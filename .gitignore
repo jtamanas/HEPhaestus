@@ -45,6 +45,7 @@ py.py
 # Local demo/run artifacts — runtime-only, never committed
 demo_output/
 .shift-manager/
+.playtest/
 fort.*
 
 # MadGraph standalone/Born-check droppings (leak into cwd on some /maddm paths)

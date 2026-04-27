@@ -1,5 +1,0 @@
-{"phase":"prep","sonnet_tries":1,"opus_tries":1,"status":"ACCEPT-WITH-NOTES"}
-{"phase":"playtest-A","sonnet_tries":1,"opus_tries":1,"status":"ACCEPT-PASS-WITH-NOTES"}
-{"phase":"playtest-B","sonnet_tries":1,"opus_tries":1,"status":"ACCEPT-PASS-WITH-NOTES"}
-{"phase":"fix-r1","sonnet_tries":1,"status":"DONE","fixed":["sd-A-005","sd-A-006","sd-A-007"],"skipped":["sd-A-001","sd-A-002","sd-A-003","sd-A-004"],"branch":"sd/fix-r1-20260424"}
-{"phase":"fix","sonnet_tries":1,"opus_tries":0,"sonnet_review":1,"status":"ACCEPT"}

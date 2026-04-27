@@ -1,4 +1,0 @@
-import model /Users/yianni/.local/share/hep-ph-agents/models/dark_su3/DarkSU3
-define darkmatter psiD
-generate relic_density
-output /Users/yianni/Projects/hep-ph-agents/.shift-manager/run-20260425-dmc/playtest/work/maddm_darksu3

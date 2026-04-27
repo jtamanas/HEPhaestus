@@ -1,6 +1,0 @@
-{
-  "model_id": "2hdm-a",
-  "mode": "default",
-  "error": "ModelNotInRegistry",
-  "error_msg": "Model '2hdm-a' not found in constraints.yaml models block. Known models: ['singlet-doublet', 'dark-su3', 'two-hdm-a']"
-}

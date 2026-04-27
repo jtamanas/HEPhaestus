@@ -1,6 +1,0 @@
-{
-  "lo": 9.9693,
-  "hi": 11.0187,
-  "source": "fixture-calibration ±5% post-patcher Ωh²=10.494 (iseed_status=unset→ODE-deterministic; single probe; PhasechiR=1.0 from T2 fix a96940818; same as PT1 manually-corrected run; source: T2_IMPL_NOTE.md + run-20260424-202956/workstreams/2hdma/playtest/relic.json)",
-  "basis": "fixture-calibration"
-}
