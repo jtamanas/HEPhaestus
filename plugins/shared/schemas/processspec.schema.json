@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hep-ph-agents/schemas/processspec/v1",
+  "$id": "https://hephaestus/schemas/processspec/v1",
   "title": "Process specification (processspec/v1)",
   "type": "object",
   "additionalProperties": false,

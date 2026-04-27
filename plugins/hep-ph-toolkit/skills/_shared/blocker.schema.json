@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hep-ph-agents/schemas/blocker/v1",
+  "$id": "https://hephaestus/schemas/blocker/v1",
   "title": "Three-state blocker contract",
-  "description": "JSON Schema for blockers emitted on stderr by hep-ph-agents model-building skills. Three modes: fatal, recoverable, reference_only. See SHARED.md §Three-state blocker contract and §2.7 of phase2-plan-final.md.",
+  "description": "JSON Schema for blockers emitted on stderr by HEPhaestus model-building skills. Three modes: fatal, recoverable, reference_only. See SHARED.md §Three-state blocker contract and §2.7 of phase2-plan-final.md.",
   "oneOf": [
     {
       "title": "fatal blocker",

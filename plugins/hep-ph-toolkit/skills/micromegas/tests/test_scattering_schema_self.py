@@ -43,7 +43,7 @@ def test_schema_is_valid_draft_2020_12():
 
 def test_schema_id():
     schema = _load_schema()
-    assert schema.get("$id") == "https://hep-ph-agents/schemas/scattering/v1"
+    assert schema.get("$id") == "https://hephaestus/schemas/scattering/v1"
 
 
 def test_schema_required_fields():

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hep-ph-agents/schemas/scattering/v1",
+  "$id": "https://hephaestus/schemas/scattering/v1",
   "title": "DM–nucleon scattering cross-sections (scattering/v1)",
   "type": "object",
   "additionalProperties": true,

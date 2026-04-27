@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hep-ph-agents/schemas/router_contract/v1",
+  "$id": "https://hephaestus/schemas/router_contract/v1",
   "title": "Router contract manifest (router_contract/v1)",
   "description": "Self-schema for router_contract.json — enumerates every cross-tool field, config key, and status enum the /dark-matter-constraints router consumes.",
   "type": "object",

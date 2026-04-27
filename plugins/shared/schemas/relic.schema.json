@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hep-ph-agents/schemas/relic/v1",
+  "$id": "https://hephaestus/schemas/relic/v1",
   "title": "DM relic density (relic/v1)",
   "type": "object",
   "additionalProperties": true,
