@@ -110,24 +110,6 @@ Longer-term: detector simulation (Delphes/MadAnalysis), jet algorithms
 (FastJet/RIVET), broader UFO-generation coverage (FeynRules / SARAH / LanHEP /
 hand-authored), and a Whizard driver for lepton-collider work.
 
-## TODOs
-
-Short pointer to in-flight work; see
-[`eval/BENCHMARK_TODO.md`](eval/BENCHMARK_TODO.md) for per-paper extraction
-work.
-
-- [ ] **Audit task prompts for Python-alternative language** *(IN PROGRESS — PR-B)* —
-      ~30 tier-2/3 prompts in `eval/tasks/*.yaml` say "Using MadGraph **or** a
-      Python script…". Triage into (a) rewrite to mandate tool-path,
-      (b) keep (legitimate algebraic-identity task), (c) ambiguous.
-- [ ] **Extend grading to four outcome modes** *(IN PROGRESS — PR-A)* — adding
-      `OutcomeMode = {MG_CORRECT, MG_WRONG, BLOCKED_CORRECTLY, PY_FALLBACK}`
-      to `eval/harness/types.py`, plus tool-use scanning for `used_madgraph`
-      and a `{"blocked": true, "reason": …}` contract for clean blocker
-      signalling.
-- [ ] **UFO-generation skill suite, end-to-end workflow eval, tool-version
-      pinning, micrOMEGAs/SPheno drivers, graphical-benchmark extraction.**
-
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
