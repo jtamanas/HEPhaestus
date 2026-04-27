@@ -1,6 +1,6 @@
 ---
 name: demo
-description: Constraint-first interactive front door to the Profumo blind-spot demo (arXiv:2506.19062). Presents a model picker (Singlet-Doublet, 2HDM+a, Dark SU(3)) and delegates to the chosen per-model skill, which interviews the user for constraint selection (relic/DD/ID) and runs the prereq chain. Invoke when the user says "run the demo", "show me HEPHaestus" / "show me hep-ph-agents", "reproduce the blind spot", or on fresh-install evaluation.
+description: Constraint-first interactive front door to the Profumo blind-spot demo (arXiv:2506.19062). Presents a model picker (Singlet-Doublet, 2HDM+a, Dark SU(3)) and delegates to the chosen per-model skill, which interviews the user for constraint selection (relic/DD/ID) and runs the prereq chain. Invoke when the user says "run the demo", "show me HEPhaestus" / "show me hep-ph-agents", "reproduce the blind spot", or on fresh-install evaluation.
 ---
 
 # Demo

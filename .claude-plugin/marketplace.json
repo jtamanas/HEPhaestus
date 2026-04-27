@@ -1,6 +1,6 @@
 {
   "name": "hephaestus",
-  "description": "HEPHaestus — a Claude Code plugin marketplace for high-energy physics phenomenology. Feynman diagrams, one-loop amplitudes, BSM model building, Monte Carlo, dark-matter constraints, Higgs bounds, plotting, and more.",
+  "description": "HEPhaestus — a Claude Code plugin marketplace for high-energy physics phenomenology. Feynman diagrams, one-loop amplitudes, BSM model building, Monte Carlo, dark-matter constraints, Higgs bounds, plotting, and more.",
   "owner": {
     "name": "jtamanas",
     "url": "https://github.com/jtamanas/hephaestus"

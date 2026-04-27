@@ -1,8 +1,8 @@
-# HEPHaestus
+# HEPhaestus
 
 Claude Code plugin marketplace for high-energy physics phenomenology.
 
-> **Note on naming:** The marketplace and brand are **HEPHaestus**; the
+> **Note on naming:** The marketplace and brand are **HEPhaestus**; the
 > slug is `hephaestus`. The env-var prefix `HEPPH_*` (HEP-phenomenology)
 > names the *domain*, not the project, and is preserved.
 

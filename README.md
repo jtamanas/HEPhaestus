@@ -1,4 +1,4 @@
-# HEPHaestus
+# HEPhaestus
 
 A Claude Code plugin marketplace for **high-energy physics phenomenology**,
 named after the Greek god of the forge — Hephaestus wielded the existing
@@ -93,18 +93,18 @@ real machinery. The use cases remain planned; each will return as a real skill
 (with scripts, tests, and integration with the surrounding toolkit) rather
 than a recipe-only placeholder.
 
-| Planned skill | Replaces stub | Will cover |
-|---|---|---|
-| `cross-section` | ✓ | Hadronic σ at LO/NLO with PDF convolution and 7-point scale variation |
-| `signal-background` | ✓ | Cut-based and MVA collider analyses with cut-flow tables and significance |
-| `rge-runner` | ✓ | Standalone RGE running outside the SARAH pipeline (gauge unification, vacuum stability, perturbativity) |
-| `amplitude-calc` | ✓ | Tree-level squared-amplitude derivations (the FeynArts/FormCalc skills cover the loop case) |
-| `pythia-config` | ✓ | Pythia8 `.cmnd` configuration for parton showering, hadronization, decays |
-| `root-analysis` | ✓ | ROOT/PyROOT TTree processing, fitting, ATLAS/CMS-style plotting |
-| `statistical-tools` | ✓ | CLs limits, profile likelihood, asymptotic formulae (`pyhf`/`RooStats`) |
-| `hep-paper-draft` | ✓ | REVTeX/JHEP/EPJC paper scaffolding with HEP macros and bibliography |
-| `arxiv-search` | ✓ | Structured arXiv + INSPIRE-HEP queries with BibTeX output |
-| `literature-review` | ✓ | Annotated literature reviews with citation graphs |
+| Planned skill | Will cover |
+|---|---|
+| `cross-section` | Hadronic σ at LO/NLO with PDF convolution and 7-point scale variation |
+| `signal-background` | Cut-based and MVA collider analyses with cut-flow tables and significance |
+| `rge-runner` | Standalone RGE running outside the SARAH pipeline (gauge unification, vacuum stability, perturbativity) |
+| `amplitude-calc` | Tree-level squared-amplitude derivations (the FeynArts/FormCalc skills cover the loop case) |
+| `pythia-config` | Pythia8 `.cmnd` configuration for parton showering, hadronization, decays |
+| `root-analysis` | ROOT/PyROOT TTree processing, fitting, ATLAS/CMS-style plotting |
+| `statistical-tools` | CLs limits, profile likelihood, asymptotic formulae (`pyhf`/`RooStats`) |
+| `hep-paper-draft` | REVTeX/JHEP/EPJC paper scaffolding with HEP macros and bibliography |
+| `arxiv-search` | Structured arXiv + INSPIRE-HEP queries with BibTeX output |
+| `literature-review` | Annotated literature reviews with citation graphs |
 
 Longer-term: detector simulation (Delphes/MadAnalysis), jet algorithms
 (FastJet/RIVET), broader UFO-generation coverage (FeynRules / SARAH / LanHEP /

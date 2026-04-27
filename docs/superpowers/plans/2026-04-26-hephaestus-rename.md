@@ -1,4 +1,4 @@
-# HEPHaestus rename — execution plan
+# HEPhaestus rename — execution plan
 
 **Status:** *Drafted, ready to execute.* ModelSpec-v3 landed in commit
 `aa35885` (2026-04-27). The plan was re-cataloged against post-v3 `HEAD`
@@ -17,11 +17,11 @@ plus an ornery opus skeptic review. Re-cataloged 2026-04-27 post-v3 — see
 
 The project just got an actual GitHub home: **`jtamanas/hephaestus`**. The
 marketplace, README, and CLAUDE.md headers were already retitled to
-**HEPHaestus** (slug: `hephaestus`). This document captures the full
+**HEPhaestus** (slug: `hephaestus`). This document captures the full
 remaining surface that still references the legacy name `hep-ph-agents` so
 we can cut over cleanly in one coordinated pass.
 
-The branding choice: marketplace and product are **HEPHaestus**, the slug is
+The branding choice: marketplace and product are **HEPhaestus**, the slug is
 `hephaestus`, and the GitHub repo is `jtamanas/hephaestus`. The env-var
 prefix `HEPPH_*` (HEP-phenomenology) stays — it names the *domain*, not the
 project, and the cost to rename 61 vars × 546 references × 143 files is
@@ -193,7 +193,7 @@ reads the `authors` field from each ModelSpec and emits it into the SARAH
     - `plugins/hep-ph-toolkit/skills/maddm-install/scripts/install.sh` — `# hep-ph-agents: ...` comments (3 places)
     - These markers identify our injection blocks for clean removal on uninstall — the *rename of the marker string* must be coordinated with any uninstall code that greps for the old string. Check both ends before flipping.
 
-14. **`LICENSE:178`** — `Copyright 2025 hep-ph-agents contributors` → `Copyright 2025 hephaestus contributors` (or `Copyright 2025-2026 HEPHaestus contributors` if year-bumping is desirable while we're touching it).
+14. **`LICENSE:178`** — `Copyright 2025 hep-ph-agents contributors` → `Copyright 2025 hephaestus contributors` (or `Copyright 2025-2026 HEPhaestus contributors` if year-bumping is desirable while we're touching it).
 
 15. **JSON Schema `$id` URIs** — same decision as before (out of scope; URNs that don't resolve), but inventory updated post-v3:
     - `plugins/shared/schemas/{annihilation,relic,processspec,amp_reduced.meta,scattering}.schema.json` (5 schemas, `$id: https://hep-ph-agents/schemas/...`)
