@@ -1,0 +1,151 @@
+% hephaestus TikZ style package — Ink-only palette (Palette C)
+% Reference: docs/design-system.md
+%
+% Usage:
+%   \usepackage{hephaestus-tikz}
+%   Requires: tikz-feynman, xcolor
+%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{hephaestus-tikz}[2026/04/16 hephaestus Feynman diagram style]
+
+\RequirePackage{tikz-feynman}
+\RequirePackage{xcolor}
+\RequirePackage{etoolbox}
+
+% ------------------------------------------------------------
+% Colors — Palette C (Ink-only)
+% ------------------------------------------------------------
+\definecolor{hepInk}{HTML}{1a1a1a}          % Fermion/scalar lines, vertices
+\definecolor{hepAccentBlue}{HTML}{0284c7}   % Boson of interest (Cool Analytic context)
+\definecolor{hepAccentSteel}{HTML}{0369a1}  % Boson of interest (Slate Precision context)
+\definecolor{hepLabelGray}{HTML}{555555}    % Particle labels
+\definecolor{hepDeemph}{HTML}{9ca3af}       % Subsidiary annotations
+
+% Default accent — override with \hepsetaccent{steel} for slate context
+\colorlet{hepAccent}{hepAccentBlue}
+\newcommand{\hepsetaccent}[1]{%
+  \ifstrequal{#1}{steel}{\colorlet{hepAccent}{hepAccentSteel}}{}%
+  \ifstrequal{#1}{blue}{\colorlet{hepAccent}{hepAccentBlue}}{}%
+}
+
+% ------------------------------------------------------------
+% Line weights (at print size)
+% ------------------------------------------------------------
+\tikzfeynmanset{
+  % Primary propagator lines: 1.0pt
+  every fermion/.style={
+    line width=1.0pt,
+    draw=hepInk,
+  },
+  every anti fermion/.style={
+    line width=1.0pt,
+    draw=hepInk,
+  },
+  every photon/.style={
+    line width=1.0pt,
+    draw=hepInk,
+  },
+  every gluon/.style={
+    line width=1.0pt,
+    draw=hepInk,
+  },
+  every boson/.style={
+    line width=1.0pt,
+    draw=hepInk,
+  },
+  every scalar/.style={
+    line width=1.0pt,
+    draw=hepInk,
+  },
+  every ghost/.style={
+    line width=0.7pt,
+    draw=hepInk,
+  },
+  % Accent propagator — the boson or line being discussed
+  every accent/.style={
+    draw=hepAccent,
+    line width=1.0pt,
+  },
+}
+
+% ------------------------------------------------------------
+% Vertex styles
+% ------------------------------------------------------------
+% Interaction vertex: 2pt radius filled black
+\tikzfeynmanset{
+  every dot/.style={
+    fill=hepInk,
+    inner sep=0pt,
+    minimum size=4pt,
+  },
+  every blob/.style={
+    fill=hepInk!15,
+    draw=hepInk,
+    line width=0.5pt,
+  },
+}
+
+% Convenience vertex style for interaction points
+\tikzset{
+  hep vertex/.style={
+    circle,
+    fill=hepInk,
+    inner sep=0pt,
+    minimum size=4pt,
+  },
+}
+
+% ------------------------------------------------------------
+% Label styles — italic CM Serif, positioned per spec
+% ------------------------------------------------------------
+% External leg label: 2pt offset, italic, at midpoint
+\tikzset{
+  hep label/.style={
+    font=\itshape\small,
+    text=hepLabelGray,
+    inner sep=2pt,
+  },
+  % Propagator label: centered above/below, accent color
+  hep propagator label/.style={
+    font=\itshape\small,
+    text=hepAccent,
+    inner sep=2pt,
+    midway,
+  },
+  % Subsidiary annotation
+  hep annotation/.style={
+    font=\small,
+    text=hepDeemph,
+    inner sep=2pt,
+  },
+}
+
+% ------------------------------------------------------------
+% Diagram environment defaults
+% ------------------------------------------------------------
+% Square aspect ratio with generous padding
+% External legs extend >= 30% of diagram width
+\tikzfeynmanset{
+  large/.style={
+    every vertex={
+      inner sep=0pt,
+    },
+  },
+}
+
+% Set default diagram size and padding
+\newlength{\hepdiagramsize}
+\setlength{\hepdiagramsize}{50mm}
+
+% Recommended feynman environment usage:
+%   \begin{tikzpicture}
+%   \begin{feynman}[layered layout, horizontal=a to b]
+%     ... vertices and diagram ...
+%   \end{feynman}
+%   \end{tikzpicture}
+
+% ------------------------------------------------------------
+% Axis / frame: no bounding box (diagrams are unframed)
+% ------------------------------------------------------------
+
+\endinput

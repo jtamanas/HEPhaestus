@@ -1,0 +1,5 @@
+feynrules_version: "2.3.49"
+feynrules_url: "http://feynrules.irmp.ucl.ac.be/downloads/feynrules-current.tar.gz"
+feynrules_github_mirror: "https://github.com/FeynRules/FeynRules"
+feynrules_github_tag: "fr-2.3.49"
+feynrules_sha256: "TODO"   # TODO: compute real SHA256 before v1 release; verify_checksum warns-not-aborts for "TODO"

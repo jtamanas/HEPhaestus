@@ -1,0 +1,9 @@
+{
+  "n_topologies": 3,
+  "note": "Z self-energy (Z->Z) at 1-loop in SM: 3 distinct topologies (W-loop, fermion-loop, H-loop)",
+  "topologies": [
+    {"id": 1, "n_diagrams": 4},
+    {"id": 2, "n_diagrams": 12},
+    {"id": 3, "n_diagrams": 1}
+  ]
+}

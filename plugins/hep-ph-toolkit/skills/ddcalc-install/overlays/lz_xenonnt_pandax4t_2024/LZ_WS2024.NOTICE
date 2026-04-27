@@ -1,0 +1,27 @@
+LZ WS2024 Experiment Attribution
+==================================
+
+This overlay implements the LUX-ZEPLIN (LZ) WIMP-search result from the
+2024 WIMP-search data release.
+
+Citation
+--------
+LZ Collaboration, "First Dark Matter Search Results from the LUX-ZEPLIN
+(LZ) Experiment," Phys. Rev. Lett. (PRL) 131, 041002 (2023);
+arXiv:2207.03764.
+
+LZ Collaboration, "New results on WIMP dark matter from LZ," arXiv:2410.17036
+(2024, LZ WS2024 dataset).
+
+Data provenance
+---------------
+Efficiency tables and background distributions are derived from publicly
+available data in the LZ papers cited above (LZ Collaboration, licensed
+under the LZ publication policy for scientific data).
+
+The DDCalc Fortran module implementing this experiment follows the DDCalc
+module pattern (Bringmann et al., EPJC 2021, arXiv:2103.04039) and is
+authored by the hephaestus DDCalc overlay team.
+
+Status: STUB — efficiency table and Fortran module are placeholders.
+Real data arrives at v1.1 overlay publication.

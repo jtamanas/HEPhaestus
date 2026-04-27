@@ -1,0 +1,17 @@
+{
+  "index": 4,
+  "hb_allowed": true,
+  "hs_consistent": true,
+  "obsratio_max": 0.9,
+  "most_sensitive_channel": {"id": 104, "expref": "ATLAS-HIGG-2016-04", "obsratio": 0.9, "reference": "Ref4"},
+  "chi2_total": 92.0,
+  "chi2_rates": 87.0,
+  "chi2_masses": 5.0,
+  "ndf_rates": 80,
+  "ndf_masses": 5,
+  "p_value_rates": 0.32,
+  "p_value_masses": 0.50,
+  "backend": "legacy",
+  "dataset_version": "HB-5.10.2/HS-2.6.2",
+  "slha_file": "scan_mini/point_4.slha"
+}

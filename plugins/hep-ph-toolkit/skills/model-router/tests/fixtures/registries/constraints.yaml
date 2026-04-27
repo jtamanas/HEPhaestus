@@ -1,0 +1,167 @@
+# Mock constraints.yaml for WS3 tests — minimal schema-valid fixture
+schema_version: 2
+
+blocker_catalog_ref:
+  path: plugins/hep-ph-toolkit/skills/_shared/blocker_catalog.yaml
+  version: 1
+
+taxonomy_ref:
+  path: plugins/hep-ph-toolkit/skills/_shared/taxonomy.py
+  version: 1
+
+analytic_exceptions_ref:
+  path: plugins/hep-ph-toolkit/skills/_shared/analytic_exceptions.yaml
+  version: 1
+
+prereqs:
+  maddm:
+    status: exists
+    hours:
+      cold: [1.0, 2.0]
+      cached: [0.25, 0.5]
+    capabilities:
+      description: "MadDM relic density and DD cross-section via MG5-compatible UFO"
+      install_skill: maddm-install
+      role:
+        relic: primary
+        dd: primary
+        id: none
+        higgs: none
+        collider: none
+      gating_for: [relic, dd]
+      priority_tiebreak: 10
+      depends_on_prereqs: []
+      inputs_required: [ufo_model]
+      support:
+        - axis: A1
+          match: ["SM + extra SU(N)", "SM + extra mixed"]
+          verdict: blocked
+          blocker: MG5_DARK_COLOR_TENSOR_WALL
+          blocker_class: fundamental-group-theory-gap
+          evidence: "intel/digest.md §52"
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+  micromegas:
+    status: exists
+    hours:
+      cold: [0.5, 1.5]
+      cached: [0.2, 0.4]
+    capabilities:
+      description: "micrOMEGAs relic density cross-check via CalcHEP .mdl"
+      install_skill: micromegas-install
+      role:
+        relic: validator
+        dd: validator
+        id: none
+        higgs: none
+        collider: none
+      gating_for: []
+      priority_tiebreak: 20
+      depends_on_prereqs: []
+      inputs_required: [calchep_mdl]
+      support:
+        - axis: A1
+          match: ["SM + extra SU(N)", "SM + extra mixed"]
+          verdict: blocked
+          blocker: MICROMEGAS_MISSING
+          blocker_class: missing-tool-feature
+          evidence: "intel/digest.md §FU-wsg-01"
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+constraints:
+  relic:
+    display: "Relic density Ωh²"
+    chain: [maddm, micromegas]
+    hours_note: "maddm primary; micromegas validator"
+
+  dd:
+    display: "Direct detection σ_SI/SD"
+    chain: [maddm, micromegas]
+    hours_note: "maddm primary; micromegas validator"
+
+  id:
+    display: "Indirect detection ⟨σv⟩"
+    chain: [maddm]
+    hours_note: "maddm only in v1"
+
+models:
+  singlet-doublet:
+    display: "Singlet-doublet fermion DM"
+    spec_path: plugins/hep-ph-toolkit/skills/model-router/tests/fixtures/specs/singlet_doublet.yaml
+    dm_phenomenology:
+      candidates:
+        - name: "chi_1"
+          field_type: "Dirac fermion"
+          mediator_regime: "off-resonance"
+          uv_provenance: "tree-level portal"
+    multi_component: false
+
+  dark-su3:
+    display: "Dark SU(3) confining sector"
+    spec_path: plugins/hep-ph-toolkit/skills/model-router/tests/fixtures/specs/dark_su3.yaml
+    dm_phenomenology:
+      candidates:
+        - name: "V"
+          field_type: "vector"
+          mediator_regime: "off-resonance"
+          uv_provenance: "analytic-only"
+        - name: "Psi"
+          field_type: "Dirac fermion"
+          mediator_regime: "off-resonance"
+          uv_provenance: "analytic-only"
+    multi_component: true
+    analytic_module: "analytic_models.dark_su3"
+    chain_overrides:
+      relic:
+        chain: [analytic_backend]
+        reason: "MG5 dt1 dark-color tensor wall; analytic backend required"
+        backend_hint: "analytic"
+        # NB: MATRIX_COVERAGE_GAP intentionally OMITTED so that
+        # test_dark_su3_strict_with_missing_acknowledgement_exits_4 can
+        # verify the strict-mode raise contract. The dd entry below
+        # carries the full acknowledgement.
+        matrix_acknowledgement:
+          accepted_blockers:
+            - SPHENO_NOT_REQUESTED
+            - MG5_DARK_COLOR_TENSOR_WALL
+            - CALCHEP_MDL_MISSING
+            - DRAKE_SINGLE_SPECIES_ONLY
+            - HIGGSTOOLS_SLHA_MISSING_BLOCKS
+            - ANALYTIC_MODULE_MISSING
+      dd:
+        chain: [analytic_backend]
+        reason: "MG5 dt1 dark-color tensor wall; analytic backend required"
+        backend_hint: "analytic"
+        matrix_acknowledgement:
+          accepted_blockers:
+            - SPHENO_NOT_REQUESTED
+            - MG5_DARK_COLOR_TENSOR_WALL
+            - CALCHEP_MDL_MISSING
+            - DRAKE_SINGLE_SPECIES_ONLY
+            - HIGGSTOOLS_SLHA_MISSING_BLOCKS
+            - ANALYTIC_MODULE_MISSING
+            - MATRIX_COVERAGE_GAP
+
+  two-hdm-a:
+    display: "2HDM+a DM model"
+    spec_path: plugins/hep-ph-toolkit/skills/model-router/tests/fixtures/specs/two_hdm_a.yaml
+    dm_phenomenology:
+      candidates:
+        - name: "chi"
+          field_type: "Dirac fermion"
+          mediator_regime: "off-resonance"
+          uv_provenance: "tree-level portal"
+    multi_component: false
+    analytic_module: "analytic_models.stub_unimplemented"
+
+  dark-su3-confining-synthetic:
+    display: "Dark SU(3) unbroken confining (synthetic, EFT rewrite required)"
+    spec_path: plugins/hep-ph-toolkit/skills/model-router/tests/fixtures/specs/dark_su3_confining_synthetic.yaml
+    analytic_module: null
+    # No chain_overrides — HARD_HALT short-circuits before P3/P4.

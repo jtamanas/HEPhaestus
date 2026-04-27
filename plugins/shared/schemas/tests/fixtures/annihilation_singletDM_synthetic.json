@@ -1,0 +1,10 @@
+{
+  "schema_version": "annihilation/v1",
+  "m_dm_gev": 62.5,
+  "sigma_v_zero": 2.3e-26,
+  "channel_fractions": {"bb": 0.623, "ww": 0.123, "hh": 0.254},
+  "source": "micromegas",
+  "source_run": "micromegas_runs/20260425T120000Z",
+  "model_class": "singletDM",
+  "model": "singletDM"
+}

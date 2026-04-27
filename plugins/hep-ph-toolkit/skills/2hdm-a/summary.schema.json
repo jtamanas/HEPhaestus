@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "2hdm-a summary schema extension",
+  "description": "Extends the universal core summary schema for the 2HDM+a model. Declares model-specific gate_check fields. Channel names (bbx, ccx, etc.) are documented here as hints but remain free strings at runtime — they are parameter-point properties, not model properties.",
+  "allOf": [
+    {"$ref": "../_shared/summary.core.schema.json"},
+    {
+      "type": "object",
+      "properties": {
+        "model": {
+          "const": "2hdm-a",
+          "description": "Model identifier pinned for 2hdm-a skill."
+        },
+        "gate_check": {
+          "type": "object",
+          "description": "Gate assertions computed at write time for 2hdm-a. bbx_* fields are specific to the off-resonance benchmark (Mchi=100, Ma=400, tanβ=10).",
+          "properties": {
+            "bbx_fraction": {
+              "type": "number",
+              "description": "Fraction of annihilation to bbx channel at the parameter point."
+            },
+            "bbx_threshold_pct": {
+              "type": "number",
+              "description": "Threshold fraction (as a decimal) for bbx dominance gate."
+            },
+            "bbx_threshold_passed": {
+              "type": "boolean",
+              "description": "True if bbx_fraction >= bbx_threshold_pct."
+            },
+            "bbx_gate_pass": {
+              "type": "boolean",
+              "description": "Alias for bbx_threshold_passed for backward compatibility."
+            },
+            "channels_sum_in_unity_range": {
+              "type": "boolean",
+              "description": "True if sum(channel_fractions) is in [0.99, 1.01]."
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    }
+  ]
+}

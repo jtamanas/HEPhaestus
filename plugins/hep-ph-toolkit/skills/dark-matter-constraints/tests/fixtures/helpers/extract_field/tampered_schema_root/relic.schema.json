@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hep-ph-agents/schemas/relic/v2",
+  "title": "DM relic density (relic/v2) — TAMPERED: $id mutated to v2 for schema drift test",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version"],
+  "properties": {
+    "schema_version": {"const": "relic/v2"}
+  }
+}

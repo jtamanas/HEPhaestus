@@ -1,0 +1,53 @@
+{
+  "arxiv_id": "2601.13147",
+  "version": "v3",
+  "title": "Revisiting Singlet Fermion Dark Matter with a Scalar Portal: Connecting Higgs Phenomenology and Strong Electroweak Phase Transition",
+  "authors": ["Jaydeb Das", "Saurabh Niyogi", "Tripurari Srivastava"],
+  "date": "2021-01-31",
+  "categories": ["hep-ph"],
+  "url": "https://arxiv.org/abs/2601.13147",
+  "html_url": "https://arxiv.org/html/2601.13147v3",
+  "models": [
+    {
+      "name": "Singlet Fermion DM + Real Scalar Portal",
+      "label": "SPS",
+      "lagrangian_eq": 4,
+      "mass_matrix_eq": 8,
+      "mixing_angle_eq": 11,
+      "sigma_SI_eq": 31,
+      "ufo_model": "scalar_portal_singlet (not yet built)"
+    }
+  ],
+  "benchmark_points": {
+    "BP1": {
+      "m_chi": 222.0, "g_chi": 0.57, "sin_theta": 0.001,
+      "m_h1": 125.25, "m_h2": 200.0, "lambda_s": 3.38, "mu_3": -20.0,
+      "paper_sigma_SI_p": 6.96e-50, "paper_sigma_SI_n": 7.10e-50,
+      "paper_omega_h2": 0.119
+    },
+    "BP_mid": {
+      "m_chi": 200.0, "g_chi": 1.0, "sin_theta": 0.2,
+      "m_h1": 125.25, "m_h2": 300.0, "lambda_s": 2.0, "mu_3": -50.0,
+      "source": "synthetic_control"
+    },
+    "BP9": {
+      "m_chi": 78.0, "g_chi": 0.34, "sin_theta": 0.002,
+      "m_h1": 125.25, "m_h2": 70.0, "lambda_s": 0.73, "mu_3": 20.0,
+      "paper_sigma_SI_p": 1.26e-48
+    }
+  },
+  "experimental_limits": {
+    "direct_detection": ["LZ (2024)"],
+    "collider": ["LHC Higgs signal strength (mu_sig >= 0.9)"]
+  },
+  "computational_tools": {
+    "relic_density": "micrOMEGAs (Belanger et al.)",
+    "nucleon_form_factors": "Hoferichter et al.",
+    "ewpt": "CosmoTransitions (Wainwright 2012)"
+  },
+  "constants": {
+    "V_H": 246.22,
+    "M_H": 125.25,
+    "convention": "V_H^2 * G_F * sqrt(2) approx 1 (to 3e-6)"
+  }
+}

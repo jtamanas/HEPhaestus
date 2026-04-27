@@ -1,0 +1,53 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Python (for any helper scripts)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node (if any tooling)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+.gstack/
+.superpowers/
+
+# Claude Code runtime state
+.claude/scheduled_tasks.lock
+.claude/worktrees/
+.claude/settings.json
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Generated eval task files (emitted at runtime by generate_maddm_tasks.py)
+eval/tasks/tier3_*.generated.yaml
+py.py
+
+# Local demo/run artifacts — runtime-only, never committed
+demo_output/
+.shift-manager/
+fort.*
+
+# MadGraph standalone/Born-check droppings (leak into cwd on some /maddm paths)
+MG5_debug
+check_sa_*.f
+nsqso_*.inc

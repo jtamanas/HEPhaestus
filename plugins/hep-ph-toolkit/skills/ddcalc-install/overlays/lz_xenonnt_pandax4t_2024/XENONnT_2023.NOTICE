@@ -1,0 +1,22 @@
+XENONnT 2023 Experiment Attribution
+=====================================
+
+This overlay implements the XENONnT experiment WIMP search result from 2023.
+
+Citation
+--------
+XENON Collaboration, "First Dark Matter Search with Nuclear Recoils from
+the XENONnT Experiment," Phys. Rev. Lett. (PRL) 131, 041003 (2023);
+arXiv:2303.14729.
+
+Data provenance
+---------------
+Efficiency tables and background distributions are derived from publicly
+available data in the XENONnT paper cited above (XENON Collaboration).
+
+The DDCalc Fortran module implementing this experiment follows the DDCalc
+module pattern (Bringmann et al., EPJC 2021, arXiv:2103.04039) and is
+authored by the hephaestus DDCalc overlay team.
+
+Status: STUB — efficiency table and Fortran module are placeholders.
+Real data arrives at v1.1 overlay publication.

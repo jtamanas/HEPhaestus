@@ -1,0 +1,23 @@
+{
+  "scenario_id": "pointA_configured",
+  "tier": "tier3",
+  "hard_failures": [
+    {
+      "attempt": 1,
+      "assertion_id": "check_prereqs_invocation"
+    },
+    {
+      "attempt": 1,
+      "assertion_id": "extract_field_schema_version_arg"
+    },
+    {
+      "attempt": 1,
+      "assertion_id": "extract_field_sigma_v_zero_invocation"
+    }
+  ],
+  "soft_results": {
+    "caveats_rel_diff_numeric": 1,
+    "drake_branch_rationale_prose": 1,
+    "spectrum_analysis_ratio_prose": 1
+  }
+}

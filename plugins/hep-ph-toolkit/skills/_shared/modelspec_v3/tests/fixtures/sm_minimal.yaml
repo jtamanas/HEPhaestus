@@ -1,0 +1,53 @@
+model:
+  name: SMTest
+  latex: '\text{SM Test}'
+  authors: 'tester'
+  date: '2026-04-26'
+gauge_groups:
+  - { symbol: B,  type: U(1),  label: hypercharge, coupling: g1, ssb: false }
+  - { symbol: WB, type: SU(2), label: left,        coupling: g2, ssb: true }
+  - { symbol: G,  type: SU(3), label: color,       coupling: g3, ssb: false }
+global_symmetries: []
+fermions:
+  - name: q
+    generations: 3
+    components: [uL, dL]
+    reps: { B: '1/6', WB: 2, G: 3 }
+  - name: LL
+    generations: 3
+    components: [vL, eL]
+    reps: { B: '-1/2', WB: 2, G: 1 }
+  - name: d
+    generations: 3
+    components: 'conj[dR]'
+    reps: { B: '1/3', WB: 1, G: -3 }
+  - name: u
+    generations: 3
+    components: 'conj[uR]'
+    reps: { B: '-2/3', WB: 1, G: -3 }
+  - name: e
+    generations: 3
+    components: 'conj[eR]'
+    reps: { B: 1, WB: 1, G: 1 }
+scalars:
+  - name: H
+    generations: 1
+    components: [Hp, H0]
+    reps: { B: '1/2', WB: 2, G: 1 }
+    real: false
+parameters:
+  - { name: g1, real: true }
+  - { name: g2, real: true }
+  - { name: g3, real: true }
+lagrangian: { hc: [], no_hc: [] }
+ewsb:
+  vevs: []
+  gauge_sector: []
+  mixing_sector: []
+  phases: []
+  dirac_spinors_pre_ewsb: []
+  dirac_spinors_post_ewsb: []
+particles:
+  gauge_es: []
+  ewsb: []
+  weyl_intermediate: []

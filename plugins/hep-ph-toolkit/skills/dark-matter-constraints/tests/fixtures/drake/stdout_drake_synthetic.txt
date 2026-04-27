@@ -1,0 +1,33 @@
+# STRUCTURED FAKE — synthetic fixture for router contract test, NOT a real run
+# These values are seeded constants representing DRAKE Wolfram Language stdout
+# as documented in plugins/hep-ph-toolkit/skills/drake/SKILL.md lines 190-225.
+# DRAKE prints Oh2_nBE / Oh2_cBE / Oh2_fBE (NOT "Omega h^2").
+# Acceptance regex: Oh2_(nBE|cBE|fBE)\s*=\s*([0-9eE.+\-]+)
+#
+# Seed values (use to verify parser output in tests):
+#   SEED_omega_h2  = 0.12052366691892884  (Oh2_nBE from WIMP benchmark, ws-h-impl-3)
+#   SEED_xf        = 22.4
+
+*************************
+WIMP settings_WIMP parameters_WIMP
+-----------------------
+Oh2_nBE = 0.12052366691892884
+-----------------------
+...gamma(x) done. Time [s]: 1.2
+Computing cBE...
+...<sv>_2 done. Time [s]: 0.9
+...cBE done. Time [s]: 2.1
+-----------------------
+Oh2_cBE = 0.12051
+-----------------------
+Computing fBE...
+...<sv>_theta done. Time [s]: 1.0
+...fBE done. Time [s]: 3.3
+-----------------------
+Oh2_fBE = 0.12050
+-----------------------
+**************************************
+result  Oh2nBE               Oh2cBE   Oh2fBE   time [s]
+calculated  0.12052366691892884  0.12051  0.12050  7.6
+precomputed 0.1204               0.1203   0.1202   12.3
+**************************************

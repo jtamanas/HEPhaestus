@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ranked_chain.schema.json",
+  "title": "ActiveChain",
+  "description": "The selected or ranked tool chain for a single observable slot.",
+  "type": "object",
+  "required": ["prereq_id", "role", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "prereq_id": {
+      "type": "string",
+      "description": "Prereq skill ID (e.g. 'maddm') or 'analytic_backend' or 'BLOCKED'."
+    },
+    "role": {
+      "type": "string",
+      "enum": ["primary", "validator", "specialty", "escape_hatch", "none", "BLOCKED"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ROUTED", "BLOCKED", "HALT", "HARD_HALT"]
+    },
+    "blockers": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "blocker_classes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "missing-skill",
+          "missing-tool-feature",
+          "fundamental-group-theory-gap",
+          "regime-mismatch",
+          "spec-authoring-gap",
+          "analytic-exception"
+        ]
+      }
+    },
+    "caveats": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "runtime_install_required": {
+      "type": "boolean"
+    },
+    "matrix_acknowledgement_missing": {
+      "type": "boolean"
+    }
+  }
+}

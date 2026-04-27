@@ -1,0 +1,10 @@
+{
+  "_fixture_meta": {
+    "synthetic": true,
+    "scenario": "pointA_missing",
+    "source": "detect_drake.py canned output — DRAKE missing branch"
+  },
+  "status": "missing",
+  "drake_path": "/usr/local/lib/drake",
+  "version": null
+}

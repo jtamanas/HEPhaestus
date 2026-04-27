@@ -1,0 +1,1 @@
+{"code": "MICROMEGAS_BUILD_NEEDS_NETWORK", "mode": "fatal", "message": "micrOMEGAs build attempted network access under HEPPH_NO_NETWORK=1.", "context": {"attempted_url": "https://example.com/some-package.tgz"}}

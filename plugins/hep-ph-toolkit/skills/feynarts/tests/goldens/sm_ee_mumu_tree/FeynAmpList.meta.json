@@ -1,0 +1,22 @@
+{
+  "feynarts_version": "3.11",
+  "model_hash": "",
+  "n_diagrams": 1,
+  "processspec": {
+    "excludes": [],
+    "kinematic_limit": "general",
+    "loop_order": 0,
+    "particles": {
+      "in": [
+        {"label": "e+", "mass_symbol": "ME", "pdg": -11},
+        {"label": "e-", "mass_symbol": "ME", "pdg": 11}
+      ],
+      "out": [
+        {"label": "mu+", "mass_symbol": "MMU", "pdg": -13},
+        {"label": "mu-", "mass_symbol": "MMU", "pdg": 13}
+      ]
+    },
+    "schema_version": "processspec/v1"
+  },
+  "schema_version": "processspec/v1"
+}

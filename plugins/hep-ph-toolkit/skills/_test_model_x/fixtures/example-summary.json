@@ -1,0 +1,11 @@
+{
+  "schema_version": "1",
+  "model": "model-x",
+  "run_at": "2026-04-25T12:00:00Z",
+  "ran": ["relic"],
+  "skipped_constraints": [],
+  "artifacts_dir": "./demo_output/model-x",
+  "headline": "model-x relic density stub run complete",
+  "benchmark_id": "synthetic-1",
+  "provenance_ref": "provenance.json"
+}

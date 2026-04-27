@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "hep-ph-demo universal core summary (model-agnostic)",
+  "description": "Model-agnostic keys that apply to any DM relic-density skill. Per-skill extensions use allOf composition. This file MUST NOT contain channel names, model names, or parameter-point values.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "model",
+    "run_at",
+    "ran",
+    "skipped_constraints",
+    "artifacts_dir",
+    "headline"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1",
+      "description": "Schema version; const 1 for this release."
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "BSM model name; free string — per-skill schemas MAY add const constraint."
+    },
+    "run_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp when the run completed."
+    },
+    "ran": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Constraint names that actually executed this run. Per-skill schemas MAY restrict via enum."
+    },
+    "skipped_constraints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "id":     {"type": "string"},
+          "reason": {"type": "string"}
+        }
+      },
+      "description": "Constraints skipped this run and why."
+    },
+    "artifacts_dir": {
+      "type": "string",
+      "description": "Relative path to the directory where run artifacts are stored."
+    },
+    "headline": {
+      "type": "string",
+      "description": "Human-readable one-line summary of the run outcome."
+    },
+    "relic_approx": {
+      "type": "boolean",
+      "description": "True if relic density was approximated (analytic/EFT); false if from full Boltzmann integration."
+    },
+    "model_source": {
+      "type": "string",
+      "description": "Provenance of the UFO model (e.g. hand_crafted_sarah_model, sarah_build_renderer, feynrules_export)."
+    },
+    "model_fixture": {
+      "type": "string",
+      "description": "Path to the committed model fixture directory, or empty string if not fixture-based."
+    },
+    "channel_percentages": {
+      "type": "object",
+      "description": "Raw percent-valued annihilation channel contributions from MadDM (sum ~ 100). Channel names are free strings — they are parameter-point properties, not model properties.",
+      "additionalProperties": {"type": "number"}
+    },
+    "channel_fractions": {
+      "type": "object",
+      "description": "Normalized unit-fraction annihilation channel contributions (sum in [0.99, 1.01]). Channel names are free strings.",
+      "additionalProperties": {"type": "number"}
+    },
+    "benchmark_id": {
+      "type": "string",
+      "description": "References the named benchmark fixture under <skill>/benchmarks/<benchmark_id>/expectations.json."
+    },
+    "provenance_ref": {
+      "type": "string",
+      "description": "Path to the sibling provenance.json file. Runtime invariant: provenance.json must be written before summary.json."
+    }
+  }
+}

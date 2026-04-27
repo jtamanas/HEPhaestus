@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.10.16, pytest-9.0.3, pluggy-1.6.0 -- /Users/yianni/.pyenv/versions/3.10.16/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/yianni/Projects/hep-ph-agents-worktrees/dmc-ws3-r1
+configfile: pytest.ini
+plugins: anyio-4.13.0
+collecting ... collected 1 item
+
+tests/dark_su3_playtest/test_negative_control.py::test_negative_control[NC-2-extract_field_sigma_v_zero_invocation] PASSED [100%]
+
+======================== 1 passed in 258.44s (0:04:18) =========================

@@ -1,0 +1,79 @@
+# UFO blocked. Re-enable by renaming to .yaml once UFO lands.
+# See eval/2603.23040_scotogenic_inverse_seesaw/madgraph/README.md 'Known gap — UFO blocked'.
+# Plan-C: ScotoInverseSeesaw_UFO not yet available (Day 0).
+
+- id: t1_scoto_proc_card
+  tier: 1
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Generate a proc_card.dat for DM pair annihilation in the scotogenic inverse-seesaw
+    model (arXiv:2603.23040). Use UFO 'ScotoInverseSeesaw_UFO'. DM candidate is chi1.
+    Generate: chi1 chi1 > f f~ for all SM fermions via h/Z s-channel.
+    Report 'proc_card' key.
+  reference_fn: scoto_proc_card
+  reference_args: {}
+  graders:
+    - type: file_contains
+      key: proc_card
+      pattern: "import model ScotoInverseSeesaw"
+    - type: file_contains
+      key: proc_card
+      pattern: "chi1 chi1 >"
+  tags: [proc_card, scotogenic, setup, paper-2]
+
+- id: t1_scoto_param_card_BP1
+  tier: 1
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Generate a param_card.dat for BP1 of arXiv:2603.23040. Use the scalar triplet
+    m_phi = (1000, 1200, 1400) GeV and the NuFIT 6.0 PMNS inputs specified in the
+    paper's Section 2.1. The (M_R, mu_S, M_N) triplet for BP1 is in reference_args.
+  reference_fn: scoto_param_card
+  reference_args:
+    bp: "BP1"
+  graders:
+    - type: numeric
+      key: mass_chi1
+      tolerance: 0.01
+    - type: numeric
+      key: M_PHI_1
+      tolerance: 1.0e-10
+  tags: [param_card, scotogenic, setup, paper-2]
+
+- id: t1_scoto_param_card_BP2
+  tier: 1
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Generate a param_card.dat for BP2 (m_chi ~ 59 GeV) of arXiv:2603.23040. Use
+    the scalar triplet m_phi = (1000, 1200, 1400) GeV and the NuFIT 6.0 PMNS
+    inputs specified in the paper's Section 2.1.
+  reference_fn: scoto_param_card
+  reference_args:
+    bp: "BP2"
+  graders:
+    - type: numeric
+      key: mass_chi1
+      tolerance: 0.01
+    - type: numeric
+      key: M_PHI_1
+      tolerance: 1.0e-10
+  tags: [param_card, scotogenic, setup, paper-2]
+
+- id: t1_scoto_param_card_BP3
+  tier: 1
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Generate a param_card.dat for BP3 (m_chi ~ 61 GeV) of arXiv:2603.23040. Use
+    the scalar triplet m_phi = (1000, 1200, 1400) GeV and the NuFIT 6.0 PMNS
+    inputs specified in the paper's Section 2.1.
+  reference_fn: scoto_param_card
+  reference_args:
+    bp: "BP3"
+  graders:
+    - type: numeric
+      key: mass_chi1
+      tolerance: 0.01
+    - type: numeric
+      key: M_PHI_1
+      tolerance: 1.0e-10
+  tags: [param_card, scotogenic, setup, paper-2]

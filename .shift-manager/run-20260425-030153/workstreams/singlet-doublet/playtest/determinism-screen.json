@@ -1,0 +1,16 @@
+{
+  "label": "screen, not metric",
+  "band": [
+    0.286,
+    0.298
+  ],
+  "values": [
+    0.292,
+    0.292,
+    0.292,
+    0.292,
+    0.292
+  ],
+  "all_in_band": true,
+  "verdict": "PASS"
+}

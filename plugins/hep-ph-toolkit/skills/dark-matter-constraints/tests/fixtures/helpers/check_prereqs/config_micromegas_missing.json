@@ -1,0 +1,10 @@
+{
+  "maddm_path": "__TMPDIR__/fake_maddm",
+  "micromegas_path": "/nonexistent/micromegas-install",
+  "drake_path": "__TMPDIR__/fake_drake",
+  "models": {
+    "singletDM": {
+      "ufo_path": "__TMPDIR__/singletDM_UFO"
+    }
+  }
+}

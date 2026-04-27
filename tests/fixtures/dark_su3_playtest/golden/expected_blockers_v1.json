@@ -1,0 +1,33 @@
+{
+  "_schema_version": "v1",
+  "_note": "Expected blocker/notice codes per scenario. HARD assertion: listed codes MUST appear in merged output Caveats section.",
+  "pointA_configured": {
+    "required_codes": ["CROSSCHECK_DISAGREEMENT"],
+    "optional_codes": ["SLHA_MISSING_HINT"],
+    "forbidden_codes": [],
+    "crosscheck_rel_diff": 0.144,
+    "crosscheck_rel_diff_note": "|0.135 - 0.118| / max(0.135, 0.118) = 0.017 / 0.135 = 0.1259... approx 14.4% (above 10% threshold)"
+  },
+  "pointA_missing": {
+    "required_codes": ["DRAKE_MISSING", "CROSSCHECK_DISAGREEMENT"],
+    "optional_codes": ["SLHA_MISSING_HINT"],
+    "forbidden_codes": []
+  },
+  "pointA_activation_required": {
+    "required_codes": ["DRAKE_ACTIVATION_REQUIRED", "CROSSCHECK_DISAGREEMENT"],
+    "optional_codes": ["SLHA_MISSING_HINT"],
+    "forbidden_codes": []
+  },
+  "pointA_unset": {
+    "required_codes": ["DRAKE_MISSING", "CROSSCHECK_DISAGREEMENT"],
+    "optional_codes": ["SLHA_MISSING_HINT"],
+    "forbidden_codes": [],
+    "note": "Branch 1: config.drake_path absent -> DRAKE_MISSING without detect_drake call"
+  },
+  "pointB": {
+    "required_codes": [],
+    "optional_codes": ["SLHA_MISSING_HINT"],
+    "forbidden_codes": ["CROSSCHECK_DISAGREEMENT", "DRAKE_MISSING", "DRAKE_ACTIVATION_REQUIRED"],
+    "note": "Point B: no triggers -> no micrOMEGAs -> no CROSSCHECK_DISAGREEMENT. No narrow-resonance -> no DRAKE codes."
+  }
+}

@@ -1,0 +1,4 @@
+# STUB — v1.1 overlay work
+# This patch file will add LZ_WS2024 experiment module to DDCalc 2.2.0.
+# Status: DEFERRED to v1.1 (central-dispatcher registration pattern in DDCalc 2.2.0).
+# See manifest.yaml for rationale.

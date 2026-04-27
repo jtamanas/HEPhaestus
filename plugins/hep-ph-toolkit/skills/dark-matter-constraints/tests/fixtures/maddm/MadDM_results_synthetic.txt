@@ -1,0 +1,54 @@
+################################################
+#                 MadDM v. 3.2                 #
+################################################
+
+# STRUCTURED SYNTHETIC — test fixture for router contract test, NOT a real run.
+# Regenerated for WS1/gamlike v0 (T26): real form_s/form_n banner format.
+# Real MadDM 3.2+ format with section banners.
+#
+# Seed values (use to verify parser output in tests):
+#   SEED_Omegah2                      = 2.92e-01
+#   SEED_Xenon1T_2018_SI_sig          = 1.23e-45
+#   SEED_Xenon1T_2018_SI_lim          = 3.40e-46
+#   SEED_Xenon1T_2018_SD_neutron_sig  = 5.50e-42
+#   SEED_Xenon1T_2018_SD_neutron_lim  = 5.67e-42
+#   SEED_Total_xsec_sig               = 2.34e-26
+#   SEED_Total_xsec_lim               = 3.00e-25
+
+
+################################################
+# Relic Density                                #
+################################################
+
+Omegah2                       = 2.92e-01
+Omegah_Planck                 = 1.20e-01
+xsi                           = 1.00e+00 	 # xsi = (Omega/Omega_Planck)
+x_f                           = 2.50e+01
+sigmav_xf                     = 4.21e-27 	 # cm^3 s^-1
+# % of the relic density channels
+%_chi1chi1_zz                 = 17.84 %
+%_chi1chi1_ww                 = 12.30 %
+
+
+################################################
+# Direct Detection [cm^2]                      #
+################################################
+
+Xenon1T_2018_SI               = [1.23e-45,3.40e-46]   # XENON1T 2018 (SI)
+Xenon1T_2018_SD_neutron       = [5.50e-42,5.67e-42]   # XENON1T 2018 (SD)
+
+
+################################################
+# Indirect Detection                           #
+################################################
+# Results in brackets display [prediction, upper limit]
+
+# Annihilation cross section computed with the method: madevent
+# <sigma v>[cm^3 s^-1] of continuum spectrum final states and Fermi dSph limits (if available, else -1)
+chi1chi1_bbx                  = [1.40e-26,3.00e-25]
+chi1chi1_ww                   = [9.40e-27,3.00e-25]
+
+# Global Fermi dSph Limit computed with pythia8 spectra
+Total_xsec                    = [2.34e-26,3.00e-25]
+Fermi_Likelihood              = -1.20e+01
+Fermi_pvalue                  = 1.00e-01

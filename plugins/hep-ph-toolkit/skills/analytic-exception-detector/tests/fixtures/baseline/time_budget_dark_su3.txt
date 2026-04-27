@@ -1,0 +1,19 @@
+# Baseline captured pre-WS4 against commit 0caf8937fb59e6db40fa6a39e60110dd40578374
+
+Planned chain for Dark SU(3):
+
+  Relic density         READY
+    /sarah-build [EXISTS] → /spheno-build [EXISTS] → /dark-matter-constraints [EXISTS]
+    cold: 1.5–3 hr   cached: 0.3–0.7 hr
+
+  Direct detection      BLOCKED [BLOCKED — missing: /feynarts, /formcalc, /ddcalc]
+    /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS] → /feynarts [PLANNED] → /formcalc [PLANNED] → /ddcalc [PLANNED] → /dark-matter-constraints [EXISTS]
+    cold: 3–5 hr   cached: 0.5–1 hr
+
+  Indirect detection    BLOCKED [BLOCKED — missing: /gamlike]
+    /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS] → /maddm [EXISTS] → /gamlike [PLANNED] → /dark-matter-constraints [EXISTS]
+    cold: 1.5–4 hr   cached: 0.3–0.7 hr
+
+Overlap-adjusted totals (shared prereqs counted once):
+  selected + ready : cold ~1–3 hr,  cached ~0.3–0.6 hr
+  selected total   : cold ~3.5–9 hr,  cached ~1.1–2.3 hr  (if all prereqs existed)

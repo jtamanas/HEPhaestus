@@ -1,0 +1,20 @@
+
+ Xf= 2.460e+01
+ Omega h^2 = 1.180e-01
+
+ # Channels which contribute to 1/(omega) more than 1%.
+ # Relative contributions in %  are displayed
+
+  hh ZZ    29%
+  hh WW    24%
+  hh hh    18%
+  hh tt    15%
+  hh bb     8%
+  hh gg     4%
+  hh tautau  2%
+
+ sigma_SI(p) = 1.13e-46 cm^2
+ sigma_SI(n) = 1.10e-46 cm^2
+ sigma_SD(p) = 0.00e+00 cm^2
+ sigma_SD(n) = 0.00e+00 cm^2
+ sigma_v(v=0) = 2.10e-26 cm^3/s

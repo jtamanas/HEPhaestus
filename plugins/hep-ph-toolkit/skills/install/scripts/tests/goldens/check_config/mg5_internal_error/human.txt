@@ -1,0 +1,6 @@
+PASS  Wolfram Engine         v14.1                   ok (2+2 -> 4)
+PASS  SARAH                  v4.15.3                 version 4.15.3
+PASS  SPheno                 v4.0.5                  usage banner present
+INTERNAL ERROR  MadGraph5_aMC@NLO      v3.5.7                  install_mg5.sh rc=127: 
+Config: $TMPDIR/config.json
+One or more tools FAIL/INTERNAL ERROR.

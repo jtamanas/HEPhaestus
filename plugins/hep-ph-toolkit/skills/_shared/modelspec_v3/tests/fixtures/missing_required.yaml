@@ -1,0 +1,19 @@
+gauge_groups:
+  - { symbol: B, type: U(1), label: hypercharge, coupling: g1, ssb: false }
+global_symmetries: []
+fermions: []
+scalars: []
+parameters:
+  - { name: g1, real: true }
+lagrangian: { hc: [], no_hc: [] }
+ewsb:
+  vevs: []
+  gauge_sector: []
+  mixing_sector: []
+  phases: []
+  dirac_spinors_pre_ewsb: []
+  dirac_spinors_post_ewsb: []
+particles:
+  gauge_es: []
+  ewsb: []
+  weyl_intermediate: []

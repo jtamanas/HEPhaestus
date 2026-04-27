@@ -1,0 +1,18 @@
+branch: tier1/t13-higgstools-driver-r1-20260426
+HEAD: 79c589e
+date: 2026-04-26
+
+tests:
+  FU-wsj-01 SPheno row-index format: PASS
+  FU-wsj-01 PDG-triplet format: PASS
+  total: 13/13 pass
+
+HB smoke (FU-wsj-02):
+  binary: /Users/yianni/HiggsBounds-5.10.2/build/HiggsBounds
+  cmd: HiggsBounds LandH SLHA 3 1 /tmp/hb_2hdm/2hdm_type2_benchmark.slha
+  exit code: 0
+  HBresult: 1 (allowed)
+  obsratio: 0.0 (no constraint from this benchmark at HB-5 with old SPheno coupling format)
+  note: obsratio=0 is expected — HB-5 cannot parse old HiggsBoundsInputHiggsCouplingsX blocks
+        natively (it needs HiggsCouplingsBosons HB-5 format). The fix validates that HB
+        binary runs without crashing (exit 0) with correct arg order.

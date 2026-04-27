@@ -1,0 +1,5 @@
+maddm_version: "3.2.13"
+maddm_url: "https://github.com/maddmhep/maddm.git"
+maddm_tag: "v3.2.13"
+maddm_sha256: "TODO"   # Git checkout; sha256 applies only if we switch to a tarball pin. verify_checksum warns-not-aborts for TODO; update pre-v1 release.
+mg5_min_version: "2.6.2"

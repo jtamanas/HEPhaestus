@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hep-ph-agents/schemas/annihilation/v1",
+  "title": "DM annihilation cross-section (annihilation/v1)",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "m_dm_gev", "sigma_v_zero", "source", "source_run"],
+  "properties": {
+    "schema_version": {"const": "annihilation/v1"},
+    "m_dm_gev": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Dark-matter candidate mass in GeV."
+    },
+    "sigma_v_zero": {
+      "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0}],
+      "description": "Annihilation cross-section ⟨σv⟩ at v→0 (cm³/s). The v→0 limit is the indirect-detection observable. Producers emitting at v=v_freezeout (e.g. MadDM's `sigmav_total`) MUST convert to v→0 before writing this field, OR set it to null and document the v in `notes`. micrOMEGAs emits at v→0 natively (see micromegas/SKILL.md line 217). The schema does not enforce v=0; this is producer discipline."
+    },
+    "channel_fractions": {
+      "type": "object",
+      "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1},
+      "description": "Per-channel branching fractions of total ⟨σv⟩(v→0). Channel keys (e.g. 'bb','ww','zh') are model-dependent — no required keys. Sum-to-one is producer discipline (JSON Schema cannot easily enforce)."
+    },
+    "source": {
+      "enum": ["micromegas", "maddm"],
+      "description": "DRAKE excluded — DRAKE returns Ωh² only in v1."
+    },
+    "source_run": {"type": "string", "minLength": 1},
+    "model_class": {"type": "string"},
+    "model": {"type": "string"}
+  }
+}

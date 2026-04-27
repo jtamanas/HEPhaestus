@@ -1,0 +1,5 @@
+{
+  "name": "hep-ph-toolkit",
+  "description": "All-in-one toolkit for high-energy physics phenomenology — Feynman diagrams, one-loop amplitudes (FeynArts/FormCalc/LoopTools), BSM model building (FeynRules/SARAH/SPheno), dark-matter constraints (DDCalc/HiggsTools/GamLike/micrOMEGAs/DRAKE), Monte Carlo event generation (MadGraph/MadDM), publication plotting, plus workflow skills for model-to-tool routing and analytic-exception detection. Collider analysis, RGE running, parton-shower configuration, ROOT analysis, statistical inference, LaTeX paper drafting, and arXiv/literature search are on the roadmap.",
+  "version": "0.1.0"
+}

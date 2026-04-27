@@ -1,0 +1,41 @@
+{
+  "arxiv_id": "2509.08043",
+  "version": "v1",
+  "title": "Testing Viability of Benchmark Dark Matter Models for the Galactic Center Excess",
+  "authors": ["Yongao Hu", "Cari Cesarotti", "Tracy R. Slatyer"],
+  "date": "2025-09-09",
+  "url": "https://arxiv.org/abs/2509.08043",
+  "html_url": "https://arxiv.org/html/2509.08043v1",
+  "models": [
+    {
+      "label": "sechyp",
+      "name": "Secluded Hypercharge",
+      "description": "Dirac DM fermion coupled to a dark photon Z' in the secluded regime (m_Z' < m_chi). Annihilation channel chi chi -> Z' Z' (Eq. 24).",
+      "equations": ["Eq. 24 (sigma_v)", "Eq. 27 (thermal anchor)"],
+      "status": "sigma_v function present; no YAML grader (S0 E1=NOT_FOUND — no explicit thermal-anchor BP stated in paper)"
+    },
+    {
+      "label": "2hdma",
+      "name": "Two-Higgs-Doublet-Plus-Axion (2HDM+a)",
+      "description": "Dirac DM fermion coupled to a pseudoscalar mediator a and heavy pseudoscalar A via mixing angle theta. Direct detection via triangle diagram (Eq. 47/50).",
+      "equations": ["Eq. 41 (DM couplings)", "Eq. 47 (triangle effective Lagrangian)", "Eq. 48-49 (loop function G)", "Eq. 50 (sigma_SI)"],
+      "status": "Full sigma_SI_exact + sigma_SI_scaling + scaling identities implemented and YAML-wired"
+    }
+  ],
+  "experimental_limits": {
+    "direct_detection": "LZ 2024 (sigma_SI)",
+    "indirect_detection": "Fermi-LAT GCE spectrum; INTEGRAL/COMPTEL gamma-ray lines (Fig. 12)",
+    "collider": "LHC DM WG VBF + MET (deferred to Phase-2)"
+  },
+  "computational_tools": {
+    "monte_carlo": "MadGraph5_aMC@NLO with Bauer 2HDM+a UFO (vendored stub; full MG5 run deferred)",
+    "relic_density": "Not benchmarked (g_D determined dynamically per paper)",
+    "loop_functions": "scipy.integrate.quad for G(x,0); mpmath.quad for independent ledger validation"
+  },
+  "phase1_caveats": [
+    "S0 E1=NOT_FOUND: no secluded-hypercharge thermal-anchor BP in paper text; sechyp YAML tasks dropped",
+    "S0 E4=NOT_FOUND: no gamma-ray line numeric anchor; t3_thdma_gamma_line_anchor dropped",
+    "S0 E5=NOT_FOUND: no Bauer UFO SHA in paper; vendored stub used (LHC DM WG parameter names)",
+    "MG5 VBF task intentionally absent from YAML for Phase-1; re-add in follow-up PR with cached mg_cache.json"
+  ]
+}

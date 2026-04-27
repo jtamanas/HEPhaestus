@@ -1,0 +1,2 @@
+DDCalc 2.2.0
+ DDCalc successfully initialized

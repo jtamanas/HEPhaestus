@@ -1,0 +1,114 @@
+{
+  "schema_version": "gamlike/v1",
+  "_meta": {
+    "source_file": "<SCRUBBED>",
+    "parser_version": "0.1.0",
+    "maddm_version": "3.2",
+    "parsed_at": "<SCRUBBED>"
+  },
+  "relic": {
+    "present": true,
+    "Omegah2": 10.5,
+    "Omegah_Planck": 0.12,
+    "xsi": 1.0,
+    "x_f": 16.0,
+    "sigmav_xf": 1.33e-28,
+    "initial_states": [
+      "chichibar"
+    ],
+    "channels": {
+      "chichibar": {
+        "ah2ah2": 0.0,
+        "ah2ah3": 0.0,
+        "ah3ah3": 0.0,
+        "ddx": 0.0,
+        "dsx": 0.0,
+        "dbx": 0.0,
+        "uux": 0.0,
+        "ucx": 0.0,
+        "utx": 0.0,
+        "sdx": 0.0,
+        "ssx": 0.0,
+        "sbx": 0.0,
+        "cux": 0.0,
+        "ccx": 0.06,
+        "ctx": 0.0,
+        "bdx": 0.0,
+        "bsx": 0.0,
+        "bbx": 0.65,
+        "tux": 0.0,
+        "tcx": 0.0,
+        "ttx": 0.0,
+        "zhh1": 0.0,
+        "zh2": 0.0,
+        "wphp": 49.62,
+        "wmhm": 49.62,
+        "wphm2": 0.0,
+        "wmhm2c": 0.0,
+        "hh1hh1": 0.0,
+        "hh1h2": 0.0,
+        "hh1ah2": 0.0,
+        "hh1ah3": 0.0,
+        "h2h2": 0.0,
+        "h2ah2": 0.0,
+        "h2ah3": 0.0,
+        "hphm": 0.0,
+        "hphm2c": 0.0,
+        "hm2hm": 0.0,
+        "hm2hm2c": 0.0,
+        "emep": 0.0,
+        "emmup": 0.0,
+        "emtap": 0.0,
+        "mumep": 0.0,
+        "mummup": 0.0,
+        "mumtap": 0.0,
+        "tamep": 0.0,
+        "tammup": 0.0,
+        "tamtap": 0.04
+      }
+    },
+    "channels_sum_pct": 99.99
+  },
+  "direct": {
+    "present": false,
+    "results": []
+  },
+  "indirect": {
+    "present": false,
+    "sigmav_method": null,
+    "continuum": {
+      "present": false,
+      "channels": {}
+    },
+    "lines": {
+      "present": false,
+      "channels": {}
+    },
+    "global": {
+      "flux_method": null,
+      "Total_xsec": null,
+      "TotalSM_xsec": null,
+      "Fermi_Likelihood": null,
+      "Fermi_pvalue": null,
+      "Fermi_Likelihood_Thermal": null,
+      "Fermi_pvalue_Thermal": null,
+      "thermal_emitted": false
+    }
+  },
+  "spectral": {
+    "present": false,
+    "experiments": []
+  },
+  "fluxes_source": {
+    "present": false,
+    "method": null,
+    "fluxes": {
+      "neutrinos_e": null,
+      "neutrinos_mu": null,
+      "neutrinos_tau": null,
+      "gammas": null,
+      "positrons": null
+    }
+  },
+  "warnings": []
+}

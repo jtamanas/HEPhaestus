@@ -1,0 +1,1 @@
+{"code": "MICROMEGAS_SMOKE_TEST_FAILED", "mode": "fatal", "message": "micrOMEGAs smoke test failed: MSSM/main.c produced no finite Omega h^2.", "user_instruction": "Ensure micrOMEGAs is fully compiled: cd /path/to/micromegas && make."}

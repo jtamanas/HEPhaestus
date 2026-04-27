@@ -1,0 +1,39 @@
+render-grep.sh self-test transcript
+Date: 2026-04-25T12:21:17Z
+Harness: /Users/yianni/Projects/hep-ph-agents-harness/.shift-manager/harness/tests/../render-grep.sh
+==========================================
+
+--- TEST: positive_visible ---
+File: /Users/yianni/Projects/hep-ph-agents-harness/.shift-manager/harness/tests/fixture_visible.md
+Needle: banner-token-xyz
+Expected exit: 0
+Test fixture: visible banner token This fixture contains the banner token in a visible blockquote. banner-token-xyz: This token is visible in rendered output. Some additional text after the banner.
+Actual exit: 0
+RESULT: PASS
+
+--- TEST: negative_comment ---
+File: /Users/yianni/Projects/hep-ph-agents-harness/.shift-manager/harness/tests/fixture_comment.md
+Needle: banner-token-xyz
+Expected exit: 1
+Actual exit: 1
+RESULT: PASS
+
+--- TEST: positive_blockquote_v1 ---
+File: /Users/yianni/Projects/hep-ph-agents-harness/.shift-manager/harness/tests/fixture_blockquote.md
+Needle: dark-SU(3) relic uses sigma_v approximations (sigmav_approx=True). Paper fidelity (Ω_tot h² ≈ 0.12) is out of reach this run; values reported are regression-anchors, not physics targets.
+Expected exit: 0
+Test fixture: V1 blockquote shape (mirrors fix) This fixture mirrors the exact V1 fix shape for the dsu3-002 banner. Disclosure (dsu3-002): dark-SU(3) relic uses sigma_v approximations (sigmav_approx=True). Paper fidelity (Ω_tot h² ≈ 0.12) is out of reach this run; values reported are regression-anchors, not physics targets. Additional text below the disclosure blockquote.
+Actual exit: 0
+RESULT: PASS
+
+--- TEST: positive_unicode ---
+File: /Users/yianni/Projects/hep-ph-agents-harness/.shift-manager/harness/tests/fixture_unicode.md
+Needle: Ω h²
+Expected exit: 0
+Test fixture: Unicode characters (G-RENDER-UTF8) This fixture tests that Unicode characters are preserved through the rendering pipeline. It guards against entity-escaping that would cause grep misses. banner-token-xyz: Physics notation with Ω h² values near 0.12 require careful treatment. The Ω h² quantity is central to relic density calculations.
+Actual exit: 0
+RESULT: PASS
+
+==========================================
+SUMMARY: PASS=4 FAIL=0 TOTAL=4
+OVERALL: ALL_PASS

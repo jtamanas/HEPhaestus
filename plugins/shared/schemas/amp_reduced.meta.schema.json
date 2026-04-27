@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hep-ph-agents/schemas/amp_reduced.meta/v1",
+  "title": "FormCalc reduced-amplitude sidecar (amp_reduced.meta/v1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "formcalc_version", "form_version", "looptools_version",
+    "gamma5_scheme", "pv_heads", "abbreviations_manifest",
+    "input_hashes", "kinematic_limit", "ir_flags", "produced_at",
+    "wolfram_version_major_minor"
+  ],
+  "properties": {
+    "schema_version":    {"const": "amp_reduced.meta/v1"},
+    "formcalc_version":  {"type": "string", "minLength": 1},
+    "form_version":      {"type": "string", "minLength": 1},
+    "looptools_version": {"type": "string", "minLength": 1},
+    "gamma5_scheme":     {"enum": ["naive", "hv", "bmhv", "larin"]},
+    "pv_heads":          {"const": "formcalc-native"},
+    "abbreviations_manifest": {"type": "string"},
+    "input_hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["feynamplist_m"],
+      "properties": {
+        "feynamplist_m":   {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "processspec_json":{"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "kinematic_limit": {"enum": ["general", "heavy_mediator", "on_shell", "soft"]},
+    "ir_flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ir_divergent", "uv_regularized"],
+      "properties": {
+        "ir_divergent":  {"type": "boolean"},
+        "uv_regularized":{"type": "boolean"}
+      }
+    },
+    "caveats":     {"type": "array", "items": {"type": "string"}},
+    "produced_at": {"type": "string", "format": "date-time"},
+    "wolfram_version_major_minor": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"}
+  }
+}

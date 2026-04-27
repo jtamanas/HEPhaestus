@@ -1,0 +1,45 @@
+# Overlay manifest: lz_xenonnt_pandax4t_2024
+# Status: DEFERRED to v1.1 (DDCALC_OVERLAY_NOT_SUPPORTED_V1)
+#
+# Step 0 feasibility check (2026-04-19) determined that DDCalc 2.2.0 uses
+# a central-dispatcher registration pattern requiring edits to THREE files:
+#   1. src/DDExperiments.f90  — USE statement per experiment
+#   2. include/DDExperiments.hpp — C extern declaration per experiment
+#   3. Makefile — analyses variable listing per experiment
+# git apply --3way across three simultaneously-edited files is structurally
+# fragile for bundled overlay patches. Overlay work is deferred to v1.1.
+#
+# This manifest is a stub with correct structure for forward-compatibility.
+# When v1.1 ships, this file will be replaced with real pinned SHAs.
+
+deferred: v1.1
+reason: "DDCalc 2.2.0 central-dispatcher registration requires multi-file edits; overlay patches deferred."
+
+# Upstream DDCalc commit this overlay targets
+upstream_ddcalc_commit: "9364c02dca3d23e75558e3238229a6fa41a8ec1a"
+
+# Experiments in this overlay bundle
+experiments:
+  - name: LZ_WS2024
+    source_paper: "arXiv:2410.17036"
+    patch_file: "patches/LZ_WS2024.patch"
+    eff_file: "data/LZ_WS2024.eff"
+    eff_sha256: "STUB_SHA256_TO_BE_COMPUTED_AT_OVERLAY_PUBLICATION"
+    notice_file: "LZ_WS2024.NOTICE"
+
+  - name: XENONnT_2023
+    source_paper: "arXiv:2303.14729"
+    patch_file: "patches/XENONnT_2023.patch"
+    eff_file: "data/XENONnT_2023.eff"
+    eff_sha256: "STUB_SHA256_TO_BE_COMPUTED_AT_OVERLAY_PUBLICATION"
+    notice_file: "XENONnT_2023.NOTICE"
+
+  - name: PandaX_4T_2021
+    source_paper: "arXiv:2107.13438"
+    patch_file: "patches/PandaX_4T_2021.patch"
+    eff_file: "data/PandaX_4T_2021.eff"
+    eff_sha256: "STUB_SHA256_TO_BE_COMPUTED_AT_OVERLAY_PUBLICATION"
+    notice_file: "PandaX_4T_2021.NOTICE"
+
+# Concatenated manifest SHA256 (computed at overlay publication)
+overlay_sha: "STUB_TO_BE_COMPUTED"

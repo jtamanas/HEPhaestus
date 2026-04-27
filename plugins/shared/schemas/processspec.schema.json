@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hep-ph-agents/schemas/processspec/v1",
+  "title": "Process specification (processspec/v1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "particles", "loop_order", "kinematic_limit", "excludes"],
+  "properties": {
+    "schema_version": {"const": "processspec/v1"},
+    "particles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["in", "out"],
+      "properties": {
+        "in":  {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/particle"}},
+        "out": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/particle"}}
+      }
+    },
+    "loop_order":      {"type": "integer", "minimum": 0, "maximum": 2},
+    "kinematic_limit": {"enum": ["general", "heavy_mediator", "on_shell", "soft"]},
+    "excludes":        {"type": "array", "items": {"type": "string"}},
+    "mandelstam": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "s": {"type": "string"}, "t": {"type": "string"}, "u": {"type": "string"}
+      }
+    }
+  },
+  "$defs": {
+    "particle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "pdg", "mass_symbol"],
+      "properties": {
+        "label":       {"type": "string", "minLength": 1},
+        "pdg":         {"type": "integer"},
+        "mass_symbol": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

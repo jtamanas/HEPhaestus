@@ -1,0 +1,62 @@
+# expected/dark_su3.yaml
+# Source: ws5_spike_dark_su3_{default,strict}.json (iter-1 post-S0.5)
+# LOAD_BEARING: placements[0].content contains REGRESSION-ANCHOR, 25000, Planck target
+# per_candidate labels are PER-OBSERVABLE (iter-1 review O2):
+#   relic: Omega_<n>_h2, dd: sigma_SI_<n>, id: Phi_id_<n>
+
+model_id: dark-su3
+observables: [relic, dd, id]
+verdict: ROUTE_TO_ANALYTIC
+exit_code:
+  default: 0
+  strict: 4   # relic chain_override missing MATRIX_COVERAGE_GAP → MatrixAcknowledgementMissing in strict mode
+              # (WS3 test test_dark_su3_strict_with_missing_acknowledgement_exits_4 preserves this contract)
+
+per_observable:
+  relic:
+    status: ROUTED
+    active_chain_prereq_id: analytic_backend
+    blockers_set: []
+  dd:
+    status: ROUTED
+    active_chain_prereq_id: analytic_backend
+    blockers_set: []
+  id:
+    status: ROUTED
+    active_chain_prereq_id: analytic_backend
+    blockers_set: []
+
+placements:
+  - position: before_per_observable
+    kind: analytic
+    exception_id: dsu3-002
+    # LOAD_BEARING triple-substring assertion (per plan §1.2 + S0.5 fixture banner repair)
+    content_substrings:
+      - "REGRESSION-ANCHOR"
+      - "25000"
+      - "Planck target"
+    content_negative_substrings: []
+
+# per_candidate: encoded per-observable with per-observable labels (iter-1 O2)
+per_candidate:
+  relic:
+    length: 2
+    names_set: [V, Psi]
+    labels_set: [Omega_V_h2, Omega_Psi_h2]
+  dd:
+    length: 2
+    names_set: [V, Psi]
+    labels_set: [sigma_SI_V, sigma_SI_Psi]
+  id:
+    length: 2
+    names_set: [V, Psi]
+    labels_set: [Phi_id_V, Phi_id_Psi]
+
+matrix_acknowledgement_missing_observables: []
+
+markdown_substrings:
+  - "REGRESSION-ANCHOR ONLY"
+  - dark-su3
+markdown_negative_substrings: []
+
+axis_snapshot: presence_only

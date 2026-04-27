@@ -1,0 +1,306 @@
+{
+  "schema_version": "gamlike/v1",
+  "_meta": {
+    "source_file": "<SCRUBBED>",
+    "parser_version": "0.1.0",
+    "maddm_version": "3.2",
+    "parsed_at": "<SCRUBBED>"
+  },
+  "relic": {
+    "present": true,
+    "Omegah2": -1.0,
+    "Omegah_Planck": 0.12,
+    "xsi": 1.0,
+    "x_f": 0.0,
+    "sigmav_xf": 0.0,
+    "initial_states": [
+      "chi1chi1"
+    ],
+    "channels": {
+      "chi1chi1": {
+        "zz": null,
+        "zh": null,
+        "hh": null,
+        "wpwm": null,
+        "ddx": null,
+        "uux": null,
+        "ssx": null,
+        "ccx": null,
+        "bbx": null,
+        "ttx": null,
+        "emep": null,
+        "mummup": null,
+        "tamtap": null,
+        "gg": null,
+        "aa": null,
+        "vevex": null,
+        "dsx": null,
+        "dbx": null,
+        "ucx": null,
+        "utx": null,
+        "sdx": null,
+        "sbx": null,
+        "cux": null,
+        "ctx": null,
+        "bdx": null,
+        "bsx": null,
+        "tux": null,
+        "tcx": null,
+        "emmup": null,
+        "emtap": null,
+        "mumep": null,
+        "mumtap": null,
+        "tamep": null,
+        "tammup": null
+      }
+    },
+    "channels_sum_pct": null
+  },
+  "direct": {
+    "present": false,
+    "results": []
+  },
+  "indirect": {
+    "present": false,
+    "sigmav_method": null,
+    "continuum": {
+      "present": false,
+      "channels": {}
+    },
+    "lines": {
+      "present": false,
+      "channels": {}
+    },
+    "global": {
+      "flux_method": null,
+      "Total_xsec": null,
+      "TotalSM_xsec": null,
+      "Fermi_Likelihood": null,
+      "Fermi_pvalue": null,
+      "Fermi_Likelihood_Thermal": null,
+      "Fermi_pvalue_Thermal": null,
+      "thermal_emitted": false
+    }
+  },
+  "spectral": {
+    "present": false,
+    "experiments": []
+  },
+  "fluxes_source": {
+    "present": false,
+    "method": null,
+    "fluxes": {
+      "neutrinos_e": null,
+      "neutrinos_mu": null,
+      "neutrinos_tau": null,
+      "gammas": null,
+      "positrons": null
+    }
+  },
+  "warnings": [
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.zz",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.zz; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.zh",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.zh; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.hh",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.hh; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.wpwm",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.wpwm; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.ddx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.ddx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.uux",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.uux; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.ssx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.ssx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.ccx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.ccx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.bbx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.bbx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.ttx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.ttx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.emep",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.emep; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.mummup",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.mummup; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.tamtap",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.tamtap; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.gg",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.gg; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.aa",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.aa; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.vevex",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.vevex; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.dsx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.dsx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.dbx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.dbx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.ucx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.ucx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.utx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.utx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.sdx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.sdx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.sbx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.sbx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.cux",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.cux; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.ctx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.ctx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.bdx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.bdx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.bsx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.bsx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.tux",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.tux; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.tcx",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.tcx; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.emmup",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.emmup; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.emtap",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.emtap; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.mumep",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.mumep; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.mumtap",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.mumtap; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.tamep",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.tamep; converted to null (D15).",
+      "source_ref": ""
+    },
+    {
+      "code": "FIELD_NAN",
+      "field": "relic.channels.chi1chi1.tammup",
+      "reason": "Producer emitted 'nan' for relic.channels.chi1chi1.tammup; converted to null (D15).",
+      "source_ref": ""
+    }
+  ]
+}

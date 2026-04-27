@@ -1,0 +1,8 @@
+
+ Xf= 2.460e+01
+ Omega h^2 = NaN
+
+ sigma_SI(p) = 1.13e-46 cm^2
+ sigma_SI(n) = 1.10e-46 cm^2
+ sigma_SD(p) = 0.00e+00 cm^2
+ sigma_SD(n) = 0.00e+00 cm^2

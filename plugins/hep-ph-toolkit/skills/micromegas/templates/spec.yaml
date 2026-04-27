@@ -1,0 +1,42 @@
+# /micromegas spec.yaml — annotated template
+# Copy to your model directory and fill in the required fields.
+#
+# Field names match plugins/shared/schemas/scattering.schema.json.
+# Required fields are marked with (REQUIRED).
+
+# ── DM candidate (REQUIRED) ───────────────────────────────────────────────────
+dm_candidate:
+  pdg: 9000001          # (REQUIRED) PDG id of the DM particle
+  name: S               # (REQUIRED) Human-readable name (must match UFO particle)
+  mass_gev: 100.0       # (REQUIRED) DM mass in GeV
+
+# ── Halo model (optional, default: SHM) ──────────────────────────────────────
+halo: shm               # Only "shm" supported in v1.
+# halo:                 # Inline override of SHM parameters:
+#   model: shm
+#   v0_km_per_s: 220.0
+#   vesc_km_per_s: 544.0
+#   rho0_gev_per_cm3: 0.3
+
+# ── Nucleon form factors (optional, default: default_2018) ────────────────────
+# Choices: "default_2018" (micrOMEGAs built-in lattice values) or "A1" (Arcadi-Profumo).
+nucleon_form_factors: default_2018
+
+# ── Cosmology (optional, default: standard_thermal) ──────────────────────────
+# Only "standard_thermal" supported in v1.
+cosmology: standard_thermal
+
+# ── Pre-compiled project (optional) ──────────────────────────────────────────
+# Skip UFO conversion by using a micrOMEGAs-shipped project.
+# Choices: MSSM, NMSSM, singletDM, IDM
+# Set to null (or omit) to use UFO → CalcHEP conversion.
+precompiled_project: null
+# precompiled_project: singletDM
+
+# ── Notes ─────────────────────────────────────────────────────────────────────
+# - dm_candidate.pdg must refer to a neutral, stable (zero-width DECAY block),
+#   non-colored particle.
+# - Charged or colored dm_candidate → fatal DM_CANDIDATE_UNPHYSICAL or
+#   DM_CANDIDATE_COLOR_MISMATCH.
+# - Two stable DM candidates → fatal MULTICOMPONENT_UNSUPPORTED (v1 limitation).
+# - Set precompiled_project for 10× speedup on MSSM-family models.

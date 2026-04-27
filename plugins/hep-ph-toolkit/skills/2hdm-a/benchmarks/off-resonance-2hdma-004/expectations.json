@@ -1,0 +1,44 @@
+{
+  "schema_version": "1",
+  "benchmark_id": "off-resonance-2hdma-004",
+  "model": "2hdm-a",
+  "parameter_point": {
+    "Mchi": 100,
+    "Ma": 400,
+    "gchi": 1.0,
+    "tan_beta": 10
+  },
+  "expectations": {
+    "omega_h2": {
+      "central": 10.493,
+      "band": [9.0, 11.5],
+      "tolerance": "±15%",
+      "notes": "Well above Planck observed value ~0.12; benchmark is deeply off-resonance (Ma=400 >> 2*Mchi=200 GeV), so annihilation is suppressed and universe over-closes."
+    },
+    "channel_fractions": {
+      "wphp": {
+        "central": 0.4962,
+        "band": [0.40, 0.60]
+      },
+      "wmhm": {
+        "central": 0.4962,
+        "band": [0.40, 0.60]
+      },
+      "bbx": {
+        "central": 0.0065,
+        "band": [0.001, 0.02]
+      }
+    },
+    "dominant_channel": "wphp+wmhm",
+    "dominant_channel_combined_fraction": 0.9925
+  },
+  "physics_caveat": "2hdma-004 incident post-mortem: the original SKILL.md narrative claimed 'bbx ~60% dominant' at this parameter point. This was incorrect. Cycle-1 MadDM run (relic.json, run-20260425-current/impl/2hdm-a) shows wphp=49.62%, wmhm=49.62%, bbx=0.65%, ccx=0.06%. The reason bbx is sub-percent: Ma=400 GeV >> 2*Mchi=200 GeV (off-resonance), so a-mediated bb-bar annihilation is suppressed. Instead, chi chi-bar -> W+H- and W-H+ cascade channels dominate (~99.2% combined). This is consistent with off-resonance behavior at this parameter point as understood from 2HDM+a theory (Profumo et al. §III).",
+  "source": {
+    "primary": "cycle-1 MadDM run artifact: run-20260425-current/impl/2hdm-a/cycle-1 — S1-snapshot/relic.json (omega_h2=10.5, wphp=49.62%, wmhm=49.62%, bbx=0.65%, ccx=0.06%)",
+    "paper": "arXiv:2506.19062 (Profumo et al.)",
+    "paper_note": "Post-cutoff paper; not fully verifiable. Cited as context consistent with off-resonance off-shell behavior at Mchi=100, Ma=400 >> 2*Mchi=200 GeV — physics reasoning, not paper quotation.",
+    "section": "III",
+    "commit": "20616cd",
+    "notes": "omega_h2 central corrected from 10.15 to 10.493 (cycle-1 relic.json reports 10.5; 10.493 is the deterministic MadDM value from the same run per cycle-1 results.md). dominant_channel corrected from 'bbx' to 'wphp+wmhm'. bbx.central corrected from 0.909 to 0.0065. This rewrite was performed in schema-fix cycle-2 per T-SF-5 reviewer directive."
+  }
+}

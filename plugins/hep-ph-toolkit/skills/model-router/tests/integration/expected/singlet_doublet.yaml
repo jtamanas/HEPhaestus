@@ -1,0 +1,48 @@
+# expected/singlet_doublet.yaml
+# Source: ws5_spike_singlet_doublet_{default,strict}.json (iter-1 post-S0.5)
+# Corrections applied per iter-1 review O1: dd.active_chain_prereq_id = ddcalc (not maddm)
+
+model_id: singlet-doublet
+observables: [relic, dd, id]
+verdict: CLEAR
+exit_code:
+  default: 0
+  strict: 0
+
+per_observable:
+  relic:
+    status: ROUTED
+    active_chain_prereq_id: maddm
+    blockers_set: []
+  dd:
+    status: ROUTED
+    active_chain_prereq_id: ddcalc   # alphabetical tiebreak: ddcalc < maddm (both role=primary, priority=10)
+    blockers_set: []
+  id:
+    status: ROUTED
+    active_chain_prereq_id: maddm
+    blockers_set: []
+
+placements: []
+
+per_candidate:
+  relic:
+    length: 0
+    names_set: []
+    labels_set: []
+  dd:
+    length: 0
+    names_set: []
+    labels_set: []
+  id:
+    length: 0
+    names_set: []
+    labels_set: []
+
+matrix_acknowledgement_missing_observables: []
+
+markdown_substrings:
+  - singlet-doublet
+markdown_negative_substrings: []
+
+axis_snapshot: presence_only

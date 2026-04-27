@@ -1,0 +1,3 @@
+spheno_version: "4.0.5"
+spheno_url: "https://spheno.hepforge.org/downloads/SPheno-4.0.5.tar.gz"
+spheno_sha256: "TODO"   # verify_checksum warns-not-aborts; update pre-v1 release

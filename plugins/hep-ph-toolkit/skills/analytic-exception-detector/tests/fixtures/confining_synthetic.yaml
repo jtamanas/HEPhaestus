@@ -1,0 +1,43 @@
+# Synthetic confining dark-sector ModelSpec for HARD_HALT detector test.
+# Adapted from the v1 archived confining-variant template (deleted in modelspec-v3 rollout).
+# Nearest v3 reference: plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/dark_su3.yaml (Higgsed variant).
+# This spec triggers S_CONFINING_DARK via the explicit confining: true field
+# on a dark gauge group entry (synthesis §3.2 detection rule).
+
+spec_version: 1
+name: dark_su3_confining_synthetic
+claim_source: "Synthetic test fixture — NOT a real model spec"
+sarah_version_required: ">=4.15,<4.16"
+
+gauge_groups:
+  - {symbol: B,  group: U1,  kind: hypercharge, coupling: g1, gauge_boson: B0,  gaugino: null}
+  - {symbol: WB, group: SU2, kind: left,        coupling: g2, gauge_boson: W,   gaugino: null}
+  - {symbol: G,  group: SU3, kind: color,       coupling: g3, gauge_boson: g,   gaugino: null}
+  # Confining dark SU(3) — explicit confining: true flag
+  - {symbol: GD, group: SU3, kind: dark, coupling: gD, gauge_boson: gD0, gaugino: null, confining: true}
+
+fermions:
+  - name: psiDL
+    reps: {WB: 1, G: 1, GD: 3}
+    hypercharge: 0
+    generations: 1
+    chirality: left
+  - name: psiDR
+    reps: {WB: 1, G: 1, GD: 3}
+    hypercharge: 0
+    generations: 1
+    chirality: right
+
+scalars: []
+
+lagrangian:
+  mass_terms:
+    - {fields: [psiDL, psiDR], coefficient: MpsiD, hermitian_conjugate: true}
+  yukawa_terms: []
+  scalar_potential: []
+
+parameters:
+  - {name: MpsiD, latex: "M_{\\psi_D}", real: true, positive: true, default: 500.0}
+  - {name: gD,    latex: "g_D",         real: true, positive: true, default: 1.0}
+
+outputs: [ufo, spheno]

@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "routing_report.schema.json",
+  "title": "RoutingReport",
+  "description": "WS3 model-router full routing report (JSON sidecar). schema_version 1.",
+  "type": "object",
+  "required": ["schema_version", "model_id", "observables", "verdict", "model_props", "per_observable", "placements", "diagnostics"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [1]
+    },
+    "model_id": {
+      "type": "string"
+    },
+    "observables": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["CLEAR", "ROUTE_TO_ANALYTIC", "HALT_FOR_SIGNOFF", "HARD_HALT"]
+    },
+    "status_modifier": {
+      "type": ["string", "null"]
+    },
+    "exit_code": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 6
+    },
+    "model_props": {
+      "$ref": "#/definitions/ModelProps"
+    },
+    "axis_snapshot": {
+      "$ref": "#/definitions/AxisSnapshot"
+    },
+    "per_observable": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ObservableRouting"
+      }
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Placement"
+      }
+    },
+    "diagnostics": {
+      "type": "object"
+    }
+  },
+  "definitions": {
+    "ModelProps": {
+      "type": "object",
+      "required": ["analytic_module_status"],
+      "additionalProperties": true,
+      "properties": {
+        "analytic_module_status": {
+          "type": "string",
+          "enum": [
+            "registered_active",
+            "deprecated",
+            "retired",
+            "unregistered",
+            "stub",
+            "missing"
+          ]
+        }
+      }
+    },
+    "AxisSnapshot": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "A1": {"type": ["string", "null"]},
+        "A2": {},
+        "A3": {},
+        "A4": {},
+        "A5": {},
+        "A6": {},
+        "A7": {},
+        "A8": {"type": ["string", "null"]}
+      }
+    },
+    "ActiveChain": {
+      "$ref": "ranked_chain.schema.json"
+    },
+    "PerCandidateRouting": {
+      "type": "object",
+      "required": ["candidate_name", "active_chain", "expected_observable_label"],
+      "additionalProperties": false,
+      "properties": {
+        "candidate_name": {
+          "type": "string"
+        },
+        "candidate_field_type": {
+          "type": ["string", "null"]
+        },
+        "candidate_mediator_regime": {
+          "type": ["string", "null"]
+        },
+        "candidate_uv_provenance": {
+          "type": ["string", "null"]
+        },
+        "active_chain": {
+          "$ref": "#/definitions/ActiveChain"
+        },
+        "expected_observable_label": {
+          "type": "string"
+        }
+      }
+    },
+    "ObservableRouting": {
+      "type": "object",
+      "required": ["observable", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "observable": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["ROUTED", "BLOCKED", "HALT", "HARD_HALT", "PLACEHOLDER"]
+        },
+        "active_chain": {
+          "oneOf": [
+            {"$ref": "#/definitions/ActiveChain"},
+            {"type": "null"}
+          ]
+        },
+        "ranked_alternatives": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/ActiveChain"}
+        },
+        "blockers": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "blocker_classes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "missing-skill",
+              "missing-tool-feature",
+              "fundamental-group-theory-gap",
+              "regime-mismatch",
+              "spec-authoring-gap",
+              "analytic-exception"
+            ]
+          }
+        },
+        "caveats": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "per_candidate": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PerCandidateRouting"
+          }
+        },
+        "matrix_acknowledgement_warnings": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "Placement": {
+      "type": "object",
+      "required": ["position", "content", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "type": "string",
+          "enum": ["top", "before_results_table", "before_per_observable", "appendix", "inline"]
+        },
+        "content": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["analytic", "proxy_run", "halt_notice", "signoff_prompt", "hard_halt_prompt"]
+        },
+        "exception_id": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

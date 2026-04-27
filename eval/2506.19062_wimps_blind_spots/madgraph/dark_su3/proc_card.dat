@@ -1,0 +1,66 @@
+#************************************************************
+#* MadGraph5_aMC@NLO process card for Dark SU(3) Model      *
+#* arXiv:2506.19062 benchmark comparisons                   *
+#*                                                           *
+#* NOTE: Requires custom UFO model generated via FeynRules   *
+#* from the Lagrangian in Eq. (26).                          *
+#************************************************************
+
+# Import the dark SU(3) UFO model
+import model DarkSU3_UFO
+
+# -------------------------------------------------------
+# Process 1: Vector DM annihilation
+# (two-component DM: V is the vector, Psi is the scalar)
+# -------------------------------------------------------
+
+# Vector-vector annihilation into SM
+generate V1 V1~ > w+ w-
+add process V1 V1~ > z z
+add process V1 V1~ > h1 h1    # h1 = SM-like Higgs
+add process V1 V1~ > t t~
+add process V1 V1~ > b b~
+output DSU3_vector_annihilation_SM
+
+# Vector-vector annihilation into dark sector
+generate V1 V1~ > psi psi~    # into scalar DM
+add process V1 V1~ > h2 h2    # into dark Higgs pairs
+add process V1 V1~ > V3 h1    # semi-annihilation
+add process V1 V1~ > V3 h2
+output DSU3_vector_annihilation_dark
+
+# -------------------------------------------------------
+# Process 2: Scalar DM annihilation
+# -------------------------------------------------------
+generate psi psi~ > w+ w-
+add process psi psi~ > z z
+add process psi psi~ > h1 h1
+add process psi psi~ > t t~
+add process psi psi~ > b b~
+output DSU3_scalar_annihilation
+
+# -------------------------------------------------------
+# Process 3: Vector DM-nucleon scattering (SI)
+# Tree-level via Higgs portal
+# -------------------------------------------------------
+generate V1 u > V1 u
+add process V1 d > V1 d
+add process V1 u~ > V1 u~
+add process V1 d~ > V1 d~
+output DSU3_vector_nucleon
+
+# -------------------------------------------------------
+# Process 4: Scalar DM-nucleon scattering (SI)
+# Should show exact cancellation (blind spot, Eq. 29)
+# -------------------------------------------------------
+generate psi u > psi u
+add process psi d > psi d
+output DSU3_scalar_nucleon
+
+# -------------------------------------------------------
+# Process 5: DM conversion processes
+# (relevant for coupled Boltzmann equations, Eq. 27)
+# -------------------------------------------------------
+generate V1 V1~ > psi psi~
+add process psi psi~ > V1 V1~
+output DSU3_conversion

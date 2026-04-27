@@ -1,0 +1,62 @@
+# expected/two_hdm_a.yaml
+# Source: ws5_spike_two_hdm_a_{default,strict}.json (iter-1 post-S0.5)
+# model_id: two-hdm-a (fixture key; NOT 2hdm-a per iter-1 review D3)
+# O5: both placements have exception_id: null
+
+model_id: two-hdm-a
+observables: [relic, dd, id]
+verdict: HALT_FOR_SIGNOFF
+exit_code:
+  default: 0
+  strict: 5
+
+per_observable:
+  relic:
+    status: HALT
+    active_chain_prereq_id: null
+    blockers_set: []
+  dd:
+    status: HALT
+    active_chain_prereq_id: null
+    blockers_set: []
+  id:
+    status: HALT
+    active_chain_prereq_id: null
+    blockers_set: []
+
+placements:
+  - position: top
+    kind: halt_notice
+    exception_id: null
+    content_substrings:
+      - "HALT FOR SIGN-OFF REQUIRED"
+    content_negative_substrings: []
+  - position: appendix
+    kind: signoff_prompt
+    exception_id: null
+    content_substrings:
+      - "## Required next steps (analytic exception sign-off)"
+    content_negative_substrings: []
+
+per_candidate:
+  relic:
+    length: 0
+    names_set: []
+    labels_set: []
+  dd:
+    length: 0
+    names_set: []
+    labels_set: []
+  id:
+    length: 0
+    names_set: []
+    labels_set: []
+
+matrix_acknowledgement_missing_observables: []
+
+markdown_substrings:
+  - "## Required next steps (analytic exception sign-off)"
+  - two-hdm-a
+markdown_negative_substrings: []
+
+axis_snapshot: presence_only

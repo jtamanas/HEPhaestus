@@ -1,0 +1,62 @@
+#************************************************************
+#* MadGraph5_aMC@NLO process card for 2HDM+a Model          *
+#* arXiv:2506.19062 benchmark comparisons                   *
+#*                                                           *
+#* Uses the official LHC DM WG UFO model: DMPseudo_2HDM     *
+#************************************************************
+
+# Import the 2HDM+a UFO model (LHC DM WG)
+import model DMPseudo_2HDM
+
+# -------------------------------------------------------
+# Process 1: DM pair annihilation into quarks
+# (for relic density cross-check)
+# -------------------------------------------------------
+generate chi chi~ > b b~
+add process chi chi~ > t t~
+add process chi chi~ > c c~
+add process chi chi~ > ta+ ta-
+output 2HDMa_annihilation_fermions
+
+# -------------------------------------------------------
+# Process 2: DM annihilation into bosons
+# -------------------------------------------------------
+generate chi chi~ > w+ w-
+add process chi chi~ > z z
+add process chi chi~ > z h
+add process chi chi~ > h h
+output 2HDMa_annihilation_bosons
+
+# -------------------------------------------------------
+# Process 3: DM annihilation into pseudoscalars
+# (important for relic density when m_chi > m_a)
+# -------------------------------------------------------
+generate chi chi~ > a1 a1
+add process chi chi~ > a1 a2
+add process chi chi~ > a2 a2
+output 2HDMa_annihilation_pseudoscalars
+
+# -------------------------------------------------------
+# Process 4: Loop-induced DM-quark scattering
+# (requires MadLoop for the one-loop amplitude)
+# NOTE: This is the key comparison with the paper's Eq. 23
+# -------------------------------------------------------
+# Tree-level process doesn't exist (CP forbids scalar operator
+# from pseudoscalar exchange). Need loop-induced:
+generate chi u > chi u [QCD]   # one-loop
+output 2HDMa_DM_nucleon_loop
+
+# -------------------------------------------------------
+# Process 5: LHC mono-jet production
+# (for collider constraint validation)
+# -------------------------------------------------------
+generate p p > chi chi~ j
+output 2HDMa_monojet
+
+# -------------------------------------------------------
+# Process 6: Heavy Higgs + pseudoscalar production
+# -------------------------------------------------------
+generate p p > h2 a1
+add process p p > h2 a2
+add process p p > h3 a1    # h3 = H+/-, if present
+output 2HDMa_heavy_higgs

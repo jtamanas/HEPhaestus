@@ -1,0 +1,1 @@
+{"code": "MICROMEGAS_MACOS_SDK_MISMATCH", "mode": "fatal", "message": "xcrun --show-sdk-path failed or returned empty.", "user_instruction": "Run: xcode-select --install", "context": {"sdkroot": ""}}

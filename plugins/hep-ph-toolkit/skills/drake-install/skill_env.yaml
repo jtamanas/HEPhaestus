@@ -1,0 +1,5 @@
+drake_version: "1.0"   # DRAKE has no formal version tags; "1.0" is the initial public release tied to arXiv:2103.01944 (2021).
+drake_url: "https://drake.hepforge.org/"   # Zipball linked from Downloads page.
+drake_sha256: "TODO"   # TODO: compute after a successful manual download; verify_checksum warns-not-aborts for "TODO".
+# CAVEAT: hepforge is behind an Anubis PoW bot-challenge. curl/wget will return the challenge page, not the zipball.
+# The install.sh script detects this and routes the user through `/drake-install use-path` after a manual browser download.

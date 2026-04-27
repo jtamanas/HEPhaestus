@@ -1,0 +1,11 @@
+{
+  "maddm_path": "__TMPDIR__/fake_maddm",
+  "micromegas_path": "__TMPDIR__/fake_micromegas",
+  "drake_path": "__TMPDIR__/fake_drake",
+  "models": {
+    "MSSM": {
+      "ufo_path": "__TMPDIR__/MSSM_UFO",
+      "latest_slha": "/nonexistent/mssm_spectrum.slha"
+    }
+  }
+}

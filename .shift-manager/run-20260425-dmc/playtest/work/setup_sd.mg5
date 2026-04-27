@@ -1,0 +1,5 @@
+import model /Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet/SingletDoublet
+define darkmatter chi1
+generate relic_density
+output /Users/yianni/Projects/hep-ph-agents/.shift-manager/run-20260425-dmc/playtest/work/maddm_sd_run1
+launch -f

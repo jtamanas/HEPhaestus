@@ -1,0 +1,4 @@
+ERROR_STRING: N::precbd: Requested precision <xgen> is not a machine-sized real number
+OCCURRENCE_COUNT: 4
+SOURCE: .shift-manager/run-20260424-202956/workstreams/singlet-doublet/playtest/verdict-B.md
+CAPTURED_AT: 2026-04-25T03:01:53Z

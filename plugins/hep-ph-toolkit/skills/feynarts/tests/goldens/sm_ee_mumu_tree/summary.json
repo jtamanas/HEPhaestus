@@ -1,0 +1,17 @@
+{
+  "cached": false,
+  "loop_order": 0,
+  "model": "SM",
+  "n_diagrams": 1,
+  "process": {
+    "in": [
+      "e+",
+      "e-"
+    ],
+    "out": [
+      "mu+",
+      "mu-"
+    ]
+  },
+  "wall_clock_s": 0.0
+}

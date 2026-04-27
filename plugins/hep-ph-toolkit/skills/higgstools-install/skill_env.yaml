@@ -1,0 +1,34 @@
+# HiggsTools install skill — version pins and commit SHAs
+# Legacy HB-5.10.2 + HS-2.6.2 Fortran is the v1 default.
+# Unified C++ (HiggsTools v1.2) is opt-in via HEPPH_HIGGSTOOLS_BACKEND=unified.
+
+# Legacy backend (default)
+HB_VERSION: "5.10.2"
+HS_VERSION: "2.6.2"
+# Full commit SHAs recorded via git ls-remote on 2026-04-19
+hb_repo: "https://gitlab.com/higgsbounds/higgsbounds"
+hb_tag: "5.10.2"
+hb_commit: "3d9c992b14ca983f9551eb0153463882160751f7"
+
+hs_repo: "https://gitlab.com/higgsbounds/higgssignals"
+hs_tag: "2.6.2"
+hs_commit: "2253ca7ebf881bffd634ddcef88705e71750dd4b"
+
+# Unified backend (opt-in, HEPPH_HIGGSTOOLS_BACKEND=unified required)
+HT_VERSION: "1.2"
+ht_repo: "https://gitlab.com/higgsbounds/higgstools"
+ht_tag: "v1.2"
+ht_commit: "7ab57ca559f2ec6adbeaedba2625f34c1a998b5f"
+
+HBDATASET_TAG: "v1.7"
+hbdataset_repo: "https://gitlab.com/higgsbounds/hbdataset"
+hbdataset_tag: "v1.7"
+hbdataset_commit: "3539f9adf3724f8752701208bf059d1658824cd2"
+
+HSDATASET_TAG: "v1.1"
+hsdataset_repo: "https://gitlab.com/higgsbounds/hsdataset"
+hsdataset_tag: "v1.1"
+hsdataset_commit: "3c6c2538d9ba0549ea0559cf9b38c18eb80c3af1"
+
+# Python floor
+python_min: "3.10"

@@ -1,0 +1,53 @@
+######################################################################
+## MadGraph5 param_card for Singlet-Doublet Model
+## arXiv:2506.19062 — Benchmark point from Figure 2
+##
+## Parameters:
+##   m_S = 150 GeV, m_D = 500 GeV
+##   y = 1.0, tan(theta) = 0 => y1 = 1.0, y2 = 0.0
+##
+## Physical spectrum (from diagonalization):
+##   m_chi1 ~ 147 GeV (DM)
+##   m_chi2 ~ 503 GeV
+##   m_chi3 ~ 503 GeV
+##   m_psi  = 500 GeV (charged)
+######################################################################
+
+Block MASS
+  25  1.252500e+02  # MH (SM Higgs)
+  23  9.118760e+01  # MZ
+  24  8.037700e+01  # MW
+   6  1.726900e+02  # MT
+   5  4.180000e+00  # MB
+  15  1.777000e+00  # MTA
+  ## BSM masses (physical, after diagonalization)
+  9000001  1.470000e+02  # Mchi1 (DM candidate)
+  9000002  5.030000e+02  # Mchi2
+  9000003  5.030000e+02  # Mchi3
+  9000004  5.000000e+02  # Mpsi (charged fermion)
+
+Block SDINPUT  # Singlet-Doublet model parameters
+   1  1.500000e+02  # mS (singlet bare mass)
+   2  5.000000e+02  # mD (doublet bare mass)
+   3  1.000000e+00  # y1 (Yukawa 1)
+   4  0.000000e+00  # y2 (Yukawa 2)
+
+Block SMINPUTS
+   1  1.279000e+02  # aEWM1 (1/alpha_EW at MZ)
+   2  1.166379e-05  # GF (Fermi constant)
+   3  1.184000e-01  # aS (alpha_s at MZ)
+
+Block YUKAWA
+   5  4.180000e+00  # ymb
+   6  1.726900e+02  # ymt
+  15  1.777000e+00  # ymtau
+
+Block DECAY
+  25  4.070000e-03  # WH
+  23  2.495200e+00  # WZ
+  24  2.085000e+00  # WW
+   6  1.420000e+00  # WT
+  9000001  0.000000e+00  # Wchi1 (stable DM)
+  9000002  AUTO           # Wchi2
+  9000003  AUTO           # Wchi3
+  9000004  AUTO           # Wpsi

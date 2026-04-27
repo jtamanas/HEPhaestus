@@ -1,0 +1,7 @@
+{
+  "description": "Synthetic spectrum: resonance fraction just below the 5% DRAKE trigger.",
+  "m_dm_gev": 100.0,
+  "mass_gap_fraction": 0.20,
+  "mass_gap_to_resonance_fraction": 0.0499,
+  "trigger_expected": {"coannihilation": false, "near_resonance": false}
+}

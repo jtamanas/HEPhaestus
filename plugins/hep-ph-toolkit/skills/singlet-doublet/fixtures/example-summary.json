@@ -1,0 +1,13 @@
+{
+  "schema_version": "1",
+  "model": "singlet-doublet",
+  "run_at": "2026-04-25T00:00:00Z",
+  "ran": ["relic", "dd"],
+  "relic_approx": false,
+  "model_source": "example_fixture",
+  "skipped_constraints": [
+    {"id": "id", "reason": "blocked on /gamlike"}
+  ],
+  "artifacts_dir": "./fixtures/",
+  "headline": "Example summary fixture (not a real run): relic + DD; ID skipped pending /gamlike."
+}

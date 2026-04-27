@@ -1,0 +1,4 @@
+{"tool":"wolfram","result":{"status":"missing"}}
+{"tool":"sarah","result":{"status":"missing"}}
+{"tool":"spheno","result":{"status":"missing"}}
+{"tool":"mg5","result":{"status":"found","path":"/Users/yianni/MG5_aMC/bin/mg5_aMC"}}

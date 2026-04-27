@@ -1,0 +1,10 @@
+{
+  "_fixture_meta": {
+    "synthetic": true,
+    "scenario": "pointA_configured",
+    "source": "detect_drake.py canned output — DRAKE configured branch"
+  },
+  "status": "configured",
+  "drake_path": "/usr/local/lib/drake",
+  "version": "1.0.0"
+}

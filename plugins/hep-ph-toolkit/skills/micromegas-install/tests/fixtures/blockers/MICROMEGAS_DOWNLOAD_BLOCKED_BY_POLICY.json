@@ -1,0 +1,1 @@
+{"code": "MICROMEGAS_DOWNLOAD_BLOCKED_BY_POLICY", "mode": "fatal", "message": "HEPPH_NO_NETWORK=1 is set and micrOMEGAs tarball is not in the offline cache.", "user_instruction": "Pre-stage micromegas_6.0.5.tgz in HEPPH_OFFLINE_CACHE_DIR and retry."}

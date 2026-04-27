@@ -1,0 +1,840 @@
+# plugins/hep-ph-toolkit/skills/_shared/constraints.yaml
+#
+# Single source of truth for:
+#   - prereq chains per constraint
+#   - per-prereq implementation status (exists | planned)
+#   - per-prereq cold/cached hour ranges (amortized contribution)
+#   - per-model time overrides where warranted
+#   - per-model chain_overrides where the default chain doesn't apply
+#
+# Edit the `status` field (and hours if needed) when a prereq skill ships.
+#
+# chain_overrides schema (per-model):
+#   models.<model>.chain_overrides:
+#     <constraint>:           # one of {relic, dd, id}
+#       chain: [<prereq>, ...]   # full replacement for constraints.<c>.chain
+#       reason: "<one-line>"     # required; surfaces in router caveats
+#       backend_hint: <str>      # optional; e.g. 'analytic' to steer
+#                                # /spheno-build away from SARAH/SPheno when
+#                                # the model has no SPheno-compatible MSSM-
+#                                # like representation.
+#
+# Use cases:
+#   - Models whose SU(N) gauge structure makes MadGraph/MadDM unreachable
+#     (e.g. dark SU(3) with non-SM color), and which therefore must run
+#     entirely through an analytic spectrum + analytic-only DM router branch.
+#   - Models whose default constraints chain must be augmented with extra
+#     prereqs (use multi_component_prereq for that case, not chain_overrides).
+
+schema_version: 2
+
+# WS2 pointers — added when capabilities blocks were introduced (WS2 plan S1).
+blocker_catalog_ref:
+  path: plugins/hep-ph-toolkit/skills/_shared/blocker_catalog.yaml
+  version: 1
+
+taxonomy_ref:
+  path: plugins/hep-ph-toolkit/skills/_shared/taxonomy.py
+  version: 1
+
+analytic_exceptions_ref:
+  path: plugins/hep-ph-toolkit/skills/_shared/analytic_exceptions.yaml
+  version: 1
+
+prereqs:
+  # Canonical list of every skill referenced by any chain.
+  # hours: per-prereq amortized contribution to a single-constraint run.
+  # capabilities: WS2 tool-capability matrix block per prereq.
+
+  sarah-build:
+    status: exists
+    hours:
+      cold:   [0.33, 1.0]
+      cached: [0.08, 0.17]
+    capabilities:
+      description: "SARAH 4.15 model renderer — emits UFO, SPheno, CalcHEP model files"
+      install_skill: sarah-install
+      role:
+        collider: none
+        dd: none
+        higgs: none
+        id: none
+        relic: none
+      gating_for: [relic, dd, id, higgs]
+      priority_tiebreak: 100
+      depends_on_prereqs: []
+      inputs_required: [modelspec_yaml]
+      support:
+        # and: dark gauge group + dark-charged fermion → SARAH_MATTER_REP_UNSUPPORTED (blocked)
+        - and:
+            - axis: A1
+              match: ["SM + extra SU(N)", "SM + extra mixed"]
+            - axis: A3.has_dark_charged_fermion
+              match: true
+          verdict: blocked
+          blocker: SARAH_MATTER_REP_UNSUPPORTED
+          blocker_class: missing-tool-feature
+          fix_locality: upstream
+          evidence: "intel/digest.md §§359-366 (SARAH renderer; dark-SU(N) reps)"
+        # dark gauge group without dark-charged fermions (e.g. dsu3): SARAH can attempt
+        # but UFO will fail at MG5 import (dt1 wall). Caveat, not hard block for SARAH itself.
+        - axis: A1
+          match: ["SM + extra SU(N)", "SM + extra mixed"]
+          verdict: supported_with_caveat
+          caveat: >-
+            SARAH can emit files but UFO import into MG5 will fail (MG5_DARK_COLOR_TENSOR_WALL).
+            Use analytic backend or hand-author SARAH model.
+          evidence: "intel/digest.md §§232-238 (MG5 dt1 NameError; dark-color wall)"
+        # Mirror sector
+        - axis: A1
+          match: "SM + mirror"
+          verdict: supported_with_caveat
+          caveat: "Mirror-sector embedding requires hand-authored SARAH files for gauge kinetics."
+          evidence: "intel/digest.md (mirror sector)"
+        # SM models: fully supported
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+  spheno-build:
+    status: exists
+    hours:
+      cold:   [0.17, 0.5]
+      cached: [0.05, 0.1]
+    capabilities:
+      description: "SPheno 4.0.5 spectrum generator — reads SARAH output, emits SLHA2"
+      install_skill: spheno-install
+      role:
+        collider: none
+        dd: none
+        higgs: none
+        id: none
+        relic: none
+      gating_for: [higgs]
+      priority_tiebreak: 100
+      depends_on_prereqs: [sarah-build]
+      inputs_required: [sarah_spheno_output]
+      support:
+        # spheno not requested in spec: SPHENO_NOT_REQUESTED
+        - axis: lagrangian.spec_intent.requested_emissions
+          match: not_contains[spheno]
+          verdict: blocked
+          blocker: SPHENO_NOT_REQUESTED
+          blocker_class: spec-authoring-gap
+          evidence: "intel/digest.md (spheno output not requested; FU-wsj-03)"
+        # Analytic-only spectrum: spheno not applicable
+        - axis: model.analytic_module_status
+          match: ["registered_active", "deprecated"]
+          verdict: not_applicable
+        # Otherwise supported
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+  madgraph:
+    status: exists
+    hours:
+      cold:   [0.25, 0.5]
+      cached: [0.08, 0.17]
+    capabilities:
+      description: "MadGraph5_aMC@NLO 3.5.6 — UFO importer + amplitude generator + parton shower"
+      install_skill: null
+      role:
+        collider: none
+        dd: none
+        higgs: none
+        id: none
+        relic: none
+      gating_for: [relic, dd, id]
+      priority_tiebreak: 100
+      depends_on_prereqs: [sarah-build]
+      inputs_required: [ufo_path]
+      support:
+        # Dark SU(N)/mixed gauge group: ANALYTIC_EXCEPTION_TRIGGER conjunction + MG5 wall
+        - and:
+            - axis: A1
+              match: ["SM + extra SU(N)", "SM + extra mixed"]
+            - or:
+                - axis: A2[?].pattern
+                  match: ["Higgsed-partial", "unbroken-confining"]
+                - axis: candidates[?].uv_provenance
+                  match: ["broken-generator-boson", "composite"]
+          verdict: blocked
+          blocker: ANALYTIC_EXCEPTION_TRIGGER
+          blocker_class: analytic-exception
+          workaround: ANALYTIC_BACKEND_PATH
+          escape_hatch_target: ws4
+          evidence: "brainstorm/ws1_taxonomy_synthesis.md:660-686 (analytic-exception trigger)"
+        # Dark SU(N) without explicit candidates triggering ws4 (fallback)
+        - axis: A1
+          match: ["SM + extra SU(N)", "SM + extra mixed"]
+          verdict: blocked
+          blocker: MG5_DARK_COLOR_TENSOR_WALL
+          blocker_class: fundamental-group-theory-gap
+          workaround: ANALYTIC_BACKEND_PATH
+          evidence: "intel/digest.md §52 (MG5 dt1 NameError at import_ufo.py:1604)"
+        # Mirror sector
+        - axis: A1
+          match: "SM + mirror"
+          verdict: blocked
+          blocker: MG5_MIRROR_COLOR_WALL
+          blocker_class: fundamental-group-theory-gap
+          evidence: "intel/digest.md (mirror sector MG5 limits)"
+        # UFO not in requested emissions
+        - axis: lagrangian.spec_intent.requested_emissions
+          match: not_contains[ufo]
+          verdict: blocked
+          blocker: UFO_MISSING
+          blocker_class: spec-authoring-gap
+          evidence: "intel/digest.md §25 (UFO_MISSING)"
+        # SM models and SM+extra U(1): supported
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+  maddm:
+    status: exists        # reference skill, not orchestrator
+    hours:
+      cold:   [0.25, 0.5]
+      cached: [0.17, 0.33]
+    capabilities:
+      description: "MadDM 3.2.13 — DM relic density + direct detection via MG5 UFO"
+      install_skill: maddm-install
+      role:
+        collider: none
+        dd: primary
+        higgs: none
+        id: primary
+        relic: primary
+      gating_for: []
+      priority_tiebreak: 10
+      depends_on_prereqs: [madgraph]
+      inputs_required: [ufo_path, slha_path]
+      runtime_caveats:
+        - condition: "multi_component: true"
+          message: >-
+            MadDM single-species only; multi-component combination handled by
+            dark-matter-constraints multi-component combiner prereq.
+      support:
+        # Dark SU(N)/mixed: ANALYTIC_EXCEPTION_TRIGGER (inherits from madgraph wall)
+        - and:
+            - axis: A1
+              match: ["SM + extra SU(N)", "SM + extra mixed"]
+            - or:
+                - axis: A2[?].pattern
+                  match: ["Higgsed-partial", "unbroken-confining"]
+                - axis: candidates[?].uv_provenance
+                  match: ["broken-generator-boson", "composite"]
+          verdict: blocked
+          blocker: ANALYTIC_EXCEPTION_TRIGGER
+          blocker_class: analytic-exception
+          workaround: ANALYTIC_BACKEND_PATH
+          escape_hatch_target: ws4
+          evidence: "brainstorm/ws1_taxonomy_synthesis.md:660-686 (analytic-exception trigger)"
+        - axis: A1
+          match: ["SM + extra SU(N)", "SM + extra mixed"]
+          verdict: blocked
+          blocker: MG5_DARK_COLOR_TENSOR_WALL
+          blocker_class: fundamental-group-theory-gap
+          evidence: "intel/digest.md §52 (MadDM inherits MG5 dark-color wall)"
+        - axis: A1
+          match: "SM + mirror"
+          verdict: blocked
+          blocker: MG5_MIRROR_COLOR_WALL
+          blocker_class: fundamental-group-theory-gap
+          evidence: "intel/digest.md (MadDM inherits MG5 mirror wall)"
+        # UFO not requested
+        - axis: lagrangian.spec_intent.requested_emissions
+          match: not_contains[ufo]
+          verdict: blocked
+          blocker: UFO_MISSING
+          blocker_class: spec-authoring-gap
+          evidence: "intel/digest.md §25 (UFO_MISSING → MadDM blocked)"
+        # SM models: supported
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+  micromegas:
+    status: exists
+    hours:
+      cold:   [0.25, 0.5]
+      cached: [0.08, 0.17]
+    capabilities:
+      description: "micrOMEGAs 6.0.5 — relic density validator via CalcHEP .mdl files"
+      install_skill: micromegas-install
+      role:
+        collider: none
+        dd: validator
+        higgs: none
+        id: none
+        relic: validator
+      gating_for: []
+      priority_tiebreak: 20
+      depends_on_prereqs: [sarah-build]
+      inputs_required: [calchep_mdl_files]
+      runtime_caveats:
+        - condition: "proxy_run: true in output JSON"
+          message: >-
+            micrOMEGAs ran on proxy model; results do not apply to the target model.
+            Do not quote proxy values as native predictions.
+        - condition: "vSigmaA(0.0) NaN"
+          message: "micrOMEGAs 6.0.5: use calcSpectrum() path; vSigmaA(T=0) returns NaN."
+      support:
+        # CalcHEP .mdl not in requested emissions: CALCHEP_MDL_MISSING
+        - axis: lagrangian.spec_intent.requested_emissions
+          match: not_contains[calchep_mdl]
+          verdict: blocked
+          blocker: CALCHEP_MDL_MISSING
+          blocker_class: spec-authoring-gap
+          evidence: "intel/digest.md §12 (micrOMEGAs CalcHEP .mdl requirement; FU-wsg-01)"
+        # Non-SM gauge structure: vertex evaluator silently fails
+        - axis: A1
+          match: ["SM + extra SU(N)", "SM + extra mixed", "SM + mirror"]
+          verdict: blocked
+          blocker: MICROMEGAS_VERTEX_SILENT_FAIL
+          blocker_class: missing-tool-feature
+          fix_locality: upstream
+          evidence: "intel/digest.md §12 (micrOMEGAs vertex evaluator non-SM gauge)"
+        # Multi-component: not supported
+        - axis: candidates[*]
+          match: ">=2"
+          verdict: blocked
+          blocker: MICROMEGAS_MULTICOMPONENT_UNSUPPORTED
+          blocker_class: missing-tool-feature
+          fix_locality: upstream
+          evidence: "intel/digest.md §12 (micrOMEGAs multi-component DM unsupported)"
+        # Loop-only DD: silent failure
+        - axis: candidates[?].mediator_regime
+          match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
+          verdict: blocked
+          blocker: MICROMEGAS_LOOP_SILENT_FAIL
+          blocker_class: regime-mismatch
+          evidence: "intel/digest.md §12 (micrOMEGAs loop-level silent failure)"
+        # SM models otherwise: supported
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+  drake:
+    status: exists
+    hours:
+      cold:   [0.5, 1.5]
+      cached: [0.17, 0.33]
+    capabilities:
+      description: "DRAKE 1.0 — Boltzmann solver for narrow-resonance DM freeze-out"
+      install_skill: drake-install
+      role:
+        collider: none
+        dd: none
+        higgs: none
+        id: none
+        relic: specialty
+      gating_for: []
+      priority_tiebreak: 30
+      depends_on_prereqs: []
+      inputs_required: [wolfram_sv_closure, wolfram_gam_closure]
+      runtime_caveats:
+        - condition: "runtime0 = 0. in output"
+          message: "DRAKE preset bleed-through; DRAKE failed to load. Treat as DRAKE_RUN_FAILED."
+        - condition: "Anubis gate on hepforge"
+          message: "DRAKE automated download blocked; manual install required."
+      support:
+        # Narrow-resonance regime: DRAKE is the right tool (specialty)
+        - axis: candidates[?].mediator_regime
+          match: narrow-resonance
+          verdict: supported
+        # Multi-component: single-species only
+        - axis: candidates[*]
+          match: ">=2"
+          verdict: blocked
+          blocker: DRAKE_SINGLE_SPECIES_ONLY
+          blocker_class: regime-mismatch
+          evidence: "intel/digest.md §13 (DRAKE single-species; narrow-resonance only)"
+        # Non-narrow-resonance models: DRAKE not applicable (specialty tool)
+        - axis: candidates[?].mediator_regime
+          match: ["tree-level-open", "tree-level-blind-spot", "loop-only-CP-forbidden",
+                  "loop-only-anomaly-induced", "forbidden", "n/a"]
+          verdict: not_applicable
+        # Fallthrough: not_applicable (DRAKE is only for narrow resonance)
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: not_applicable
+
+  ddcalc:
+    status: exists
+    hours:
+      cold:   [0.5, 1.5]
+      cached: [0.08, 0.17]
+    capabilities:
+      description: "DDCalc 2.2.0 — direct detection constraint calculator (SI/SD nuclear recoil)"
+      install_skill: ddcalc-install
+      role:
+        collider: none
+        dd: primary
+        higgs: none
+        id: none
+        relic: none
+      gating_for: []
+      priority_tiebreak: 10
+      depends_on_prereqs: [looptools]
+      inputs_required: [scattering_v1_json]
+      runtime_caveats:
+        - condition: "DARWIN experiment requested"
+          message: "DARWIN not registered in DDCalc v1 native set; overlay required (tier-2 FU-wsi-01)."
+      support:
+        # Loop-induced DD: caveat (upstream chain blocked by LOOP_DD_TOOLING_PLANNED)
+        - axis: candidates[?].mediator_regime
+          match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
+          verdict: supported_with_caveat
+          caveat: >-
+            Loop-induced DD requires FormCalc+LoopTools to compute the scattering/v1
+            JSON input; LOOP_DD_TOOLING_PLANNED blocks the upstream chain.
+          evidence: "intel/digest.md §14 (DDCalc scattering/v1 JSON input; loop-only DD)"
+        # Exact blind spot: not constraining
+        - axis: candidates[?].mediator_regime
+          match: tree-level-blind-spot
+          verdict: supported_with_caveat
+          caveat: "DD blind spot: sigma_SI ~ 0 for this candidate; DDCalc will return no exclusion."
+          evidence: "intel/digest.md (Psi blind spot; Eq.29)"
+        # All other models: supported
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+  higgstools:
+    status: exists
+    hours:
+      cold:   [0.5, 1.5]
+      cached: [0.08, 0.17]
+    capabilities:
+      description: "HiggsBounds 5.10.2 + HiggsSignals 2.6.2 — Higgs sector exclusion + fit"
+      install_skill: higgstools-install
+      role:
+        collider: none
+        dd: none
+        higgs: primary
+        id: none
+        relic: none
+      gating_for: []
+      priority_tiebreak: 10
+      depends_on_prereqs: [spheno-build]
+      inputs_required: [slha2_with_higgs_blocks]
+      runtime_caveats:
+        - condition: "cmake 4.x"
+          message: "Pass -DCMAKE_POLICY_VERSION_MINIMUM=3.5 to cmake; cmake 4.x incompatibility."
+        - condition: "HB SLHA mode"
+          message: "HB-5 SLHA mode requires full path with .slha extension, not stem."
+      support:
+        # CPV Higgs sector: not supported in HiggsTools v1
+        - axis: A4.cp_odd_scalar_present
+          match: true
+          verdict: blocked
+          blocker: HIGGSTOOLS_CPV_NOT_SUPPORTED
+          blocker_class: missing-tool-feature
+          fix_locality: upstream
+          evidence: "intel/digest.md §15 (HiggsTools CP-conserving only; CPV deferred v1.1)"
+        # SPheno not requested: SLHA2 unavailable
+        - axis: lagrangian.spec_intent.requested_emissions
+          match: not_contains[spheno]
+          verdict: blocked
+          blocker: HIGGSTOOLS_SLHA_MISSING_BLOCKS
+          blocker_class: spec-authoring-gap
+          evidence: "intel/digest.md §46 (HIGGSTOOLS_SLHA_MISSING_BLOCKS; spheno required)"
+        # Extra Higgs doublets: supported with caveat
+        - axis: A4.n_higgs_doublets
+          match: ">=2"
+          verdict: supported_with_caveat
+          caveat: >-
+            2HDM+ Higgs sector requires SPheno SLHA2 with complete HMIX + decay tables +
+            HiggsBoundsInputHiggsCouplingsFermions blocks. Verify block completeness.
+          evidence: "intel/digest.md §15 (HiggsTools SLHA2 block requirements)"
+        # Single-Higgs-doublet SM-like models: supported
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+  analytic_backend:
+    status: exists
+    hours:
+      cold:   [0.5, 1.0]
+      cached: [0.1, 0.25]
+    capabilities:
+      description: "Analytic backend — hand-derived sigma_v + scipy Boltzmann; one module per model; dsu3-002 exception"
+      install_skill: null
+      role:
+        collider: none
+        dd: escape_hatch
+        higgs: none
+        id: escape_hatch
+        relic: escape_hatch
+      gating_for: []
+      priority_tiebreak: 90
+      depends_on_prereqs: []
+      inputs_required: [analytic_module_registered]
+      runtime_caveats:
+        - condition: "backend == analytic in summary.json"
+          message: >-
+            REGRESSION-ANCHOR ONLY — NOT A PHYSICS TARGET. Analytic Omega_h2 values are
+            regression anchors. dsu3-002 disclosure mandatory before any results table.
+          banner_ref: dsu3-002
+      support:
+        # Registry active entry: supported_with_caveat (disclosure mandatory)
+        - axis: model.analytic_module_status
+          match: registered_active
+          verdict: supported_with_caveat
+          caveat: "WS4 disclosure banner mandatory; verbatim from analytic_exceptions.yaml. REGRESSION-ANCHOR ONLY."
+          evidence: "plugins/hep-ph-toolkit/skills/dark-matter-constraints/SKILL.md:72-83 (disclosure contract)"
+        # Missing, stub, or deprecated: ANALYTIC_MODULE_MISSING
+        - axis: model.analytic_module_status
+          match: ["missing", "stub", "deprecated", "retired"]
+          verdict: blocked
+          blocker: ANALYTIC_MODULE_MISSING
+          blocker_class: spec-authoring-gap
+          evidence: "intel/digest.md §357 (analytic_models.stub_unimplemented)"
+        # Fallthrough (should not normally reach here)
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: blocked
+          blocker: ANALYTIC_MODULE_MISSING
+          blocker_class: spec-authoring-gap
+          evidence: "intel/digest.md §357 (fallthrough: analytic module not declared)"
+
+  feynrules:
+    status: planned
+    hours:
+      cold:   [0.5, 1.0]
+      cached: [0.17, 0.33]
+    capabilities:
+      description: "FeynRules — alternative model file generator; tighter MG5 UFO compatibility than SARAH (PLANNED)"
+      install_skill: feynrules-install
+      role:
+        collider: none
+        dd: validator
+        higgs: none
+        id: validator
+        relic: validator
+      gating_for: []
+      priority_tiebreak: 50
+      depends_on_prereqs: []
+      inputs_required: [modelspec_yaml]
+      support:
+        # Dark SU(N)/mixed: same wall as SARAH/MG5
+        - axis: A1
+          match: ["SM + extra SU(N)", "SM + extra mixed"]
+          verdict: blocked
+          blocker: MG5_DARK_COLOR_TENSOR_WALL
+          blocker_class: fundamental-group-theory-gap
+          evidence: "intel/digest.md §52 (FeynRules UFO shares MG5 dark-color wall)"
+        # Mirror sector
+        - axis: A1
+          match: "SM + mirror"
+          verdict: blocked
+          blocker: MG5_MIRROR_COLOR_WALL
+          blocker_class: fundamental-group-theory-gap
+          evidence: "intel/digest.md (FeynRules mirror wall)"
+        # SM models: supported (validator role per project_lagrangian_builder_backend memory)
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+
+  feynarts:
+    status: planned
+    hours:
+      cold:   [0.5, 1.0]
+      cached: [0.17, 0.33]
+    capabilities:
+      description: "FeynArts 3.11 — Feynman diagram generator (skill exists at plugins/hep-ph-toolkit/skills/feynarts/; loop-DD chain integration pending)"
+      install_skill: feynarts-install
+      role:
+        collider: none
+        dd: none
+        higgs: none
+        id: none
+        relic: none
+      gating_for: [dd]
+      priority_tiebreak: 100
+      depends_on_prereqs: []
+      inputs_required: [feynarts_model_file]
+      support:
+        # Loop-only DD: feynarts gates the loop chain
+        - axis: candidates[?].mediator_regime
+          match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
+          verdict: blocked
+          blocker: LOOP_DD_TOOLING_PLANNED
+          blocker_class: missing-skill
+          evidence: "intel/digest.md §§371-381 (feynarts-install; LOOP_DD_TOOLING_PLANNED)"
+        # All other models: not applicable (feynarts is only for loop chains)
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: not_applicable
+
+  formcalc:
+    status: planned
+    hours:
+      cold:   [0.5, 1.0]
+      cached: [0.17, 0.33]
+    capabilities:
+      description: "FormCalc 9.10 — amplitude reduction (skill exists at plugins/hep-ph-toolkit/skills/formcalc/; loop-DD chain integration pending)"
+      install_skill: formcalc-install
+      role:
+        collider: none
+        dd: none
+        higgs: none
+        id: none
+        relic: none
+      gating_for: [dd]
+      priority_tiebreak: 100
+      depends_on_prereqs: [feynarts, looptools]
+      inputs_required: [feynarts_amplitude_output]
+      support:
+        # Loop-only DD: formcalc gates the loop chain
+        - axis: candidates[?].mediator_regime
+          match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
+          verdict: blocked
+          blocker: LOOP_DD_TOOLING_PLANNED
+          blocker_class: missing-skill
+          evidence: "intel/digest.md §§371-381 (formcalc-install; LOOP_DD_TOOLING_PLANNED)"
+        # All other models: not applicable
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: not_applicable
+
+  looptools:
+    status: exists
+    hours:
+      cold:   [0.5, 1.5]
+      cached: [0.17, 0.33]
+    capabilities:
+      description: "LoopTools 2.16 — Passarino-Veltman loop integrals; downstream of FormCalc"
+      install_skill: looptools-install
+      role:
+        collider: none
+        dd: none
+        higgs: none
+        id: none
+        relic: none
+      gating_for: [dd]
+      priority_tiebreak: 100
+      depends_on_prereqs: [formcalc]
+      inputs_required: [formcalc_output]
+      support:
+        # Loop-only DD: looptools gates this chain
+        - axis: candidates[?].mediator_regime
+          match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
+          verdict: blocked
+          blocker: LOOP_DD_TOOLING_PLANNED
+          blocker_class: missing-skill
+          evidence: "intel/digest.md §§371-381 (looptools-install; LOOP_DD_TOOLING_PLANNED)"
+        # All other: not applicable (looptools is only for loop integral evaluation)
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: not_applicable
+
+  gamlike:
+    status: exists
+    hours:
+      cold:   [0.5, 1.5]
+      cached: [0.17, 0.33]
+    capabilities:
+      description: "/gamlike v0 — MadDM_results.txt → gamlike/v1 JSON parser; pure transport, no physics interpretation."
+      install_skill: null
+      role:
+        collider: none
+        dd: none
+        higgs: none
+        id: validator           # MR3
+        relic: none
+      gating_for: []
+      priority_tiebreak: 20     # MR3 (between maddm=10 and drake=30)
+      depends_on_prereqs: [maddm]   # MR4
+      inputs_required: [maddm_results_txt_path]   # MR4
+      support:
+        # MR5: dark SU(N)/mixed → ANALYTIC_EXCEPTION_TRIGGER (inherits from MG5/MadDM)
+        - and:
+            - axis: A1
+              match: ["SM + extra SU(N)", "SM + extra mixed"]
+            - or:
+                - axis: A2[?].pattern
+                  match: ["Higgsed-partial", "unbroken-confining"]
+                - axis: candidates[?].uv_provenance
+                  match: ["broken-generator-boson", "composite"]
+          verdict: blocked
+          blocker: ANALYTIC_EXCEPTION_TRIGGER
+          blocker_class: analytic-exception
+          workaround: ANALYTIC_BACKEND_PATH
+          escape_hatch_target: ws4
+          evidence: "gamlike inherits MadDM/MG5 dark-color wall; gamlike requires MadDM output."
+        - axis: A1
+          match: ["SM + extra SU(N)", "SM + extra mixed"]
+          verdict: blocked
+          blocker: MG5_DARK_COLOR_TENSOR_WALL
+          blocker_class: fundamental-group-theory-gap
+          evidence: "gamlike inherits MadDM dark-color wall (no MadDM output → no parsing)."
+        - axis: A1
+          match: "SM + mirror"
+          verdict: blocked
+          blocker: MG5_MIRROR_COLOR_WALL
+          blocker_class: fundamental-group-theory-gap
+          evidence: "gamlike inherits MadDM mirror wall."
+        # UFO not requested
+        - axis: lagrangian.spec_intent.requested_emissions
+          match: not_contains[ufo]
+          verdict: blocked
+          blocker: UFO_MISSING
+          blocker_class: spec-authoring-gap
+          evidence: "gamlike requires MadDM run; MadDM requires UFO."
+        # SM models: supported (gamlike has no MadDM-version wall of its own)
+        - axis: A1
+          match: "*"
+          match_all_current_values: true
+          verdict: supported
+  nulike:
+    status: planned
+    hours:
+      cold:   [0.5, 1.5]
+      cached: [0.17, 0.33]
+  hep-plotting:
+    status: exists        # reference skill
+    hours:
+      cold:   [0.05, 0.1]
+      cached: [0.03, 0.08]
+  dark-matter-constraints:
+    status: exists       # router contract committed; analytic-only branch
+                         # supports multi-component DM combination
+    hours:
+      cold:   [0.5, 1.5]
+      cached: [0.17, 0.33]
+
+constraints:
+  relic:
+    chain: [sarah-build, spheno-build, madgraph, maddm]
+    default_time:
+      cold:   [1.0, 2.0]    # hours, overlap-adjusted for this chain
+      cached: [0.33, 0.67]
+  dd:
+    chain: [sarah-build, spheno-build, madgraph, feynarts, formcalc, ddcalc]
+    default_time:
+      cold:   [2.0, 4.0]
+      cached: [0.5, 1.0]
+  id:
+    chain: [sarah-build, spheno-build, madgraph, maddm, gamlike]
+    default_time:
+      cold:   [1.0, 3.0]
+      cached: [0.33, 0.67]
+  collider:
+    chain: []
+    placeholder: true
+    message: "Collider constraints are not yet implemented; planned for a future release."
+
+models:
+  singlet-doublet:
+    display:
+      title: "Singlet-Doublet"
+      hook:  "3×3 neutralino-like mixing, tree-level blind spot, loop floor."
+    # spec_path: INTENTIONALLY ABSENT (singlet-doublet v3 spec present at
+    #   plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/singlet_doublet.yaml
+    # but not yet wired here — /model-router singlet-doublet degrades to the
+    # diagnostics path (no axis_snapshot). Wire when the constraint chain is ready.
+    # spec_path: plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/singlet_doublet.yaml
+    dm_candidates:
+      - {name: chi1, spin: "1/2", notes: "Majorana, lightest eigenstate of the singlet-doublet mixing."}
+    plot_axes:
+      x: {symbol: "m_chi",      range: [100, 1500], units: "GeV", scale: linear}
+      y: {symbol: "sin_2theta", range: [-1, 1],                   scale: linear}
+    multi_component: false
+    time_overrides: {}   # uses defaults above
+
+  2hdm-a:
+    spec_path: plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/2hdm_a.yaml
+    display:
+      title: "2HDM + a"
+      hook:  "Pseudoscalar mediator, CP-forbidden tree SI, loop-only DD."
+    dm_candidates:
+      - {name: chi, spin: "1/2", notes: "Dirac DM coupled via the CP-odd mediator a."}
+    plot_axes:
+      x: {symbol: "m_a",      range: [10, 1500], units: "GeV", scale: log}
+      y: {symbol: "tan_beta", range: [0.5, 50],               scale: log}
+    multi_component: false
+    # spec_authoring_blockers removed for `relic` — the relic chain is now
+    # unblocked via the hand-crafted SARAH model fixture at:
+    #   plugins/hep-ph-toolkit/skills/2hdm-a/fixtures/sarah_model/
+    # The fixture bypasses the /sarah-build renderer (which still cannot emit
+    # a correct Dirac-singlet PortalDM model). DD and ID remain blocked on
+    # planned skills and on the renderer backport.
+    # See demo_output/2hdm-a/fix_loop/POST_MORTEM.md §"Remaining debt" for
+    # the renderer backport plan (loop B, concurrent worktree).
+    spec_authoring_blockers:
+      dd:
+        - "spec-authoring-incomplete"
+      id:
+        - "spec-authoring-incomplete"
+    spec_authoring_reason: >-
+      Relic density: UNBLOCKED via hand-crafted SARAH model fixture
+      (plugins/hep-ph-toolkit/skills/2hdm-a/fixtures/sarah_model/).
+      DD/ID remain blocked: two_hdm_a.yaml renderer cannot yet emit a
+      physics-correct UFO for the loop-only DD subchain, and /feynarts,
+      /gamlike is a PLANNED skill; /feynarts, /formcalc, /ddcalc exist as standalone skills but the loop-DD chain is not yet integrated end-to-end.
+      Renderer backport is tracked in demo_output/2hdm-a/fix_loop/POST_MORTEM.md
+      §Remaining debt item 1.
+    time_overrides:
+      dd: {cold: [3.0, 6.0]}    # loop-only DD is primary signal; slower
+
+  dark-su3:
+    spec_path: plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/dark_su3.yaml
+    display:
+      title: "Dark SU(3)"
+      hook:  "SU(3)_D Higgsed to SU(2)_D; two DM candidates with exact parameter-independent blind spot on Psi."
+    # Canonical dark-su3 model is the Higgsed Arcadi-Profumo variant (commit
+    # 2bb56d6 archived the confining-variant template and declared the
+    # dark-Higgs variant canonical). DM candidates: V (vector, spin-1, tree
+    # SI via Higgs portal) and Psi (CP-odd scalar, spin-0, exact parameter-
+    # independent SI blind spot — Eq. 29 of arXiv:2506.19062).
+    dm_candidates:
+      - {name: V,   spin: "1", notes: "Dark vector DM; tree-level SI via Higgs portal (H_1 + H_2 exchange)."}
+      - {name: Psi, spin: "0", notes: "Dark pseudoscalar DM; exact parameter-independent SI blind spot (Eq. 29)."}
+    plot_axes:
+      x: {symbol: "m_V",   range: [1, 1000], units: "GeV", scale: log}
+      y: {symbol: "m_Psi", range: [1, 300],  units: "GeV", scale: log}
+    multi_component: true
+    multi_component_prereq: dark-matter-constraints   # appended to every chain
+    time_overrides:
+      relic: {cold: [1.5, 3.0]}
+      dd:    {cold: [3.0, 5.0]}
+      id:    {cold: [1.5, 4.0]}
+    # Dark SU(3)_D is a non-SM color sector; MadGraph/MadDM cannot generate
+    # the relic-density coannihilation set because they cannot represent the
+    # dark color group. The relic chain therefore runs entirely through the
+    # analytic backend + analytic-only branch in /dark-matter-constraints.
+    # DD/ID remain on the default chains (and may be blocked separately by
+    # planned tools); only relic is overridden here.
+    chain_overrides:
+      relic:
+        chain: [sarah-build, spheno-build, dark-matter-constraints]
+        reason: >-
+          Dark SU(3)_D is non-SM color; MadGraph/MadDM cannot generate the
+          coannihilation set. Relic runs through the analytic spectrum
+          backend and the /dark-matter-constraints analytic-only branch.
+        backend_hint: analytic
+        matrix_acknowledgement:
+          accepted_blockers:
+            - MG5_DARK_COLOR_TENSOR_WALL
+            - MG5_MIRROR_COLOR_WALL
+            - ANALYTIC_EXCEPTION_TRIGGER
+            - UFO_MISSING
+          accepted_workaround: ANALYTIC_BACKEND_PATH
+          authority: "WS4 dsu3-002 disclosure registered in _shared/analytic_exceptions.yaml"
+          last_audited: "2026-04-26"

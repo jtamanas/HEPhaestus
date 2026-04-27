@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "backend": "analytic",
+    "model": "dark-su3",
+    "exception_id": "dsu3-002",
+    "analytic_module": "analytic_models.dark_su3"
+  },
+  "sigmav_approx": true,
+  "Omega_V_h2": 3000.0,
+  "Omega_Psi_h2": 2500.0,
+  "Omega_total_h2": 5500.0,
+  "sigma_SI_V_proton_cm2": 1.2e-46,
+  "sigma_SI_Psi_proton_cm2": 0.0,
+  "blind_spot_Psi": true,
+  "_regression_anchor_note": "REGRESSION-ANCHOR ONLY — NOT A PHYSICS TARGET (dsu3-002). Values ~25000x Planck target."
+}

@@ -1,0 +1,57 @@
+make[1]: Entering directory '/opt/SPheno-4.0.5'
+gfortran -O2 -ffree-line-length-none -c src/BranchingRatios.f90 -o lib/BranchingRatios.o
+gfortran -O2 -ffree-line-length-none -c src/Charginos.f90 -o lib/Charginos.o
+gfortran -O2 -ffree-line-length-none -c src/Couplings.f90 -o lib/Couplings.o
+gfortran -O2 -ffree-line-length-none -c src/DecayFunctions.f90 -o lib/DecayFunctions.o
+gfortran -O2 -ffree-line-length-none -c src/Gauginos.f90 -o lib/Gauginos.o
+gfortran -O2 -ffree-line-length-none -c src/InputOutput.f90 -o lib/InputOutput.o
+gfortran -O2 -ffree-line-length-none -c src/LoopFunctions.f90 -o lib/LoopFunctions.o
+gfortran -O2 -ffree-line-length-none -c src/Mathematics.f90 -o lib/Mathematics.o
+gfortran -O2 -ffree-line-length-none -c src/MassMatrices.f90 -o lib/MassMatrices.o
+gfortran -O2 -ffree-line-length-none -c src/Neutralinos.f90 -o lib/Neutralinos.o
+gfortran -O2 -ffree-line-length-none -c src/RGEs.f90 -o lib/RGEs.o
+gfortran -O2 -ffree-line-length-none -c src/SPheno.f90 -o lib/SPheno.o
+gfortran -O2 -ffree-line-length-none -c src/Spectrum.f90 -o lib/Spectrum.o
+gfortran -O2 -ffree-line-length-none -c src/StandardModel.f90 -o lib/StandardModel.o
+gfortran -O2 -ffree-line-length-none -c src/SusyDecays.f90 -o lib/SusyDecays.o
+gfortran -O2 -ffree-line-length-none -c src/TwoLoopHiggs.f90 -o lib/TwoLoopHiggs.o
+gfortran -O2 -ffree-line-length-none -c src/Vertices.f90 -o lib/Vertices.o
+gfortran -O2 -ffree-line-length-none -c src/WidthFunctions.f90 -o lib/WidthFunctions.o
+ar rcs lib/libSPheno.a lib/BranchingRatios.o lib/Charginos.o lib/Couplings.o \
+  lib/DecayFunctions.o lib/Gauginos.o lib/InputOutput.o lib/LoopFunctions.o \
+  lib/Mathematics.o lib/MassMatrices.o lib/Neutralinos.o lib/RGEs.o \
+  lib/SPheno.o lib/Spectrum.o lib/StandardModel.o lib/SusyDecays.o \
+  lib/TwoLoopHiggs.o lib/Vertices.o lib/WidthFunctions.o
+gfortran -O2 -ffree-line-length-none -o bin/SPheno src/main.f90 \
+  -Llib -lSPheno -llapack -lblas
+/usr/bin/ld: cannot find -llapack
+collect2: error: ld returned 1 exit status
+make[1]: *** [Makefile:42: bin/SPheno] Error 1
+make[1]: Leaving directory '/opt/SPheno-4.0.5'
+make: *** [Makefile:10: all] Error 2
+gfortran -O2 -ffree-line-length-none -c src/SusyMasses.f90 -o lib/SusyMasses.o
+/usr/bin/ld: lib/SPheno.o: undefined reference to symbol 'dgemm_'
+/usr/lib/x86_64-linux-gnu/liblapack.so.3: error adding symbols: DSO missing from command line
+collect2: error: ld returned 1 exit status
+make[1]: *** [Makefile:50: bin/SPheno] Error 1
+gfortran: fatal error: cannot link with -llapack (library not found)
+compilation terminated.
+make[1]: *** Waiting for unfinished jobs....
+gfortran -O2 -ffree-line-length-none -c src/ThreeBodyDecays.f90 -o lib/ThreeBodyDecays.o
+make[1]: *** [Makefile:55: bin/SPheno] Error 1
+make[1]: Leaving directory '/opt/SPheno-4.0.5'
+make: *** [Makefile:10: all] Error 2
+Note: liblapack not found in standard paths. Install liblapack-dev (Debian/Ubuntu) or lapack-devel (Fedora).
+/usr/bin/ld: cannot find -llapack: No such file or directory
+make[1]: *** [bin/SPheno] Error 1
+gfortran -O2 -ffree-line-length-none src/main.f90 -o bin/SPheno -Llib -lSPheno -llapack -lblas
+/usr/bin/ld: cannot find -llapack
+undefined reference to 'dgemm_'
+undefined reference to 'dgemv_'
+undefined reference to 'dsyev_'
+undefined reference to 'dgetrf_'
+undefined reference to 'dgetri_'
+collect2: error: ld returned 1 exit status
+make[1]: *** [Makefile:42: bin/SPheno] Error 1
+make[1]: Leaving directory '/opt/SPheno-4.0.5'
+make: *** [Makefile:10: all] Error 2

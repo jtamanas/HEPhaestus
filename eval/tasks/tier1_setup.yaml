@@ -1,0 +1,518 @@
+# Tier 1 — Setup: Can the agent use MadGraph skill scripts correctly?
+#
+# These tasks test whether the agent can call the MadGraph/MadDM utility
+# scripts with correct arguments and interpret the output.
+
+# --- proc_card generation using mg5_batch.py ---
+
+- id: t1_sd_proc_card
+  task_type: mg_required
+  tier: 1
+  model: singlet-doublet
+  prompt: >
+    Using the mg5_batch.generate_proc_card() function from the MadGraph skill
+    scripts, generate a proc_card.dat for DM-nucleon elastic scattering in
+    the singlet-doublet fermion dark matter model.
+
+    The function signature is:
+      generate_proc_card(processes, model, output_name, multiparticle_defs)
+
+    The UFO model name is "SingletDoublet_UFO". The DM candidate is chi1.
+    Include both u and d quark scattering: chi1 u > chi1 u, chi1 d > chi1 d.
+
+    Write and execute a Python script that calls this function and prints the
+    result. Report the generated proc_card content in your JSON output under
+    the key "proc_card".
+  reference_fn: sd_proc_card
+  reference_args: {}
+  graders:
+    - type: file_contains
+      key: proc_card
+      pattern: "import model"
+    - type: file_contains
+      key: proc_card
+      pattern: "generate.*chi1.*>.*chi1"
+  tags: [proc_card, singlet-doublet, setup, mg5_batch]
+
+- id: t1_thdma_proc_card
+  task_type: mg_required
+  tier: 1
+  model: 2HDM+a
+  prompt: >
+    Using mg5_batch.generate_proc_card(), generate a proc_card.dat for DM
+    pair annihilation into quarks in the 2HDM+a model.
+
+    The UFO model is "DMPseudo_2HDM". The DM is a Dirac fermion named "chi".
+    Include b-bbar and t-tbar final states:
+      chi chi~ > b b~
+      chi chi~ > t t~
+
+    Write and execute a Python script calling generate_proc_card() and report
+    the proc_card content.
+  reference_fn: thdma_proc_card
+  reference_args: {}
+  graders:
+    - type: file_contains
+      key: proc_card
+      pattern: "import model"
+    - type: file_contains
+      key: proc_card
+      pattern: "generate.*chi.*chi~.*>.*b"
+  tags: [proc_card, 2HDM+a, setup, mg5_batch]
+
+- id: t1_dsu3_proc_card
+  task_type: mg_required
+  tier: 1
+  model: dark-su3
+  prompt: >
+    Using mg5_batch.generate_proc_card(), generate a proc_card.dat for
+    vector DM-nucleon elastic scattering in the Dark SU(3) model.
+
+    The UFO model is "DarkSU3_UFO". The DM is the dark vector boson V1.
+    Include u and d quark channels: V1 u > V1 u, V1 d > V1 d.
+
+    Write and execute a Python script and report the proc_card content.
+  reference_fn: dsu3_proc_card
+  reference_args: {}
+  graders:
+    - type: file_contains
+      key: proc_card
+      pattern: "import model"
+    - type: file_contains
+      key: proc_card
+      pattern: "generate.*V1.*>.*V1"
+  tags: [proc_card, dark-su3, setup, mg5_batch]
+
+# --- param_card values using card_io.py conventions ---
+
+- id: t1_sd_param_card
+  task_type: mg_required
+  tier: 1
+  model: singlet-doublet
+  prompt: >
+    You need to prepare a param_card.dat for the singlet-doublet model using
+    the card_io.py SLHA utilities from the MadGraph skill. The card_io module
+    provides read_param_card(), write_param_card(), and update_param() functions.
+
+    At the benchmark point m_S=150 GeV, m_D=500 GeV, y=1.0, theta=0, compute
+    the Yukawa couplings y1 = y*cos(theta) and y2 = y*sin(theta).
+
+    Write a Python script that computes these values and report them as:
+    param_mS, param_mD, param_y1, param_y2.
+  reference_fn: sd_param_card
+  reference_args:
+    m_S: 150.0
+    m_D: 500.0
+    y: 1.0
+    theta: 0.0
+  graders:
+    - type: numeric
+      key: param_mS
+      tolerance: 1.0e-10
+    - type: numeric
+      key: param_mD
+      tolerance: 1.0e-10
+    - type: numeric
+      key: param_y1
+      tolerance: 1.0e-10
+    - type: numeric
+      key: param_y2
+      tolerance: 1.0e-10
+  tags: [param_card, singlet-doublet, setup, card_io]
+
+- id: t1_thdma_param_card
+  task_type: mg_required
+  tier: 1
+  model: 2HDM+a
+  prompt: >
+    Prepare param_card values for the 2HDM+a model (DMPseudo_2HDM UFO) using
+    the card_io.py conventions from the MadGraph skill.
+
+    Benchmark: m_chi=200 GeV, m_a=200 GeV, m_H=m_A=m_Hpm=600 GeV,
+    y_chi=1.0, sin_theta=0.35, tan_beta=1.0.
+
+    Write a Python script and report: param_mchi, param_ychi, param_sintheta.
+  reference_fn: thdma_param_card
+  reference_args:
+    m_chi: 200.0
+    m_a: 200.0
+    m_H: 600.0
+    m_A: 600.0
+    m_Hpm: 600.0
+    y_chi: 1.0
+    sin_theta: 0.35
+    tan_beta: 1.0
+  graders:
+    - type: numeric
+      key: param_mchi
+      tolerance: 1.0e-10
+    - type: numeric
+      key: param_ychi
+      tolerance: 1.0e-10
+    - type: numeric
+      key: param_sintheta
+      tolerance: 1.0e-10
+  tags: [param_card, 2HDM+a, setup, card_io]
+
+- id: t1_dsu3_param_card
+  task_type: mg_required
+  tier: 1
+  model: dark-su3
+  prompt: >
+    Prepare param_card values for the Dark SU(3) model using card_io.py
+    conventions from the MadGraph skill.
+
+    Benchmark: g_tilde=1.0, sin_theta=0.1, m_H2=300 GeV, m_V=200 GeV.
+
+    Write a Python script and report: param_gtilde, param_sintheta,
+    param_mH2, param_mV.
+  reference_fn: dsu3_param_card
+  reference_args:
+    g_tilde: 1.0
+    sin_theta: 0.1
+    m_H2: 300.0
+    m_V: 200.0
+  graders:
+    - type: numeric
+      key: param_gtilde
+      tolerance: 1.0e-10
+    - type: numeric
+      key: param_mV
+      tolerance: 1.0e-10
+  tags: [param_card, dark-su3, setup, card_io]
+
+# --- MadGraph output parsing using lhe_parser.py ---
+
+- id: t1_parse_banner
+  task_type: na
+  tier: 1
+  model: generic
+  prompt: >
+    The MadGraph skill provides lhe_parser.py with functions parse_lhe() and
+    extract_cross_section() for reading LHE output files.
+
+    extract_cross_section(path) returns a tuple (xsec_pb, error_pb) by
+    parsing the <init> block of an LHE XML file.
+
+    If you had an LHE file where the <init> block second line reads:
+      1.234e-03  5.678e-05  1.000  1
+
+    What cross-section and unit would extract_cross_section return?
+    Report xsec and xsec_unit.
+  reference_fn: parse_mg5_xsec_banner
+  reference_args: {}
+  graders:
+    - type: numeric
+      key: xsec
+      tolerance: 1.0e-10
+    - type: unit
+      key: xsec_unit
+      expected: pb
+  tags: [parsing, setup, lhe_parser]
+
+- id: t1_parse_html
+  task_type: na
+  tier: 1
+  model: generic
+  prompt: >
+    MadGraph writes cross-section results to stdout and banner files. The
+    lhe_parser.py from the MadGraph skill extracts these values.
+
+    If a MadGraph banner contains the line:
+      #  Integrated weight (pb)  :  5.678e-02
+
+    What value and unit would you report? Report xsec and xsec_unit.
+  reference_fn: parse_mg5_xsec_html
+  reference_args: {}
+  graders:
+    - type: numeric
+      key: xsec
+      tolerance: 1.0e-10
+    - type: unit
+      key: xsec_unit
+      expected: pb
+  tags: [parsing, setup, lhe_parser]
+
+# ======================================================================
+# Scalar Portal Singlet (arXiv:2601.13147) — Tier 1 setup tasks
+# ======================================================================
+
+- id: t1_sps_proc_card
+  task_type: mg_required
+  tier: 1
+  model: scalar-portal-singlet
+  prompt: >
+    Write a Python script that generates the expected MadGraph proc_card.dat
+    content for the scalar portal singlet fermion DM model (arXiv:2601.13147).
+
+    The model name is "scalar_portal_singlet". The processes are:
+      p p > h2  (h2 production via gg fusion)
+      chi chi~ > p p  (DM annihilation)
+
+    Report the proc_card content as a string under the key "proc_card".
+  reference_fn: sps_proc_card
+  reference_args: {}
+  graders:
+    - type: file_contains
+      key: proc_card
+      pattern: "import model scalar_portal_singlet"
+    - type: file_contains
+      key: proc_card
+      pattern: "generate p p > h2"
+  tags: [proc_card, scalar-portal-singlet, setup]
+
+- id: t1_sps_param_card_bp1
+  task_type: mg_required
+  tier: 1
+  model: scalar-portal-singlet
+  prompt: >
+    Prepare param_card values for the scalar portal singlet model at BP1:
+    m_h1=125.25 GeV, m_h2=200.0 GeV, sin_theta=0.001, lambda_s=3.38,
+    mu_3=-20.0 GeV, m_chi=222.0 GeV, g_chi=0.57.
+
+    Do NOT include lambda_hs as an input -- derive it internally from the
+    physical input parameters. Report the 5 values:
+    param_m_h2, param_sin_theta, param_lambda_s, param_m_chi, param_g_chi.
+  reference_fn: sps_param_card
+  reference_args:
+    m_h1: 125.25
+    m_h2: 200.0
+    sin_theta: 0.001
+    lambda_s: 3.38
+    mu_3: -20.0
+    m_chi: 222.0
+    g_chi: 0.57
+  graders:
+    - type: numeric
+      key: param_m_h2
+      tolerance: 1.0e-6
+    - type: numeric
+      key: param_sin_theta
+      tolerance: 1.0e-6
+    - type: numeric
+      key: param_lambda_s
+      tolerance: 1.0e-6
+    - type: numeric
+      key: param_m_chi
+      tolerance: 1.0e-6
+    - type: numeric
+      key: param_g_chi
+      tolerance: 1.0e-6
+  tags: [param_card, scalar-portal-singlet, BP1, setup]
+
+# ======================================================================
+# Scotogenic Inverse Seesaw (arXiv:2603.23040) — 4 Tier-1 setup tasks
+# Appended per plan Step 22. NuFIT 5.2 (plan §0.5.2 binding default).
+# ======================================================================
+
+- id: t1_scoto_proc_card
+  task_type: mg_required
+  tier: 1
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Generate a proc_card.dat for DM pair annihilation in the scotogenic inverse-seesaw
+    model (arXiv:2603.23040). Use UFO 'ScotoInverseSeesaw_UFO'. DM candidate is chi1.
+    Generate: chi1 chi1 > f f~ for all SM fermions via h/Z s-channel.
+    Report 'proc_card' key.
+  reference_fn: scoto_proc_card
+  reference_args: {}
+  graders:
+    - type: file_contains
+      key: proc_card
+      pattern: "import model ScotoInverseSeesaw"
+    - type: file_contains
+      key: proc_card
+      pattern: "chi1 chi1 >"
+  tags: [proc_card, scotogenic, setup, paper-2]
+
+- id: t1_scoto_param_card_BP1
+  task_type: mg_required
+  tier: 1
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Generate a param_card.dat for BP1 of arXiv:2603.23040. Use the scalar triplet
+    m_phi = (1000, 1200, 1400) GeV and the NuFIT 5.2 PMNS inputs specified in the
+    paper's Section 2.1. The (M_R, mu_S, M_N) triplet for BP1 is in reference_args.
+  reference_fn: scoto_param_card
+  reference_args:
+    bp: "BP1"
+  graders:
+    - type: numeric
+      key: mass_chi1
+      tolerance: 0.01
+    - type: numeric
+      key: M_PHI_1
+      tolerance: 1.0e-10
+  tags: [param_card, scotogenic, setup, paper-2]
+
+- id: t1_scoto_param_card_BP2
+  task_type: mg_required
+  tier: 1
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Generate a param_card.dat for BP2 (m_chi ~ 59 GeV) of arXiv:2603.23040. Use
+    the scalar triplet m_phi = (1000, 1200, 1400) GeV and the NuFIT 5.2 PMNS
+    inputs specified in the paper's Section 2.1.
+  reference_fn: scoto_param_card
+  reference_args:
+    bp: "BP2"
+  graders:
+    - type: numeric
+      key: mass_chi1
+      tolerance: 0.01
+    - type: numeric
+      key: M_PHI_1
+      tolerance: 1.0e-10
+  tags: [param_card, scotogenic, setup, paper-2]
+
+- id: t1_scoto_param_card_BP3
+  task_type: mg_required
+  tier: 1
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Generate a param_card.dat for BP3 (m_chi ~ 61 GeV) of arXiv:2603.23040. Use
+    the scalar triplet m_phi = (1000, 1200, 1400) GeV and the NuFIT 5.2 PMNS
+    inputs specified in the paper's Section 2.1.
+  reference_fn: scoto_param_card
+  reference_args:
+    bp: "BP3"
+  graders:
+    - type: numeric
+      key: mass_chi1
+      tolerance: 0.01
+    - type: numeric
+      key: M_PHI_1
+      tolerance: 1.0e-10
+  tags: [param_card, scotogenic, setup, paper-2]
+
+# ======================================================================
+# Paper 3 (arXiv:2509.08043) — 2HDM+a Setup Tasks
+# ======================================================================
+
+- id: t1_thdma_proc_card_vbf
+  task_type: mg_required
+  tier: 1
+  model: 2hdma
+  prompt: >
+    Generate a proc_card.dat for the Bauer 2HDM+a UFO (Pseudoscalar_2HDM)
+    that produces xd xd~ + jj via VBF topology at 13 TeV.
+    Use xd as the Dirac DM candidate. Report the full proc_card text under key "proc_card".
+  reference_fn: thdma_proc_card_vbf
+  reference_args: {}
+  graders:
+    - {type: file_contains, key: proc_card, pattern: "import model"}
+    - {type: file_contains, key: proc_card, pattern: "xd.*xd~"}
+  tags: [2hdma, proc_card, vbf, setup, paper-3]
+
+- id: t1_thdma_param_card_anchor
+  task_type: mg_required
+  tier: 1
+  model: 2hdma
+  prompt: >
+    Generate param_card.dat at the 2HDM+a anchor benchmark: m_A=800, m_a=50,
+    m_chi=30 GeV, theta=0.1, g_chi=0.5, tan_beta=1. Report under keys
+    param_m_A, param_m_a, param_m_chi, param_theta, param_g_chi.
+  reference_fn: thdma_param_card_anchor
+  reference_args: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: param_m_A,   tolerance: 1.0e-10}
+    - {type: numeric, key: param_m_a,   tolerance: 1.0e-10}
+    - {type: numeric, key: param_m_chi, tolerance: 1.0e-10}
+    - {type: numeric, key: param_theta, tolerance: 1.0e-10}
+    - {type: numeric, key: param_g_chi, tolerance: 1.0e-10}
+  tags: [2hdma, param_card, anchor, paper-3]
+
+# ===========================================================================
+# Paper 4 — arXiv:2511.21808 — GCE WIMP Comprehensive Study
+# ===========================================================================
+
+- id: t1_p4_higgs_portal_scalar_proc_card
+  task_type: mg_required
+  tier: 1
+  model: higgs-portal-scalar
+  prompt: >
+    Using mg5_batch.generate_proc_card(), write a proc_card for scalar DM
+    pair annihilation via Higgs portal. UFO model: DMScalar (DMSimp release,
+    version pinned in eval/2511.21808_gce_wimp_comprehensive/madgraph/README.md).
+    DM candidate: Xs. Channels: b b~, tau+ tau-. Report under key "proc_card".
+  reference_fn: p4_proc_card_higgs_portal_scalar
+  reference_args: {}
+  graders:
+    - type: file_contains
+      key: proc_card
+      pattern: "import model DMScalar"
+    - type: file_contains
+      key: proc_card
+      pattern: "generate.*Xs.*>.*b.*b~"
+  tags: [paper-4, higgs-portal, setup]
+
+
+# ============================================================
+# NMSSM bino/higgsino blind-spot benchmark — arXiv:2509.15121
+# ============================================================
+
+- id: t1_nmssm_proc_card
+  task_type: mg_required
+  tier: 1
+  model: nmssm-bino-higgsino
+  prompt: >
+    Using MadGraph5, write and report a proc_card.dat for the process
+    pp > chi1+ chi20 j (associated chargino-neutralino + jet production)
+    in the NMSSM with the built-in MG5 nmssm UFO model
+    (arXiv:2509.15121). The proc_card should import the nmssm model,
+    generate p p > x1+ n2 j, and output to a directory named nmssm_x1pn2j.
+    Report the proc_card content in your JSON output under the key "proc_card".
+  reference_fn: nmssm_proc_card
+  reference_args: {}
+  graders:
+    - type: file_contains
+      key: proc_card
+      pattern: "import model.*nmssm"
+    - type: file_contains
+      key: proc_card
+      pattern: "generate.*x1\\+.*n2.*j"
+  tags: [proc_card, nmssm, setup, mg5_batch]
+
+- id: t1_nmssm_transcription_bp1_3
+  task_type: na
+  tier: 1
+  model: nmssm-bino-higgsino
+  prompt: >
+    Transcription check only — do not recompute.
+    Report the paper-quoted values of sigma_DD_SI (direct detection SI cross section
+    in cm^2) and Omega_h2 (relic density) for benchmark point BP1-3 of
+    arXiv:2509.15121 (Table 7). These are NMSSMTools/micrOMEGAs outputs from the paper.
+    Report sigma_DD_SI as a float in cm^2 and omega_h2 as a float.
+  reference_fn: nmssm_transcription_bp
+  reference_args:
+    bp_name: BP1_3
+  graders:
+    - type: numeric
+      key: sigma_DD_SI
+      tolerance: 0.05
+    - type: numeric
+      key: omega_h2
+      tolerance: 0.10
+  tags: [nmssm, BP1_3, transcription-check]
+
+- id: t1_nmssm_transcription_bp9_3
+  task_type: na
+  tier: 1
+  model: nmssm-bino-higgsino
+  prompt: >
+    Transcription check only — do not recompute.
+    Report the paper-quoted values of sigma_DD_SI (direct detection SI cross section
+    in cm^2) and Omega_h2 (relic density) for benchmark point BP9-3 of
+    arXiv:2509.15121 (Table 6 / Table 8). These are NMSSMTools/micrOMEGAs outputs
+    from the paper. Report sigma_DD_SI as a float in cm^2 and omega_h2 as a float.
+  reference_fn: nmssm_transcription_bp
+  reference_args:
+    bp_name: BP9_3
+  graders:
+    - type: numeric
+      key: sigma_DD_SI
+      tolerance: 0.05
+    - type: numeric
+      key: omega_h2
+      tolerance: 0.10
+  tags: [nmssm, BP9_3, transcription-check]

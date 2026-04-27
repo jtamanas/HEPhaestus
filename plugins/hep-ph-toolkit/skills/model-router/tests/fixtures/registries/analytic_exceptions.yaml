@@ -1,0 +1,32 @@
+# Mock analytic_exceptions.yaml for WS3 tests
+# WS4-authored; WS3 consumes read-only.
+schema_version: 1
+
+exceptions:
+  dsu3-002:
+    model_id: dark-su3
+    status: active
+    disclosure_id: dsu3-002
+    banner: |
+      **REGRESSION-ANCHOR ONLY — NOT A PHYSICS TARGET (dsu3-002).** Dark-SU(3)
+      relic density runs through the analytic backend (`analytic_models.dark_su3`)
+      and currently uses `<sigma v>` approximations (`sigmav_approx=True`). The
+      emitted Ωh² values are roughly **25000× the Planck target** and must be read
+      as regression anchors for the analytic pipeline, **not** as a physics
+      prediction or a paper-fidelity result. Paper fidelity (Ω_tot h² ≈ 0.12) is
+      out of reach this iteration and requires the upgrade roadmap in
+      `analytic_models.dark_su3` (full Boltzmann integration + multi-component
+      weighting in `/dark-matter-constraints`). Any downstream report that quotes
+      these numbers MUST embed this banner verbatim — do not silently strip it.
+    signoff_prompt: >-
+      To proceed with the analytic backend for dark-SU(3):
+      1. Confirm `analytic_models.dark_su3` is the authoritative implementation.
+      2. Add `matrix_acknowledgement` to your chain_override in constraints.yaml.
+      3. Re-run /model-router --strict to verify exit 0.
+    analytic_module: "analytic_models.dark_su3"
+    observable_labels:
+      relic:
+        - candidate: "V"
+          label: "Omega_V_h2"
+        - candidate: "Psi"
+          label: "Omega_Psi_h2"

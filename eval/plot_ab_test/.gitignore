@@ -1,0 +1,7 @@
+data/
+outputs/
+results/run_*.json
+!results/votes_*.json
+viewer.html
+__pycache__/
+*.pyc

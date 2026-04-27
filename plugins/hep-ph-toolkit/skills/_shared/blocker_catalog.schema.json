@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "blocker_catalog.schema.json",
+  "title": "WS2 Blocker Catalog",
+  "description": "JSON Schema for plugins/hep-ph-toolkit/skills/_shared/blocker_catalog.yaml",
+
+  "type": "object",
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "catalog_date": {"type": "string"},
+    "blockers": {
+      "type": "object",
+      "description": "All blocker codes; keys are SCREAMING_SNAKE_CASE identifiers.",
+      "additionalProperties": {
+        "$ref": "#/$defs/BlockerEntry"
+      }
+    }
+  },
+  "required": ["schema_version", "blockers"],
+  "additionalProperties": true,
+
+  "$defs": {
+    "BlockerClassEnum": {
+      "type": "string",
+      "enum": [
+        "missing-skill",
+        "missing-tool-feature",
+        "fundamental-group-theory-gap",
+        "regime-mismatch",
+        "spec-authoring-gap",
+        "informational",
+        "analytic-exception"
+      ]
+    },
+
+    "SeverityEnum": {
+      "type": "string",
+      "enum": ["fatal", "recoverable", "informational"]
+    },
+
+    "FixLocalityEnum": {
+      "type": "string",
+      "enum": ["upstream", "local_patch", "both"]
+    },
+
+    "BlockerEntry": {
+      "type": "object",
+      "properties": {
+        "class": {"$ref": "#/$defs/BlockerClassEnum"},
+        "severity": {"$ref": "#/$defs/SeverityEnum"},
+        "emitted_by": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "triggered_by_axes": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "ws1_reference": {"type": "string"},
+        "ws4_reference": {"type": "string"},
+        "digest_reference": {"type": "string"},
+        "description": {"type": "string"},
+        "workaround_codes": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "owned_by": {"type": "string"},
+        "fix_locality": {"$ref": "#/$defs/FixLocalityEnum"}
+      },
+      "required": ["class", "severity", "description", "owned_by"],
+      "if": {
+        "properties": {"class": {"const": "missing-tool-feature"}}
+      },
+      "then": {
+        "required": ["fix_locality"]
+      },
+      "additionalProperties": true
+    }
+  }
+}

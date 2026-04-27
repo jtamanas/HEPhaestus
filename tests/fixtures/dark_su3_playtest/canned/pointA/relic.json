@@ -1,0 +1,11 @@
+{
+  "schema_version": "relic/v1",
+  "m_dm_gev": 100.0,
+  "omega_h2": 0.118,
+  "xf": 25.3,
+  "source": "micromegas",
+  "source_run": "tests/fixtures/dark_su3_playtest/canned/pointA",
+  "cosmology": "standard_thermal",
+  "model_class": "darksu3",
+  "model": "darksu3"
+}

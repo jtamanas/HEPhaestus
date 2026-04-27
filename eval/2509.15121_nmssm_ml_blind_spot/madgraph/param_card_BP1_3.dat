@@ -1,0 +1,41 @@
+# SLHA-1 parameter card for BP1-3 of arXiv:2509.15121
+# Benchmark group 1, point 3: m_chi1=147.5, m_chi2=158.5, m_chi3=164.8 GeV
+# sigma(pp > chi1+ chi20 j) = 105.1 fb (paper Table 7)
+#
+# Parameter reconstruction:
+#   M1 = 500 GeV (fixed, Table 2)
+#   M2 = 5000 GeV (decoupled wino)
+#   mu_eff = -161.8 GeV (SLHA convention: -mu_eff = 161.8 from Table 7 chargino mass)
+#   tan_beta = 6.2 (fixed, Table 2)
+#   lambda = 0.027 (fixed, Table 2)
+#   kappa = 0.01243 (tuned: 2*kappa*vS ~ m_chi1)
+#   vS = mu_eff/lambda = 5992.59 GeV (SLHA convention: negative mu_eff -> negative vS)
+#   A_lambda = -900 GeV (typical range -800 to -1100 GeV per Table 2)
+#   A_kappa = 100 GeV (fixed, Table 2)
+
+BLOCK SMINPUTS
+    1   1.279000e+02   # alpha_EM^{-1}
+    2   1.166370e-05   # G_F
+    3   1.176000e-01   # alpha_S
+    4   9.118760e+01   # M_Z
+    5   4.200000e+00   # m_b
+    6   1.735000e+02   # m_t
+
+BLOCK MINPAR
+    3   6.200000e+00   # tan_beta
+
+BLOCK EXTPAR
+    1   5.000000e+02   # M_1 (bino mass) [GeV]
+    2   5.000000e+03   # M_2 (wino mass) [GeV]
+   61   2.700000e-02   # lambda (NMSSM superpotential coupling)
+   62   1.243000e-02   # kappa (NMSSM self-coupling)
+   63  -9.000000e+02   # A_lambda [GeV]
+   64   1.000000e+02   # A_kappa [GeV]
+   65  -1.618000e+02   # mu_eff [GeV] (negative SLHA convention; |mu_eff| = 161.8)
+
+BLOCK MASS
+   1000022   1.475000e+02   # m_chi1 (LSP, singlino-like)
+   1000023   1.585000e+02   # m_chi2
+   1000025   1.648000e+02   # m_chi3
+   1000035   5.000000e+02   # m_chi4 (bino-like)
+   1000024   1.618000e+02   # m_chi1+ (chargino)

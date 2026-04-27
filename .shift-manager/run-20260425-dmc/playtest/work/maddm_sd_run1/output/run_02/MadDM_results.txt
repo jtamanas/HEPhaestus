@@ -1,0 +1,49 @@
+################################################
+#                 MadDM v. 3.2                 #
+################################################
+
+
+################################################
+# Relic Density                                #
+################################################
+
+Omegah2                       = 2.92e-01
+Omegah_Planck                 = 1.20e-01
+xsi                           = 1.00e+00 	 # xsi = (Omega/Omega_Planck)
+x_f                           = 2.00e+01
+sigmav_xf                     = 8.42e-27 	 # cm^3 s^-1
+# % of the relic density channels
+%_chi1chi1_zz                 = 17.84 %
+%_chi1chi1_zh                 = 20.03 %
+%_chi1chi1_hh                 = 12.23 %
+%_chi1chi1_wpwm               = 33.55 %
+%_chi1chi1_ddx                = 0.87 %
+%_chi1chi1_uux                = 0.68 %
+%_chi1chi1_ssx                = 0.88 %
+%_chi1chi1_ccx                = 1.59 %
+%_chi1chi1_bbx                = 10.76 %
+%_chi1chi1_ttx                = 0.00 %
+%_chi1chi1_emep               = 0.20 %
+%_chi1chi1_mummup             = 0.20 %
+%_chi1chi1_tamtap             = 0.79 %
+%_chi1chi1_gg                 = 0.00 %
+%_chi1chi1_aa                 = 0.00 %
+%_chi1chi1_vevex              = 0.39 %
+%_chi1chi1_dsx                = 0.00 %
+%_chi1chi1_dbx                = 0.00 %
+%_chi1chi1_ucx                = 0.00 %
+%_chi1chi1_utx                = 0.00 %
+%_chi1chi1_sdx                = 0.00 %
+%_chi1chi1_sbx                = 0.00 %
+%_chi1chi1_cux                = 0.00 %
+%_chi1chi1_ctx                = 0.00 %
+%_chi1chi1_bdx                = 0.00 %
+%_chi1chi1_bsx                = 0.00 %
+%_chi1chi1_tux                = 0.00 %
+%_chi1chi1_tcx                = 0.00 %
+%_chi1chi1_emmup              = 0.00 %
+%_chi1chi1_emtap              = 0.00 %
+%_chi1chi1_mumep              = 0.00 %
+%_chi1chi1_mumtap             = 0.00 %
+%_chi1chi1_tamep              = 0.00 %
+%_chi1chi1_tammup             = 0.00 %

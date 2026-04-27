@@ -1,0 +1,1238 @@
+# Tier 2 — Accuracy: Does it get the physics right at known benchmarks?
+#
+# Each task requires the agent to write and execute code (using MadGraph scripts
+# or numpy/scipy implementations of the model equations) to compute an observable.
+# The agent must NOT compute from memory — it must run actual code.
+
+# ======================================================================
+# Singlet-Doublet: tree-level sigma_SI at 4 benchmark points
+# ======================================================================
+
+- id: t2_sd_si_fig2_ref
+  task_type: mg_required
+  tier: 2
+  model: singlet-doublet
+  prompt: >
+    Using MadGraph or by writing and executing a Python script that implements
+    the singlet-doublet fermion DM model (arXiv:2506.19062 Eq. 1-7), compute
+    the tree-level spin-independent DM-nucleon cross-section at the Figure 2
+    reference point: m_S=150 GeV, m_D=500 GeV, y=1, theta=0.
+
+    You must write and run code to do this — do not compute analytically in
+    your head. The calculation chain is: build 3x3 mass matrix (Eq. 3) →
+    diagonalize to get m_chi1 → compute Higgs coupling y_h (Eq. 7) →
+    evaluate sigma_SI (Eq. 5) using standard nucleon form factors.
+
+    Report sigma_SI in cm^2 and the DM mass m_chi1 in GeV.
+  reference_fn: sd_sigma_si_tree
+  reference_args:
+    m_S: 150.0
+    m_D: 500.0
+    y: 1.0
+    theta: 0.0
+  graders:
+    - type: numeric
+      key: sigma_SI
+      tolerance: 0.05
+    - type: numeric
+      key: m_chi1
+      tolerance: 0.01
+    - type: unit
+      key: sigma_SI_unit
+      expected: "cm^2"
+  tags: [SI, tree-level, singlet-doublet, figure-2]
+
+- id: t2_sd_si_near_bs
+  task_type: mg_required
+  tier: 2
+  model: singlet-doublet
+  prompt: >
+    Using MadGraph or a Python script implementing the singlet-doublet model,
+    compute sigma_SI near a blind spot: m_S=150 GeV, m_D=500 GeV, y=1,
+    theta=-0.148 rad. Write and run the code — do not compute from memory.
+    The cross-section should be suppressed relative to theta=0.
+  reference_fn: sd_sigma_si_tree
+  reference_args:
+    m_S: 150.0
+    m_D: 500.0
+    y: 1.0
+    theta: -0.148
+  graders:
+    - type: numeric
+      key: sigma_SI
+      tolerance: 0.05
+    - type: numeric
+      key: m_chi1
+      tolerance: 0.01
+  tags: [SI, tree-level, singlet-doublet, blind-spot]
+
+- id: t2_sd_si_heavy
+  task_type: mg_required
+  tier: 2
+  model: singlet-doublet
+  prompt: >
+    Using MadGraph or a Python script, compute sigma_SI for a heavy DM
+    benchmark in the singlet-doublet model: m_S=1000 GeV, m_D=1200 GeV,
+    y=0.5, theta=0.3 rad. You must write and execute code.
+  reference_fn: sd_sigma_si_tree
+  reference_args:
+    m_S: 1000.0
+    m_D: 1200.0
+    y: 0.5
+    theta: 0.3
+  graders:
+    - type: numeric
+      key: sigma_SI
+      tolerance: 0.05
+    - type: numeric
+      key: m_chi1
+      tolerance: 0.01
+  tags: [SI, tree-level, singlet-doublet, heavy]
+
+- id: t2_sd_si_symmetric
+  task_type: mg_required
+  tier: 2
+  model: singlet-doublet
+  prompt: >
+    Using MadGraph or a Python script, compute sigma_SI with symmetric
+    Yukawas in the singlet-doublet model: m_S=300 GeV, m_D=400 GeV,
+    y=0.5, theta=pi/4 (so y1=y2). Write and execute code.
+  reference_fn: sd_sigma_si_tree
+  reference_args:
+    m_S: 300.0
+    m_D: 400.0
+    y: 0.5
+    theta: 0.7853981633974483
+  graders:
+    - type: numeric
+      key: sigma_SI
+      tolerance: 0.05
+    - type: numeric
+      key: m_chi1
+      tolerance: 0.01
+  tags: [SI, tree-level, singlet-doublet]
+
+# ======================================================================
+# Singlet-Doublet: sigma_SD at 2 points
+# ======================================================================
+
+- id: t2_sd_sd_fig2_ref
+  task_type: mg_required
+  tier: 2
+  model: singlet-doublet
+  prompt: >
+    Using MadGraph or a Python script implementing Eq. 5 and Eq. 7 of
+    arXiv:2506.19062, compute the tree-level spin-dependent DM-nucleon
+    cross-section for the singlet-doublet model at m_S=150, m_D=500, y=1,
+    theta=0. You must write and execute code. Report sigma_SD in cm^2.
+  reference_fn: sd_sigma_sd_tree
+  reference_args:
+    m_S: 150.0
+    m_D: 500.0
+    y: 1.0
+    theta: 0.0
+  graders:
+    - type: numeric
+      key: sigma_SD
+      tolerance: 0.05
+    - type: unit
+      key: sigma_SD_unit
+      expected: "cm^2"
+  tags: [SD, tree-level, singlet-doublet, figure-2]
+
+- id: t2_sd_sd_heavy
+  task_type: mg_required
+  tier: 2
+  model: singlet-doublet
+  prompt: >
+    Using MadGraph or a Python script, compute sigma_SD for m_S=1000,
+    m_D=1200, y=0.5, theta=0.3. Write and execute code.
+  reference_fn: sd_sigma_sd_tree
+  reference_args:
+    m_S: 1000.0
+    m_D: 1200.0
+    y: 0.5
+    theta: 0.3
+  graders:
+    - type: numeric
+      key: sigma_SD
+      tolerance: 0.05
+  tags: [SD, tree-level, singlet-doublet, heavy]
+
+# ======================================================================
+# Singlet-Doublet: mass spectrum at 3 points
+# ======================================================================
+
+- id: t2_sd_masses_fig2
+  task_type: algebra
+  tier: 2
+  model: singlet-doublet
+  prompt: >
+    Using a Python script, build the 3x3 neutral fermion mass matrix for
+    the singlet-doublet model (arXiv:2506.19062 Eq. 3) at m_S=150, m_D=500,
+    y1=1.0, y2=0, and diagonalize it numerically with numpy. Report the
+    physical masses m_chi1, m_chi2, m_chi3 in GeV, and the charged fermion
+    mass m_psi (which equals m_D at tree level). You must run actual code.
+  reference_fn: sd_mass_spectrum
+  reference_args:
+    m_S: 150.0
+    m_D: 500.0
+    y: 1.0
+    theta: 0.0
+  graders:
+    - type: numeric
+      key: m_chi1
+      tolerance: 0.001
+    - type: numeric
+      key: m_chi2
+      tolerance: 0.001
+    - type: numeric
+      key: m_chi3
+      tolerance: 0.001
+    - type: numeric
+      key: m_psi_charged
+      tolerance: 1.0e-10
+  tags: [mass-spectrum, singlet-doublet, figure-2]
+
+- id: t2_sd_masses_heavy
+  task_type: algebra
+  tier: 2
+  model: singlet-doublet
+  prompt: >
+    Using numpy, diagonalize the singlet-doublet mass matrix at m_S=1000,
+    m_D=1200, y=0.5, theta=0.3. Write and execute the code.
+  reference_fn: sd_mass_spectrum
+  reference_args:
+    m_S: 1000.0
+    m_D: 1200.0
+    y: 0.5
+    theta: 0.3
+  graders:
+    - type: numeric
+      key: m_chi1
+      tolerance: 0.001
+    - type: numeric
+      key: m_chi2
+      tolerance: 0.001
+    - type: numeric
+      key: m_chi3
+      tolerance: 0.001
+  tags: [mass-spectrum, singlet-doublet, heavy]
+
+- id: t2_sd_masses_trace
+  task_type: algebra
+  tier: 2
+  model: singlet-doublet
+  prompt: >
+    Using numpy, diagonalize the singlet-doublet mass matrix at m_S=500,
+    m_D=300, y=2.0, theta=0.1 and verify that the trace (sum of eigenvalues)
+    equals m_S. Write and execute the code.
+  reference_fn: sd_mass_spectrum
+  reference_args:
+    m_S: 500.0
+    m_D: 300.0
+    y: 2.0
+    theta: 0.1
+  graders:
+    - type: numeric
+      key: trace
+      tolerance: 1.0e-8
+    - type: numeric
+      key: trace_expected
+      tolerance: 1.0e-10
+  tags: [mass-spectrum, singlet-doublet, algebraic-identity]
+
+# ======================================================================
+# 2HDM+a: trilinear couplings at 3 points (Eq. 25)
+# ======================================================================
+
+- id: t2_thdma_trilinear_zero
+  task_type: algebra
+  tier: 2
+  model: 2HDM+a
+  prompt: >
+    Using a Python script implementing Eq. 25 of arXiv:2506.19062, compute
+    the trilinear couplings lambda_haa and lambda_Haa for the 2HDM+a model
+    with lambda_1P=0, lambda_2P=0, tan_beta=10. Both should vanish.
+    Write and execute the code.
+  reference_fn: thdma_trilinear
+  reference_args:
+    lambda_1P: 0.0
+    lambda_2P: 0.0
+    tan_beta: 10.0
+  graders:
+    - type: exact_zero
+      key: lambda_haa
+      tolerance: 1.0e-15
+    - type: exact_zero
+      key: lambda_Haa
+      tolerance: 1.0e-15
+  tags: [trilinear, 2HDM+a, figure-4]
+
+- id: t2_thdma_trilinear_equal
+  task_type: algebra
+  tier: 2
+  model: 2HDM+a
+  prompt: >
+    Using a Python script implementing Eq. 25, compute lambda_haa and
+    lambda_Haa with lambda_1P=1, lambda_2P=1, tan_beta=10, m_H=800 GeV.
+    Equal portals means lambda_Haa should vanish. Run the code.
+  reference_fn: thdma_trilinear
+  reference_args:
+    lambda_1P: 1.0
+    lambda_2P: 1.0
+    tan_beta: 10.0
+    m_H: 800.0
+  graders:
+    - type: numeric
+      key: lambda_haa
+      tolerance: 0.01
+    - type: exact_zero
+      key: lambda_Haa
+      tolerance: 1.0e-12
+  tags: [trilinear, 2HDM+a, figure-4]
+
+- id: t2_thdma_trilinear_asym
+  task_type: algebra
+  tier: 2
+  model: 2HDM+a
+  prompt: >
+    Using a Python script implementing Eq. 25, compute lambda_haa and
+    lambda_Haa with lambda_1P=3, lambda_2P=0, tan_beta=10, m_H=800 GeV.
+    Execute the code.
+  reference_fn: thdma_trilinear
+  reference_args:
+    lambda_1P: 3.0
+    lambda_2P: 0.0
+    tan_beta: 10.0
+    m_H: 800.0
+  graders:
+    - type: numeric
+      key: lambda_haa
+      tolerance: 0.01
+    - type: numeric
+      key: lambda_Haa
+      tolerance: 0.01
+  tags: [trilinear, 2HDM+a, figure-4]
+
+# ======================================================================
+# Dark SU(3): vector sigma_SI at 3 Figure 7 points
+# ======================================================================
+
+- id: t2_dsu3_vector_bp1
+  task_type: mg_required
+  tier: 2
+  model: dark-su3
+  prompt: >
+    Using MadGraph or a Python script implementing the Dark SU(3) model
+    (arXiv:2506.19062 Eqs. 26-28), compute the tree-level SI cross-section
+    for vector DM at g_tilde=2.0, m_V=150 GeV, sin_theta=0.1, m_H2=500 GeV.
+    The calculation involves two Higgs exchange diagrams (H1 and H2).
+    You must write and execute code. Report sigma_SI_vector in cm^2.
+  reference_fn: dsu3_sigma_si_vector
+  reference_args:
+    g_tilde: 2.0
+    m_V: 150.0
+    sin_theta: 0.1
+    m_H2: 500.0
+  graders:
+    - type: numeric
+      key: sigma_SI_vector
+      tolerance: 0.05
+  tags: [SI, tree-level, dark-su3, figure-7]
+
+- id: t2_dsu3_vector_bp2
+  task_type: mg_required
+  tier: 2
+  model: dark-su3
+  prompt: >
+    Using MadGraph or a Python script for the Dark SU(3) model, compute
+    vector DM sigma_SI at g_tilde=0.5, m_V=415 GeV, sin_theta=0.25,
+    m_H2=650 GeV. Write and execute code. Report in cm^2.
+  reference_fn: dsu3_sigma_si_vector
+  reference_args:
+    g_tilde: 0.5
+    m_V: 415.0
+    sin_theta: 0.25
+    m_H2: 650.0
+  graders:
+    - type: numeric
+      key: sigma_SI_vector
+      tolerance: 0.05
+  tags: [SI, tree-level, dark-su3, figure-7]
+
+- id: t2_dsu3_vector_bp3
+  task_type: mg_required
+  tier: 2
+  model: dark-su3
+  prompt: >
+    Using MadGraph or a Python script for the Dark SU(3) model, compute
+    vector DM sigma_SI at g_tilde=0.2, m_V=75 GeV, sin_theta=0.03,
+    m_H2=1000 GeV. Write and execute code. Report in cm^2.
+  reference_fn: dsu3_sigma_si_vector
+  reference_args:
+    g_tilde: 0.2
+    m_V: 75.0
+    sin_theta: 0.03
+    m_H2: 1000.0
+  graders:
+    - type: numeric
+      key: sigma_SI_vector
+      tolerance: 0.05
+  tags: [SI, tree-level, dark-su3, figure-7]
+
+# ======================================================================
+# Dark SU(3): scalar blind spot at 3 points
+# ======================================================================
+
+- id: t2_dsu3_blind_spot_1
+  task_type: algebra
+  tier: 2
+  model: dark-su3
+  prompt: >
+    Using a Python script implementing Eq. 28-29 of arXiv:2506.19062,
+    verify the exact blind spot for Dark SU(3) scalar DM at g_tilde=1.0,
+    m_V=200 GeV, sin_theta=0.1, m_H2=300 GeV. Compute the SI scattering
+    amplitude from the sum of H1 and H2 exchange — it should cancel exactly.
+    You must write and run the code. Report blind_spot_amplitude.
+  reference_fn: dsu3_scalar_blind_spot
+  reference_args:
+    g_tilde: 1.0
+    m_V: 200.0
+    sin_theta: 0.1
+    m_H2: 300.0
+  graders:
+    - type: exact_zero
+      key: blind_spot_amplitude
+      tolerance: 1.0e-12
+  tags: [blind-spot, dark-su3, exact]
+
+- id: t2_dsu3_blind_spot_2
+  task_type: algebra
+  tier: 2
+  model: dark-su3
+  prompt: >
+    Using a Python script for the Dark SU(3) scalar blind spot (Eq. 29),
+    verify the amplitude cancels at g_tilde=3.5, m_V=1000 GeV, sin_theta=0.5,
+    m_H2=50 GeV. Write and run the code.
+  reference_fn: dsu3_scalar_blind_spot
+  reference_args:
+    g_tilde: 3.5
+    m_V: 1000.0
+    sin_theta: 0.5
+    m_H2: 50.0
+  graders:
+    - type: exact_zero
+      key: blind_spot_amplitude
+      tolerance: 1.0e-12
+  tags: [blind-spot, dark-su3, exact]
+
+- id: t2_dsu3_blind_spot_extreme
+  task_type: algebra
+  tier: 2
+  model: dark-su3
+  prompt: >
+    Using a Python script, verify the Dark SU(3) scalar blind spot at extreme
+    parameters: g_tilde=10, m_V=1 GeV, sin_theta=0.707, m_H2=999 GeV.
+    Write and execute the code.
+  reference_fn: dsu3_scalar_blind_spot
+  reference_args:
+    g_tilde: 10.0
+    m_V: 1.0
+    sin_theta: 0.707
+    m_H2: 999.0
+  graders:
+    - type: exact_zero
+      key: blind_spot_amplitude
+      tolerance: 1.0e-10
+  tags: [blind-spot, dark-su3, exact, edge-case]
+
+# ======================================================================
+# Scalar Portal Singlet (arXiv:2601.13147) — Tier 2 accuracy tasks
+# 10 tasks: 3 sigma_SI + 3 mass_spectrum + 3 mu_signal + 1 unit_check
+# ======================================================================
+
+- id: t2_sps_sigma_si_bp1
+  task_type: mg_required
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    Write and execute a Python script implementing arXiv:2601.13147 Eq. 31
+    for the singlet-fermion + Higgs-portal model. Compute sigma_SI on protons
+    and neutrons at BP1: m_chi=222, g_chi=0.57, sin_theta=0.001, m_h1=125.25,
+    m_h2=200. Use the (2/9)*f_TG form of the nucleon coupling.
+    Report sigma_SI_p and sigma_SI_n in cm^2.
+  reference_fn: sps_sigma_si
+  reference_args:
+    m_chi: 222.0
+    g_chi: 0.57
+    sin_theta: 0.001
+    m_h1: 125.25
+    m_h2: 200.0
+  graders:
+    - type: numeric
+      key: sigma_SI_p
+      tolerance: 1.0e-10
+    - type: numeric
+      key: sigma_SI_n
+      tolerance: 1.0e-10
+    - type: unit
+      key: sigma_SI_p_unit
+      expected: "cm^2"
+    - type: unit
+      key: sigma_SI_n_unit
+      expected: "cm^2"
+  tags: [SI, tree-level, scalar-portal-singlet, BP1]
+
+- id: t2_sps_sigma_si_bp_mid
+  task_type: mg_required
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    Implement Eq. 31 from arXiv:2601.13147 and compute sigma_SI at BP_mid
+    (synthetic control): m_chi=200, g_chi=1.0, sin_theta=0.2, m_h1=125.25,
+    m_h2=300. Report sigma_SI_p and sigma_SI_n in cm^2.
+  reference_fn: sps_sigma_si
+  reference_args:
+    m_chi: 200.0
+    g_chi: 1.0
+    sin_theta: 0.2
+    m_h1: 125.25
+    m_h2: 300.0
+  graders:
+    - type: numeric
+      key: sigma_SI_p
+      tolerance: 1.0e-10
+    - type: numeric
+      key: sigma_SI_n
+      tolerance: 1.0e-10
+    - type: unit
+      key: sigma_SI_p_unit
+      expected: "cm^2"
+    - type: unit
+      key: sigma_SI_n_unit
+      expected: "cm^2"
+  tags: [SI, tree-level, scalar-portal-singlet, BP_mid]
+
+- id: t2_sps_sigma_si_bp9
+  task_type: mg_required
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    Implement Eq. 31 from arXiv:2601.13147 and compute sigma_SI at BP9
+    (light singlet): m_chi=78, g_chi=0.34, sin_theta=0.002, m_h1=125.25,
+    m_h2=70. Note m_h2 < m_h1 for this benchmark.
+    Report sigma_SI_p and sigma_SI_n in cm^2.
+  reference_fn: sps_sigma_si
+  reference_args:
+    m_chi: 78.0
+    g_chi: 0.34
+    sin_theta: 0.002
+    m_h1: 125.25
+    m_h2: 70.0
+  graders:
+    - type: numeric
+      key: sigma_SI_p
+      tolerance: 1.0e-10
+    - type: numeric
+      key: sigma_SI_n
+      tolerance: 1.0e-10
+    - type: unit
+      key: sigma_SI_p_unit
+      expected: "cm^2"
+    - type: unit
+      key: sigma_SI_n_unit
+      expected: "cm^2"
+  tags: [SI, tree-level, scalar-portal-singlet, BP9]
+
+- id: t2_sps_mass_spectrum_bp1
+  task_type: algebra
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    For the scalar portal singlet model (arXiv:2601.13147), compute the
+    CP-even Higgs mass spectrum at BP1: m_h1=125.25, m_h2=200, sin_theta=0.001,
+    lambda_s=3.38, mu_3=-20. Derive Lagrangian parameters internally and
+    diagonalize the 2x2 mass matrix numerically.
+    Report m_h1, m_h2, and sin_theta.
+  reference_fn: sps_mass_spectrum
+  reference_args:
+    m_h1: 125.25
+    m_h2: 200.0
+    sin_theta: 0.001
+    lambda_s: 3.38
+    mu_3: -20.0
+  graders:
+    - type: numeric
+      key: m_h1
+      tolerance: 1.0e-10
+    - type: numeric
+      key: m_h2
+      tolerance: 1.0e-10
+    - type: numeric
+      key: sin_theta
+      tolerance: 1.0e-10
+  tags: [mass-spectrum, scalar-portal-singlet, BP1]
+
+- id: t2_sps_mass_spectrum_bp_mid
+  task_type: algebra
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    Compute the CP-even Higgs mass spectrum at BP_mid: m_h1=125.25, m_h2=300,
+    sin_theta=0.2, lambda_s=2.0, mu_3=-50. Report m_h1, m_h2, sin_theta.
+  reference_fn: sps_mass_spectrum
+  reference_args:
+    m_h1: 125.25
+    m_h2: 300.0
+    sin_theta: 0.2
+    lambda_s: 2.0
+    mu_3: -50.0
+  graders:
+    - type: numeric
+      key: m_h1
+      tolerance: 1.0e-10
+    - type: numeric
+      key: m_h2
+      tolerance: 1.0e-10
+    - type: numeric
+      key: sin_theta
+      tolerance: 1.0e-10
+  tags: [mass-spectrum, scalar-portal-singlet, BP_mid]
+
+- id: t2_sps_mass_spectrum_bp9
+  task_type: algebra
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    Compute the CP-even Higgs mass spectrum at BP9: m_h1=125.25, m_h2=70,
+    sin_theta=0.002, lambda_s=0.73, mu_3=20. Note m_h2=70 < m_h1=125.25
+    (singlet lighter). Report m_h1, m_h2, sin_theta as ascending eigenvalues.
+  reference_fn: sps_mass_spectrum
+  reference_args:
+    m_h1: 125.25
+    m_h2: 70.0
+    sin_theta: 0.002
+    lambda_s: 0.73
+    mu_3: 20.0
+  graders:
+    - type: numeric
+      key: m_h1
+      tolerance: 1.0e-10
+    - type: numeric
+      key: m_h2
+      tolerance: 1.0e-10
+    - type: numeric
+      key: sin_theta
+      tolerance: 1.0e-10
+  tags: [mass-spectrum, scalar-portal-singlet, BP9]
+
+- id: t2_sps_mu_signal_theta_zero
+  task_type: algebra
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    Implement Eq. 22 from arXiv:2601.13147: the signal strength modifier
+    mu_sig = cos^2(theta) = 1 - sin^2(theta). Compute at sin_theta=0.
+    Report mu_sig.
+  reference_fn: sps_mu_signal
+  reference_args:
+    sin_theta: 0.0
+  graders:
+    - type: numeric
+      key: mu_sig
+      tolerance: 1.0e-15
+  tags: [signal-strength, scalar-portal-singlet]
+
+- id: t2_sps_mu_signal_bp1
+  task_type: algebra
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    Implement Eq. 22 (signal strength) from arXiv:2601.13147. Compute
+    mu_sig = 1 - sin^2(theta) at sin_theta=0.001 (BP1). Report mu_sig.
+  reference_fn: sps_mu_signal
+  reference_args:
+    sin_theta: 0.001
+  graders:
+    - type: numeric
+      key: mu_sig
+      tolerance: 1.0e-10
+  tags: [signal-strength, scalar-portal-singlet, BP1]
+
+- id: t2_sps_mu_signal_bp_mid
+  task_type: algebra
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    Implement Eq. 22 (signal strength) from arXiv:2601.13147. Compute
+    mu_sig = 1 - sin^2(theta) at sin_theta=0.2 (BP_mid). Report mu_sig.
+  reference_fn: sps_mu_signal
+  reference_args:
+    sin_theta: 0.2
+  graders:
+    - type: numeric
+      key: mu_sig
+      tolerance: 1.0e-10
+  tags: [signal-strength, scalar-portal-singlet, BP_mid]
+
+- id: t2_sps_sigma_si_unit_check
+  task_type: algebra
+  tier: 2
+  model: scalar-portal-singlet
+  prompt: >
+    Confirm that the sigma_SI computation (Eq. 31) returns cm^2 as units
+    for both proton and neutron cross-sections. Use BP1 parameters:
+    m_chi=222, g_chi=0.57, sin_theta=0.001, m_h1=125.25, m_h2=200.
+    Report sigma_SI_p_unit and sigma_SI_n_unit as strings.
+  reference_fn: sps_sigma_si_unit_only
+  reference_args:
+    m_chi: 222.0
+    g_chi: 0.57
+    sin_theta: 0.001
+    m_h1: 125.25
+    m_h2: 200.0
+  graders:
+    - type: unit
+      key: sigma_SI_p_unit
+      expected: "cm^2"
+    - type: unit
+      key: sigma_SI_n_unit
+      expected: "cm^2"
+  tags: [SI, scalar-portal-singlet, BP1, transcription-check]
+
+# ======================================================================
+# Scotogenic Inverse Seesaw (arXiv:2603.23040) — Tier 2 tasks
+# ======================================================================
+
+- id: t2_scoto_sigmav_BP2
+  task_type: mg_required
+  expected_outcome: BLOCKED_CORRECTLY
+  tier: 2
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    For BP2 of arXiv:2603.23040 (m_chi ~ 59 GeV, Higgs-funnel), compute <sigma v_Moeller>
+    at freeze-out (x = m_chi/T = 20) using Eq. 21 Gondolo-Gelmini over Eqs. 22-24 with
+    Breit-Wigner h and Z propagators (fixed widths Gamma_h = 4.07 MeV, Gamma_Z = 2.495 GeV).
+    Use scipy.integrate.quad. Report in cm^3/s.
+  reference_fn: scoto_sigmav_thermal
+  reference_args:
+    M_R: 59.0
+    mu_S: 0.05
+    M_N: 59.0
+    bp: "BP2"
+    x_fo: 20.0
+  graders:
+    - type: numeric
+      key: sigmav_thermal
+      tolerance: 0.02
+    - type: unit
+      key: sigmav_unit
+      expected: "cm^3/s"
+  tags: [relic, funnel, paper-2, BP2, self-consistency]
+
+- id: t2_scoto_sigma_SI_BP3
+  task_type: mg_required
+  expected_outcome: BLOCKED_CORRECTLY
+  tier: 2
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Compute sigma-bar^SI (Eq. 30) at BP3 (m_chi ~ 61 GeV) over xenon isotopes
+    (Del Nobile 2022 Table B.1 abundances), including the v^2/c^2 velocity term
+    (v_rel = 1e-3). Chain: Higgs coupling -> C^SS_h (Eq. 26a) -> c1 per nucleon
+    (Eq. 29a, Hoferichter 2015 form factors) -> sigma-bar^SI per nucleon (Eq. 30).
+    Apply Majorana factor of 2 at the cross-section layer.
+  reference_fn: scoto_sigma_SI
+  reference_args:
+    M_R: 61.0
+    mu_S: 0.05
+    M_N: 61.0
+    bp: "BP3"
+    v_rel: 1.0e-3
+  graders:
+    - type: numeric
+      key: sigma_SI_per_nucleon
+      tolerance: 0.05
+    - type: unit
+      key: sigma_SI_unit
+      expected: "cm^2"
+  tags: [SI, NREFT, xenon, paper-2, BP3, self-consistency]
+
+- id: t2_scoto_BR_mueg_BP1
+  task_type: algebra
+  tier: 2
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Compute B(mu -> e gamma) at BP1 of arXiv:2603.23040 via Eqs. 16-17. Use the
+    Casas-Ibarra yukawa with R = I_3 (identity) and NuFIT 6.0 PMNS inputs.
+  reference_fn: scoto_mueg_br
+  reference_args:
+    M_R: 42.0
+    mu_S: 0.05
+    M_N: 42.0
+    bp: "BP1"
+  graders:
+    - type: numeric
+      key: BR_mu_egamma
+      tolerance: 0.05
+  tags: [mueg, loop, paper-2, BP1]
+
+# ======================================================================
+# Paper 3 (arXiv:2509.08043) — 2HDM+a Accuracy Tasks
+# ======================================================================
+
+- id: t2_thdma_sigma_si_exact_anchor
+  task_type: mg_required
+  expected_outcome: BLOCKED_CORRECTLY
+  tier: 2
+  model: 2hdma
+  prompt: >
+    Implement Eq. 47/50 of arXiv:2509.08043 (exact 1-loop sigma_SI with
+    loop function G(m_chi^2/m_a^2, 0)) and evaluate at m_A=800, m_a=50,
+    m_chi=30 GeV, theta=0.1, g_chi=0.5, tan_beta=1. Report sigma_SI (cm^2),
+    sigma_SI_unit, G_value, and the ratio sigma_SI_scaling/sigma_SI_exact.
+  reference_fn: thdma_sigma_si_exact
+  reference_args: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: sigma_SI,             tolerance: 0.02}
+    - {type: unit,    key: sigma_SI_unit,        expected: "cm^2"}
+    - {type: numeric, key: ratio_eq50_over_eq44, tolerance: 0.05}
+  tags: [2hdma, SI, eq47, eq50, anchor, paper-3]
+
+- id: t2_thdma_sigma_si_exact_mA_vary
+  task_type: mg_required
+  expected_outcome: BLOCKED_CORRECTLY
+  tier: 2
+  model: 2hdma
+  prompt: >
+    Evaluate the exact 1-loop sigma_SI (Eq. 47/50 of arXiv:2509.08043) at
+    m_A=1600, m_a=50, m_chi=30 GeV, theta=0.1, g_chi=0.5, tan_beta=1.
+    Report sigma_SI (cm^2), sigma_SI_unit, G_value, ratio_eq50_over_eq44.
+  reference_fn: thdma_sigma_si_exact
+  reference_args: {m_A: 1600.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: sigma_SI,             tolerance: 0.02}
+    - {type: unit,    key: sigma_SI_unit,        expected: "cm^2"}
+    - {type: numeric, key: ratio_eq50_over_eq44, tolerance: 0.05}
+  tags: [2hdma, SI, eq47, eq50, mA_vary, paper-3]
+
+- id: t2_thdma_sigma_si_exact_ma_vary
+  task_type: mg_required
+  expected_outcome: BLOCKED_CORRECTLY
+  tier: 2
+  model: 2hdma
+  prompt: >
+    Evaluate the exact 1-loop sigma_SI (Eq. 47/50 of arXiv:2509.08043) at
+    m_A=800, m_a=25, m_chi=30 GeV, theta=0.1, g_chi=0.5, tan_beta=1.
+    Report sigma_SI (cm^2), sigma_SI_unit, G_value, ratio_eq50_over_eq44.
+  reference_fn: thdma_sigma_si_exact
+  reference_args: {m_A: 800.0, m_a: 25.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: sigma_SI,             tolerance: 0.02}
+    - {type: unit,    key: sigma_SI_unit,        expected: "cm^2"}
+    - {type: numeric, key: ratio_eq50_over_eq44, tolerance: 0.05}
+  tags: [2hdma, SI, eq47, eq50, ma_vary, paper-3]
+
+- id: t2_thdma_sigma_si_exact_mchi_vary
+  task_type: mg_required
+  expected_outcome: BLOCKED_CORRECTLY
+  tier: 2
+  model: 2hdma
+  prompt: >
+    Evaluate the exact 1-loop sigma_SI (Eq. 47/50 of arXiv:2509.08043) at
+    m_A=800, m_a=50, m_chi=60 GeV, theta=0.1, g_chi=0.5, tan_beta=1.
+    Report sigma_SI (cm^2), sigma_SI_unit, G_value, ratio_eq50_over_eq44.
+  reference_fn: thdma_sigma_si_exact
+  reference_args: {m_A: 800.0, m_a: 50.0, m_chi: 60.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: sigma_SI,             tolerance: 0.02}
+    - {type: unit,    key: sigma_SI_unit,        expected: "cm^2"}
+    - {type: numeric, key: ratio_eq50_over_eq44, tolerance: 0.05}
+  tags: [2hdma, SI, eq47, eq50, mchi_vary, paper-3]
+
+- id: t2_thdma_sigma_si_exact_theta_vary
+  task_type: mg_required
+  expected_outcome: BLOCKED_CORRECTLY
+  tier: 2
+  model: 2hdma
+  prompt: >
+    Evaluate the exact 1-loop sigma_SI (Eq. 47/50 of arXiv:2509.08043) at
+    m_A=800, m_a=50, m_chi=30 GeV, theta=0.05, g_chi=0.5, tan_beta=1.
+    Report sigma_SI (cm^2), sigma_SI_unit, G_value, ratio_eq50_over_eq44.
+  reference_fn: thdma_sigma_si_exact
+  reference_args: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.05, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: sigma_SI,             tolerance: 0.02}
+    - {type: unit,    key: sigma_SI_unit,        expected: "cm^2"}
+    - {type: numeric, key: ratio_eq50_over_eq44, tolerance: 0.05}
+  tags: [2hdma, SI, eq47, eq50, theta_vary, paper-3]
+
+- id: t2_thdma_sigma_si_exact_gchi_vary
+  task_type: mg_required
+  expected_outcome: BLOCKED_CORRECTLY
+  tier: 2
+  model: 2hdma
+  prompt: >
+    Evaluate the exact 1-loop sigma_SI (Eq. 47/50 of arXiv:2509.08043) at
+    m_A=800, m_a=50, m_chi=30 GeV, theta=0.1, g_chi=1.0, tan_beta=1.
+    Report sigma_SI (cm^2), sigma_SI_unit, G_value, ratio_eq50_over_eq44.
+  reference_fn: thdma_sigma_si_exact
+  reference_args: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 1.0, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: sigma_SI,             tolerance: 0.02}
+    - {type: unit,    key: sigma_SI_unit,        expected: "cm^2"}
+    - {type: numeric, key: ratio_eq50_over_eq44, tolerance: 0.05}
+  tags: [2hdma, SI, eq47, eq50, gchi_vary, paper-3]
+
+
+# ===========================================================================
+# Paper 4 — arXiv:2511.21808 — GCE WIMP Comprehensive Study
+# ===========================================================================
+
+- id: t2_p4_zprime_width_mumu_Lmu_Le
+  task_type: algebra
+  tier: 2
+  model: zprime-Lmu-Le
+  prompt: >
+    Implement Eq. 27 of arXiv:2511.21808 for the partial Z' decay width
+    Gamma(Z' -> mu+ mu-) in the Lmu-Le portal. Evaluate at:
+      m_Zp=200.0 GeV, g_Zp=0.01. Dirac DM (g_chi=0.1, m_DM=50 GeV unused here).
+    Report the partial width in GeV under key "gamma_ff" and its unit under "gamma_ff_unit".
+  reference_fn: p4_zprime_width_to_ff
+  reference_args:
+    portal: "Lmu_Le"
+    m_Zp: 200.0
+    g_Zp: 0.01
+    flavor: "mu"
+    dm_type: "Dirac"
+  graders:
+    - type: numeric
+      key: gamma_ff
+      tolerance: 0.01
+    - type: unit
+      key: gamma_ff_unit
+      expected: "GeV"
+  tags: [paper-4, zprime, Lmu-Le, decay-width, accuracy, hand-calc]
+
+- id: t2_p4_zprime_width_nu_Lmu_Le
+  task_type: algebra
+  tier: 2
+  model: zprime-Lmu-Le
+  prompt: >
+    Implement Eq. 29 of arXiv:2511.21808 for the total Z' neutrino decay width
+    in the Lmu-Le portal (sum over all active neutrinos). Evaluate at:
+      m_Zp=200.0 GeV, g_Zp=0.01, Dirac DM.
+    Report the total neutrino width in GeV under key "gamma_nu" and its unit under "gamma_nu_unit".
+  reference_fn: p4_zprime_width_to_nu
+  reference_args:
+    portal: "Lmu_Le"
+    m_Zp: 200.0
+    g_Zp: 0.01
+    dm_type: "Dirac"
+  graders:
+    - type: numeric
+      key: gamma_nu
+      tolerance: 0.01
+    - type: unit
+      key: gamma_nu_unit
+      expected: "GeV"
+  tags: [paper-4, zprime, Lmu-Le, decay-width, accuracy, hand-calc]
+
+- id: t2_p4_zprime_width_DM_BminusL
+  task_type: algebra
+  tier: 2
+  model: zprime-BminusL
+  prompt: >
+    Implement Eq. 28 of arXiv:2511.21808 for the Z' decay width to Dirac DM pair
+    in the B-L portal. Evaluate at:
+      m_Zp=200.0 GeV, m_DM=50.0 GeV, g_chi=0.1. Dirac DM.
+    Report the partial width in GeV under key "gamma_DM" and its unit under "gamma_DM_unit".
+  reference_fn: p4_zprime_width_to_DM
+  reference_args:
+    portal: "BminusL"
+    m_Zp: 200.0
+    m_DM: 50.0
+    g_chi: 0.1
+    dm_type: "Dirac"
+  graders:
+    - type: numeric
+      key: gamma_DM
+      tolerance: 0.01
+    - type: unit
+      key: gamma_DM_unit
+      expected: "GeV"
+  tags: [paper-4, zprime, BminusL, decay-width, accuracy, hand-calc]
+
+- id: t2_p4_zprime_width_total_identity
+  task_type: algebra
+  tier: 2
+  model: zprime-BminusL
+  prompt: >
+    Verify that Gamma_total(Z') equals the direct sum of partial widths
+    (Eqs. 27, 28, 29 of arXiv:2511.21808) at:
+      m_Zp=200.0 GeV, g_Zp=0.01, g_chi=0.1, m_DM=50.0 GeV, B-L portal, Dirac DM.
+    Report the absolute difference |Gamma_total - sum_partials| under key "diff_abs".
+  reference_fn: p4_zprime_width_total_identity
+  reference_args:
+    portal: "BminusL"
+    m_Zp: 200.0
+    g_Zp: 0.01
+    m_DM: 50.0
+    g_chi: 0.1
+    dm_type: "Dirac"
+  graders:
+    - type: exact_zero
+      key: diff_abs
+      tolerance: 1.0e-10
+  tags: [paper-4, zprime, BminusL, identity, accuracy]
+
+- id: t2_p4_BminusL_sigma_SI_handcalc
+  task_type: algebra
+  tier: 2
+  model: zprime-BminusL
+  prompt: >
+    Implement Eq. 39 of arXiv:2511.21808 for sigma_SI via B-L Z' exchange.
+    Evaluate at m_DM=50.0, m_Zp=200.0, g_chi=0.1, g_Zp=0.01, Dirac DM.
+    Report sigma_SI in cm^2 under key "sigma_SI" and its unit under "sigma_SI_unit".
+  reference_fn: p4_zprime_sigma_SI
+  reference_args:
+    portal: "BminusL"
+    m_DM: 50.0
+    m_Zp: 200.0
+    g_chi: 0.1
+    g_Zp: 0.01
+    dm_type: "Dirac"
+  graders:
+    - type: numeric
+      key: sigma_SI
+      tolerance: 0.05
+    - type: unit
+      key: sigma_SI_unit
+      expected: "cm^2"
+  tags: [paper-4, zprime, BminusL, sigma-SI, accuracy, hand-calc]
+
+- id: t2_p4_Lmu_Le_sigma_SI_zero
+  task_type: algebra
+  tier: 2
+  model: zprime-Lmu-Le
+  prompt: >
+    Using Eq. 39 (or Eq. 26) of arXiv:2511.21808, compute sigma_SI for the
+    Lmu-Le Z' portal at m_DM=50, m_Zp=200, g_chi=0.1, g_Zp=0.01 (Dirac).
+    The leptophilic portal has zero tree-level coupling to quarks, so sigma_SI=0.
+    Report sigma_SI in cm^2 under key "sigma_SI".
+  reference_fn: p4_zprime_sigma_SI
+  reference_args:
+    portal: "Lmu_Le"
+    m_DM: 50.0
+    m_Zp: 200.0
+    g_chi: 0.1
+    g_Zp: 0.01
+    dm_type: "Dirac"
+  graders:
+    - type: exact_zero
+      key: sigma_SI
+      tolerance: 1.0e-60
+  tags: [paper-4, zprime, Lmu-Le, sigma-SI, identity, accuracy]
+
+- id: t2_p4_Lmu_Le_sigma_SD_zero
+  task_type: algebra
+  tier: 2
+  model: zprime-Lmu-Le
+  prompt: >
+    Using Eq. 44 of arXiv:2511.21808, compute sigma_SD for the Lmu-Le Z' portal
+    at m_DM=50, m_Zp=200, g_chi=0.1, g_Zp=0.01 (Dirac). The portal has pure
+    vector coupling (Q_A=0), so sigma_SD=0 exactly. Report sigma_SD in cm^2.
+  reference_fn: p4_zprime_sigma_SD
+  reference_args:
+    portal: "Lmu_Le"
+    m_DM: 50.0
+    m_Zp: 200.0
+    g_chi: 0.1
+    g_Zp: 0.01
+    dm_type: "Dirac"
+  graders:
+    - type: exact_zero
+      key: sigma_SD
+      tolerance: 1.0e-60
+  tags: [paper-4, zprime, Lmu-Le, sigma-SD, identity, accuracy]
+
+- id: t2_p4_higgs_portal_sigmav_off_funnel
+  task_type: algebra
+  tier: 2
+  model: higgs-portal-scalar
+  prompt: >
+    Implement Eqs. 6-8 of arXiv:2511.21808 for the Higgs portal scalar DM
+    annihilation cross section. Evaluate at m_DM=100.0 GeV, lambda=0.1,
+    channel=b (b-bbar), off-resonance (m_DM >> m_h/2).
+    Report sigma_v in cm^3/s under key "sigma_v" and unit under "sigma_v_unit".
+  reference_fn: p4_higgs_portal_sigmav_off_funnel
+  reference_args:
+    m_DM: 100.0
+    lam: 0.1
+    channel: "b"
+    dm_type: "scalar"
+  graders:
+    - type: numeric
+      key: sigma_v
+      tolerance: 0.05
+    - type: unit
+      key: sigma_v_unit
+      expected: "cm^3/s"
+  tags: [paper-4, higgs-portal, sigma-v, accuracy, hand-calc]
+
+- id: t2_p4_higgs_portal_sigmaSI_funnel
+  task_type: algebra
+  tier: 2
+  model: higgs-portal-scalar
+  prompt: >
+    Implement Eq. 9 of arXiv:2511.21808 for the Higgs portal scalar DM
+    spin-independent cross section. Evaluate at m_DM=62.60 GeV, lambda=2e-4
+    (near Higgs funnel). Report sigma_SI in cm^2 under key "sigma_SI" and
+    unit under "sigma_SI_unit".
+  reference_fn: p4_higgs_portal_sigmaSI_funnel
+  reference_args:
+    m_DM: 62.60
+    lam: 2.0e-4
+    dm_type: "scalar"
+  graders:
+    - type: numeric
+      key: sigma_SI
+      tolerance: 0.05
+    - type: unit
+      key: sigma_SI_unit
+      expected: "cm^2"
+  tags: [paper-4, higgs-portal, sigma-SI, accuracy, hand-calc]
+
+
+# ============================================================
+# NMSSM bino/higgsino blind-spot benchmark — arXiv:2509.15121
+# ============================================================
+
+- id: t2_nmssm_spectrum_bp1_3
+  task_type: algebra
+  tier: 2
+  model: nmssm-bino-higgsino
+  prompt: >
+    Implement the 5×5 NMSSM neutralino mass matrix (arXiv:2509.15121, Eq. 3)
+    in the basis (Bino, Wino, Hd0, Hu0, Singlino), diagonalize it using
+    scipy.linalg.eigh at benchmark point BP1-3 (M1=500 GeV, M2=5000 GeV,
+    mu_eff=161.8 GeV, tan_beta=6.2, lambda=0.027, kappa=0.01243, vS=5992.59 GeV),
+    and report the three lightest neutralino masses m_chi1, m_chi2, m_chi3 (|eigenvalues|
+    sorted ascending) and the bino fraction Z_B = |N[0,0]|^2 of the LSP.
+    Write and execute Python code.
+  reference_fn: nmssm_spectrum
+  reference_args:
+    bp_name: BP1_3
+  graders:
+    - type: numeric
+      key: m_chi1
+      tolerance: 0.005
+    - type: numeric
+      key: m_chi2
+      tolerance: 0.005
+    - type: numeric
+      key: m_chi3
+      tolerance: 0.005
+    - type: numeric
+      key: Z_B
+      tolerance: 0.05
+  tags: [spectrum, nmssm, BP1_3, computed]
+
+- id: t2_nmssm_spectrum_bp9_3
+  task_type: algebra
+  tier: 2
+  model: nmssm-bino-higgsino
+  prompt: >
+    Implement the 5×5 NMSSM neutralino mass matrix (arXiv:2509.15121, Eq. 3)
+    and diagonalize it at benchmark point BP9-3 (M1=500 GeV, M2=5000 GeV,
+    mu_eff=250.306 GeV, tan_beta=6.2, lambda=0.027, kappa=0.01277, vS=9270.59 GeV).
+    Report the three lightest neutralino masses m_chi1, m_chi2, m_chi3 and
+    the bino fraction Z_B of the LSP. Write and execute Python code.
+  reference_fn: nmssm_spectrum
+  reference_args:
+    bp_name: BP9_3
+  graders:
+    - type: numeric
+      key: m_chi1
+      tolerance: 0.005
+    - type: numeric
+      key: m_chi2
+      tolerance: 0.005
+    - type: numeric
+      key: m_chi3
+      tolerance: 0.005
+    - type: numeric
+      key: Z_B
+      tolerance: 0.05
+  tags: [spectrum, nmssm, BP9_3, computed]
+
+- id: t2_nmssm_spectrum_bp5_2
+  task_type: algebra
+  tier: 2
+  model: nmssm-bino-higgsino
+  prompt: >
+    Implement the 5×5 NMSSM neutralino mass matrix (arXiv:2509.15121, Eq. 3)
+    and diagonalize it at benchmark point BP5-2 (M1=500 GeV, M2=5000 GeV,
+    mu_eff=209.051 GeV, tan_beta=6.2, lambda=0.027, kappa=0.01165, vS=7742.63 GeV).
+    Report the three lightest neutralino masses m_chi1, m_chi2, m_chi3 and
+    the bino fraction Z_B of the LSP. Write and execute Python code.
+  reference_fn: nmssm_spectrum
+  reference_args:
+    bp_name: BP5_2
+  graders:
+    - type: numeric
+      key: m_chi1
+      tolerance: 0.005
+    - type: numeric
+      key: m_chi2
+      tolerance: 0.005
+    - type: numeric
+      key: m_chi3
+      tolerance: 0.005
+    - type: numeric
+      key: Z_B
+      tolerance: 0.05
+  tags: [spectrum, nmssm, BP5_2, computed]
+
+- id: t2_nmssm_epsilon_bp9_3
+  task_type: algebra
+  tier: 2
+  model: nmssm-bino-higgsino
+  prompt: >
+    Implement the compression parameter epsilon of arXiv:2509.15121, Eq. (6):
+      epsilon = m_chi2 / m_chi1 - 1
+    Compute epsilon at BP9-3 using the masses from the 5×5 NMSSM diagonalization
+    (M1=500 GeV, M2=5000 GeV, mu_eff=250.306 GeV, tan_beta=6.2, lambda=0.027,
+    kappa=0.01277, vS=9270.59 GeV). Write and execute Python code. Report epsilon.
+  reference_fn: nmssm_epsilon
+  reference_args:
+    bp_name: BP9_3
+  graders:
+    - type: numeric
+      key: epsilon
+      tolerance: 0.005
+  tags: [compression, nmssm, BP9_3, computed]
+
+- id: t2_nmssm_sigma_si_rescaled_bp9_3
+  task_type: algebra
+  tier: 2
+  model: nmssm-bino-higgsino
+  prompt: >
+    Implement Eq. (15) of arXiv:2509.15121 for the effective sub-relic
+    direct detection cross section:
+      sigma_SI_eff = sigma_SI * min(1, Omega_h2 / Omega_Planck)
+    At BP9-3: sigma_SI_nominal = 4.2e-48 cm^2, Omega_h2 = 0.07, Omega_Planck = 0.120.
+    Compute sigma_SI_eff and report it in cm^2 under key "sigma_SI_eff".
+    Also report the unit "cm^2" under key "sigma_SI_eff_unit".
+    Write and execute Python code.
+  reference_fn: nmssm_sigma_si_rescaled
+  reference_args:
+    bp_name: BP9_3
+  graders:
+    - type: numeric
+      key: sigma_SI_eff
+      tolerance: 1.0e-8
+    - type: unit
+      key: sigma_SI_eff_unit
+      expected: "cm^2"
+  tags: [sigma_SI, rescaling, nmssm, BP9_3, computed]

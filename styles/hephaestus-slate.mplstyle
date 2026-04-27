@@ -1,0 +1,83 @@
+# hephaestus Slate Precision — Palette B (exclusion contours)
+# Reference: docs/design-system.md
+#
+# Color cycle: steel blue, observed black, muted red, then escalation variants.
+
+# --- Color cycle ---
+axes.prop_cycle: cycler('color', ['0369a1', '1a1a1a', 'dc2626', '0284c7', '0ea5e9', '7dd3fc'])
+
+# --- Figure ---
+figure.figsize: 3.346, 2.510
+figure.dpi: 300
+figure.facecolor: white
+figure.edgecolor: white
+savefig.dpi: 300
+savefig.bbox: tight
+savefig.pad_inches: 0.02
+savefig.transparent: False
+
+# --- Font (Computer Modern via LaTeX) ---
+text.usetex: True
+text.latex.preamble: \usepackage{amsmath}\usepackage{amssymb}
+font.family: serif
+font.serif: cmr10
+mathtext.fontset: cm
+axes.formatter.use_mathtext: True
+
+# --- Axis labels: 9pt ---
+axes.labelsize: 9
+axes.labelweight: normal
+axes.labelpad: 4.0
+axes.labelcolor: 334155
+
+# --- Tick labels: 8pt ---
+xtick.labelsize: 8
+ytick.labelsize: 8
+xtick.labelcolor: 334155
+ytick.labelcolor: 334155
+
+# --- Axes styling: no bounding box ---
+axes.linewidth: 0.5
+axes.edgecolor: 334155
+axes.facecolor: white
+axes.spines.top: False
+axes.spines.right: False
+axes.grid: False
+
+# --- Ticks: inward ---
+xtick.direction: in
+ytick.direction: in
+xtick.major.width: 0.5
+ytick.major.width: 0.5
+xtick.minor.width: 0.5
+ytick.minor.width: 0.5
+xtick.major.size: 3.0
+ytick.major.size: 3.0
+xtick.minor.size: 1.5
+ytick.minor.size: 1.5
+xtick.minor.visible: True
+ytick.minor.visible: True
+xtick.major.pad: 4.0
+ytick.major.pad: 4.0
+xtick.color: 334155
+ytick.color: 334155
+
+# --- Lines: 1.0pt primary, 1.2pt for exclusion boundaries ---
+lines.linewidth: 1.0
+lines.markersize: 4
+
+# --- Error bars ---
+errorbar.capsize: 0
+
+# --- Legend: off by default ---
+legend.frameon: False
+legend.fontsize: 7
+legend.labelcolor: 94a3b8
+
+# --- Patch ---
+patch.linewidth: 0.5
+patch.edgecolor: 334155
+patch.facecolor: 0369a1
+
+# --- Hatch ---
+hatch.linewidth: 0.5

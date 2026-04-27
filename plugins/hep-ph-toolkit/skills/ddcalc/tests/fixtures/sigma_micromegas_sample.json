@@ -1,0 +1,19 @@
+{
+  "schema_version": "scattering/v1",
+  "m_dm_gev": 100.0,
+  "sigma_si_proton_cm2": 1e-46,
+  "sigma_si_neutron_cm2": 1e-46,
+  "sigma_sd_proton_cm2": 0.0,
+  "sigma_sd_neutron_cm2": 0.0,
+  "source": "micromegas",
+  "source_run": "/home/user/.local/share/hephaestus/models/2HDMA/runs/20260419_120000/micromegas_result.json",
+  "halo": {
+    "model": "shm",
+    "v0_km_per_s": 238.0,
+    "vesc_km_per_s": 544.0,
+    "rho0_gev_per_cm3": 0.3
+  },
+  "nucleon_form_factors": {
+    "preset": "default_2018"
+  }
+}

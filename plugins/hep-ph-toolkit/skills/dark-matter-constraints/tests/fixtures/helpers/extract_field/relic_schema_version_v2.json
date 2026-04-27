@@ -1,0 +1,8 @@
+{
+  "schema_version": "relic/v2",
+  "m_dm_gev": 100.0,
+  "omega_h2": 0.12,
+  "source": "maddm",
+  "source_run": "run_20260425_004",
+  "cosmology": "standard_thermal"
+}

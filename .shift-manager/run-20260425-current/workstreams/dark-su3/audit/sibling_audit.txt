@@ -1,0 +1,21 @@
+## T7 Sibling Audit — HTML-comment banners in hep-ph-demo SKILL.md files
+
+### grep transcript
+
+Command: grep -rn '<!--.*: ' $REPO/plugins/hep-ph-demo/skills/*/SKILL.md
+
+Output:
+/Users/yianni/Projects/hep-ph-agents/plugins/hep-ph-demo/skills/2hdm-a/SKILL.md:12:<!-- BAND_JUSTIFICATION: variance:9.9693-11.0187 source:state/2hdma-band.json -->
+
+(No hits in demo/SKILL.md because the dsu3-002 banner has been converted to a visible blockquote in fix-r2.)
+
+### Branch check: no WS-C edits to 2hdm-a/SKILL.md
+
+git -C WT_FIX  diff --name-only main..HEAD -- plugins/hep-ph-demo/skills/2hdm-a/SKILL.md: (0 lines — no edit)
+git -C WT_PLAY diff --name-only main..HEAD -- plugins/hep-ph-demo/skills/2hdm-a/SKILL.md: (0 lines — no edit)
+
+WS-C performed no edits to plugins/hep-ph-demo/skills/2hdm-a/SKILL.md on any branch.
+
+### Disposition
+
+**Disposition (CC-001 NOT-CONFIRMED)**: WS-A plan-drafter investigated `plugins/hep-ph-demo/skills/2hdm-a/SKILL.md:12` and reports the line is `BAND_JUSTIFICATION` metadata, NOT a disclosure-banner defect; the actual 2hdma disclosure is a visible blockquote at lines 8–11. WS-C therefore CLOSES this as **CLOSED-NOT-A-DEFECT** rather than emitting a HIGH carryover ticket. No `2hdma-banner-comment.md` ticket is produced. WS-C performed no edits to `plugins/hep-ph-demo/skills/2hdm-a/SKILL.md` on any branch.

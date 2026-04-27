@@ -1,0 +1,6 @@
+FAIL  Wolfram Engine         v?                      wolframscript exit 1: some error
+FAIL  SARAH                  v?                      missing SARAH.m in path
+PASS  SPheno                 v4.0.5                  usage banner present
+PASS  MadGraph5_aMC@NLO      v3.5.7                  ok (3.5.7)
+Config: $TMPDIR/config.json
+One or more tools FAIL/INTERNAL ERROR.

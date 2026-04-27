@@ -1,0 +1,1 @@
+plugins/hep-ph-demo/skills/demo/SKILL.md

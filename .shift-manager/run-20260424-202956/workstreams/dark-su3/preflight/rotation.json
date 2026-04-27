@@ -1,0 +1,9 @@
+{
+  "rotated_paths": [
+    "demo_output/.rotated/dark-su3-preplaytest-20260425010754"
+  ],
+  "underscore_variant_check": "demo_output/dark_su3 not present — clean: skipped (not present)",
+  "created_at_utc": "2026-04-25T01:07:54Z",
+  "fresh_empty_dir": "demo_output/dark-su3/",
+  "notes": "Stale content moved from main repo demo_output/dark-su3/ (gitignored, lived in main repo filesystem). Rotated to worktree .rotated dir. Fresh empty demo_output/dark-su3/ created in dsu3-prep worktree."
+}

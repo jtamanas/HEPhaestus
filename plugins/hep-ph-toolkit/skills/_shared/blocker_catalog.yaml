@@ -1,0 +1,736 @@
+# plugins/hep-ph-toolkit/skills/_shared/blocker_catalog.yaml
+#
+# Central registry of all blocker codes used across the hephaestus project.
+# Owned by WS2 (tool-capability matrix).
+#
+# Two categories:
+#   - "owned" (owned_by: this-ws): WS2-authored codes; 29 total.
+#   - "mirrored" (owned_by: dark-matter-constraints): codes emitted by
+#     /dark-matter-constraints that WS2 mirrors for cross-reference. The
+#     canonical source is dark-matter-constraints/SKILL.md and scripts/.
+#
+# Schema: blocker_catalog.schema.json
+# WS2 synthesis ref: brainstorm/ws2_matrix_synthesis.md §2 Tension 8
+
+schema_version: 1
+catalog_date: "2026-04-26"
+
+blockers:
+  # ============================================================================
+  # OWNED CODES (this-ws; 29 total)
+  # ============================================================================
+
+  MG5_DARK_COLOR_TENSOR_WALL:
+    class: fundamental-group-theory-gap
+    severity: fatal
+    emitted_by: [madgraph, maddm]
+    triggered_by_axes: [A1, A2]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md (blocker-class mapping §6)"
+    ws4_reference: "brainstorm/ws4_exception_synthesis.md:660-686 (analytic-exception trigger)"
+    digest_reference: "intel/digest.md §52 (MG5 dt1 NameError)"
+    description: >-
+      MG5 color algebra has no SU(N)_D tensor indices; any dark-color UFO import
+      fails at models/import_ufo.py:1604 with NameError: name 'dt1' is not defined.
+      This is an MG5 architecture limitation, not a SARAH bug.
+    workaround_codes: [ANALYTIC_BACKEND_PATH]
+    owned_by: this-ws
+
+  MG5_MIRROR_COLOR_WALL:
+    class: fundamental-group-theory-gap
+    severity: fatal
+    emitted_by: [madgraph, maddm]
+    triggered_by_axes: [A1]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md (blocker-class mapping §6)"
+    digest_reference: "intel/digest.md (MG5 mirror-sector color limits)"
+    description: >-
+      MG5 color algebra cannot represent mirror-sector gauge group tensor indices;
+      SM + mirror models are blocked at UFO import.
+    workaround_codes: []
+    owned_by: this-ws
+
+  EFT_REWRITE_REQUIRED:
+    class: fundamental-group-theory-gap
+    severity: fatal
+    emitted_by: [madgraph]
+    triggered_by_axes: [A1, A2]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (EFT embedding)"
+    description: >-
+      Model requires an EFT rewrite before MG5 import; the UV completion
+      contains group-theory structures MG5 cannot process.
+    workaround_codes: []
+    owned_by: this-ws
+
+  SARAH_EMBEDDING_HANDAUTHOR_REQUIRED:
+    class: fundamental-group-theory-gap
+    severity: fatal
+    emitted_by: [sarah-build]
+    triggered_by_axes: [A1]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md §§359-366 (SARAH renderer BSM limits)"
+    description: >-
+      SARAH cannot embed this gauge group structure; a hand-authored SARAH model
+      file is required instead of automatic generation from the ModelSpec.
+    workaround_codes: []
+    owned_by: this-ws
+
+  SARAH_MATTER_REP_UNSUPPORTED:
+    class: missing-tool-feature
+    fix_locality: upstream
+    severity: fatal
+    emitted_by: [sarah-build]
+    triggered_by_axes: [A1, A3]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md §§359-366 (SARAH renderer; dark-SU(N) reps)"
+    description: >-
+      SARAH renderer does not support matter representations under BSM non-abelian
+      dark gauge groups (e.g. dark-color SU(3) fundamental reps for fermions).
+      Treated as blocked (not supported_with_caveat) per WS2 plan D5.
+    workaround_codes: [SARAH_EMBEDDING_HANDAUTHOR_REQUIRED]
+    owned_by: this-ws
+
+  MICROMEGAS_VERTEX_SILENT_FAIL:
+    class: missing-tool-feature
+    fix_locality: upstream
+    severity: recoverable
+    emitted_by: [micromegas]
+    triggered_by_axes: [A1, A2]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md §12 (micrOMEGAs vertex evaluator)"
+    description: >-
+      micrOMEGAs vertex evaluator silently mishandles non-SM gauge structures;
+      no error is raised but results are physically incorrect.
+    workaround_codes: []
+    owned_by: this-ws
+
+  MICROMEGAS_LOOP_SILENT_FAIL:
+    class: regime-mismatch
+    severity: recoverable
+    emitted_by: [micromegas]
+    triggered_by_axes: [A6]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md §12 (micrOMEGAs loop-level)"
+    description: >-
+      micrOMEGAs tree-level relic calculation fails silently for loop-induced
+      mediators; use FormCalc+LoopTools chain instead.
+    workaround_codes: [LOOP_DD_TOOLING_PLANNED]
+    owned_by: this-ws
+
+  MICROMEGAS_MULTICOMPONENT_UNSUPPORTED:
+    class: missing-tool-feature
+    fix_locality: upstream
+    severity: fatal
+    emitted_by: [micromegas]
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md §12 (multi-component DM)"
+    description: >-
+      micrOMEGAs v1 does not support multi-component DM; attempting to run
+      multi-component models produces incorrect results without warning.
+    workaround_codes: []
+    owned_by: this-ws
+
+  CALCHEP_MDL_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [micromegas]
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md §12 (CalcHEP .mdl requirement)"
+    description: >-
+      micrOMEGAs requires CalcHEP .mdl files (prtcls1.mdl, lgrng1.mdl, etc.)
+      generated by SARAH WriteCalcHEP[]. The model spec has not declared
+      calchep_mdl in requested_emissions; or SARAH was not run with WriteCalcHEP[].
+    workaround_codes: []
+    owned_by: this-ws
+
+  DRAKE_SINGLE_SPECIES_ONLY:
+    class: regime-mismatch
+    severity: recoverable
+    emitted_by: [drake]
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md §13 (DRAKE narrow-resonance only)"
+    description: >-
+      DRAKE handles single-species DM in the narrow-resonance regime only;
+      multi-component models cannot be directly routed to DRAKE.
+    workaround_codes: []
+    owned_by: this-ws
+
+  LOOP_DD_TOOLING_PLANNED:
+    class: missing-skill
+    severity: fatal
+    emitted_by: [feynarts, formcalc, looptools]
+    triggered_by_axes: [A6]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md §§371-381 (install skills)"
+    description: >-
+      Loop-level direct detection requires FormCalc + FeynArts + LoopTools;
+      these skills are planned but not yet implemented.
+    workaround_codes: []
+    owned_by: this-ws
+
+  LHC_TOOLING_MISSING:
+    class: missing-skill
+    severity: fatal
+    emitted_by: []
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (collider constraints)"
+    description: >-
+      LHC collider constraint tools (CheckMATE, MadAnalysis5, etc.) are not
+      yet implemented as skills.
+    workaround_codes: []
+    owned_by: this-ws
+
+  FLAVOR_TOOLING_MISSING:
+    class: missing-skill
+    severity: fatal
+    emitted_by: []
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (flavor constraints)"
+    description: >-
+      Flavor physics constraint tools (flavio, HEPfit, etc.) are not
+      yet implemented as skills.
+    workaround_codes: []
+    owned_by: this-ws
+
+  AXION_RELIC_TOOLING_MISSING:
+    class: missing-skill
+    severity: fatal
+    emitted_by: []
+    triggered_by_axes: [A6]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (axion relic)"
+    description: >-
+      Axion-portal or axion-like-particle relic density calculation tools
+      are not yet implemented as skills.
+    workaround_codes: []
+    owned_by: this-ws
+
+  AXION_OPERATOR_BASIS_MISSING:
+    class: missing-tool-feature
+    fix_locality: upstream
+    severity: fatal
+    emitted_by: []
+    triggered_by_axes: [A6]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (axion operators)"
+    description: >-
+      The required axion-SM operator basis is not implemented in any available
+      skill; axion-portal models require operator matching before constraint tools
+      can be applied.
+    workaround_codes: []
+    owned_by: this-ws
+
+  KINETIC_MIXING_PORTAL_DECLARED_BUT_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: []
+    triggered_by_axes: [A6]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (kinetic mixing)"
+    description: >-
+      The model spec declares a kinetic-mixing portal but the spec is missing
+      the required kinetic_mixing_terms declaration in the lagrangian.
+    workaround_codes: []
+    owned_by: this-ws
+
+  EWSB_DECLARATION_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [sarah-build, spheno-build]
+    triggered_by_axes: [A4]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (SARAH EWSB grammar)"
+    description: >-
+      SARAH requires explicit ewsb.vevs and ewsb.mixings declarations in the
+      model spec. Missing or incomplete EWSB declaration causes SARAH/SPheno
+      to fail or produce incorrect mass spectra.
+    workaround_codes: []
+    owned_by: this-ws
+
+  DM_STABILISATION_UNDECLARED:
+    class: spec-authoring-gap
+    severity: recoverable
+    emitted_by: []
+    triggered_by_axes: [A5]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (DM stabilisation)"
+    description: >-
+      The model spec does not declare a DM stabilisation mechanism (discrete
+      symmetry, topological, gauge-residual, etc.). The router cannot verify
+      DM stability and assumes accidental stability.
+    workaround_codes: []
+    owned_by: this-ws
+
+  DM_OBSERVABLE_WITHOUT_CANDIDATE:
+    class: regime-mismatch
+    severity: fatal
+    emitted_by: []
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (DM observables)"
+    description: >-
+      A DM observable was requested but no dm_phenomenology.candidates are
+      declared in the model spec. Cannot compute relic/DD/ID without a DM candidate.
+    workaround_codes: []
+    owned_by: this-ws
+
+  DD_BLIND_SPOT_EXACT:
+    class: informational
+    severity: informational
+    emitted_by: []
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (Psi blind spot; Eq.29)"
+    description: >-
+      This DM candidate has an exact parameter-independent SI cross-section
+      blind spot; direct detection via nuclear recoil is not constraining.
+      This is a physics result, not a tool limitation.
+    workaround_codes: []
+    owned_by: this-ws
+
+  OBSERVABLE_FORBIDDEN_BY_SYMMETRY:
+    class: informational
+    severity: informational
+    emitted_by: []
+    triggered_by_axes: [A5]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (symmetry-forbidden observables)"
+    description: >-
+      The requested observable is forbidden by a symmetry of the model;
+      the corresponding rate is exactly zero. This is a physics result.
+    workaround_codes: []
+    owned_by: this-ws
+
+  TREE_LEVEL_FORBIDDEN_USE_LOOP_CHAIN:
+    class: regime-mismatch
+    severity: recoverable
+    emitted_by: [maddm, micromegas]
+    triggered_by_axes: [A6]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (loop-only DD; 2HDM+a)"
+    description: >-
+      Tree-level direct detection is forbidden for this model (e.g. CP-odd
+      mediator gives SI suppression); the correct chain uses FormCalc+LoopTools
+      for loop-induced operators.
+    workaround_codes: [LOOP_DD_TOOLING_PLANNED]
+    owned_by: this-ws
+
+  DM_PROVENANCE_INCONSISTENT_WITH_A2:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: []
+    triggered_by_axes: [A2]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (dual-spec drift; §260-265)"
+    description: >-
+      The declared DM candidates' uv_provenance is inconsistent with A2
+      (symmetry-breaking pattern). E.g., candidates declared as broken-generator-boson
+      but A2 shows unbroken-confining; or confining spec with composite-glueball
+      candidates in a Higgsed model.
+    workaround_codes: []
+    owned_by: this-ws
+
+  SPEC_PROVISIONAL:
+    class: informational
+    severity: informational
+    emitted_by: []
+    triggered_by_axes: [A8]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (spec authoring status)"
+    description: >-
+      The model spec is marked provisional (A8=provisional or analytic_module is stub).
+      Results may be incomplete or placeholders.
+    workaround_codes: []
+    owned_by: this-ws
+
+  SPEC_ARCHIVED:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: []
+    triggered_by_axes: [A8]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (archived spec)"
+    description: >-
+      The model spec is archived. No constraints can be computed; use the
+      canonical active spec or author a new spec from scratch.
+    workaround_codes: []
+    owned_by: this-ws
+
+  ANALYTIC_EXCEPTION_TRIGGER:
+    class: analytic-exception
+    severity: recoverable
+    emitted_by: [madgraph, maddm]
+    triggered_by_axes: [A1, A2]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md:660-686 (analytic-exception trigger surface)"
+    ws4_reference: "brainstorm/ws4_exception_synthesis.md:20-25 (ROUTE_TO_ANALYTIC tier)"
+    digest_reference: "intel/digest.md §229-267 (dsu3 analytic exception)"
+    description: >-
+      Model triggers the WS4 analytic-exception detector: A1 in
+      {SM+extra SU(N), SM+extra mixed} AND (A2[?].pattern in {Higgsed-partial,
+      unbroken-confining} OR candidates[?].uv_provenance in
+      {broken-generator-boson, composite}). Routes to WS4 for ROUTE_TO_ANALYTIC
+      / HALT_FOR_SIGNOFF / HARD_HALT verdict.
+    workaround_codes: [ANALYTIC_BACKEND_PATH]
+    owned_by: this-ws
+
+  ANALYTIC_MODULE_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [analytic_backend]
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6 (spec-authoring-gap)"
+    ws4_reference: "brainstorm/ws4_exception_synthesis.md:681 (ANALYTIC_MODULE_MISSING)"
+    digest_reference: "intel/digest.md §357 (2HDM+a stub_unimplemented)"
+    description: >-
+      The analytic exception route is triggered but no active analytic module is
+      registered in analytic_exceptions.yaml for this model, or the module path
+      is stub_unimplemented. Author the analytic module and register it per
+      WS4 §5 sign-off protocol.
+    workaround_codes: []
+    owned_by: this-ws
+
+  HIGGSTOOLS_CPV_NOT_SUPPORTED:
+    class: missing-tool-feature
+    fix_locality: upstream
+    severity: fatal
+    emitted_by: [higgstools]
+    triggered_by_axes: [A4]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md §15 (HiggsTools CP-conserving only)"
+    description: >-
+      HiggsTools (HB + HS) supports only CP-conserving Higgs sectors in v1.
+      Models with CP-violating mixing matrices (complex Higgs couplings) are
+      deferred to v1.1 (upstream roadmap).
+    workaround_codes: []
+    owned_by: this-ws
+
+  SPHENO_NOT_REQUESTED:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [spheno-build]
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "intel/digest.md (spheno output not requested)"
+    description: >-
+      The model spec's requested_emissions does not include 'spheno';
+      SPheno cannot be run and downstream tools that require an SLHA2 file
+      (HiggsTools) are blocked.
+    workaround_codes: []
+    owned_by: this-ws
+
+  # ============================================================================
+  # MIRRORED CODES (owned_by: dark-matter-constraints)
+  # Source: plugins/hep-ph-toolkit/skills/dark-matter-constraints/SKILL.md
+  # These are read-only from the matrix's perspective; DMC remains canonical.
+  # ============================================================================
+
+  MADDM_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §24 (MADDM_MISSING)"
+    description: "MadDM not found / not installed; Step 2 of DMC default pipeline."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  UFO_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §25 (UFO_MISSING)"
+    description: >-
+      config.models[m].ufo_path absent; demoted to ANALYTIC_BACKEND_PATH notice
+      when multi_component=true && backends.spectrum=='analytic'.
+    workaround_codes: [ANALYTIC_BACKEND_PATH]
+    owned_by: dark-matter-constraints
+
+  SLHA_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §26 (SLHA_MISSING)"
+    description: "MadDM runtime fails with missing spectrum; SLHA2 file not found."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  MICROMEGAS_MISSING:
+    class: missing-skill
+    severity: recoverable
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §27 (MICROMEGAS_MISSING)"
+    description: "micrOMEGAs not installed; cross-check triggered but skipped."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  CROSSCHECK_SKIPPED:
+    class: regime-mismatch
+    severity: recoverable
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §28 (CROSSCHECK_SKIPPED)"
+    description: "--skip-crosscheck passed; Step 4 bypassed."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  CROSSCHECK_DISAGREEMENT:
+    class: regime-mismatch
+    severity: recoverable
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §29 (CROSSCHECK_DISAGREEMENT)"
+    description: "MadDM vs micrOMEGAs > 10% on any observable."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_MISSING:
+    class: missing-skill
+    severity: recoverable
+    emitted_by: [dark-matter-constraints, drake]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §30 (DRAKE_MISSING)"
+    description: "config.drake_path absent or detect returns missing/found."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_UNAVAILABLE:
+    class: missing-skill
+    severity: recoverable
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §31 (DRAKE_UNAVAILABLE)"
+    description: "drake_path set but detect invocation failed/unparseable."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_ACTIVATION_REQUIRED:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [dark-matter-constraints, drake]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §32 (DRAKE_ACTIVATION_REQUIRED)"
+    description: "Wolfram Engine not activated."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_SKIPPED:
+    class: regime-mismatch
+    severity: recoverable
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §33 (DRAKE_SKIPPED)"
+    description: "--skip-drake passed; narrow-resonance detected but bypassed."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_MADDM_DISAGREEMENT:
+    class: regime-mismatch
+    severity: recoverable
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §34 (DRAKE_MADDM_DISAGREEMENT)"
+    description: "DRAKE vs MadDM Omega_h2 > 10%."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_NOT_INSTALLED:
+    class: missing-skill
+    severity: fatal
+    emitted_by: [drake]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §35 (DRAKE_NOT_INSTALLED)"
+    description: "install.sh detect returns missing/found."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_WOLFRAM_ABSENT:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: fatal
+    emitted_by: [drake]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §36 (DRAKE_WOLFRAM_ABSENT)"
+    description: "wolfram_engine_path not set or binary not executable."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_RUN_FAILED:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: fatal
+    emitted_by: [drake]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §37 (DRAKE_RUN_FAILED)"
+    description: "wolframscript test.wls exited non-zero."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_OUTPUT_INVALID:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: fatal
+    emitted_by: [drake]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §38 (DRAKE_OUTPUT_INVALID)"
+    description: "Omega_h2 absent, NaN, or negative in stdout."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DRAKE_MODEL_FILE_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [drake]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §39 (DRAKE_MODEL_FILE_MISSING)"
+    description: "Benchmark or settings file not found in $DRAKE_PATH/test/."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  ANALYTIC_BACKEND_PATH:
+    class: informational
+    severity: informational
+    emitted_by: [dark-matter-constraints]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §40 (ANALYTIC_BACKEND_PATH)"
+    description: >-
+      Analytic-only branch fired: MadDM skipped; analytic backend is authoritative
+      source. Steps 3-5 also skipped. Dual AND-condition:
+      multi_component=true AND backends.spectrum=='analytic'.
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DDCALC_INPUT_INVALID:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [ddcalc]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §41 (DDCALC_INPUT_INVALID)"
+    description: "Schema validation failed or NREFT/non-SHM present."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DDCALC_MASS_OUT_OF_RANGE:
+    class: regime-mismatch
+    severity: recoverable
+    emitted_by: [ddcalc]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §42 (DDCALC_MASS_OUT_OF_RANGE)"
+    description: "m_DM < 0.1 GeV; context.suggested_tool = 'DarkELF'."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DDCALC_DRIVER_FAILED:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: fatal
+    emitted_by: [ddcalc]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §43 (DDCALC_DRIVER_FAILED)"
+    description: "Driver compile or runtime error."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DDCALC_NREFT_NOT_SUPPORTED:
+    class: missing-tool-feature
+    fix_locality: upstream
+    severity: fatal
+    emitted_by: [ddcalc]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §44 (DDCALC_NREFT_NOT_SUPPORTED)"
+    description: "nreft_coefficients key present in input; DDCalc v1 cannot handle NREFT."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  DDCALC_OVERLAY_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [ddcalc]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §45 (DDCALC_OVERLAY_MISSING)"
+    description: "Overlay requested but files gone."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  HIGGSTOOLS_SLHA_MISSING_BLOCKS:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [higgstools]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §46 (HIGGSTOOLS_SLHA_MISSING_BLOCKS)"
+    description: "Required HB input blocks absent from SLHA2 file."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  HIGGSTOOLS_SM_REF_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [higgstools]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §47 (HIGGSTOOLS_SM_REF_MISSING)"
+    description: "chi2_SM_ref cache absent."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  HIGGSTOOLS_DATASET_MISMATCH:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: fatal
+    emitted_by: [higgstools]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §48 (HIGGSTOOLS_DATASET_MISMATCH)"
+    description: "Unified dataset SHA != config pin."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  HIGGSTOOLS_BACKEND_UNAVAILABLE:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [higgstools]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §49 (HIGGSTOOLS_BACKEND_UNAVAILABLE)"
+    description: "Unified Python import failed; falls back to legacy."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  HIGGSTOOLS_NUMERIC_CRASH:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [higgstools]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §50 (HIGGSTOOLS_NUMERIC_CRASH)"
+    description: "Backend segfault on one scan row; row marked bad."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  OMEGA_UNCONVERGED:
+    class: regime-mismatch
+    severity: recoverable
+    emitted_by: [micromegas]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §12 (micrOMEGAs 6.0.5 vSigmaA NaN)"
+    description: >-
+      micrOMEGAs Omega h^2 did not converge; vSigmaA(0.0) returned NaN in 6.0.5.
+      Use calcSpectrum() path instead.
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  MULTICOMPONENT_UNSUPPORTED:
+    class: missing-tool-feature
+    fix_locality: upstream
+    severity: fatal
+    emitted_by: [micromegas]
+    triggered_by_axes: []
+    digest_reference: "intel/digest.md §12 (micrOMEGAs multi-component)"
+    description: "micrOMEGAs v1 multi-component DM unsupported (alias for MICROMEGAS_MULTICOMPONENT_UNSUPPORTED)."
+    workaround_codes: []
+    owned_by: dark-matter-constraints

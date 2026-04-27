@@ -1,0 +1,16 @@
+branch: docs/sharp-edges-drake-dd-r1-20260426
+head_sha: 1beaba9
+files_edited:
+  - plugins/monte-carlo-tools/skills/drake/references/sharp-edges.md  # new, 77 lines
+  - plugins/monte-carlo-tools/skills/drake/SKILL.md                   # +8 lines (decision tree + file map)
+  - plugins/constraints/skills/ddcalc/SKILL.md                        # +38 lines (Sharp edges section)
+  - plugins/constraints/skills/ddcalc-install/SKILL.md                # +43 lines (Sharp edges section)
+sharp_edges_documented:
+  SE-D-1: test.wls $Path bug (FU-WS-H-2) — fixed T1.5
+  SE-D-2: preset bleed-through false positive (FU-WS-H-2)
+  SE-D-3: DRAKE output regex Oh2_(nBE|cBE|fBE) (FU-WS-H-1, FU-wsk-02) — fixed T1.5
+  SE-DD-1: LZ_2022 unregistered in driver (FU-wsi-01) — fixed T1.4; DARWIN still unregistered (tier-2)
+  SE-DD-2: DATA_DIR baked into libDDCalc.a (FU-wsi-01) — fixed T1.4
+  SE-DD-3: Apple Silicon -lgfortran linker flag (FU-wsi-02) — fixed T1.4
+  SE-DD-4: DDCalc needs sigma_SI/SD not raw SLHA (FU-wsi-03)
+net_lines_added: 166

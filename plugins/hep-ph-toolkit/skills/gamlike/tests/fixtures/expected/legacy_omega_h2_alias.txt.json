@@ -1,0 +1,76 @@
+{
+  "schema_version": "gamlike/v1",
+  "_meta": {
+    "source_file": "<SCRUBBED>",
+    "parser_version": "0.1.0",
+    "maddm_version": "2.0",
+    "parsed_at": "<SCRUBBED>"
+  },
+  "relic": {
+    "present": true,
+    "Omegah2": 10.5,
+    "Omegah_Planck": 0.12,
+    "xsi": 1.0,
+    "x_f": 16.0,
+    "sigmav_xf": 1.33e-28,
+    "initial_states": [
+      "chichibar"
+    ],
+    "channels": {
+      "chichibar": {
+        "bbx": 80.0,
+        "wphm": 20.0
+      }
+    },
+    "channels_sum_pct": 100.0
+  },
+  "direct": {
+    "present": false,
+    "results": []
+  },
+  "indirect": {
+    "present": false,
+    "sigmav_method": null,
+    "continuum": {
+      "present": false,
+      "channels": {}
+    },
+    "lines": {
+      "present": false,
+      "channels": {}
+    },
+    "global": {
+      "flux_method": null,
+      "Total_xsec": null,
+      "TotalSM_xsec": null,
+      "Fermi_Likelihood": null,
+      "Fermi_pvalue": null,
+      "Fermi_Likelihood_Thermal": null,
+      "Fermi_pvalue_Thermal": null,
+      "thermal_emitted": false
+    }
+  },
+  "spectral": {
+    "present": false,
+    "experiments": []
+  },
+  "fluxes_source": {
+    "present": false,
+    "method": null,
+    "fluxes": {
+      "neutrinos_e": null,
+      "neutrinos_mu": null,
+      "neutrinos_tau": null,
+      "gammas": null,
+      "positrons": null
+    }
+  },
+  "warnings": [
+    {
+      "code": "MADDM_VERSION_UNTESTED",
+      "field": "_meta.maddm_version",
+      "reason": "MadDM version '2.0' is not tested with this parser (tested against 3.2). Output may differ.",
+      "source_ref": ""
+    }
+  ]
+}

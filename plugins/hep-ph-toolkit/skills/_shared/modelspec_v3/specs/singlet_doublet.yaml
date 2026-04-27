@@ -1,0 +1,313 @@
+model:
+  name: SingletDoublet
+  slug: singlet_doublet
+  latex: 'Singlet-Doublet Fermion Dark Matter'
+  authors: 'John Tamanas'
+  date: '2026-04-26'
+
+gauge_groups:
+  - { symbol: B,  type: U(1),  label: hypercharge, coupling: g1, ssb: false }
+  - { symbol: WB, type: SU(2), label: left,        coupling: g2, ssb: true  }
+  - { symbol: G,  type: SU(3), label: color,       coupling: g3, ssb: false }
+
+global_symmetries:
+  - { type: 'Z(2)', name: DMParity }
+
+fermions:
+  # SM fermions (Z2-even)
+  - name: q
+    generations: 3
+    components: [uL, dL]
+    reps: { B: '1/6', WB: 2, G: 3, DMParity: 1 }
+  - name: LL
+    generations: 3
+    components: [vL, eL]
+    reps: { B: '-1/2', WB: 2, G: 1, DMParity: 1 }
+  - name: d
+    generations: 3
+    components: 'conj[dR]'
+    reps: { B: '1/3', WB: 1, G: -3, DMParity: 1 }
+  - name: u
+    generations: 3
+    components: 'conj[uR]'
+    reps: { B: '-2/3', WB: 1, G: -3, DMParity: 1 }
+  - name: e
+    generations: 3
+    components: 'conj[eR]'
+    reps: { B: 1, WB: 1, G: 1, DMParity: 1 }
+  # BSM fermions (Z2-odd, DM sector)
+  - name: FS
+    generations: 1
+    components: s0
+    reps: { B: 0, WB: 1, G: 1, DMParity: -1 }
+  - name: PsiDd
+    generations: 1
+    components: [PsiDd0, PsiDdm]
+    reps: { B: '-1/2', WB: 2, G: 1, DMParity: -1 }
+    dirac_partner: PsiDu
+  - name: PsiDu
+    generations: 1
+    components: [PsiDup, PsiDu0]
+    reps: { B: '1/2', WB: 2, G: 1, DMParity: -1 }
+    dirac_partner: PsiDd
+
+scalars:
+  - name: H
+    generations: 1
+    components: [Hp, H0]
+    reps: { B: '1/2', WB: 2, G: 1, DMParity: 1 }
+    real: false
+
+parameters:
+  # SM parameters
+  - { name: g1,     real: true,  description: 'Hypercharge-Coupling' }
+  - { name: g2,     real: true,  description: 'Left-Coupling' }
+  - { name: g3,     real: true,  description: 'Strong-Coupling' }
+  - { name: AlphaS, real: true,  description: 'Alpha Strong' }
+  - { name: eEM,    real: true,  description: 'electric charge' }
+  - { name: Gf,     real: true,  description: "Fermi's constant" }
+  - { name: aEWinv, real: true,  description: 'inverse weak coupling constant at mZ' }
+  - name: Yu
+    real: false
+    description: 'Up-Yukawa-Coupling'
+    dependence_num: "Sqrt[2]/v* {{Mass[Fu,1],0,0}, {0, Mass[Fu,2],0}, {0, 0, Mass[Fu,3]}}"
+  - name: Yd
+    real: false
+    description: 'Down-Yukawa-Coupling'
+    dependence_num: "Sqrt[2]/v* {{Mass[Fd,1],0,0}, {0, Mass[Fd,2],0}, {0, 0, Mass[Fd,3]}}"
+  - name: Ye
+    real: false
+    description: 'Lepton-Yukawa-Coupling'
+    dependence_num: "Sqrt[2]/v* {{Mass[Fe,1],0,0}, {0, Mass[Fe,2],0}, {0, 0, Mass[Fe,3]}}"
+  - name: mu2
+    real: true
+    description: 'SM Mu Parameter'
+    output_name: m2SM
+  - name: '\[Lambda]'
+    real: true
+    description: 'SM Higgs Selfcouplings'
+    dependence_num: 'Mass[hh]^2/(v^2)'
+  - name: vEW
+    real: true
+    description: 'EW-VEV'
+    dependence_num: 'Sqrt[4*Mass[VWp]^2/(g2^2)]'
+    dependence_spheno: 'None'
+    output_name: vvSM
+  - name: mH2
+    real: true
+    description: 'SM Higgs Mass Parameter'
+  - name: ThetaW
+    real: true
+    description: 'Weinberg-Angle'
+    dependence_num: 'ArcSin[Sqrt[1 - Mass[VWp]^2/Mass[VZ]^2]]'
+  - name: ZZ
+    description: 'Photon-Z Mixing Matrix'
+  - name: ZW
+    description: 'W Mixing Matrix'
+    dependence: '1/Sqrt[2] {{1, 1}, {\[ImaginaryI],-\[ImaginaryI]}}'
+  - name: Vu
+    description: 'Left-Up-Mixing-Matrix'
+  - name: Vd
+    description: 'Left-Down-Mixing-Matrix'
+  - name: Uu
+    description: 'Right-Up-Mixing-Matrix'
+  - name: Ud
+    description: 'Right-Down-Mixing-Matrix'
+  - name: Ve
+    description: 'Left-Lepton-Mixing-Matrix'
+  - name: Ue
+    description: 'Right-Lepton-Mixing-Matrix'
+  # BSM parameters
+  - name: MS
+    real: true
+    latex: 'M_S'
+    output_name: MS
+    les_houches: [BSMPARAMS, 1]
+  - name: MPsi
+    real: true
+    latex: 'M_\Psi'
+    output_name: MPsi
+    les_houches: [BSMPARAMS, 2]
+  - name: yh1
+    real: true
+    latex: 'y_{h1}'
+    output_name: yh1
+    les_houches: [BSMPARAMS, 3]
+  - name: yh2
+    real: true
+    latex: 'y_{h2}'
+    output_name: yh2
+    les_houches: [BSMPARAMS, 4]
+  - name: ZN
+    real: false
+    description: 'Majorana-Mixing-Matrix-Chi'
+    output_name: ZN
+    les_houches: ZNMIX
+  - name: UM
+    real: false
+    description: 'Left-Mixing-Matrix-ChiM'
+    output_name: UM
+    les_houches: UMMIX
+  - name: UP
+    real: false
+    description: 'Right-Mixing-Matrix-ChiM'
+    output_name: UP
+    les_houches: UPMIX
+  - name: PhaseFS
+    real: false
+    latex: 'PhaseFS'
+    output_name: PhaseFS
+    les_houches: [PHASES, 1]
+
+lagrangian:
+  hc:
+    - { term: 'Yd conj[H].d.q',       description: 'Down Yukawa' }
+    - { term: 'Ye conj[H].e.LL',      description: 'Lepton Yukawa' }
+    - { term: 'Yu H.u.q',             description: 'Up Yukawa' }
+    - { term: '1/2 MS FS.FS',         description: 'Singlet Majorana mass' }
+    - { term: 'MPsi PsiDu.PsiDd',     description: 'Doublet Dirac mass' }
+    - { term: 'yh1 conj[H].FS.PsiDu', description: 'Singlet-doublet-Higgs Yukawa (Y=+1/2)' }
+    - { term: 'yh2 H.FS.PsiDd',       description: 'Singlet-doublet-Higgs Yukawa (Y=-1/2)' }
+  no_hc:
+    - { term: '-mu2 conj[H].H',                     description: 'Higgs mass term' }
+    - { term: '-1/2 \[Lambda] conj[H].H.conj[H].H', description: 'Higgs quartic' }
+
+ewsb:
+  vevs:
+    - component: H0
+      vev:       [v, '1/Sqrt[2]']
+      goldstone: [Ah, '\[ImaginaryI]/Sqrt[2]']
+      physical:  [hh, '1/Sqrt[2]']
+
+  gauge_sector:
+    - rotate: [VB, 'VWB[3]']
+      to:     [VP, VZ]
+      matrix: ZZ
+    - rotate: ['VWB[1]', 'VWB[2]']
+      to:     [VWp, 'conj[VWp]']
+      matrix: ZW
+
+  mixing_sector:
+    # SM quark/lepton Dirac mixings
+    - kind: dirac
+      stage: EWSB
+      lh: [dL]
+      rh: ['conj[dR]']
+      outputs:
+        lh: { name: DL, mixing: Vd }
+        rh: { name: DR, mixing: Ud }
+    - kind: dirac
+      stage: EWSB
+      lh: [uL]
+      rh: ['conj[uR]']
+      outputs:
+        lh: { name: UL, mixing: Vu }
+        rh: { name: UR, mixing: Uu }
+    - kind: dirac
+      stage: EWSB
+      lh: [eL]
+      rh: ['conj[eR]']
+      outputs:
+        lh: { name: EL, mixing: Ve }
+        rh: { name: ER, mixing: Ue }
+    # BSM: Majorana neutral sector (s0, PsiDd0, PsiDu0) -> Chi
+    - kind: majorana
+      stage: EWSB
+      weyls: [s0, PsiDd0, PsiDu0]
+      output: { name: Chi, mixing: ZN }
+    # BSM: Charged Dirac sector (PsiDdm, PsiDup) -> (ChiM, ChiP)
+    - kind: dirac
+      stage: EWSB
+      lh: [PsiDdm]
+      rh: [PsiDup]
+      outputs:
+        lh: { name: ChiM, mixing: UM }
+        rh: { name: ChiP, mixing: UP }
+
+  phases:
+    - { field: s0, phase: PhaseFS }
+
+  dirac_spinors_pre_ewsb:
+    - { name: Fd1, components: [dL, 0] }
+    - { name: Fd2, components: [0, dR] }
+    - { name: Fu1, components: [uL, 0] }
+    - { name: Fu2, components: [0, uR] }
+    - { name: Fe1, components: [eL, 0] }
+    - { name: Fe2, components: [0, eR] }
+    - { name: Fv1, components: [vL, 0] }
+    - { name: FFS0,    components: [s0, 0] }
+    - { name: FPsiDd0, components: [PsiDd0, 0] }
+    - { name: FPsiDd1, components: [PsiDdm, 0] }
+    - { name: FPsiDu0, components: [PsiDup, 0] }
+    - { name: FPsiDu1, components: [PsiDu0, 0] }
+
+  dirac_spinors_post_ewsb:
+    - { name: Fd,   components: [DL, 'conj[DR]'] }
+    - { name: Fe,   components: [EL, 'conj[ER]'] }
+    - { name: Fu,   components: [UL, 'conj[UR]'] }
+    - { name: Fv,   components: [vL, 0] }
+    - { name: FChi, components: [Chi, 'conj[Chi]'] }
+    - { name: FChiM, components: [ChiM, 'conj[ChiP]'] }
+
+particles:
+  gauge_es: []
+
+  ewsb:
+    - name: hh
+      description: 'Higgs'
+      pdg: [25]
+      pdg_ix: [101000001]
+    - name: Ah
+      description: 'Pseudo-Scalar Higgs'
+      pdg: [0]
+      pdg_ix: [0]
+      mass: [0]
+      width: [0]
+    - name: Hp
+      description: 'Charged Higgs'
+      pdg: [0]
+      pdg_ix: [0]
+      mass: [0]
+      width: [0]
+      latex: ['H^+', 'H^-']
+      output_name: ['Hp', 'Hm']
+      electric_charge: 1
+    - { name: VP,   description: 'Photon' }
+    - { name: VZ,   description: 'Z-Boson',    goldstone: Ah }
+    - { name: VG,   description: 'Gluon' }
+    - { name: VWp,  description: 'W+ - Boson', goldstone: Hp }
+    - { name: gP,   description: 'Photon Ghost' }
+    - { name: gWp,  description: 'Positive W+ - Boson Ghost' }
+    - { name: gWpC, description: 'Negative W+ - Boson Ghost' }
+    - { name: gZ,   description: 'Z-Boson Ghost' }
+    - { name: gG,   description: 'Gluon Ghost' }
+    - { name: Fd,   description: 'Down-Quarks' }
+    - { name: Fu,   description: 'Up-Quarks' }
+    - { name: Fe,   description: 'Leptons' }
+    - { name: Fv,   description: 'Neutrinos' }
+    - name: FChi
+      description: 'BSM fermion mass eigenstate Chi'
+      pdg: [9958431, 9956206, 9979223]
+      mass: LesHouches
+      width: Automatic
+      electric_charge: 0
+      latex: 'Chi'
+      output_name: 'Chi'
+    - name: FChiM
+      description: 'BSM fermion mass eigenstate ChiM'
+      pdg: [9984071]
+      mass: LesHouches
+      width: Automatic
+      electric_charge: -1
+      latex: 'ChiM'
+      output_name: 'ChiM'
+    - name: FChiP
+      description: 'BSM fermion mass eigenstate ChiP'
+      pdg: [9986687]
+      mass: LesHouches
+      width: Automatic
+      electric_charge: 1
+      latex: 'ChiP'
+      output_name: 'ChiP'
+
+  weyl_intermediate: []

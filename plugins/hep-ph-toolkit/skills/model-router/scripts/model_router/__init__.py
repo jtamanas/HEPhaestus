@@ -1,0 +1,62 @@
+"""model_router — public API.
+
+Re-exports the orchestrator entry point and the public types for in-process
+callers (CLI in ../router.py, tests, downstream skills).
+"""
+from model_router.orchestrator import route
+from model_router.types import (
+    ActiveChain,
+    AxisBundle,
+    BlockerVerdict,
+    ComposedRouting,
+    DisclosureBannerMissing,
+    ExceptionVerdict,
+    LoadedContext,
+    MatrixAcknowledgementMissing,
+    MatrixVerdicts,
+    ModelNotInRegistry,
+    ModelSpecMissing,
+    ObservableRouting,
+    PerCandidateRouting,
+    Placement,
+    PrereqFold,
+    RegistryCorrupt,
+    RouterOptions,
+    RoutingReport,
+    SchemaValidationError,
+    SignalInputs,
+    SpecArchivedError,
+    SpecValidationError,
+    WORKFLOW_PLUGIN_MISSING_DEP_HEP_PH_DEMO,
+    WS1NotMerged,
+    WS2NotMerged,
+)
+
+__all__ = [
+    "route",
+    "ActiveChain",
+    "AxisBundle",
+    "BlockerVerdict",
+    "ComposedRouting",
+    "DisclosureBannerMissing",
+    "ExceptionVerdict",
+    "LoadedContext",
+    "MatrixAcknowledgementMissing",
+    "MatrixVerdicts",
+    "ModelNotInRegistry",
+    "ModelSpecMissing",
+    "ObservableRouting",
+    "PerCandidateRouting",
+    "Placement",
+    "PrereqFold",
+    "RegistryCorrupt",
+    "RouterOptions",
+    "RoutingReport",
+    "SchemaValidationError",
+    "SignalInputs",
+    "SpecArchivedError",
+    "SpecValidationError",
+    "WORKFLOW_PLUGIN_MISSING_DEP_HEP_PH_DEMO",
+    "WS1NotMerged",
+    "WS2NotMerged",
+]

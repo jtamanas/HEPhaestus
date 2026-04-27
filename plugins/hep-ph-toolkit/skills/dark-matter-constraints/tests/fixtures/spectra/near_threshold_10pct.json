@@ -1,0 +1,7 @@
+{
+  "description": "Synthetic spectrum: mass gap fraction just above the 10% coannihilation trigger.",
+  "m_dm_gev": 100.0,
+  "mass_gap_fraction": 0.10001,
+  "mass_gap_to_resonance_fraction": 0.20,
+  "trigger_expected": {"coannihilation": true, "near_resonance": false}
+}

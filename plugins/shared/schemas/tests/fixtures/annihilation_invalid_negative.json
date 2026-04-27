@@ -1,0 +1,7 @@
+{
+  "schema_version": "annihilation/v1",
+  "m_dm_gev": 62.5,
+  "sigma_v_zero": -1.0,
+  "source": "micromegas",
+  "source_run": "micromegas_runs/20260425T120000Z"
+}

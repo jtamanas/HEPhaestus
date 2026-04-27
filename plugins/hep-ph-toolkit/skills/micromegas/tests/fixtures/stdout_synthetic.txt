@@ -1,0 +1,37 @@
+# STRUCTURED FAKE — synthetic micrOMEGAs output for parser unit tests ONLY.
+# These values are NOT from a real micrOMEGAs run. They are seeded constants
+# chosen to exercise every parser code path (omega_h2, xf, cross-sections,
+# channels, sigma_v) without committing to any physics claim.
+#
+# To regenerate this fixture from a real micrOMEGAs 6.0.5 installation, run:
+#   HEPPH_RUN_NETWORK_TESTS=1 python3 scripts/regenerate_fixture.py
+# (v1.1 follow-up — requires a machine with micrOMEGAs installed.)
+#
+# Parser seed dict (use this to verify parse() output in tests):
+#   SEED_OMEGA_H2        = 1.234e-01
+#   SEED_XF              = 2.345e+01
+#   SEED_SIGMA_SI_P      = 3.456e-46
+#   SEED_SIGMA_SI_N      = 3.210e-46
+#   SEED_SIGMA_SD_P      = 0.00e+00
+#   SEED_SIGMA_SD_N      = 0.00e+00
+#   SEED_SIGMA_V         = 4.567e-26
+#   SEED_CHANNELS        = [{"name": "hh ZZ", "fraction": 0.31},
+#                            {"name": "hh WW", "fraction": 0.27},
+#                            {"name": "hh hh", "fraction": 0.19},
+#                            {"name": "hh bb", "fraction": 0.13},
+#                            {"name": "hh tt", "fraction": 0.10}]
+
+ Xf= 2.345e+01
+ Omega h^2 = 1.234e-01
+
+  hh ZZ    31%
+  hh WW    27%
+  hh hh    19%
+  hh bb    13%
+  hh tt    10%
+
+ sigma_SI(p) = 3.456e-46 cm^2
+ sigma_SI(n) = 3.210e-46 cm^2
+ sigma_SD(p) = 0.00e+00 cm^2
+ sigma_SD(n) = 0.00e+00 cm^2
+ sigma_v(v=0) = 4.567e-26 cm^3/s

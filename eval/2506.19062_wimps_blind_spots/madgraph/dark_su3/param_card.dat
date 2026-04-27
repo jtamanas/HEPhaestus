@@ -1,0 +1,48 @@
+######################################################################
+## MadGraph5 param_card for Dark SU(3) Model
+## arXiv:2506.19062 — Benchmark from Figure 7/8
+##
+## Parameters:
+##   g_tilde = 1.0 (dark gauge coupling)
+##   sin_theta = 0.1 (scalar mixing)
+##   m_H2 = 300 GeV (dark Higgs)
+##   m_V = 200 GeV (vector DM)
+##   m_Psi = 150 GeV (scalar DM, from m_V relation)
+######################################################################
+
+Block MASS
+  ## SM particles
+  25  1.252500e+02  # MH1 (SM-like Higgs)
+  23  9.118760e+01  # MZ
+  24  8.037700e+01  # MW
+   6  1.726900e+02  # MT
+   5  4.180000e+00  # MB
+  15  1.777000e+00  # MTA
+  ## Dark sector
+  9000001  2.000000e+02  # MV (dark vector boson, DM)
+  9000002  1.500000e+02  # MPsi (dark pseudoscalar, DM)
+  9000003  3.000000e+02  # MH2 (dark Higgs)
+  9000004  0.000000e+00  # MV3 (unbroken SU(2) massless gauge bosons — confined)
+
+Block DARKINPUTS
+   1  1.000000e+00  # g_tilde (dark SU(3) gauge coupling)
+   2  1.000000e-01  # sinTheta (H1-H2 mixing angle)
+
+Block SMINPUTS
+   1  1.279000e+02  # aEWM1
+   2  1.166379e-05  # GF
+   3  1.184000e-01  # aS
+
+Block YUKAWA
+   5  4.180000e+00  # ymb
+   6  1.726900e+02  # ymt
+  15  1.777000e+00  # ymtau
+
+Block DECAY
+  25  4.070000e-03  # WH1
+  9000001  0.000000e+00  # WV (stable)
+  9000002  0.000000e+00  # WPsi (stable if lighter than V)
+  9000003  AUTO           # WH2
+  23  2.495200e+00  # WZ
+  24  2.085000e+00  # WW
+   6  1.420000e+00  # WT

@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""Stub MadDM launcher for WS-3 bell-ring tests.
+
+Returns canned MadDM output for darksu3 Point A scenario.
+Real MadDM is not available in the test environment.
+"""
+import json, sys
+
+# Canned Point A relic density output (matches fixtures/canned/pointA/maddm_stdout.txt)
+result = {
+    "status": "ok",
+    "relic_density": {"omega_h2": 0.135, "units": "dimensionless"},
+    "direct_detection": {"sigma_SI": 1.2e-45, "sigma_SD": 3.4e-44, "units": "cm^2"},
+    "indirect_detection": {"sigmav_total": 2.1e-26, "units": "cm^3/s", "channel": "bb"},
+}
+print(json.dumps(result))
+sys.exit(0)

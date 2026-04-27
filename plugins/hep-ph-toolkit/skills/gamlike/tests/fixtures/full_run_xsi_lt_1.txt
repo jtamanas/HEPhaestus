@@ -1,0 +1,47 @@
+################################################
+#                 MadDM v. 3.2                 #
+################################################
+
+
+################################################
+# Relic Density                                #
+################################################
+
+Omegah2                       = 6.00e-02
+Omegah_Planck                 = 1.20e-01
+xsi                           = 5.00e-01 	 # xsi = (Omega/Omega_Planck)
+x_f                           = 2.50e+01
+sigmav_xf                     = 8.42e-27 	 # cm^3 s^-1
+# % of the relic density channels
+%_chichibar_bbx               = 85.00 %
+%_chichibar_ttx               = 10.00 %
+%_chichibar_wphm              = 5.00 %
+
+
+################################################
+# Direct Detection [cm^2]                      #
+################################################
+
+Xenon1T_2018_SI               = [1.23e-45,3.40e-46]   # XENON1T 2018 (SI)
+Xenon1T_2018_SD_neutron       = [5.50e-42,5.67e-42]   # XENON1T 2018 (SD)
+
+
+################################################
+# Indirect Detection                           #
+################################################
+# Results in brackets display [prediction, upper limit]
+
+# Annihilation cross section computed with the method: madevent
+# <sigma v>[cm^3 s^-1] of continuum spectrum final states and Fermi dSph limits (if available, else -1)
+chichibar_bbx                 = [1.99e-26,3.00e-25]
+chichibar_ttx                 = [2.34e-27,3.00e-25]
+
+# <sigma v>[cm^3 s^-1] of line spectrum final states and Fermi LAT 2015 line limits (if available, else -1)]
+chichibar_za                  = [1.20e-30,2.30e-29]
+
+# Global Fermi dSph Limit computed with pythia8 spectra
+Total_xsec                    = [2.34e-26,3.00e-25]
+Fermi_Likelihood              = -1.23e+01
+Fermi_pvalue                  = 4.50e-02
+Fermi_Likelihood(Thermal)     = -8.70e+00
+Fermi_pvalue(Thermal)         = 1.23e-01

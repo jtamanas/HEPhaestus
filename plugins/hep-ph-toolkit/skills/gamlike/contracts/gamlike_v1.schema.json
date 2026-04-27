@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "gamlike/v1",
+  "title": "gamlike v1 output schema",
+  "description": "JSON schema for parse_maddm_results.py output (gamlike/v1). additionalProperties: false at every level.",
+  "type": "object",
+  "required": ["schema_version", "_meta", "relic", "direct", "indirect", "spectral", "fluxes_source", "warnings"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "gamlike/v1"
+    },
+    "_meta": {
+      "type": "object",
+      "required": ["source_file", "parser_version", "maddm_version", "parsed_at"],
+      "additionalProperties": false,
+      "properties": {
+        "source_file": { "type": "string" },
+        "parser_version": { "type": "string" },
+        "maddm_version": { "type": ["string", "null"] },
+        "parsed_at": { "type": "string" }
+      }
+    },
+    "relic": {
+      "type": "object",
+      "required": ["present", "Omegah2", "Omegah_Planck", "xsi", "x_f", "sigmav_xf", "initial_states", "channels", "channels_sum_pct"],
+      "additionalProperties": false,
+      "properties": {
+        "present": { "type": "boolean" },
+        "Omegah2": { "type": ["number", "null"] },
+        "Omegah_Planck": { "type": ["number", "null"] },
+        "xsi": { "type": ["number", "null"] },
+        "x_f": { "type": ["number", "null"] },
+        "sigmav_xf": { "type": ["number", "null"] },
+        "initial_states": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "channels": {
+          "type": "object",
+          "description": "Nested by initial state: {<initial>: {<final>: <pct>}}",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": { "type": ["number", "null"] }
+          }
+        },
+        "channels_sum_pct": { "type": ["number", "null"] }
+      }
+    },
+    "direct": {
+      "type": "object",
+      "required": ["present", "results"],
+      "additionalProperties": false,
+      "properties": {
+        "present": { "type": "boolean" },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "experiment_label", "sig_cm2", "lim_cm2"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "experiment_label": { "type": ["string", "null"] },
+              "sig_cm2": { "type": ["number", "null"] },
+              "lim_cm2": { "type": ["number", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "indirect": {
+      "type": "object",
+      "required": ["present", "sigmav_method", "continuum", "lines", "global"],
+      "additionalProperties": false,
+      "properties": {
+        "present": { "type": "boolean" },
+        "sigmav_method": { "type": ["string", "null"] },
+        "continuum": {
+          "type": "object",
+          "required": ["present", "channels"],
+          "additionalProperties": false,
+          "properties": {
+            "present": { "type": "boolean" },
+            "channels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["sigmav", "limit"],
+                "additionalProperties": false,
+                "properties": {
+                  "sigmav": { "type": ["number", "null"] },
+                  "limit": { "type": ["number", "null"] }
+                }
+              }
+            }
+          }
+        },
+        "lines": {
+          "type": "object",
+          "required": ["present", "channels"],
+          "additionalProperties": false,
+          "properties": {
+            "present": { "type": "boolean" },
+            "channels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["sigmav", "limit"],
+                "additionalProperties": false,
+                "properties": {
+                  "sigmav": { "type": ["number", "null"] },
+                  "limit": { "type": ["number", "null"] }
+                }
+              }
+            }
+          }
+        },
+        "global": {
+          "type": "object",
+          "required": ["flux_method", "Total_xsec", "TotalSM_xsec", "Fermi_Likelihood", "Fermi_pvalue", "Fermi_Likelihood_Thermal", "Fermi_pvalue_Thermal", "thermal_emitted"],
+          "additionalProperties": false,
+          "properties": {
+            "flux_method": { "type": ["string", "null"] },
+            "Total_xsec": { "type": ["number", "null"] },
+            "TotalSM_xsec": { "type": ["number", "null"] },
+            "Fermi_Likelihood": { "type": ["number", "null"] },
+            "Fermi_pvalue": { "type": ["number", "null"] },
+            "Fermi_Likelihood_Thermal": { "type": ["number", "null"] },
+            "Fermi_pvalue_Thermal": { "type": ["number", "null"] },
+            "thermal_emitted": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "spectral": {
+      "type": "object",
+      "required": ["present", "experiments"],
+      "additionalProperties": false,
+      "properties": {
+        "present": { "type": "boolean" },
+        "experiments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["experiment_name", "arxiv_number", "ROI", "Jfactor", "astrophysical_parameters", "no_peaks_out_of_range", "peaks"],
+            "additionalProperties": false,
+            "properties": {
+              "experiment_name": { "type": "string" },
+              "arxiv_number": { "type": ["string", "null"] },
+              "ROI": { "type": ["number", "null"] },
+              "Jfactor": { "type": ["number", "null"] },
+              "astrophysical_parameters": {
+                "type": "null",
+                "description": "Reserved; always null in v0 (producer lines :3580-3582 commented out)."
+              },
+              "no_peaks_out_of_range": { "type": "boolean" },
+              "peaks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["num", "states", "energy_GeV", "flux", "flux_UL", "loglike_neg2", "pvalue", "error_code"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "num": { "type": "integer" },
+                    "states": { "type": ["string", "null"] },
+                    "energy_GeV": { "type": ["number", "null"] },
+                    "flux": { "type": ["number", "null"] },
+                    "flux_UL": { "type": ["number", "null"] },
+                    "loglike_neg2": { "type": ["number", "null"] },
+                    "pvalue": { "type": ["number", "null"] },
+                    "error_code": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "fluxes_source": {
+      "type": "object",
+      "required": ["present", "method", "fluxes"],
+      "additionalProperties": false,
+      "properties": {
+        "present": { "type": "boolean" },
+        "method": { "type": ["string", "null"] },
+        "fluxes": {
+          "type": "object",
+          "required": ["neutrinos_e", "neutrinos_mu", "neutrinos_tau", "gammas", "positrons"],
+          "additionalProperties": false,
+          "properties": {
+            "neutrinos_e": { "type": ["number", "null"] },
+            "neutrinos_mu": { "type": ["number", "null"] },
+            "neutrinos_tau": { "type": ["number", "null"] },
+            "gammas": { "type": ["number", "null"] },
+            "positrons": {
+              "type": "null",
+              "description": "Reserved; always null in v0 (producer lines :3627-3628 commented out)."
+            }
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "field", "reason", "source_ref"],
+        "properties": {
+          "code": { "type": "string" },
+          "field": { "type": "string" },
+          "reason": { "type": "string" },
+          "source_ref": { "type": "string" }
+        }
+      }
+    }
+  }
+}

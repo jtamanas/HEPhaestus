@@ -1,0 +1,27 @@
+# Leptoquark synthetic fixture — no DM candidates (tests LHC_TOOLING_MISSING path)
+_schema_version: 2
+name: leptoquark-synthetic
+display: "Leptoquark (synthetic, collider-only)"
+version: "1.0"
+authoring_status: active
+
+gauge_groups:
+  - {symbol: B,  group: U1,  kind: hypercharge, coupling: g1, gauge_boson: B0, gaugino: null, symmetry_breaking: {pattern: SM-EWSB}}
+  - {symbol: WB, group: SU2, kind: left,        coupling: g2, gauge_boson: W,  gaugino: null, symmetry_breaking: {pattern: SM-EWSB}}
+  - {symbol: G,  group: SU3, kind: color,       coupling: g3, gauge_boson: g,  gaugino: null, symmetry_breaking: {pattern: unbroken}}
+
+scalars:
+  - name: S1
+    reps: {G: 3, WB: 1}
+    hypercharge: -0.333
+
+dm_phenomenology:
+  candidates: []
+
+lagrangian:
+  spec_intent:
+    requested_emissions: [ufo]
+  interactions: []
+
+outputs:
+  - ufo

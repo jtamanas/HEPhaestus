@@ -1,0 +1,352 @@
+{
+  "timestamp": "2026-04-17T02:38:43.608696+00:00",
+  "runner": "claude-code (opus, no-skills)",
+  "n_trials": 1,
+  "total_tasks": 8,
+  "total_pass": 8,
+  "pass_at_1": 1.0,
+  "pass_at_k": 1.0,
+  "pass_power_k": 1.0,
+  "by_tier": {
+    "1": {
+      "total": 8,
+      "pass": 8
+    }
+  },
+  "tasks": [
+    {
+      "id": "t1_sd_proc_card",
+      "tier": 1,
+      "model": "singlet-doublet",
+      "tags": [
+        "proc_card",
+        "singlet-doublet",
+        "setup",
+        "mg5_batch"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "file_contains",
+              "key": "proc_card",
+              "status": "pass",
+              "expected": null,
+              "actual": null,
+              "message": "Pattern 'import model' found"
+            },
+            {
+              "grader": "file_contains",
+              "key": "proc_card",
+              "status": "pass",
+              "expected": null,
+              "actual": null,
+              "message": "Pattern 'generate.*chi1.*>.*chi1' found"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_thdma_proc_card",
+      "tier": 1,
+      "model": "2HDM+a",
+      "tags": [
+        "proc_card",
+        "2HDM+a",
+        "setup",
+        "mg5_batch"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "file_contains",
+              "key": "proc_card",
+              "status": "pass",
+              "expected": null,
+              "actual": null,
+              "message": "Pattern 'import model' found"
+            },
+            {
+              "grader": "file_contains",
+              "key": "proc_card",
+              "status": "pass",
+              "expected": null,
+              "actual": null,
+              "message": "Pattern 'generate.*chi.*chi~.*>.*b' found"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_dsu3_proc_card",
+      "tier": 1,
+      "model": "dark-su3",
+      "tags": [
+        "proc_card",
+        "dark-su3",
+        "setup",
+        "mg5_batch"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "file_contains",
+              "key": "proc_card",
+              "status": "pass",
+              "expected": null,
+              "actual": null,
+              "message": "Pattern 'import model' found"
+            },
+            {
+              "grader": "file_contains",
+              "key": "proc_card",
+              "status": "pass",
+              "expected": null,
+              "actual": null,
+              "message": "Pattern 'generate.*V1.*>.*V1' found"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_sd_param_card",
+      "tier": 1,
+      "model": "singlet-doublet",
+      "tags": [
+        "param_card",
+        "singlet-doublet",
+        "setup",
+        "card_io"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "param_mS",
+              "status": "pass",
+              "expected": 150.0,
+              "actual": 150.0,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "param_mD",
+              "status": "pass",
+              "expected": 500.0,
+              "actual": 500.0,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "param_y1",
+              "status": "pass",
+              "expected": 1.0,
+              "actual": 1.0,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "param_y2",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_thdma_param_card",
+      "tier": 1,
+      "model": "2HDM+a",
+      "tags": [
+        "param_card",
+        "2HDM+a",
+        "setup",
+        "card_io"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "param_mchi",
+              "status": "pass",
+              "expected": 200.0,
+              "actual": 200.0,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "param_ychi",
+              "status": "pass",
+              "expected": 1.0,
+              "actual": 1.0,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "param_sintheta",
+              "status": "pass",
+              "expected": 0.35,
+              "actual": 0.35,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_dsu3_param_card",
+      "tier": 1,
+      "model": "dark-su3",
+      "tags": [
+        "param_card",
+        "dark-su3",
+        "setup",
+        "card_io"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "param_gtilde",
+              "status": "pass",
+              "expected": 1.0,
+              "actual": 1.0,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "param_mV",
+              "status": "pass",
+              "expected": 200.0,
+              "actual": 200.0,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_parse_banner",
+      "tier": 1,
+      "model": "generic",
+      "tags": [
+        "parsing",
+        "setup",
+        "lhe_parser"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "xsec",
+              "status": "pass",
+              "expected": 0.001234,
+              "actual": 0.001234,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "unit",
+              "key": "xsec_unit",
+              "status": "pass",
+              "expected": "pb",
+              "actual": "pb",
+              "message": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_parse_html",
+      "tier": 1,
+      "model": "generic",
+      "tags": [
+        "parsing",
+        "setup",
+        "lhe_parser"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "xsec",
+              "status": "pass",
+              "expected": 0.05678,
+              "actual": 0.05678,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "unit",
+              "key": "xsec_unit",
+              "status": "pass",
+              "expected": "pb",
+              "actual": "pb",
+              "message": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

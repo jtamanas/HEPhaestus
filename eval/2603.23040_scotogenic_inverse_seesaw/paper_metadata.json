@@ -1,0 +1,26 @@
+{
+  "arxiv_id": "2603.23040",
+  "title": "Light fermionic dark matter in a scotogenic inverse seesaw model",
+  "authors": ["TODO: extract from paper front matter"],
+  "date": "2026-03",
+  "models": [
+    {
+      "name": "scotogenic-inverse-seesaw",
+      "lagrangian_eq": 1,
+      "ufo_model_name": "ScotoInverseSeesaw_UFO",
+      "description": "Scotogenic model with inverse seesaw neutrino mass generation. Dark matter is the lightest Z2-odd Majorana fermion chi1 from a 3x3 neutral fermion mass matrix."
+    }
+  ],
+  "references": {
+    "form_factors_SI": "Hoferichter, Ruiz de Elvira, Kubis, Meissner 2015 (Phys. Rev. Lett. 115, 092301)",
+    "form_factors_axial": "FLAG 2021 averages",
+    "nufit": "NuFIT 6.0, Esteban et al. 2024 (normal ordering)",
+    "xenon_abundances": "Del Nobile, 'The Theory of Direct Dark Matter Detection' (2022, Springer Lect. Notes Phys. 996), Table B.1",
+    "nreft": "Del Nobile 2022 Eq. 5.49"
+  },
+  "computational_tools": {
+    "relic_density": "MadDM (gated)",
+    "loop_integrals": "hand/analytical"
+  },
+  "notes": "Paper uses NuFIT 6.0 (2024) with sin^2 values. Model parameters: m_E (vector-like doublet mass), m_N (Majorana singlet mass), y1, y2 (Yukawa couplings). Plan convention maps: M_R=m_E, mu_S=mu_1=mu_2=y*v/sqrt(2) (symmetric limit), M_N=m_N. BP masses: BP1 m_chi=42 GeV, BP2 m_chi=59 GeV, BP3 m_chi=61 GeV."
+}

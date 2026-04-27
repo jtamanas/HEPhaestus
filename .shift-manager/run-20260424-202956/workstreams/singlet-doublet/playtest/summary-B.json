@@ -1,0 +1,66 @@
+{
+  "variant": "B",
+  "perturbation": "ZN→N rename in practitioner Q4 (mixing matrix name for neutral Majorana 3x3 sector)",
+  "run_at": "2026-04-25T01:30:00Z",
+  "wall_elapsed_min": 3,
+  "verdict": "PASS",
+  "verdict_basis": "Alternate criteria 2 and 3: check_vertices.py surfaced VERTICES_MISSING(yh1) + VERTICES_MISSING(yh2) before MadDM, confirming ZN→N clash caused UFO corruption. SARAH exit was silent (exit=0) but diagnostic confirmed failure.",
+  "baseline_used": 0.292,
+  "hardcoded_reference": 0.292,
+  "omega_h2": null,
+  "omega_h2_note": "Not computed — pipeline halted at SPheno build before MadDM",
+  "criteria": {
+    "C1_summary_parseable": {
+      "status": "N/A",
+      "note": "demo_output/singlet-doublet/summary.json not written; pipeline halted before completion"
+    },
+    "C2_omega_h2_finite": {
+      "status": "PASS_ALTERNATE",
+      "note": "issues.jsonl has sd-B-001 (severity:major) with VERTICES_MISSING for yh1+yh2, logged before MadDM, confirming ZN→N clash surfaced before MadDM"
+    },
+    "C3_determinism": {
+      "status": "PASS_ALTERNATE",
+      "note": "sd-B-001 hypothesis contains 'N' + clash context; collision confirmed by check_vertices.py VERTICES_MISSING + sarah.log N::precbd. Criteria 3 alternate satisfied."
+    },
+    "C4_plots_exist": {
+      "status": "N/A",
+      "note": "Plotting not reached; pipeline halted at SPheno build"
+    },
+    "C5_spec_yaml_validates": {
+      "status": "PARTIAL",
+      "note": "singlet_doublet_b_spec.yaml validate_spec.py exit=0 (spec is schema-valid). BUT this exposes a validation gap: N is not caught as a reserved Mathematica built-in. See sd-B-002."
+    },
+    "C6_wallclock_45min": {
+      "status": "PASS",
+      "note": "Total wall time ~3 min (SARAH build 23s + diagnostics)"
+    }
+  },
+  "key_findings": [
+    {
+      "finding": "N shadows Mathematica N[] built-in precision function",
+      "impact": "SARAH emits 200+ N::precbd errors; all Higgs-portal Yukawa vertices (yh1, yh2) dropped from UFO; 0 Chi vertices vs 32 in Variant A",
+      "severity": "major",
+      "issue_id": "sd-B-001"
+    },
+    {
+      "finding": "validate_spec.py does not check mixing_matrix names against Mathematica built-ins",
+      "impact": "N accepted at spec validation; collision only detected by check_vertices.py post-SARAH",
+      "severity": "major",
+      "issue_id": "sd-B-002"
+    },
+    {
+      "finding": "SARAH exits 0 with corrupted UFO",
+      "impact": "Silent failure; build.py reports status:built despite broken output",
+      "severity": "minor",
+      "issue_id": "sd-B-003"
+    },
+    {
+      "finding": "The ZN→N rename does NOT change physics in a good run — the physics spec is identical between A and B. The failure is purely a naming artifact.",
+      "impact": "Physics equivalence cannot be confirmed numerically (MadDM not reached) but analytically confirmed: spec is identical except for mixing_matrix symbol",
+      "severity": "informational"
+    }
+  ],
+  "spheno_exit": "SPHENO_COMPILE_FAILED",
+  "maddm_reached": false,
+  "rename_leak_check": "Cannot confirm numerically — pipeline did not reach MadDM. The failure MODE was different from a silent rebind: N shadowed Mathematica's N[] rather than MSSM ZN. Both are naming collision failure modes."
+}

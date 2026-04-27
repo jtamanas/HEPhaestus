@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hep-ph-agents/schemas/scattering/v1",
+  "title": "DM–nucleon scattering cross-sections (scattering/v1)",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version", "m_dm_gev",
+    "sigma_si_proton_cm2", "sigma_si_neutron_cm2",
+    "sigma_sd_proton_cm2", "sigma_sd_neutron_cm2",
+    "source", "source_run", "nucleon_form_factors"
+  ],
+  "properties": {
+    "schema_version": {"const": "scattering/v1"},
+    "m_dm_gev":            {"type": "number", "exclusiveMinimum": 0},
+    "sigma_si_proton_cm2": {"type": "number", "minimum": 0},
+    "sigma_si_neutron_cm2":{"type": "number", "minimum": 0},
+    "sigma_sd_proton_cm2": {"oneOf": [{"type": "number", "minimum": 0}, {"type": "null"}]},
+    "sigma_sd_neutron_cm2":{"oneOf": [{"type": "number", "minimum": 0}, {"type": "null"}]},
+    "source":     {"enum": ["micromegas", "looptools"]},
+    "source_run": {"type": "string", "minLength": 1},
+    "halo": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["model", "v0_km_per_s", "vesc_km_per_s", "rho0_gev_per_cm3"],
+          "properties": {
+            "model":            {"enum": ["shm"]},
+            "v0_km_per_s":      {"type": "number", "exclusiveMinimum": 0},
+            "vesc_km_per_s":    {"type": "number", "exclusiveMinimum": 0},
+            "rho0_gev_per_cm3": {"type": "number", "exclusiveMinimum": 0}
+          }
+        }
+      ]
+    },
+    "nucleon_form_factors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preset"],
+      "properties": {
+        "preset": {"enum": ["default_2018", "A1"]}
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+SARAH version 4.15.3
+Loading model DarkSU3...
+Checking model consistency...
+Error: field psiDX undefined in FermionFields[[3]].
+Please check the field definitions in DarkSU3.m.
+Model loading stopped due to undefined field reference.

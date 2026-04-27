@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "hep-ph-demo universal provenance",
+  "description": "Run provenance metadata. Written BEFORE summary.json (atomic-write invariant). This file MUST NOT contain model-specific keys.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "git_sha",
+    "run_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1",
+      "description": "Schema version; const 1 for this release."
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.\\-]{8,128}$",
+      "description": "Unique run identifier. Format is practitioner-chosen; no format baked into the contract."
+    },
+    "git_sha": {
+      "type": "string",
+      "description": "Git commit SHA at the time of the run."
+    },
+    "run_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp when the run started."
+    },
+    "wallclock_seconds": {
+      "type": "number",
+      "description": "Total wall-clock time of the run in seconds."
+    },
+    "practitioner_script": {
+      "type": "string",
+      "description": "Path to the practitioner_script.md used for this run."
+    },
+    "matrix_name": {
+      "type": "string",
+      "description": "Mixing matrix name used (e.g. ZN)."
+    },
+    "constraint": {
+      "type": "string",
+      "description": "Primary constraint computed this run (e.g. relic, dd, id)."
+    },
+    "host": {
+      "type": "string",
+      "description": "Hostname where the run executed."
+    },
+    "tool_versions": {
+      "type": "object",
+      "description": "Map of tool name to version string (e.g. {maddm: '3.2.0', sarah: '4.15.3'}).",
+      "additionalProperties": {"type": "string"}
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Forward-compatibility escape hatch for future fields. Any key-value pairs allowed here.",
+      "additionalProperties": true
+    }
+  }
+}

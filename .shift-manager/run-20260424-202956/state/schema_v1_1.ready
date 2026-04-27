@@ -1,0 +1,8 @@
+written_by: manager (2hdma P3 sonnet skipped this step)
+schema_path: plugins/hep-ph-demo/skills/_shared/summary.schema.json
+schema_branch: 2hdma/prep-20260424
+schema_commit: 76919d4
+fields_added: relic_approx, model_source, model_fixture
+fields_optional: true
+fields_additive: true
+ready_at: 2026-04-24T21:50:00Z

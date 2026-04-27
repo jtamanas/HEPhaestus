@@ -1,0 +1,13 @@
+{
+  "_doc": "Bell-ring config — WS-3 cycle-3 live SKILL.md test. Uses stub executables so check_prereqs.py returns status:ok in the test env. Paths are relative to repo root (cwd when claude CLI runs). SYNTHETIC FIXTURE — not a real physics installation. Stub scripts return canned outputs matching fixtures/canned/pointA/.",
+  "models": {
+    "darksu3": {
+      "ufo_path": "tests/fixtures/dark_su3_playtest/ufo/darkSU3",
+      "latest_slha": null,
+      "spec_yaml": "tests/fixtures/dark_su3_playtest/specs/spec_pointA.yaml"
+    }
+  },
+  "maddm_path": "tests/fixtures/dark_su3_playtest/stubs/maddm-launcher",
+  "micromegas_path": "tests/fixtures/dark_su3_playtest/stubs/micromegas-lib",
+  "drake_path": "tests/fixtures/dark_su3_playtest/stubs/drake-lib"
+}

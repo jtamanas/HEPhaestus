@@ -1,0 +1,28 @@
+{
+  "bp1": {
+    "params": {"g_tilde": 2.0, "sin_theta": 0.10, "m_H2": 500, "m_V": 150, "m_Psi": 70},
+    "n_points": 200,
+    "Omega_V_h2": 33.30664,
+    "Omega_Psi_h2": 2995.557447,
+    "relic_approx": false,
+    "sigmav_approx": true,
+    "wall_seconds": 0.05
+  },
+  "perturbation_mV300": {
+    "params": {"g_tilde": 2.0, "sin_theta": 0.10, "m_H2": 500, "m_V": 300, "m_Psi": 70},
+    "n_points": 200,
+    "Omega_V_h2": 28.47696,
+    "Omega_Psi_h2": 35258.722812,
+    "wall_seconds": 0.04
+  },
+  "signature_args": ["spec", "params", "n_points"],
+  "module_path": "plugins/model-building/skills/spheno-build/scripts/analytic_models/dark_su3.py",
+  "assertions": {
+    "bp1_Omega_V_in_band": "PASS (33.307 in [31.6, 35.0])",
+    "bp1_Omega_Psi_in_band": "PASS (2995.6 in [2846, 3146])",
+    "bp1_relic_approx_false": "PASS",
+    "bp1_sigmav_approx_true": "PASS",
+    "bp1_wall_le_60s": "PASS (0.05s)",
+    "perturbation_Omega_V_outside_band": "PASS (28.477 NOT in [31.6, 35.0])"
+  }
+}

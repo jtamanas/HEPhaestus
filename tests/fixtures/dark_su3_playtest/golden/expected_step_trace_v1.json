@@ -1,0 +1,51 @@
+{
+  "_schema_version": "v1",
+  "_note": "Expected helper invocation sequences per scenario. Each entry is a list of (helper_name, required_args_subset) tuples. HARD assertion: captured argv must contain every required_arg for that invocation, in sequence order.",
+  "pointA_configured": {
+    "helper_sequence": [
+      {"helper": "check_prereqs", "required_args": ["--model", "darksu3", "--config"]},
+      {"helper": "extract_field", "required_args": ["--key", "omega_h2", "--schema-version", "relic/v1"]},
+      {"helper": "extract_field", "required_args": ["--key", "sigma_v_zero", "--schema-version", "annihilation/v1"]},
+      {"helper": "detect_drake", "required_args": ["--config"]},
+      {"helper": "extract_field", "required_args": ["--key", "omega_h2", "--schema-version", "relic/v1"]}
+    ],
+    "drake_branch": "configured",
+    "drake_column_expected": true
+  },
+  "pointA_missing": {
+    "helper_sequence": [
+      {"helper": "check_prereqs", "required_args": ["--model", "darksu3", "--config"]},
+      {"helper": "extract_field", "required_args": ["--key", "omega_h2", "--schema-version", "relic/v1"]},
+      {"helper": "extract_field", "required_args": ["--key", "sigma_v_zero", "--schema-version", "annihilation/v1"]},
+      {"helper": "detect_drake", "required_args": ["--config"]}
+    ],
+    "drake_branch": "missing",
+    "drake_column_expected": false
+  },
+  "pointA_activation_required": {
+    "helper_sequence": [
+      {"helper": "check_prereqs", "required_args": ["--model", "darksu3", "--config"]},
+      {"helper": "extract_field", "required_args": ["--key", "omega_h2", "--schema-version", "relic/v1"]},
+      {"helper": "extract_field", "required_args": ["--key", "sigma_v_zero", "--schema-version", "annihilation/v1"]},
+      {"helper": "detect_drake", "required_args": ["--config"]}
+    ],
+    "drake_branch": "activation_required",
+    "drake_column_expected": false
+  },
+  "pointA_unset": {
+    "helper_sequence": [
+      {"helper": "check_prereqs", "required_args": ["--model", "darksu3", "--config"]}
+    ],
+    "drake_branch": "branch1_no_drake_path",
+    "drake_column_expected": false,
+    "note": "When config.drake_path absent, detect_drake is NOT called (Branch 1). Step 4 (micrOMEGAs) may still run if Step 3 triggers; DRAKE branch decision is independent."
+  },
+  "pointB": {
+    "helper_sequence": [
+      {"helper": "check_prereqs", "required_args": ["--model", "darksu3", "--config"]}
+    ],
+    "drake_branch": null,
+    "drake_column_expected": false,
+    "note": "Point B: no Step-3 triggers (no partner, off-resonance). Step 4 and Step 5 NOT invoked. MadDM only."
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": "gamlike/v1",
+  "_meta": {
+    "source_file": "<SCRUBBED>",
+    "parser_version": "0.1.0",
+    "maddm_version": "3.2",
+    "parsed_at": "<SCRUBBED>"
+  },
+  "relic": {
+    "present": true,
+    "Omegah2": 0.12,
+    "Omegah_Planck": 0.12,
+    "xsi": 1.0,
+    "x_f": 25.0,
+    "sigmav_xf": 4.21e-27,
+    "initial_states": [
+      "chichibar"
+    ],
+    "channels": {
+      "chichibar": {
+        "bbx": 100.0
+      }
+    },
+    "channels_sum_pct": 100.0
+  },
+  "direct": {
+    "present": false,
+    "results": []
+  },
+  "indirect": {
+    "present": false,
+    "sigmav_method": null,
+    "continuum": {
+      "present": false,
+      "channels": {}
+    },
+    "lines": {
+      "present": false,
+      "channels": {}
+    },
+    "global": {
+      "flux_method": null,
+      "Total_xsec": null,
+      "TotalSM_xsec": null,
+      "Fermi_Likelihood": null,
+      "Fermi_pvalue": null,
+      "Fermi_Likelihood_Thermal": null,
+      "Fermi_pvalue_Thermal": null,
+      "thermal_emitted": false
+    }
+  },
+  "spectral": {
+    "present": false,
+    "experiments": []
+  },
+  "fluxes_source": {
+    "present": true,
+    "method": "pythia8",
+    "fluxes": {
+      "neutrinos_e": 1.23e-08,
+      "neutrinos_mu": 4.56e-09,
+      "neutrinos_tau": 2.34e-09,
+      "gammas": 7.89e-10,
+      "positrons": null
+    }
+  },
+  "warnings": []
+}

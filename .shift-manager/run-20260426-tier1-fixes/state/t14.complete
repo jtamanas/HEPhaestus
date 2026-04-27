@@ -1,0 +1,11 @@
+branch: tier1/t14-ddcalc-lz2022-r1-20260426
+head_sha: 255cac0
+base_sha: ad8dd3e
+symbol_used: C_DDCalc_lz_init
+registered_as: LZ_2022
+lz_2022_logl: -5.106609e+02
+lz_2022_excluded90: 0
+smoke_input: m_dm_gev=100.0, sigma_si_proton_cm2=5e-46
+smoke_status: PASS
+root_cause: DDInput.f90 compiled with hardcoded build-time DATA_DIR; fixed via _ensure_ddcalc_data_symlinks() in run_ddcalc.py
+completed_at: 2026-04-26

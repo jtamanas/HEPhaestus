@@ -1,0 +1,7 @@
+looptools_version: "2.16"
+looptools_release_date: "2024-11-02"
+looptools_url: "https://feynarts.de/looptools/LoopTools-2.16.tar.gz"
+looptools_sha256: "TODO"   # verify_checksum warns-not-aborts; update pre-v1 release
+looptools_tarball_size_kb: 538
+looptools_build_size_mb: 50     # budget: build tree peak
+looptools_installed_size_mb: 20 # budget: installed prefix

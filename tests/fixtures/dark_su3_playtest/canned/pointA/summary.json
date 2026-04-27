@@ -1,0 +1,11 @@
+{
+  "schema_version": "scattering/v1",
+  "m_dm_gev": 100.0,
+  "sigma_si_proton_cm2": 1.21e-45,
+  "sigma_si_neutron_cm2": 1.18e-45,
+  "sigma_sd_proton_cm2": 5.60e-42,
+  "sigma_sd_neutron_cm2": 5.45e-42,
+  "source": "micromegas",
+  "source_run": "tests/fixtures/dark_su3_playtest/canned/pointA",
+  "nucleon_form_factors": {"preset": "default_2018"}
+}

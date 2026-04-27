@@ -1,0 +1,7 @@
+{
+  "omega_h2": 0.292,
+  "source_ts": "20260425010956",
+  "hardcoded_reference": 0.292,
+  "tolerance": 0.01,
+  "drift_flag": false
+}

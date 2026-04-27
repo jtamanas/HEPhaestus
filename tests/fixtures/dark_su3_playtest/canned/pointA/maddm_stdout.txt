@@ -1,0 +1,24 @@
+# STRUCTURED FAKE — synthetic fixture for router contract test, NOT a real run
+# Patched from plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/maddm/MadDM_results_synthetic.txt
+# Only modification: relic density value changed to 1.35e-01 (vs WS-1: 2.92e-01)
+# to produce the required 14.4% rel-diff against micrOMEGAs fixture (0.118).
+#
+# Point A: m_chi=100 GeV, m_med=199 GeV (on-resonance), partner=105 GeV
+# Scenario: produces CROSSCHECK_DISAGREEMENT with micrOMEGAs crosscheck.
+#
+# Seed values for verification:
+#   SEED_Omegah2          = 1.35e-01  (patched from WS-1: 2.92e-01)
+#   SEED_sigma_SI_proton  = 1.23e-45
+#   SEED_sigma_SI_neutron = 1.20e-45
+#   SEED_sigma_SD_proton  = 5.67e-42
+#   SEED_sigma_SD_neutron = 5.50e-42
+#   SEED_sigmav_total     = 2.34e-26
+
+Omegah2                       = 1.35e-01
+sigma_SI_proton               = 1.23e-45
+sigma_SI_neutron              = 1.20e-45
+sigma_SD_proton               = 5.67e-42
+sigma_SD_neutron              = 5.50e-42
+sigmav_total                  = 2.34e-26
+%_chi1chi1_zz                 = 17.84 %
+%_chi1chi1_ww                 = 12.30 %

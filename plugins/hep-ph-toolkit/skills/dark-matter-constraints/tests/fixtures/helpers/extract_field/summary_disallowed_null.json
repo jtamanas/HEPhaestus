@@ -1,0 +1,11 @@
+{
+  "schema_version": "scattering/v1",
+  "m_dm_gev": 100.0,
+  "sigma_si_proton_cm2": null,
+  "sigma_si_neutron_cm2": 1.2e-45,
+  "sigma_sd_proton_cm2": 2.3e-40,
+  "sigma_sd_neutron_cm2": 2.3e-40,
+  "source": "micromegas",
+  "source_run": "run_20260425_006",
+  "nucleon_form_factors": "standard"
+}

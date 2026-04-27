@@ -1,0 +1,42 @@
+# Dark SU(3) confining synthetic — triggers HARD_HALT path (non-Higgsed confining)
+_schema_version: 2
+name: dark-su3-confining
+display: "Dark SU(3) unbroken confining (synthetic, EFT rewrite required)"
+version: "1.0"
+authoring_status: active
+
+gauge_groups:
+  - {symbol: B,  group: U1,  kind: hypercharge, coupling: g1, gauge_boson: B0,  gaugino: null, symmetry_breaking: {pattern: SM-EWSB}}
+  - {symbol: WB, group: SU2, kind: left,        coupling: g2, gauge_boson: W,   gaugino: null, symmetry_breaking: {pattern: SM-EWSB}}
+  - {symbol: G,  group: SU3, kind: color,       coupling: g3, gauge_boson: g,   gaugino: null, symmetry_breaking: {pattern: unbroken}}
+  - {symbol: GD, group: SU3, kind: dark,        coupling: g_D, gauge_boson: VD, gaugino: null, symmetry_breaking: {pattern: unbroken-confining}}
+
+fermions:
+  - name: q_D
+    reps: {WB: 1, G: 1, GD: 3}
+    hypercharge: 0
+    spin: "1/2"
+
+dm_phenomenology:
+  candidates:
+    - name: hadron_DM
+      field_type: "composite"
+      mediator_regime: "narrow-resonance"
+      uv_provenance: "confining-sector"
+      mass_parameter: m_hadron
+      cp: null
+      mediator_field: null
+      stabilisation_mechanism: dark_baryon_number
+      blind_spot_reference: null
+      multi_component_partner: null
+      coupled: null
+  stabilizing_symmetry: dark_baryon_number
+  coannihilation: false
+
+lagrangian:
+  spec_intent:
+    requested_emissions: [analytic_only]
+  interactions: []
+
+outputs:
+  - analytic_only

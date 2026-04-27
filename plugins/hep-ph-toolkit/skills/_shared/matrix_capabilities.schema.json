@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "matrix_capabilities.schema.json",
+  "title": "WS2 Capability Matrix Block",
+  "description": "JSON Schema for prereqs.<skill-id>.capabilities: blocks in constraints.yaml",
+
+  "$defs": {
+    "VerdictEnum": {
+      "type": "string",
+      "enum": ["supported", "supported_with_caveat", "blocked", "not_applicable"],
+      "description": "No 'unknown' — CI errors on placeholder cells."
+    },
+
+    "BlockerClassEnum": {
+      "type": "string",
+      "enum": [
+        "missing-skill",
+        "missing-tool-feature",
+        "fundamental-group-theory-gap",
+        "regime-mismatch",
+        "spec-authoring-gap",
+        "informational",
+        "analytic-exception"
+      ]
+    },
+
+    "RoleEnum": {
+      "type": "string",
+      "enum": ["primary", "validator", "specialty", "escape_hatch", "none"]
+    },
+
+    "RoleMap": {
+      "type": "object",
+      "description": "Per-observable role tier. Observables: relic, dd, id, higgs, collider.",
+      "properties": {
+        "relic": {"$ref": "#/$defs/RoleEnum"},
+        "dd": {"$ref": "#/$defs/RoleEnum"},
+        "id": {"$ref": "#/$defs/RoleEnum"},
+        "higgs": {"$ref": "#/$defs/RoleEnum"},
+        "collider": {"$ref": "#/$defs/RoleEnum"}
+      },
+      "additionalProperties": {"$ref": "#/$defs/RoleEnum"}
+    },
+
+    "RuntimeCaveat": {
+      "type": "object",
+      "properties": {
+        "condition": {"type": "string"},
+        "message": {"type": "string"},
+        "banner_ref": {"type": "string"}
+      },
+      "required": ["condition", "message"],
+      "additionalProperties": true
+    },
+
+    "RuleSingle": {
+      "type": "object",
+      "properties": {
+        "axis": {"type": "string"},
+        "match": {},
+        "verdict": {"$ref": "#/$defs/VerdictEnum"},
+        "blocker": {"type": "string"},
+        "blocker_class": {"$ref": "#/$defs/BlockerClassEnum"},
+        "caveat": {"type": "string"},
+        "workaround": {"type": "string"},
+        "escape_hatch_target": {"type": "string", "enum": ["ws4"]},
+        "evidence": {"type": "string"},
+        "fix_locality": {"type": "string", "enum": ["upstream", "local_patch", "both"]},
+        "intentional_shadow": {"type": "boolean"},
+        "match_all_current_values": {"type": "boolean"}
+      },
+      "required": ["axis", "match", "verdict"],
+      "allOf": [
+        {
+          "if": {"properties": {"verdict": {"const": "blocked"}}},
+          "then": {
+            "required": ["blocker", "evidence"],
+            "properties": {
+              "blocker": {"type": "string"},
+              "evidence": {"type": "string"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"verdict": {"const": "supported_with_caveat"}}},
+          "then": {
+            "required": ["caveat", "evidence"],
+            "properties": {
+              "caveat": {"type": "string"},
+              "evidence": {"type": "string"}
+            }
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+
+    "RuleAnd": {
+      "type": "object",
+      "properties": {
+        "and": {
+          "type": "array",
+          "items": {},
+          "minItems": 1
+        },
+        "verdict": {"$ref": "#/$defs/VerdictEnum"},
+        "blocker": {"type": "string"},
+        "blocker_class": {"$ref": "#/$defs/BlockerClassEnum"},
+        "caveat": {"type": "string"},
+        "workaround": {"type": "string"},
+        "escape_hatch_target": {"type": "string", "enum": ["ws4"]},
+        "evidence": {"type": "string"},
+        "fix_locality": {"type": "string", "enum": ["upstream", "local_patch", "both"]}
+      },
+      "required": ["and", "verdict"],
+      "allOf": [
+        {
+          "if": {"properties": {"verdict": {"const": "blocked"}}},
+          "then": {"required": ["blocker", "evidence"]}
+        },
+        {
+          "if": {"properties": {"verdict": {"const": "supported_with_caveat"}}},
+          "then": {"required": ["caveat", "evidence"]}
+        }
+      ],
+      "additionalProperties": true
+    },
+
+    "RuleOr": {
+      "type": "object",
+      "properties": {
+        "or": {
+          "type": "array",
+          "items": {},
+          "minItems": 1
+        }
+      },
+      "required": ["or"],
+      "additionalProperties": true
+    },
+
+    "SupportRule": {
+      "oneOf": [
+        {"$ref": "#/$defs/RuleSingle"},
+        {"$ref": "#/$defs/RuleAnd"},
+        {"$ref": "#/$defs/RuleOr"}
+      ]
+    },
+
+    "CapabilityBlock": {
+      "type": "object",
+      "properties": {
+        "description": {"type": "string"},
+        "install_skill": {"type": ["string", "null"]},
+        "role": {"$ref": "#/$defs/RoleMap"},
+        "gating_for": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "priority_tiebreak": {"type": "integer"},
+        "depends_on_prereqs": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "inputs_required": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "runtime_caveats": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/RuntimeCaveat"}
+        },
+        "support": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/SupportRule"},
+          "minItems": 1
+        }
+      },
+      "required": ["description", "role", "support"],
+      "additionalProperties": true
+    },
+
+    "MatrixAcknowledgement": {
+      "type": "object",
+      "description": "Explicit acknowledgement that a chain_override contradicts the matrix. Required when overrides remove prereqs that carry matrix blockers. Per WS2 plan S12.1.",
+      "properties": {
+        "accepted_blockers": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 1,
+          "description": "Blocker codes from removed prereqs that are intentionally accepted."
+        },
+        "accepted_workaround": {
+          "type": "string",
+          "description": "Named workaround that satisfies the blocker (e.g. ANALYTIC_BACKEND_PATH)."
+        },
+        "authority": {
+          "type": "string",
+          "description": "Who signed off on this acknowledgement (e.g. 'WS4 dsu3-002 disclosure')."
+        },
+        "last_audited": {
+          "type": "string",
+          "description": "ISO-8601 date when the acknowledgement was last reviewed."
+        }
+      },
+      "required": ["accepted_blockers", "authority", "last_audited"],
+      "additionalProperties": false
+    },
+
+    "ChainOverride": {
+      "type": "object",
+      "description": "A per-observable chain replacement for a model. Contradicting overrides must include matrix_acknowledgement. Per WS2 plan S12.1.",
+      "properties": {
+        "chain": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 1,
+          "description": "Replacement prereq chain for this observable."
+        },
+        "reason": {
+          "type": "string",
+          "description": "One-line human explanation surfaced in router caveats."
+        },
+        "backend_hint": {
+          "type": "string",
+          "description": "Optional hint to the router (e.g. 'analytic')."
+        },
+        "matrix_acknowledgement": {
+          "$ref": "#/$defs/MatrixAcknowledgement"
+        }
+      },
+      "required": ["chain", "reason"],
+      "additionalProperties": false
+    }
+  },
+
+  "type": "object",
+  "description": "Top-level: used to validate the 'capabilities' block of a single prereq entry.",
+  "$ref": "#/$defs/CapabilityBlock"
+}

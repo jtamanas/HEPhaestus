@@ -1,0 +1,20 @@
+# Dark SU(3) spectrum spec — Point A (on-resonance, DRAKE-narrow)
+# SYNTHETIC FIXTURE — not a real physics run. Values chosen to exercise
+# all routing branches. See fixture README for distinct-categories disclaimer.
+#
+# Routing expectations (documented for human reviewers):
+#   - delta/(2*m_chi) = |199 - 200| / 200 = 0.005  -> inside 5% Step-5 window
+#   - partner at 105 GeV -> inside 10% Step-3 Trigger A window
+#   - Gamma_med/m_med = 0.005 (physically narrow resonance, not just heuristic)
+
+dm_candidate:
+  name: "chi"
+  m_chi: 100
+  m_med: 199
+  partner:
+    name: "chi_partner"
+    mass: 105
+  width_over_mass: 0.005
+
+model: "darksu3"
+observables: "all"

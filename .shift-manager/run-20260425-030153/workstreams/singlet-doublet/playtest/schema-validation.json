@@ -1,0 +1,38 @@
+{
+  "runs": [
+    {
+      "run": "run-1",
+      "summary_json": "runs/run-1/demo_output/singlet-doublet/summary.json",
+      "exit": 0,
+      "first_line": "[PASS] runs/run-1/demo_output/singlet-doublet/summary.json"
+    },
+    {
+      "run": "run-2",
+      "summary_json": "runs/run-2/demo_output/singlet-doublet/summary.json",
+      "exit": 0,
+      "first_line": "[PASS] runs/run-2/demo_output/singlet-doublet/summary.json"
+    },
+    {
+      "run": "run-3",
+      "summary_json": "runs/run-3/demo_output/singlet-doublet/summary.json",
+      "exit": 0,
+      "first_line": "[PASS] runs/run-3/demo_output/singlet-doublet/summary.json"
+    },
+    {
+      "run": "run-4",
+      "summary_json": "runs/run-4/demo_output/singlet-doublet/summary.json",
+      "exit": 0,
+      "first_line": "[PASS] runs/run-4/demo_output/singlet-doublet/summary.json"
+    },
+    {
+      "run": "run-5",
+      "summary_json": "runs/run-5/demo_output/singlet-doublet/summary.json",
+      "exit": 0,
+      "first_line": "[PASS] runs/run-5/demo_output/singlet-doublet/summary.json"
+    }
+  ],
+  "all_pass": true,
+  "schema": "plugins/hep-ph-demo/skills/_shared/summary.schema.json",
+  "validator": "validate_one.py",
+  "task": "sd-T4"
+}

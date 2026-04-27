@@ -1,0 +1,14 @@
+{
+  "schema_version": "scattering/v1",
+  "m_dm_gev": 100.0,
+  "sigma_si_proton_cm2": 1e-46,
+  "sigma_si_neutron_cm2": 1e-46,
+  "sigma_sd_proton_cm2": 0.0,
+  "sigma_sd_neutron_cm2": 0.0,
+  "source": "looptools",
+  "source_run": "/home/user/.local/share/hephaestus/models/2HDMA/runs/20260419_120000/looptools_result.json",
+  "halo": null,
+  "nucleon_form_factors": {
+    "preset": "A1"
+  }
+}

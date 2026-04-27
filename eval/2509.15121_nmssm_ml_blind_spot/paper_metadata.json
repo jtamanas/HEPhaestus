@@ -1,0 +1,48 @@
+{
+  "arxiv_id": "2509.15121",
+  "version": "v1",
+  "title": "Shedding Light on Dark Matter at the LHC with Machine Learning",
+  "authors": [
+    "Ernesto Arganda",
+    "Martín de los Rios",
+    "Andres D. Perez",
+    "Subhojit Roy",
+    "Rosa M. Sandá Seoane",
+    "Carlos E. M. Wagner"
+  ],
+  "date": "2025-09",
+  "categories": ["hep-ph", "cs.LG", "hep-ex"],
+  "url": "https://arxiv.org/abs/2509.15121",
+  "models": [
+    {
+      "name": "NMSSM bino-higgsino blind-spot",
+      "description": "Compressed singlino-higgsino spectrum with ML-enhanced LHC sensitivity",
+      "lagrangian_eq": 1,
+      "spectrum_eq": 3,
+      "blind_spot_eq": 7,
+      "compression_eq": 6,
+      "rescaling_eq": 15,
+      "ufo_model": "nmssm (MG5 builtin)"
+    }
+  ],
+  "experimental_limits": {
+    "direct_detection": ["LZ (2024)", "XENONnT (2023)"],
+    "collider": ["LHC HL-LHC projections (14 TeV, 3000 fb-1)"]
+  },
+  "computational_tools": {
+    "NMSSMTools": "paper-pinned (not executed) — used by paper for spectrum, relic density, sigma_DD^SI",
+    "micrOMEGAs": "paper-pinned (not executed) — used by paper for Omega_h2",
+    "MadGraph5_aMC@NLO": "invoked offline via madgraph/run_mg5_production.py for sigma_prod benchmark",
+    "ML_pipeline": "paper-pinned (not executed) — Z_BL, Z_MLL significance values"
+  },
+  "benchmark_groups": {
+    "table_7": "Groups 1-6, mu_eff 130-214 GeV range, sqrt(s)=14 TeV",
+    "table_8": "Groups 7-9, mu_eff 220-320 GeV range, sqrt(s)=14 TeV"
+  },
+  "fixed_parameters": {
+    "lambda": 0.027,
+    "tan_beta": 6.2,
+    "M1_gev": 500,
+    "A_kappa_gev": 100
+  }
+}

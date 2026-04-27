@@ -1,0 +1,53 @@
+# Axis-bundle fixture for 2HDM+a model
+# Derived from plugins/hep-ph-demo/skills/_shared/assets/two_hdm_a.yaml
+# via ws1_axis_reader.py alias logic (outputs: [ufo] -> spec_intent.requested_emissions: [ufo]).
+#
+# WS1 taxonomy axes:
+#   A1 = SM   — no extra non-SM gauge groups
+#   A2 = []   — no non-SM gauge factors
+#   A3 = {has_dark_charged_fermion: false, has_majorana_fermion: false, has_chiral_bsm_fermion: false}
+#         chiL, chiR are SM-singlet Dirac fermion (not majorana, not BSM-gauge-charged)
+#   A4 = {n_higgs_doublets: 2, n_pure_sm_singlets: 1, n_dark_charged_scalars: 0, cp_odd_scalar_present: true, replaces_sm_higgs: true, pseudo_goldstone_higgs: false}
+#         H1, H2 = two Higgs doublets; a = CP-odd singlet; replaces_sm_higgs because 2HDM sector supersedes
+#   A5 = []   — no global_symmetries declared
+#   A6 = [pseudoscalar-portal]   — chi couples to a (CP-odd) which mixes into Higgs portal
+#   A7 = false   — no extra colored matter
+#   A8 = provisional   — backends.analytic_module is stub_unimplemented
+
+axes:
+  A1: SM
+  A2: []
+  A3:
+    has_dark_charged_fermion: false
+    has_majorana_fermion: false
+    has_chiral_bsm_fermion: false
+  A4:
+    n_higgs_doublets: 2
+    n_pure_sm_singlets: 1
+    cp_odd_scalar_present: true
+    n_dark_charged_scalars: 0
+    replaces_sm_higgs: true
+    pseudo_goldstone_higgs: false
+  A5: []
+  A6:
+    - pseudoscalar-portal
+  A7: false
+  A8: provisional
+
+candidates:
+  - name: chi
+    field_type: dirac-fermion
+    mediator_regime: loop-only-CP-forbidden
+    uv_provenance: UV-field
+    stabilisation_mechanism: discrete-global
+    cp: even
+
+lagrangian:
+  spec_intent:
+    requested_emissions:
+      - ufo
+  kinetic_mixing_terms: []
+
+model_runtime:
+  # analytic_module: analytic_models.stub_unimplemented -> stub status
+  analytic_module_status: stub

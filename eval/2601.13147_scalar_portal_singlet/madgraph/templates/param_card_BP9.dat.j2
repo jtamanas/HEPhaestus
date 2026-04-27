@@ -1,0 +1,24 @@
+# MadGraph5 param_card for arXiv:2601.13147 — Scalar Portal Singlet DM
+# Benchmark Point: BP9
+# Source: Paper Table 1
+# m_chi={{ m_chi }}, g_chi={{ g_chi }}, sin_theta={{ sin_theta }}, m_h2={{ m_h2 }}
+# Note: m_h2=70 < m_h1=125.25 (singlet lighter than SM Higgs)
+
+Block MASS
+  35  {{ m_h2 }}      # m_h2 = 70 GeV (singlet-like, lighter)
+  9000001  {{ m_chi }}   # m_chi [GeV]
+
+Block COUPLINGS
+  1   {{ g_chi }}     # g_chi
+  2   {{ sin_theta }} # sin_theta
+
+Block SCALAR
+  1   {{ lambda_hs }}   # lambda_hs
+  2   {{ lambda_s }}    # lambda_s
+  3   {{ mu_3 }}        # mu_3 [GeV]
+  4   {{ mu_hs }}       # mu_hs [GeV]
+  5   {{ mu_s_sq }}     # mu_s^2 [GeV^2]
+  6   {{ lambda_h }}    # lambda_h
+
+DECAY  35  0.0
+DECAY  9000001  0.0

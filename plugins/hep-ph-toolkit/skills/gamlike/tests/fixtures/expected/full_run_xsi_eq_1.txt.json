@@ -1,0 +1,92 @@
+{
+  "schema_version": "gamlike/v1",
+  "_meta": {
+    "source_file": "<SCRUBBED>",
+    "parser_version": "0.1.0",
+    "maddm_version": "3.2",
+    "parsed_at": "<SCRUBBED>"
+  },
+  "relic": {
+    "present": true,
+    "Omegah2": 0.12,
+    "Omegah_Planck": 0.12,
+    "xsi": 1.0,
+    "x_f": 25.0,
+    "sigmav_xf": 4.21e-27,
+    "initial_states": [
+      "chichibar"
+    ],
+    "channels": {
+      "chichibar": {
+        "bbx": 60.0,
+        "ttx": 30.0,
+        "wphm": 10.0
+      }
+    },
+    "channels_sum_pct": 100.0
+  },
+  "direct": {
+    "present": false,
+    "results": []
+  },
+  "indirect": {
+    "present": true,
+    "sigmav_method": "madevent",
+    "continuum": {
+      "present": true,
+      "channels": {
+        "chichibar_bbx": {
+          "sigmav": 2.53e-26,
+          "limit": 3e-25
+        },
+        "chichibar_ttx": {
+          "sigmav": 1.26e-26,
+          "limit": 3e-25
+        }
+      }
+    },
+    "lines": {
+      "present": false,
+      "channels": {}
+    },
+    "global": {
+      "flux_method": "pythia8",
+      "Total_xsec": 3.79e-26,
+      "TotalSM_xsec": null,
+      "Fermi_Likelihood": -15.0,
+      "Fermi_pvalue": 0.062,
+      "Fermi_Likelihood_Thermal": null,
+      "Fermi_pvalue_Thermal": null,
+      "thermal_emitted": false
+    }
+  },
+  "spectral": {
+    "present": false,
+    "experiments": []
+  },
+  "fluxes_source": {
+    "present": false,
+    "method": null,
+    "fluxes": {
+      "neutrinos_e": null,
+      "neutrinos_mu": null,
+      "neutrinos_tau": null,
+      "gammas": null,
+      "positrons": null
+    }
+  },
+  "warnings": [
+    {
+      "code": "FIELD_GATED",
+      "field": "indirect.global.Fermi_Likelihood_Thermal",
+      "reason": "xsi >= 1 (xsi_value=1.00e+00); MadDM does not emit thermal-rescaled likelihood",
+      "source_ref": "maddm_run_interface.py:3572-3574"
+    },
+    {
+      "code": "FIELD_GATED",
+      "field": "indirect.global.Fermi_pvalue_Thermal",
+      "reason": "xsi >= 1 (xsi_value=1.00e+00); MadDM does not emit thermal-rescaled p-value",
+      "source_ref": "maddm_run_interface.py:3572-3574"
+    }
+  ]
+}

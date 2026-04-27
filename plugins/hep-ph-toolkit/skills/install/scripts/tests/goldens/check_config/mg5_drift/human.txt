@@ -1,0 +1,6 @@
+PASS  Wolfram Engine         v14.1                   ok (2+2 -> 4)
+PASS  SARAH                  v4.15.3                 version 4.15.3
+PASS  SPheno                 v4.0.5                  usage banner present
+WARN  MadGraph5_aMC@NLO      v3.5.6 -> 3.5.7 on disk version 3.5.7 on disk, expected 3.5.6
+Config: $TMPDIR/config.json
+All tools OK.

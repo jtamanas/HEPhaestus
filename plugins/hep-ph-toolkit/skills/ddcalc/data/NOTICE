@@ -1,0 +1,41 @@
+Neutrino Floor Data Attribution
+=================================
+
+File: neutrino_fog_ohare_2021.csv
+Description: SI spin-independent neutrino floor for Xenon targets
+             (discovery limit, n=2 events above background, 90% CL)
+Columns: m_DM [GeV]  σ_SI [cm²]
+Rows: 1000 (m_DM range: 0.1 – 10000 GeV)
+SHA256: da5eadf0df53d6a6d22835e4eecc9fe4d434decd9eed439310236893ed60f1fb
+
+Source
+------
+C.A.J. O'Hare, "New Definition of the Neutrino Floor for Direct Dark Matter
+Searches," Phys. Rev. Lett. 127, 251802 (2021).
+arXiv:2109.03116 [hep-ph]
+DOI: 10.1103/PhysRevLett.127.251802
+
+Repository: https://github.com/cajohare/NeutrinoFog
+Pinned commit: 0df3d0cd2322602dc147a66d94055f7f64879d80 (2022-06-07)
+File path within repo: data/WIMPLimits/SI/nufloor-Xe.txt
+
+License
+-------
+MIT License
+Copyright (c) 2019 cajohare
+https://github.com/cajohare/NeutrinoFog/blob/main/LICENSE
+
+Curve definition
+----------------
+"nufloor-Xe.txt" contains the Xenon SI neutrino floor as defined in
+O'Hare (2021) PRL: the discovery limit (σ at which a 2-event signal from
+neutrino backgrounds appears), which corresponds to the "fog gradient n=2"
+definition (Eq. 14 of arXiv:2109.03116).
+
+Used in paper 2506.19062 (Arcadi, Profumo): Fig. 6/7 show the O'Hare 2021
+Xenon SI neutrino floor as the benchmark floor curve.
+
+Usage in /ddcalc
+----------------
+opt-in via `--nu-floor ohare_2021`.
+Default source remains DDCalc built-in (ddcalc_builtin_2.2.0).

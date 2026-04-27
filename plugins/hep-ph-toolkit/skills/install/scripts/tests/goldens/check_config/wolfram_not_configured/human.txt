@@ -1,0 +1,6 @@
+SKIP  Wolfram Engine         v?                      wolfram_engine_path not set in config.json
+FAIL  SARAH                  v?                      wolframscript not found (wolfram_engine_missing)
+PASS  SPheno                 v4.0.5                  usage banner present
+PASS  MadGraph5_aMC@NLO      v3.5.7                  ok (3.5.7)
+Config: $TMPDIR/config.json
+One or more tools FAIL/INTERNAL ERROR.

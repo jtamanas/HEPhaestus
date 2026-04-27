@@ -1,0 +1,56 @@
+{
+  "schema_version": "ddcalc_result/v1",
+  "status": "ok",
+  "verdict": "excluded",
+  "m_dm_gev": 150.0,
+  "experiments": {
+    "XENON1T_2018": {
+      "logL": -10.111,
+      "p_value": 0.9999989,
+      "excluded_90cl": false
+    },
+    "LUX_2016": {
+      "logL": -2.996243,
+      "p_value": 1.000001,
+      "excluded_90cl": false
+    },
+    "PandaX_2017": {
+      "logL": -3.303029,
+      "p_value": 0.9999993,
+      "excluded_90cl": false
+    },
+    "PICO_60_2019": {
+      "logL": -1.495923,
+      "p_value": 0.0,
+      "excluded_90cl": true
+    },
+    "DarkSide_50": {
+      "logL": -0.2202413,
+      "p_value": 0.9999829,
+      "excluded_90cl": false
+    }
+  },
+  "neutrino_fog": {
+    "source": "ddcalc_builtin_2.2.0"
+  },
+  "halo_used": {
+    "model": "shm",
+    "v0_km_per_s": 238.0,
+    "vesc_km_per_s": 544.0,
+    "rho0_gev_per_cm3": 0.3
+  },
+  "nucleon_form_factors_used": {
+    "preset": "default_2018"
+  },
+  "inputs_echo": {
+    "sigma_si_proton_cm2": 5e-46,
+    "sigma_si_neutron_cm2": 5e-46,
+    "sigma_sd_proton_cm2": 0.0,
+    "sigma_sd_neutron_cm2": 0.0,
+    "source": "micromegas"
+  },
+  "ddcalc_version": "2.2.0",
+  "ddcalc_upstream_commit": "9364c02dca3d23e75558e3238229a6fa41a8ec1a",
+  "experiment_set": "native",
+  "experiment_overlay_sha": null
+}

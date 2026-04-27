@@ -1,0 +1,1 @@
+../../../../micromegas/tests/fixtures/stdout_synthetic.txt

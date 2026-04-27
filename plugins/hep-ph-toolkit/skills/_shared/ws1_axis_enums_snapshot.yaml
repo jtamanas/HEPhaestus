@@ -1,0 +1,109 @@
+# WS1 axis enum snapshot
+# Transcribed from WS1 final synthesis (ws1_taxonomy_synthesis.md §3, §5)
+# Used by WS2 matrix validator to check axis values match allowed enums.
+# When WS1 implementation lands, this file may be removed in favor of
+# WS1's own taxonomy.py enum definitions (see WS2 plan S23).
+
+schema_version: 1
+snapshot_date: "2026-04-26"
+source: "brainstorm/ws1_taxonomy_synthesis.md (WS1 final design)"
+
+A1:
+  - SM
+  - "SM + extra U(1)"
+  - "SM + extra SU(N)"
+  - "SM + extra mixed"
+  - "SM + mirror"
+  - Non-SM-embedding
+
+A2:
+  pattern:
+    - unbroken-confining
+    - unbroken-non-confining
+    - Higgsed-fully
+    - Higgsed-partial
+    - kinetic-mixed-only
+    - SM-EWSB
+    - unbroken
+    - unknown
+
+A3:
+  # Booleans — no enum; any bool is valid.
+  fields:
+    - has_dark_charged_fermion
+    - has_majorana_fermion
+    - has_chiral_bsm_fermion
+
+A4:
+  # Integer/boolean sub-fields — no closed enum; validated by type.
+  fields:
+    - n_higgs_doublets
+    - n_pure_sm_singlets
+    - n_dark_charged_scalars
+    - cp_odd_scalar_present
+    - replaces_sm_higgs
+    - pseudo_goldstone_higgs
+
+A5:
+  kind:
+    - discrete
+    - continuous
+    - gauged
+
+A6:
+  - higgs-portal
+  - vector-portal-Z
+  - vector-portal-darkphoton-kinmix
+  - "vector-portal-Z'"
+  - pseudoscalar-portal
+  - axion-portal-WZ
+  - neutrino-portal
+  - none
+
+A7:
+  # Boolean — any bool is valid.
+  type: boolean
+
+A8:
+  - complete
+  - provisional
+  - archived
+
+candidates:
+  field_type:
+    - scalar
+    - pseudoscalar
+    - dirac-fermion
+    - majorana-fermion
+    - vector
+    - composite-hadron
+    - composite-glueball
+    - pseudo-goldstone
+
+  uv_provenance:
+    - UV-field
+    - mass-eigenstate-of-UV-fields
+    - broken-generator-boson
+    - composite
+
+  mediator_regime:
+    - tree-level-open
+    - tree-level-blind-spot
+    - loop-only-CP-forbidden
+    - loop-only-anomaly-induced
+    - forbidden
+    - narrow-resonance
+    - "n/a"
+
+  stabilisation_mechanism:
+    - discrete-global
+    - continuous-global
+    - gauge-residual
+    - accidental-global
+    - topological
+    - none-required
+    - unstable
+
+  cp:
+    - even
+    - odd

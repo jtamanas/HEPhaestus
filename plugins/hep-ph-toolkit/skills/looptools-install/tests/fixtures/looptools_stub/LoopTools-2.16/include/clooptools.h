@@ -1,0 +1,1 @@
+/* Stub clooptools.h for test fixtures only. */

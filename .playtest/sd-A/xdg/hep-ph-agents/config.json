@@ -1,0 +1,50 @@
+{
+  "last_configured": "2026-04-23T03:23:35Z",
+  "maddm_installed_at": "2026-04-22T12:05:00Z",
+  "maddm_path": "/Users/yianni/MG5_aMC_v3_5_6/PLUGIN/maddm",
+  "maddm_version": "3.2.13",
+  "madgraph_path": "/Users/yianni/MG5_aMC/bin/mg5_aMC",
+  "madgraph_version": "3.5.6",
+  "matplotlib_version": "3.10.8",
+  "models": {
+    "dark_su3": {
+      "sarah_built_at": "2026-04-23T03:23:35Z",
+      "spec": "/Users/yianni/.local/share/hep-ph-agents/models/dark_su3/spec.yaml",
+      "ufo": "/Users/yianni/.local/share/hep-ph-agents/models/dark_su3/DarkSU3"
+    },
+    "singlet_doublet": {
+      "latest_run": "2026-04-22T2241Z-aee644cc",
+      "latest_slha": "/Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet/runs/2026-04-22T2241Z-aee644cc/SPheno.spc",
+      "sarah_built_at": "2026-04-22T22:40:13Z",
+      "spec": "/Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet/spec.yaml",
+      "spheno_bin": "/Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet/spheno_bin/SPhenoSingletDoublet",
+      "spheno_built_at": "2026-04-22T22:41:16Z",
+      "ufo": "/Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet/SingletDoublet"
+    },
+    "singlet_doublet_ln": {
+      "latest_run": "2026-04-22T2120Z",
+      "latest_slha": "/Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet_ln/runs/2026-04-22T2120Z/SPheno.spc",
+      "sarah_built_at": "2026-04-22T14:27:29Z",
+      "spec": "/Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet_ln/spec.yaml",
+      "spheno_bin": "/Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet_ln/spheno_bin/SPhenoSingletDoubletLN",
+      "spheno_built_at": "2026-04-22T21:20:37Z",
+      "ufo": "/Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet_ln/SingletDoubletLN"
+    },
+    "two_hdm_a": {
+      "sarah_built_at": "2026-04-22T23:19:07Z",
+      "spec": "/Users/yianni/.local/share/hep-ph-agents/models/two_hdm_a/spec.yaml",
+      "ufo": "/Users/yianni/.local/share/hep-ph-agents/models/two_hdm_a/TwoHdmA"
+    }
+  },
+  "numpy_version": "2.2.6",
+  "python": "/Users/yianni/.pyenv/versions/3.10.16/bin/python3",
+  "python_deps_checked_at": "2026-04-22T21:48:39Z",
+  "sarah_path": "/Users/yianni/SARAH/SARAH-4.15.3",
+  "sarah_version": "4.15.3",
+  "spheno_installed_at": "2026-04-21T12:46:38Z",
+  "spheno_path": "/Users/yianni/SPheno/SPheno-4.0.5/bin/SPheno",
+  "spheno_src_path": "/Users/yianni/SPheno/SPheno-4.0.5",
+  "spheno_version": "4.0.5",
+  "wolfram_engine_path": "/usr/local/bin/wolframscript",
+  "wolfram_engine_version": "14.3.0"
+}

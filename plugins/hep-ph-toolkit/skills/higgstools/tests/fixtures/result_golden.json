@@ -1,0 +1,21 @@
+{
+  "hb_allowed": false,
+  "hs_consistent": true,
+  "obsratio_max": 1.15,
+  "most_sensitive_channel": {
+    "id": 342,
+    "expref": "ATLAS-CONF-2020-052",
+    "obsratio": 1.15,
+    "reference": "ATLAS:2020tlo"
+  },
+  "chi2_total": 89.4,
+  "chi2_rates": 85.1,
+  "chi2_masses": 4.3,
+  "ndf_rates": 80,
+  "ndf_masses": 5,
+  "p_value_rates": 0.19,
+  "p_value_masses": 0.51,
+  "backend": "legacy",
+  "dataset_version": "HB-5.10.2/HS-2.6.2",
+  "_note": "2HDM Type-II benchmark: mh=125, mH=500, mA=450, mHp=500, tanb=5, sin(beta-alpha)=0.999, m12^2=150^2 GeV^2. hb_allowed=False because heavy A/H channels exceed 95% CL. chi2_total near SM reference (hs_consistent=True due to SM-like h couplings). obsratio_max interval: [1.05, 1.30] expected from HB-5.10.2 at this benchmark."
+}

@@ -1,0 +1,82 @@
+# dm_phenomenology_enums.yaml — Authoritative closed enumerations for WS1 taxonomy.
+# Canonical home: plugins/hep-ph-toolkit/skills/_shared/dm_phenomenology_enums.yaml
+# Referenced by: taxonomy.py (legacy v2 dm-phenomenology helpers)
+# Source: ws1_taxonomy_synthesis.md §4 "Top-level new required block" + §3 per-axis specs.
+# Do NOT edit enum values without updating all consumer sites.
+
+field_type:
+  - scalar
+  - pseudoscalar
+  - dirac-fermion
+  - majorana-fermion
+  - vector
+  - composite-hadron
+  - composite-glueball
+  - pseudo-goldstone
+
+uv_provenance:
+  - UV-field
+  - mass-eigenstate-of-UV-fields
+  - broken-generator-boson
+  - composite
+
+mediator_regime:
+  - tree-level-open
+  - tree-level-blind-spot
+  - loop-only-CP-forbidden
+  - loop-only-anomaly-induced
+  - forbidden
+  - narrow-resonance
+  - "n/a"
+
+stabilisation_mechanism:
+  - discrete-global
+  - continuous-global
+  - gauge-residual
+  - accidental-global
+  - topological
+  - none-required
+  - unstable
+
+# Symmetry-breaking patterns (synthesis §3 A2)
+symmetry_breaking_pattern:
+  - unbroken-confining
+  - unbroken-non-confining
+  - Higgsed-fully
+  - Higgsed-partial
+  - kinetic-mixed-only
+  - SM-EWSB
+  - unbroken
+  - unknown
+
+# Portal coupling types (synthesis §3 A6)
+portal_couplings:
+  - higgs-portal
+  - vector-portal-Z
+  - vector-portal-darkphoton-kinmix
+  - vector-portal-Z'
+  - pseudoscalar-portal
+  - axion-portal-WZ
+  - neutrino-portal
+  - none
+
+authoring_status:
+  - complete
+  - provisional
+  - archived
+
+scalar_cp:
+  - even
+  - odd
+  - complex
+
+# Extended gauge group kinds (synthesis §3 A1)
+gauge_kind:
+  - hypercharge
+  - left
+  - color
+  - dark
+  - mirror
+  - B-L
+  - X
+  - embedding

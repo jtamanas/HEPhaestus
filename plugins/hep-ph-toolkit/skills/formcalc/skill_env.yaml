@@ -1,0 +1,27 @@
+# formcalc skill environment configuration
+
+# FeynArts versions supported as input (add new versions here with SHARED.md update)
+supported_feynarts_versions:
+  - "3.11"
+
+# Supported gamma5 schemes
+supported_gamma5_schemes:
+  - naive
+  - hv
+  - bmhv
+  - larin
+
+# Supported regulators
+supported_regulators:
+  - dimreg
+  - cdr
+  - thv
+
+# Default fermion chain treatment
+default_fermion_chains: weyl
+
+# Default space-time dimension
+default_dimension: D
+
+# Cache canonicalizer version — increment when cache-key hash function changes
+canonicalizer_version: 1

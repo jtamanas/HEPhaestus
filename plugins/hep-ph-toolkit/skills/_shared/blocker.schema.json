@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hep-ph-agents/schemas/blocker/v1",
+  "title": "Three-state blocker contract",
+  "description": "JSON Schema for blockers emitted on stderr by hep-ph-agents model-building skills. Three modes: fatal, recoverable, reference_only. See SHARED.md §Three-state blocker contract and §2.7 of phase2-plan-final.md.",
+  "oneOf": [
+    {
+      "title": "fatal blocker",
+      "description": "Unrecoverable error; execution must stop.",
+      "type": "object",
+      "required": ["code", "mode", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]+$",
+          "description": "SCREAMING_SNAKE_CASE error code. Known fatal codes: SARAH_DOWNLOAD_FAILED, SARAH_SMOKE_TEST_FAILED, SARAH_OUTPUT_MISSING, SARAH_OUTPUT_CORRUPT, ANOMALY_CANCELLATION_FAILED, MODELSPEC_INVALID, WOLFRAM_KERNEL_ABSENT, GFORTRAN_ABSENT, SPHENO_DOWNLOAD_FAILED, SPHENO_BASE_BUILD_FAILED, SPHENO_PATH_INVALID, SPHENO_COMPILE_FAILED, SPHENO_NO_OUTPUT, ANALYTIC_MODULE_MISSING, ANALYTIC_INTERNAL_ERROR."
+        },
+        "mode": {
+          "const": "fatal"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable description of the error."
+        },
+        "context": {
+          "type": "object",
+          "description": "Optional: structured diagnostic data (paths, stderr excerpts, etc.)."
+        },
+        "user_instruction": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional: exact shell command or action the user must take to unblock. Required when the error is user-actionable (e.g. missing Homebrew, Wolfram activation). See §2.8."
+        }
+      }
+    },
+    {
+      "title": "recoverable blocker",
+      "description": "Error that allows scan rows to be marked bad and execution to continue.",
+      "type": "object",
+      "required": ["code", "mode", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]+$",
+          "description": "SCREAMING_SNAKE_CASE error code. Known recoverable codes: SPHENO_SPECTRUM_PROBLEM, SPHENO_RGE_NONCONVERGENT, ANALYTIC_INVALID_PARAMS, ANALYTIC_SPECTRUM_PROBLEM."
+        },
+        "mode": {
+          "const": "recoverable"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable description of the recoverable condition."
+        },
+        "context": {
+          "type": "object",
+          "description": "Optional: structured diagnostic data."
+        },
+        "user_instruction": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional: user action to attempt recovery."
+        }
+      }
+    },
+    {
+      "title": "reference_only result",
+      "description": "Skill fell back to a reference method (analytic, literature) instead of running the real tool. Per PR-D commit f72e19e and reviewer Blocker #25.",
+      "type": "object",
+      "required": ["status", "reference_method", "caveats"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "reference_only"
+        },
+        "reference_method": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Non-empty description of the reference method used."
+        },
+        "caveats": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Non-empty list of caveats about the reference result."
+        }
+      }
+    }
+  ]
+}

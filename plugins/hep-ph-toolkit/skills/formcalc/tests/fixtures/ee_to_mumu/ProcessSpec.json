@@ -1,0 +1,21 @@
+{
+  "schema_version": "processspec/v1",
+  "particles": {
+    "in": [
+      {"label": "e+", "pdg": -11, "mass_symbol": "ME"},
+      {"label": "e-", "pdg": 11,  "mass_symbol": "ME"}
+    ],
+    "out": [
+      {"label": "mu+", "pdg": -13, "mass_symbol": "MU"},
+      {"label": "mu-", "pdg": 13,  "mass_symbol": "MU"}
+    ]
+  },
+  "loop_order": 0,
+  "kinematic_limit": "general",
+  "excludes": ["ME", "MU"],
+  "mandelstam": {
+    "s": "s",
+    "t": "t",
+    "u": "u"
+  }
+}

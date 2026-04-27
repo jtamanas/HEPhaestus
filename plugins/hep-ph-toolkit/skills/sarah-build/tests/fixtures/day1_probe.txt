@@ -1,0 +1,23 @@
+Day-1 Probe Status: SKIPPED — wolframscript not found
+Date: 2026-04-19
+Machine: darwin (macOS)
+
+wolframscript was not available on the build machine.
+The provisional SARAH name canonicalizer from W0 is in use:
+    dark_su3 -> DarkSU3   (provisional rule: split on _, capitalize each segment)
+
+TODO: When wolframscript and SARAH are available, run:
+    wolframscript -code 'AppendTo[$Path, "<sarah_path>/.."]; <<SARAH`; Start["SM"]; Print[ModelName]'
+
+Then test the dark_su3 model name:
+    1. Copy the rendered DarkSU3.m file to SARAH's Models/ directory
+    2. Run: wolframscript -code 'AppendTo[$Path, "<sarah_path>/.."]; <<SARAH`; Start["DarkSU3"]; Print[ModelName]'
+    3. Observe whether SARAH accepts "DarkSU3" or requires a different casing
+
+If the canonical name differs from "DarkSU3":
+    - Amend plugins/hep-ph-toolkit/skills/_shared/sarah_name.py (the provisional canonicalizer)
+    - Update plugins/hep-ph-toolkit/SHARED-model-building.md §X with the verified rule
+    - Rerun tests/regen_goldens.py
+    - Open a one-commit patch touching only sarah_name.py + tests/test_sarah_name.py in _shared
+
+Resolution: Update this file and SHARED.md §X once the probe is complete.

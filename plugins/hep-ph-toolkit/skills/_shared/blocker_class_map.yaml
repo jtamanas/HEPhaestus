@@ -1,0 +1,277 @@
+# blocker_class_map.yaml — Authoritative mapping from axis predicates to blocker classes.
+# Canonical home: plugins/hep-ph-toolkit/skills/_shared/blocker_class_map.yaml
+# Source: ws1_taxonomy_synthesis.md §6 "Blocker-class mapping"
+# Consumed by: taxonomy.py, validate_spec.py (S3a/S20), WS2 capability matrix, WS3 router.
+
+schema_version: 1
+
+blocker_classes:
+  - missing-skill
+  - missing-tool-feature
+  - fundamental-group-theory-gap
+  - approximation-regime-mismatch
+  - spec-authoring-gap
+
+mappings:
+  # ---- A1: Gauge extension class blockers ----
+  - axis_predicate: "A1 == 'SM + extra SU(N)'"
+    blocker_code: MG5_DARK_COLOR_TENSOR_WALL
+    class: fundamental-group-theory-gap
+    description: >
+      MG5 color algebra has no SU(N)_D tensor indices (dt1..dt4 wall).
+      Any dark-color UFO import fails at models/import_ufo.py:1604 with NameError.
+      MadDM, micrOMEGAs CalcHEP vertex evaluator also blocked.
+    emitted_by: taxonomy.analytic_exception_triggered, validate_spec._check_required_v2_fields
+
+  - axis_predicate: "A1 == 'SM + extra mixed' with SU(N) component"
+    blocker_code: MG5_DARK_COLOR_TENSOR_WALL_MIXED
+    class: fundamental-group-theory-gap
+    description: Same dt1 wall as SM + extra SU(N); applies to the SU(N) component of a mixed gauge extension.
+    emitted_by: taxonomy.analytic_exception_triggered
+
+  - axis_predicate: "A1 == 'SM + mirror' with mirror-color non-singlet matter"
+    blocker_code: MG5_MIRROR_COLOR_WALL
+    class: fundamental-group-theory-gap
+    description: Mirror-color tensors trigger the same MG5 import wall as dark SU(N).
+    emitted_by: taxonomy.analytic_exception_triggered
+
+  - axis_predicate: "A1 == 'Non-SM-embedding'"
+    blocker_code: SARAH_EMBEDDING_HANDAUTHOR_REQUIRED
+    class: fundamental-group-theory-gap
+    description: >
+      Non-standard SM gauge embeddings (left-right, Pati-Salam, GUT) require
+      hand-authored SARAH model files. MG5 import depends on the embedding.
+    emitted_by: "validate_spec._check_required_v2_fields (kind: embedding)"
+
+  # ---- A2: Symmetry-breaking pattern blockers ----
+  - axis_predicate: "A2[?].pattern == 'unbroken-confining'"
+    blocker_code: EFT_REWRITE_REQUIRED
+    class: fundamental-group-theory-gap
+    description: >
+      Confining dark gauge group: DM is composite. No UV-Lagrangian-based tool applies.
+      SARAH/MG5/MadDM cannot describe composite dark hadrons.
+      EFT rewrite at the dark-pion/dark-baryon scale required.
+    emitted_by: taxonomy.analytic_exception_triggered
+
+  - axis_predicate: "A2[?].pattern == 'unknown'"
+    blocker_code: SPEC_AUTHORING_INCOMPLETE_A2
+    class: spec-authoring-gap
+    description: >
+      Gauge factor has pattern: unknown — spec author has not decided the breaking pattern.
+      Router refuses to proceed until pattern is declared.
+    emitted_by: validate_spec._check_required_v2_fields
+
+  - axis_predicate: "A2[?].pattern in {'Higgsed-partial','unbroken-confining'} AND dm_phenomenology[?].uv_provenance in {'broken-generator-boson','composite'}"
+    blocker_code: ANALYTIC_BACKEND_PATH
+    class: fundamental-group-theory-gap
+    description: >
+      Analytic-exception trigger: model has non-abelian non-SM gauge factor with
+      partial-Higgsed or confining breaking AND DM is a broken-generator boson or composite.
+      Routes to analytic backend; dsu3-002-style disclosure mandatory.
+    emitted_by: taxonomy.analytic_exception_triggered, validate_spec._check_analytic_exception
+
+  # ---- A3: Fermion projection blockers ----
+  - axis_predicate: "A3.has_dark_charged_fermion == true AND A1 in {'SM + extra SU(N)', 'SM + extra mixed'} AND rep not in SARAH-supported-list"
+    blocker_code: SARAH_MATTER_REP_UNSUPPORTED
+    class: missing-tool-feature
+    description: >
+      SARAH's group-theory factory does not support this BSM non-abelian rep.
+      For SU(3)_D: triplet reps are not in SARAH's supported list.
+      WS2 SARAH capability matrix maintains the supported-rep list.
+    emitted_by: WS2 capability matrix (not WS1)
+
+  # ---- A4: Scalar sector topology blockers ----
+  - axis_predicate: "A4.n_higgs_doublets >= 2 AND ewsb.vevs absent"
+    blocker_code: EWSB_DECLARATION_MISSING
+    class: spec-authoring-gap
+    description: >
+      2HDM/nHDM models require SARAH EWSB declaration (vevs + mixings).
+      Without ewsb.vevs, SPheno cannot diagonalise the Higgs sector.
+    emitted_by: "validate_spec (check 9: sm_overrides.higgs_sector completeness)"
+
+  # ---- A5: Discrete symmetry catalogue blockers ----
+  - axis_predicate: "A5 == [] AND dm_phenomenology.candidates non-empty AND no stabilisation declared"
+    blocker_code: DM_STABILISATION_UNDECLARED
+    class: spec-authoring-gap
+    description: >
+      DM candidates declared but no stabilisation mechanism on any candidate,
+      and no global_symmetry with stabilises: true. DM would be unstable in SARAH.
+    emitted_by: validate_spec._check_dm_stabilisation_undeclared
+
+  # ---- A6: Portal-coupling presence blockers ----
+  - axis_predicate: "A6 contains 'pseudoscalar-portal' AND dd observable selected"
+    blocker_code: LOOP_DD_TOOLING_PLANNED
+    class: missing-skill
+    description: >
+      Pseudoscalar-portal DD is loop-induced (CP-forbidden at tree level).
+      Requires FormCalc/FeynArts chain — both are planned skills.
+      Blocker: LOOP_DD_TOOLING_PLANNED until /formcalc and /feynarts exist.
+    emitted_by: WS3 router (not WS1)
+
+  - axis_predicate: "A6 contains 'axion-portal-WZ' AND dd observable selected"
+    blocker_code: LOOP_DD_TOOLING_PLANNED_AXION
+    class: missing-skill
+    description: >
+      Axion/WZ-portal DD requires FormCalc with anomaly-operator basis.
+      No skill exists for anomaly-operator DD chains.
+    emitted_by: WS3 router (not WS1)
+
+  - axis_predicate: "A6 contains 'axion-portal-WZ' AND relic observable selected"
+    blocker_code: AXION_RELIC_TOOLING_MISSING
+    class: missing-skill
+    description: >
+      Axion relic density via misalignment requires a dedicated solver.
+      MadDM/micrOMEGAs cannot compute the misalignment mechanism.
+    emitted_by: WS3 router (not WS1)
+
+  - axis_predicate: "A6 contains 'axion-portal-WZ' AND dd selected"
+    blocker_code: AXION_OPERATOR_BASIS_MISSING
+    class: missing-tool-feature
+    description: >
+      Anomaly-induced operators (aGGtilde, aWWtilde) are not in FormCalc's
+      standard basis. Requires a custom operator module.
+    emitted_by: WS3 router (not WS1)
+
+  - axis_predicate: "A6 contains 'vector-portal-darkphoton-kinmix' AND lagrangian.kinetic_mixing_terms == []"
+    blocker_code: KINETIC_MIXING_PORTAL_DECLARED_BUT_MISSING
+    class: spec-authoring-gap
+    description: >
+      Spec declares vector-portal-darkphoton-kinmix in portal_couplings but
+      lagrangian.kinetic_mixing_terms is empty. The kinetic mixing coefficient
+      must be declared in lagrangian.kinetic_mixing_terms.
+    emitted_by: validate_spec._check_dm_provenance_consistent_with_a2
+
+  # ---- A7: Extra colored matter blockers ----
+  - axis_predicate: "A7.extra_colored_matter == true AND collider observables selected"
+    blocker_code: LHC_TOOLING_MISSING
+    class: missing-skill
+    description: >
+      Extra colored matter (leptoquarks, vector-like quarks) requires LHC-direct-search
+      tooling (CheckMATE, MadAnalysis, ColliderBit). No skill exists in this catalogue.
+    emitted_by: WS3 router (not WS1)
+
+  - axis_predicate: "A7.extra_colored_matter == true AND flavor observables selected"
+    blocker_code: FLAVOR_TOOLING_MISSING
+    class: missing-skill
+    description: Flavor constraints (flavio) require a flavor skill not yet written.
+    emitted_by: WS3 router (not WS1)
+
+  # ---- A8: Authoring status blockers ----
+  - axis_predicate: "A8 == 'provisional'"
+    blocker_code: SPEC_PROVISIONAL
+    class: spec-authoring-gap
+    description: >
+      Spec is provisional: router proceeds but all results carry [PROVISIONAL] tag.
+      Each spec_authoring_blockers token surfaces per-constraint.
+    emitted_by: validate_spec._check_required_v2_fields (informational; not a hard blocker)
+
+  - axis_predicate: "A8 == 'archived'"
+    blocker_code: SPEC_ARCHIVED
+    class: spec-authoring-gap
+    description: Router refuses to process archived specs. Points to archived/README.md.
+    emitted_by: validate_spec._check_required_v2_fields
+
+  # ---- dm_phenomenology candidate-level blockers ----
+  - axis_predicate: "dm_phenomenology[?].mediator_regime == 'narrow-resonance' AND DRAKE not installed"
+    blocker_code: DRAKE_MISSING
+    class: missing-skill
+    description: >
+      Narrow-resonance regime requires DRAKE for accurate relic density.
+      MadDM velocity expansion fails at |m_med - 2*m_DM|/m_med < 0.10.
+    emitted_by: /dark-matter-constraints Step 5
+
+  - axis_predicate: "dm_phenomenology[?].mediator_regime == 'narrow-resonance' AND DRAKE installed"
+    blocker_code: DRAKE_REQUIRED_REGIME_DETECTED
+    class: approximation-regime-mismatch
+    description: >
+      Narrow-resonance regime detected and DRAKE installed.
+      Informational: router uses DRAKE for relic density calculation.
+    emitted_by: /dark-matter-constraints Step 5
+
+  - axis_predicate: "dm_phenomenology[?].mediator_regime == 'tree-level-blind-spot'"
+    blocker_code: DD_BLIND_SPOT_EXACT
+    class: approximation-regime-mismatch
+    description: >
+      Exact SI blind spot: H_1 and H_2 exchange amplitudes cancel identically (Eq. 29).
+      Informational: DDCalc input is structurally zero; skip DD numerical compute.
+    emitted_by: WS3 router (not WS1)
+
+  - axis_predicate: "dm_phenomenology[?].mediator_regime == 'forbidden'"
+    blocker_code: OBSERVABLE_FORBIDDEN_BY_SYMMETRY
+    class: approximation-regime-mismatch
+    description: Observable is structurally zero by symmetry. Informational.
+    emitted_by: WS3 router (not WS1)
+
+  - axis_predicate: "dm_phenomenology[?].mediator_regime == 'loop-only-CP-forbidden' AND tree-level DD requested"
+    blocker_code: TREE_LEVEL_FORBIDDEN_USE_LOOP_CHAIN
+    class: approximation-regime-mismatch
+    description: >
+      CP-odd mediator forbids tree-level SI DD (sigma_SI_tree ~ 0).
+      Route to loop-induced DD chain (FormCalc/FeynArts — planned).
+    emitted_by: WS3 router (not WS1)
+
+  - axis_predicate: "dm_phenomenology[?].uv_provenance == 'composite'"
+    blocker_code: EFT_REWRITE_REQUIRED_COMPOSITE
+    class: fundamental-group-theory-gap
+    description: >
+      Composite DM (dark pions, dark baryons, composite glueballs):
+      no UV-Lagrangian-based tool applies. EFT rewrite required.
+    emitted_by: taxonomy.analytic_exception_triggered
+
+  - axis_predicate: "dm_phenomenology[?].uv_provenance == 'broken-generator-boson' AND A2 does not contain Higgsed-partial"
+    blocker_code: DM_PROVENANCE_INCONSISTENT_WITH_A2
+    class: spec-authoring-gap
+    description: >
+      Internal inconsistency: broken-generator-boson DM requires partial Higgsing (A2 = Higgsed-partial).
+      The spec's symmetry_breaking.pattern does not match the uv_provenance declaration.
+    emitted_by: validate_spec._check_dm_provenance_consistent_with_a2
+
+  - axis_predicate: "dm_phenomenology.candidates == [] AND model has DM observables in constraints.yaml"
+    blocker_code: DM_OBSERVABLE_WITHOUT_CANDIDATE
+    class: spec-authoring-gap
+    description: >
+      Model registered in constraints.yaml with DM observables but dm_phenomenology.candidates is empty.
+      Either add DM candidates or remove DM observables from constraints.yaml.
+    emitted_by: validate_spec._check_dm_observable_without_candidate
+
+  - axis_predicate: "dm_phenomenology[?].mediator_regime == 'narrow-resonance' AND narrow_resonance_separation > 0.10 or absent"
+    blocker_code: NARROW_RESONANCE_SEPARATION_UNDECLARED
+    class: spec-authoring-gap
+    description: >
+      Candidate claims narrow-resonance regime but does not declare narrow_resonance_separation <= 0.10.
+      The regime claim is unverifiable without the separation value.
+    emitted_by: validate_spec._check_dm_provenance_consistent_with_a2
+
+  - axis_predicate: "dm_phenomenology[?].mediator_regime == 'loop-only-CP-forbidden' AND cp not declared"
+    blocker_code: LOOP_ONLY_CP_REQUIRES_CP_DECLARATION
+    class: spec-authoring-gap
+    description: >
+      Loop-only-CP-forbidden regime requires the DM candidate and its mediator to declare cp.
+      Without cp declarations the loop-operator basis cannot be determined.
+    emitted_by: validate_spec._check_dm_provenance_consistent_with_a2
+
+  - axis_predicate: "dm_phenomenology[?].field_type == 'vector' AND uv_provenance not in {broken-generator-boson, UV-field}"
+    blocker_code: DM_VECTOR_PROVENANCE_INVALID
+    class: spec-authoring-gap
+    description: >
+      Vector DM must arise from a broken gauge generator or be a UV field.
+      The declared uv_provenance is inconsistent with field_type: vector.
+    emitted_by: validate_spec._check_dm_provenance_consistent_with_a2
+
+  - axis_predicate: "dm_phenomenology[?].multi_component_partner non-null AND coupled is null"
+    blocker_code: MULTI_COMPONENT_COUPLING_UNDECLARED
+    class: spec-authoring-gap
+    description: >
+      Candidate declares a multi_component_partner but coupled: is not set (null).
+      Must declare coupled: true or coupled: false explicitly.
+    emitted_by: validate_spec._check_dm_provenance_consistent_with_a2
+
+  # ---- Analytic-exception enforcement (S20) ----
+  - axis_predicate: "analytic_exception_triggered AND backends.spectrum != analytic"
+    blocker_code: ANALYTIC_MODULE_MISSING
+    class: spec-authoring-gap
+    description: >
+      WS4 trigger fires (model has non-abelian non-SM gauge + composite/broken-generator DM)
+      but backends.spectrum is not analytic. The model cannot be computed via standard tool chains.
+      Declare backends.spectrum: analytic and backends.analytic_module: <module_path>.
+    emitted_by: validate_spec._check_analytic_exception

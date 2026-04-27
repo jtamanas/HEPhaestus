@@ -1,0 +1,687 @@
+{
+  "timestamp": "2026-04-17T03:03:31.683733+00:00",
+  "runner": "claude-code (opus, no-skills)",
+  "n_trials": 1,
+  "total_tasks": 18,
+  "total_pass": 16,
+  "pass_at_1": 0.8888888888888888,
+  "pass_at_k": 0.8888888888888888,
+  "pass_power_k": 0.8888888888888888,
+  "by_tier": {
+    "2": {
+      "total": 18,
+      "pass": 16
+    }
+  },
+  "tasks": [
+    {
+      "id": "t2_sd_si_fig2_ref",
+      "tier": 2,
+      "model": "singlet-doublet",
+      "tags": [
+        "SI",
+        "tree-level",
+        "singlet-doublet",
+        "figure-2"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI",
+              "status": "pass",
+              "expected": 7.636257893254885e-45,
+              "actual": 7.636257893254885e-45,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "m_chi1",
+              "status": "pass",
+              "expected": 132.6922847671223,
+              "actual": 132.6922847671223,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "unit",
+              "key": "sigma_SI_unit",
+              "status": "pass",
+              "expected": "cm^2",
+              "actual": "cm^2",
+              "message": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_sd_si_near_bs",
+      "tier": 2,
+      "model": "singlet-doublet",
+      "tags": [
+        "SI",
+        "tree-level",
+        "singlet-doublet",
+        "blind-spot"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI",
+              "status": "pass",
+              "expected": 6.254040448956618e-48,
+              "actual": 6.254040448956618e-48,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "m_chi1",
+              "status": "pass",
+              "expected": 149.51213680821397,
+              "actual": 149.51213680821397,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_sd_si_heavy",
+      "tier": 2,
+      "model": "singlet-doublet",
+      "tags": [
+        "SI",
+        "tree-level",
+        "singlet-doublet",
+        "heavy"
+      ],
+      "pass_rate": 0.0,
+      "any_pass": false,
+      "all_pass": false,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": false,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI",
+              "status": "fail",
+              "expected": 1.783382776454228e-44,
+              "actual": 4.238599393703457e-44,
+              "message": "rel_diff=1.38e+00 > tol 5.00e-02"
+            },
+            {
+              "grader": "numeric",
+              "key": "m_chi1",
+              "status": "pass",
+              "expected": 974.4716354880434,
+              "actual": 974.5124687995037,
+              "message": "rel_diff=4.19e-05"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_sd_si_symmetric",
+      "tier": 2,
+      "model": "singlet-doublet",
+      "tags": [
+        "SI",
+        "tree-level",
+        "singlet-doublet"
+      ],
+      "pass_rate": 0.0,
+      "any_pass": false,
+      "all_pass": false,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": false,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI",
+              "status": "fail",
+              "expected": 4.836001895598797e-44,
+              "actual": 2.300301976455142e-43,
+              "message": "rel_diff=3.76e+00 > tol 5.00e-02"
+            },
+            {
+              "grader": "numeric",
+              "key": "m_chi1",
+              "status": "pass",
+              "expected": 249.61057799748025,
+              "actual": 249.6780183608797,
+              "message": "rel_diff=2.70e-04"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_sd_sd_fig2_ref",
+      "tier": 2,
+      "model": "singlet-doublet",
+      "tags": [
+        "SD",
+        "tree-level",
+        "singlet-doublet",
+        "figure-2"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SD",
+              "status": "pass",
+              "expected": 3.774013676254417e-39,
+              "actual": 3.774013676254417e-39,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "unit",
+              "key": "sigma_SD_unit",
+              "status": "pass",
+              "expected": "cm^2",
+              "actual": "cm^2",
+              "message": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_sd_sd_heavy",
+      "tier": 2,
+      "model": "singlet-doublet",
+      "tags": [
+        "SD",
+        "tree-level",
+        "singlet-doublet",
+        "heavy"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SD",
+              "status": "pass",
+              "expected": 3.873267406967078e-41,
+              "actual": 3.873267406967078e-41,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_sd_masses_fig2",
+      "tier": 2,
+      "model": "singlet-doublet",
+      "tags": [
+        "mass-spectrum",
+        "singlet-doublet",
+        "figure-2"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "m_chi1",
+              "status": "pass",
+              "expected": 132.6922847671223,
+              "actual": 132.6922847671223,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "m_chi2",
+              "status": "pass",
+              "expected": 523.0261530384614,
+              "actual": 523.0261530384614,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "m_chi3",
+              "status": "pass",
+              "expected": 540.333868271339,
+              "actual": 540.333868271339,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "m_psi_charged",
+              "status": "pass",
+              "expected": 500.0,
+              "actual": 500.0,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_sd_masses_heavy",
+      "tier": 2,
+      "model": "singlet-doublet",
+      "tags": [
+        "mass-spectrum",
+        "singlet-doublet",
+        "heavy"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "m_chi1",
+              "status": "pass",
+              "expected": 974.4716354880434,
+              "actual": 974.498892421878,
+              "message": "rel_diff=2.80e-05"
+            },
+            {
+              "grader": "numeric",
+              "key": "m_chi2",
+              "status": "pass",
+              "expected": 1200.7503943008778,
+              "actual": 1200.7494988324213,
+              "message": "rel_diff=7.46e-07"
+            },
+            {
+              "grader": "numeric",
+              "key": "m_chi3",
+              "status": "pass",
+              "expected": 1226.2787588128344,
+              "actual": 1226.2506064105432,
+              "message": "rel_diff=2.30e-05"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_sd_masses_trace",
+      "tier": 2,
+      "model": "singlet-doublet",
+      "tags": [
+        "mass-spectrum",
+        "singlet-doublet",
+        "algebraic-identity"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "trace",
+              "status": "pass",
+              "expected": 499.9999999999998,
+              "actual": 500.0,
+              "message": "rel_diff=4.55e-16"
+            },
+            {
+              "grader": "numeric",
+              "key": "trace_expected",
+              "status": "pass",
+              "expected": 500.0,
+              "actual": 500.0,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_thdma_trilinear_zero",
+      "tier": 2,
+      "model": "2HDM+a",
+      "tags": [
+        "trilinear",
+        "2HDM+a",
+        "figure-4"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "exact_zero",
+              "key": "lambda_haa",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": "|val| = 0.00e+00 <= 1.00e-15"
+            },
+            {
+              "grader": "exact_zero",
+              "key": "lambda_Haa",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": "|val| = 0.00e+00 <= 1.00e-15"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_thdma_trilinear_equal",
+      "tier": 2,
+      "model": "2HDM+a",
+      "tags": [
+        "trilinear",
+        "2HDM+a",
+        "figure-4"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "lambda_haa",
+              "status": "pass",
+              "expected": -3.9316566866267464,
+              "actual": -3.9316566866267464,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "exact_zero",
+              "key": "lambda_Haa",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": "|val| = 0.00e+00 <= 1.00e-12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_thdma_trilinear_asym",
+      "tier": 2,
+      "model": "2HDM+a",
+      "tags": [
+        "trilinear",
+        "2HDM+a",
+        "figure-4"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "lambda_haa",
+              "status": "pass",
+              "expected": -0.11678188178099273,
+              "actual": -0.11678188178099273,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "lambda_Haa",
+              "status": "pass",
+              "expected": 0.18283663366336655,
+              "actual": 0.18283663366336655,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_vector_bp1",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "SI",
+        "tree-level",
+        "dark-su3",
+        "figure-7"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI_vector",
+              "status": "pass",
+              "expected": 1.0238673758116004e-43,
+              "actual": 1.0238673758116004e-43,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_vector_bp2",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "SI",
+        "tree-level",
+        "dark-su3",
+        "figure-7"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI_vector",
+              "status": "pass",
+              "expected": 2.2723683013493252e-45,
+              "actual": 2.2723683013493252e-45,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_vector_bp3",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "SI",
+        "tree-level",
+        "dark-su3",
+        "figure-7"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI_vector",
+              "status": "pass",
+              "expected": 8.389482309499546e-49,
+              "actual": 8.389482309499546e-49,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_blind_spot_1",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "blind-spot",
+        "dark-su3",
+        "exact"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "exact_zero",
+              "key": "blind_spot_amplitude",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": "|val| = 0.00e+00 <= 1.00e-12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_blind_spot_2",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "blind-spot",
+        "dark-su3",
+        "exact"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "exact_zero",
+              "key": "blind_spot_amplitude",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": "|val| = 0.00e+00 <= 1.00e-12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_blind_spot_extreme",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "blind-spot",
+        "dark-su3",
+        "exact",
+        "edge-case"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "exact_zero",
+              "key": "blind_spot_amplitude",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": "|val| = 0.00e+00 <= 1.00e-10"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

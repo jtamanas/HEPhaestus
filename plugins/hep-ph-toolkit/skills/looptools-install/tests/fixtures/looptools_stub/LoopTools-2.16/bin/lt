@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Stub LoopTools lt CLI for test fixtures only.
+echo "LoopTools CLI stub"

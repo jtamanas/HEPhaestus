@@ -1,0 +1,79 @@
+spec_version: 1
+name: singlet_doublet_b
+claim_source: "arXiv:2506.19062 §II — Singlet-Doublet fermion DM benchmark (Variant B: ZN→N)"
+sarah_version_required: ">=4.15,<4.16"
+
+global_symmetries:
+  - {kind: Z2, name: DMParity}
+
+gauge_groups:
+  - {symbol: B,  group: U1,  kind: hypercharge, coupling: g1, gauge_boson: B0, gaugino: null}
+  - {symbol: WB, group: SU2, kind: left,        coupling: g2, gauge_boson: W,  gaugino: null}
+  - {symbol: G,  group: SU3, kind: color,       coupling: g3, gauge_boson: g,  gaugino: null}
+
+fermions:
+  - name: FS
+    reps:  {WB: 1, G: 1}
+    hypercharge: 0
+    generations: 1
+    chirality: majorana
+    components: [s0]
+    discrete_charges: {DMParity: -1}
+  - name: PsiDd
+    reps:  {WB: 2, G: 1}
+    hypercharge: -0.5
+    generations: 1
+    chirality: left
+    components: [PsiDd0, PsiDdm]
+    discrete_charges: {DMParity: -1}
+  - name: PsiDu
+    reps:  {WB: 2, G: 1}
+    hypercharge: 0.5
+    generations: 1
+    chirality: left
+    components: [PsiDup, PsiDu0]
+    discrete_charges: {DMParity: -1}
+
+scalars: []
+
+lagrangian:
+  mass_terms:
+    - {fields: [FS, FS], coefficient: MS, hermitian_conjugate: true}
+    - {fields: [PsiDu, PsiDd], coefficient: MPsi, hermitian_conjugate: true}
+  yukawa_terms:
+    - {fields: ["conj[H]", FS, PsiDu], coefficient: yh1, hermitian_conjugate: true}
+    - {fields: [H, FS, PsiDd],         coefficient: yh2, hermitian_conjugate: true}
+  scalar_potential: []
+
+parameters:
+  - {name: MS,   latex: "M_S",   real: true, positive: false, default: 300.0}
+  - {name: MPsi, latex: "M_\\Psi", real: true, positive: true,  default: 500.0}
+  - {name: yh1,  latex: "y_{h1}", real: true, positive: false, default: 0.3}
+  - {name: yh2,  latex: "y_{h2}", real: true, positive: false, default: 0.3}
+
+ewsb:
+  vevs: []
+  mixings:
+    - kind: fermion
+      chirality: majorana
+      weyls:
+        - s0
+        - PsiDd0
+        - PsiDu0
+      mass_eigenstate: Chi
+      mixing_matrix: N
+    - kind: fermion
+      chirality: dirac
+      lh_weyls:
+        - PsiDdm
+      rh_weyls:
+        - PsiDup
+      mass_eigenstate: ChiM
+      mass_eigenstate_rh: ChiP
+      left_mixing_matrix: UM
+      right_mixing_matrix: UP
+
+sm_overrides:
+  higgs_sector: false
+
+outputs: [ufo, spheno]

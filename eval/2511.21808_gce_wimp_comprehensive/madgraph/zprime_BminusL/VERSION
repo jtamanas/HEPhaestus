@@ -1,0 +1,4 @@
+# U1B-L UFO version placeholder (Plan C: not vendored)
+# STATUS: ABSENT — model.sha256 not present; MG tasks disabled.
+# To populate: vendor UFO tarball, compute SHA256, write to model.sha256,
+# update EXPECTED_SHA in generate_mg_tasks.py.

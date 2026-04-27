@@ -1,0 +1,48 @@
+make[1]: Entering directory '/opt/SPheno-4.0.5'
+gfortran -O2 -ffree-line-length-none -c src/BranchingRatios.f90 -o lib/BranchingRatios.o
+gfortran -O2 -ffree-line-length-none -c src/Charginos.f90 -o lib/Charginos.o
+gfortran -O2 -ffree-line-length-none -c src/Couplings.f90 -o lib/Couplings.o
+gfortran -O2 -ffree-line-length-none -c src/DecayFunctions.f90 -o lib/DecayFunctions.o
+gfortran -O2 -ffree-line-length-none -c src/Gauginos.f90 -o lib/Gauginos.o
+gfortran -O2 -ffree-line-length-none -c src/InputOutput.f90 -o lib/InputOutput.o
+gfortran -O2 -ffree-line-length-none -c src/LoopFunctions.f90 -o lib/LoopFunctions.o
+gfortran -O2 -ffree-line-length-none -c src/Mathematics.f90 -o lib/Mathematics.o
+gfortran -O2 -ffree-line-length-none -c src/MassMatrices.f90 -o lib/MassMatrices.o
+gfortran -O2 -ffree-line-length-none -c src/Neutralinos.f90 -o lib/Neutralinos.o
+gfortran -O2 -ffree-line-length-none -c src/RGEs.f90 -o lib/RGEs.o
+gfortran -O2 -ffree-line-length-none -c src/SPheno.f90 -o lib/SPheno.o
+gfortran -O2 -ffree-line-length-none -c src/Spectrum.f90 -o lib/Spectrum.o
+gfortran -O2 -ffree-line-length-none -c src/StandardModel.f90 -o lib/StandardModel.o
+gfortran -O2 -ffree-line-length-none -c src/SusyDecays.f90 -o lib/SusyDecays.o
+gfortran -O2 -ffree-line-length-none -c src/TwoLoopHiggs.f90 -o lib/TwoLoopHiggs.o
+gfortran -O2 -ffree-line-length-none -c src/Vertices.f90 -o lib/Vertices.o
+gfortran -O2 -ffree-line-length-none -c src/WidthFunctions.f90 -o lib/WidthFunctions.o
+gfortran -O2 -ffree-line-length-none -c src/SusyMasses.f90 -o lib/SusyMasses.o
+gfortran -O2 -ffree-line-length-none -c src/ThreeBodyDecays.f90 -o lib/ThreeBodyDecays.o
+gfortran -O2 -ffree-line-length-none -c src/LoopMasses.f90 -o lib/LoopMasses.o
+gfortran -O2 -ffree-line-length-none -c src/RenormalizationGroup.f90 -o lib/RenormalizationGroup.o
+gfortran -O2 -ffree-line-length-none -c src/DecayWidths.f90 -o lib/DecayWidths.o
+gfortran -O2 -ffree-line-length-none -c src/InputOutput.f90 -o lib/InputOutput.o
+gfortran -O2 -ffree-line-length-none -c src/main.f90 -o lib/main.o
+ar rcs lib/libSPheno.a lib/BranchingRatios.o lib/Charginos.o lib/Couplings.o \
+  lib/DecayFunctions.o lib/Gauginos.o lib/InputOutput.o lib/LoopFunctions.o \
+  lib/Mathematics.o lib/MassMatrices.o lib/Neutralinos.o lib/RGEs.o \
+  lib/SPheno.o lib/Spectrum.o lib/StandardModel.o lib/SusyDecays.o \
+  lib/TwoLoopHiggs.o lib/Vertices.o lib/WidthFunctions.o lib/SusyMasses.o \
+  lib/ThreeBodyDecays.o lib/LoopMasses.o lib/RenormalizationGroup.o \
+  lib/DecayWidths.o
+gfortran -O2 -ffree-line-length-none -o bin/SPheno lib/main.o \
+  -Llib -lSPheno -lmkl_gf_lp64 -lmkl_sequential -lmkl_core -lpthread -lm
+ar: creating lib/libSPheno.a
+ranlib lib/libSPheno.a
+install -d /opt/SPheno-4.0.5/bin
+install -d /opt/SPheno-4.0.5/lib
+install bin/SPheno /opt/SPheno-4.0.5/bin/SPheno
+install lib/libSPheno.a /opt/SPheno-4.0.5/lib/libSPheno.a
+install -d /opt/SPheno-4.0.5/include
+install lib/*.mod /opt/SPheno-4.0.5/include/
+Checking SPheno version consistency...
+SPheno 4.0.5 build complete.
+Binary installed to: /opt/SPheno-4.0.5/bin/SPheno
+Library installed to: /opt/SPheno-4.0.5/lib/libSPheno.a
+make[1]: Leaving directory '/opt/SPheno-4.0.5'

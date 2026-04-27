@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "singlet-doublet summary schema extension",
+  "description": "Extends the universal core summary schema for the singlet-doublet model. Pins model to 'singlet-doublet' and documents model-specific gate_check fields.",
+  "allOf": [
+    {"$ref": "../_shared/summary.core.schema.json"},
+    {
+      "type": "object",
+      "properties": {
+        "model": {
+          "const": "singlet-doublet",
+          "description": "Model identifier pinned for singlet-doublet skill."
+        },
+        "gate_check": {
+          "type": "object",
+          "description": "Gate assertions computed at write time for singlet-doublet.",
+          "properties": {
+            "omega_in_band": {
+              "type": "boolean",
+              "description": "True if omega_h2 falls within the benchmark acceptance band."
+            },
+            "omega_deviation_pct": {
+              "type": "number",
+              "description": "Fractional deviation of omega_h2 from the benchmark central value, as a percentage."
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    }
+  ]
+}

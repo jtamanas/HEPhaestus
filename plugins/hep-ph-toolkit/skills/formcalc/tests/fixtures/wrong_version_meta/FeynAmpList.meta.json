@@ -1,0 +1,16 @@
+{
+  "schema_version": "processspec/v1",
+  "feynarts_version": "3.10",
+  "model_hash": "sm_builtin",
+  "n_diagrams": 1,
+  "processspec": {
+    "schema_version": "processspec/v1",
+    "particles": {
+      "in": [{"label": "e+", "pdg": -11, "mass_symbol": "ME"}],
+      "out": [{"label": "e-", "pdg": 11,  "mass_symbol": "ME"}]
+    },
+    "loop_order": 0,
+    "kinematic_limit": "general",
+    "excludes": []
+  }
+}

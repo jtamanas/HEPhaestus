@@ -1,0 +1,1 @@
+{"code": "CALCHEP_PATH_INVALID", "mode": "fatal", "message": "CalcHEP path '/nonexistent' lacks getFlags script.", "user_instruction": "Provide the CalcHEP_src/ subdirectory of a valid CalcHEP installation."}

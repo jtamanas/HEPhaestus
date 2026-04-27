@@ -1,0 +1,92 @@
+{
+  "model_id": "two-hdm-a",
+  "mode": "strict",
+  "exit_code": 5,
+  "json_report": {
+    "schema_version": 1,
+    "model_id": "two-hdm-a",
+    "observables": [
+      "relic",
+      "dd",
+      "id"
+    ],
+    "verdict": "HALT_FOR_SIGNOFF",
+    "model_props": {
+      "analytic_module_status": "unregistered"
+    },
+    "per_observable": {
+      "relic": {
+        "observable": "relic",
+        "status": "HALT",
+        "active_chain": null,
+        "ranked_alternatives": [],
+        "blockers": [],
+        "blocker_classes": [],
+        "caveats": [],
+        "per_candidate": [],
+        "matrix_acknowledgement_warnings": []
+      },
+      "dd": {
+        "observable": "dd",
+        "status": "HALT",
+        "active_chain": null,
+        "ranked_alternatives": [],
+        "blockers": [],
+        "blocker_classes": [],
+        "caveats": [],
+        "per_candidate": [],
+        "matrix_acknowledgement_warnings": []
+      },
+      "id": {
+        "observable": "id",
+        "status": "HALT",
+        "active_chain": null,
+        "ranked_alternatives": [],
+        "blockers": [],
+        "blocker_classes": [],
+        "caveats": [],
+        "per_candidate": [],
+        "matrix_acknowledgement_warnings": []
+      }
+    },
+    "placements": [
+      {
+        "position": "top",
+        "content": "> **HALT FOR SIGN-OFF REQUIRED**\n> An analytic exception has been detected for this model. Routing cannot proceed without sign-off. See Required Next Steps below.",
+        "kind": "halt_notice",
+        "exception_id": null
+      },
+      {
+        "position": "appendix",
+        "content": "## Required next steps (analytic exception sign-off)\n\nAn analytic exception was triggered for this model. To proceed:\n\n1. Review the analytic exception details above.\n2. Either author a real analytic module and register it, or declare this model is not analytic-eligible.\n3. Re-run `/model-router` after resolving the sign-off.\n",
+        "kind": "signoff_prompt",
+        "exception_id": null
+      }
+    ],
+    "diagnostics": {
+      "analytic_stub_short_circuit": true
+    },
+    "exit_code": 5,
+    "axis_snapshot": {
+      "A1": "SM",
+      "A2": null,
+      "A3": {
+        "has_dark_charged_fermion": false,
+        "has_majorana": false,
+        "has_chiral_bsm": false
+      },
+      "A4": {
+        "n_higgs_doublets": 2,
+        "cp_odd_scalar_present": true,
+        "replaces_higgs": false
+      },
+      "A5": null,
+      "A6": null,
+      "A7": {
+        "extra_colored_matter": false,
+        "fields": []
+      },
+      "A8": "provisional"
+    }
+  }
+}

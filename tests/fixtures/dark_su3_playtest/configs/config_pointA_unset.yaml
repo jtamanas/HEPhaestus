@@ -1,0 +1,14 @@
+# Dark SU(3) playtest config — Point A, DRAKE path absent (Branch 1)
+# Spectrum: m_chi=100 GeV, m_med=199 GeV (on-resonance), partner=105 GeV
+# DRAKE scenario: drake_path absent entirely — Branch 1 (DRAKE_MISSING, no detect call)
+# SYNTHETIC FIXTURE — not a real run; see fixture README for disclaimer.
+
+models:
+  darksu3:
+    ufo_path: "tests/fixtures/dark_su3_playtest/ufo/darkSU3"
+    latest_slha: null
+    spec_yaml: "tests/fixtures/dark_su3_playtest/specs/spec_pointA.yaml"
+
+maddm_path: "/usr/local/bin/maddm-launcher"
+micromegas_path: "/usr/local/lib/micromegas"
+# drake_path intentionally absent — triggers DRAKE Branch 1 (config.drake_path absent)

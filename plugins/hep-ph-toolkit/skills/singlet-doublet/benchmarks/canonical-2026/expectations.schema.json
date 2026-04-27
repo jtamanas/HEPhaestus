@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "hep-ph-demo benchmark expectations",
+  "description": "Universal schema for per-benchmark numeric expectations. Reused by all skills (singlet-doublet, 2hdm-a, dark-su3, future models). Numeric values live here, NOT in SKILL.md narrative.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "benchmark_id", "model", "parameter_point", "expectations", "source"],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "benchmark_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique name for this benchmark within the skill."
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "BSM model name (free string; matches model field in summary.json)."
+    },
+    "parameter_point": {
+      "type": "object",
+      "description": "Parameter values that define this benchmark point. Keys are model-specific.",
+      "additionalProperties": {"type": "number"}
+    },
+    "expectations": {
+      "type": "object",
+      "description": "Expected physics observables at this benchmark point.",
+      "properties": {
+        "omega_h2": {
+          "type": "object",
+          "required": ["central", "band"],
+          "properties": {
+            "central": {"type": "number", "description": "Central expected value of Omega h^2."},
+            "band": {
+              "type": "array",
+              "items": {"type": "number"},
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "[lo, hi] acceptance band for Omega h^2."
+            },
+            "tolerance": {"type": "string", "description": "Human-readable tolerance string."}
+          },
+          "additionalProperties": false
+        },
+        "channel_fractions": {
+          "type": "object",
+          "description": "Expected channel fraction ranges. Keys are channel names (free strings).",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "central": {"type": "number"},
+              "band": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        "dominant_channel": {
+          "type": "string",
+          "description": "Name of the expected dominant annihilation channel at this parameter point."
+        }
+      },
+      "additionalProperties": true
+    },
+    "physics_caveat": {
+      "type": "string",
+      "description": "Optional note about parameter-point specificity or known limitations of these expectations."
+    },
+    "source": {
+      "type": "object",
+      "required": ["paper", "commit"],
+      "properties": {
+        "paper": {"type": "string", "description": "arXiv ID or DOI of the paper supporting these values."},
+        "section": {"type": "string", "description": "Section/figure reference in the paper."},
+        "commit": {"type": "string", "description": "Git commit SHA when this fixture was committed."}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "code": "SARAH_OUTPUT_CORRUPT",
+  "mode": "fatal",
+  "message": "SARAH emitted 17 corruption marker(s) across 3 file(s); Mathematica internals leaked into generated output.",
+  "context": {
+    "sarah_name": "SingletDoublet",
+    "scanned_roots": {
+      "spheno": "/abs/path/to/sarah_output/SPheno/SingletDoublet",
+      "ufo": "/abs/path/to/sarah_output/UFO/SingletDoublet"
+    },
+    "files_scanned": 42,
+    "files_with_hits": 3,
+    "total_hits": 17,
+    "truncated": false,
+    "skipped_oversize": [],
+    "hits": [
+      {
+        "tree": "spheno",
+        "file": "RGEs_SingletDoublet.f90",
+        "pattern": "DOLLAR_FAILED",
+        "line": 159,
+        "excerpt": "Complex(dp) :: Lamp2,$Failed,$Failed,$Failed,$Failed"
+      },
+      {
+        "tree": "spheno",
+        "file": "RGEs_SingletDoublet.f90",
+        "pattern": "SAX_DYNL",
+        "line": 213,
+        "excerpt": "$Failed =SAxDynL(2,hypercharge)**2"
+      },
+      {
+        "tree": "ufo",
+        "file": "particles.py",
+        "pattern": "DOLLAR_FAILED",
+        "line": 335,
+        "excerpt": "mass = Param.$Failed ,"
+      }
+    ],
+    "log_hints": [
+      {
+        "pattern": "PART_PARTD_NONE",
+        "line": 1843,
+        "excerpt": "Part::partd: Part specification None[[1]] is longer than depth of object."
+      }
+    ]
+  },
+  "user_instruction": "SARAH failed to evaluate group-theory / representation quantities upstream; Mathematica sentinels leaked into the generated files. See context.hits[] for file:line evidence and context.log_hints[] for the upstream stderr cascade. Common causes: a matter_sector entry with an ambiguous representation, or a gauge group whose Dynkin/Casimir wasn't pre-computed. Inspect the excerpts, fix the ModelSpec, then re-run /sarah-build."
+}

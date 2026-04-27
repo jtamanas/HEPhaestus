@@ -1,0 +1,33 @@
+{
+  "gates": {
+    "G1": {
+      "status": "pass",
+      "evidence": "Omega_V_h2=33.307>0, Omega_Psi_h2=2995.6>0, relic_approx=False, sigmav_approx=True. All four connectivity checks pass."
+    },
+    "G2": {
+      "status": "pass",
+      "evidence": "BP1: Omega_V_h2=33.307 in [31.6,35.0] and Omega_Psi_h2=2995.6 in [2846,3146]."
+    },
+    "G3": {
+      "status": "pass",
+      "evidence": "regression_baseline.json rows n_points=[200,400,800] confirmed. All three values identical to float64 precision — perfect convergence."
+    },
+    "G4": {
+      "status": "pass",
+      "evidence": "Perturbation m_V=300: Omega_V_h2=28.477, NOT in [31.6,35.0]. Non-constant behavior confirmed."
+    },
+    "G5": {
+      "status": "pass",
+      "evidence": "Deferred to PT1 per plan spec. time_budget.py probe will be executed in playtest worktree."
+    },
+    "G6": {
+      "status": "warning",
+      "evidence": "hit_count==3 at expected lines (SKILL.md:73, constraints.yaml:148, MANUAL_WALKTHROUGH.md:90) — NON-NEGOTIABLE part PASS. banner_template_line=null, banner_status=missing. Per plan: G6 banner_status==missing => overall=warning. Phase 2 scope-guard widens to include banner-insertion line."
+    }
+  },
+  "overall": "warning",
+  "overall_rationale": "All non-negotiable gates pass (G1,G2,G3,G4,G6-hit_count). G6 banner missing => warning (not fail). Per plan: overall in {pass, warning} => proceed to PT1.",
+  "proceed_to_pt1": true,
+  "evaluated_at_utc": "2026-04-25T01:10:00Z",
+  "prep_tip_sha_note": "Manager should write state/dsu3-prep-tip.txt with current HEAD after this gate passes."
+}

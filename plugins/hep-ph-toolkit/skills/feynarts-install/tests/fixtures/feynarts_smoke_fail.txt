@@ -1,0 +1,6 @@
+Wolfram Language 14.1.0 Engine for Linux ARM (64-bit)
+Copyright 1988-2024 Wolfram Research, Inc.
+
+Get::noopen: Cannot open FeynArts`.
+
+$Failed

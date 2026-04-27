@@ -1,0 +1,22 @@
+PandaX-4T 2021 Experiment Attribution
+=======================================
+
+This overlay implements the PandaX-4T experiment WIMP search result from 2021.
+
+Citation
+--------
+PandaX-4T Collaboration, "Dark Matter Search Results from the PandaX-4T
+Commissioning Run," Phys. Rev. Lett. (PRL) 127, 261802 (2021);
+arXiv:2107.13438.
+
+Data provenance
+---------------
+Efficiency tables and background distributions are derived from publicly
+available data in the PandaX-4T paper cited above (PandaX-4T Collaboration).
+
+The DDCalc Fortran module implementing this experiment follows the DDCalc
+module pattern (Bringmann et al., EPJC 2021, arXiv:2103.04039) and is
+authored by the hephaestus DDCalc overlay team.
+
+Status: STUB — efficiency table and Fortran module are placeholders.
+Real data arrives at v1.1 overlay publication.

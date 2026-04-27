@@ -1,0 +1,58 @@
+# expected/dark_su3_confining_synthetic.yaml
+# Source: ws5_spike_dark_su3_confining_synthetic_{default,strict}.json (iter-1 post-S0.5)
+# O4 confirmation: per_observable.status = HARD_HALT (not BLOCKED or PLACEHOLDER)
+# placements[0].kind: hard_halt_prompt; content contains "EFT REWRITE REQUIRED"
+# No signoff_prompt placement (HARD_HALT vs HALT_FOR_SIGNOFF distinguisher)
+
+model_id: dark-su3-confining-synthetic
+observables: [relic, dd, id]
+verdict: HARD_HALT
+exit_code:
+  default: 0
+  strict: 6
+
+per_observable:
+  relic:
+    status: HARD_HALT   # O4 confirmed literal from spike
+    active_chain_prereq_id: null
+    blockers_set: []
+  dd:
+    status: HARD_HALT
+    active_chain_prereq_id: null
+    blockers_set: []
+  id:
+    status: HARD_HALT
+    active_chain_prereq_id: null
+    blockers_set: []
+
+placements:
+  - position: top
+    kind: hard_halt_prompt
+    exception_id: null
+    content_substrings:
+      - "EFT REWRITE REQUIRED"
+    content_negative_substrings:
+      - "signoff_prompt"
+
+per_candidate:
+  relic:
+    length: 0
+    names_set: []
+    labels_set: []
+  dd:
+    length: 0
+    names_set: []
+    labels_set: []
+  id:
+    length: 0
+    names_set: []
+    labels_set: []
+
+matrix_acknowledgement_missing_observables: []
+
+markdown_substrings:
+  - "EFT REWRITE REQUIRED"
+markdown_negative_substrings:
+  - "## Required next steps"
+
+axis_snapshot: presence_only

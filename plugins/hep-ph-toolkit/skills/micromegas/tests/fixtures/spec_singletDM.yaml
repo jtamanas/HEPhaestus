@@ -1,0 +1,9 @@
+dm_candidate:
+  pdg: 9000001
+  name: S
+  mass_gev: 100.0
+
+halo: shm
+nucleon_form_factors: default_2018
+cosmology: standard_thermal
+precompiled_project: singletDM

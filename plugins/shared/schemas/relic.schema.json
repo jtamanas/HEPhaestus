@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hep-ph-agents/schemas/relic/v1",
+  "title": "DM relic density (relic/v1)",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "m_dm_gev", "omega_h2", "source", "source_run", "cosmology"],
+  "properties": {
+    "schema_version": {"const": "relic/v1"},
+    "m_dm_gev": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Dark-matter candidate mass in GeV."
+    },
+    "omega_h2": {
+      "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0}],
+      "description": "Relic density Ωh². Null when OMEGA_UNCONVERGED or not requested."
+    },
+    "xf": {
+      "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0}],
+      "description": "Freeze-out parameter (m_DM/T_f). Null for solvers (e.g. DRAKE) that don't use it."
+    },
+    "source": {"enum": ["micromegas", "maddm", "drake"]},
+    "source_run": {"type": "string", "minLength": 1},
+    "cosmology": {
+      "const": "standard_thermal",
+      "description": "v1 assumes standard thermal cosmology. Non-standard cosmologies require relic/v2."
+    },
+    "model_class": {
+      "type": "string",
+      "description": "Producer self-identification (e.g. 'MSSM', 'darkSU3'). Free-form; not validated against a whitelist."
+    },
+    "model": {"type": "string"}
+  }
+}

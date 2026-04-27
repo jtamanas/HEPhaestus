@@ -1,0 +1,47 @@
+make[1]: Entering directory '/opt/SPheno-4.0.5'
+gfortran -O2 -ffree-line-length-none -c src/BranchingRatios.f90 -o lib/BranchingRatios.o
+gfortran -O2 -ffree-line-length-none -c src/Charginos.f90 -o lib/Charginos.o
+gfortran -O2 -ffree-line-length-none -c src/Couplings.f90 -o lib/Couplings.o
+gfortran -O2 -ffree-line-length-none -c src/DecayFunctions.f90 -o lib/DecayFunctions.o
+gfortran -O2 -ffree-line-length-none -c src/Gauginos.f90 -o lib/Gauginos.o
+gfortran -O2 -ffree-line-length-none -c src/InputOutput.f90 -o lib/InputOutput.o
+gfortran -O2 -ffree-line-length-none -c src/LoopFunctions.f90 -o lib/LoopFunctions.o
+gfortran -O2 -ffree-line-length-none -c src/Mathematics.f90 -o lib/Mathematics.o
+gfortran -O2 -ffree-line-length-none -c src/MassMatrices.f90 -o lib/MassMatrices.o
+gfortran -O2 -ffree-line-length-none -c src/Neutralinos.f90 -o lib/Neutralinos.o
+gfortran -O2 -ffree-line-length-none -c src/RGEs.f90 -o lib/RGEs.o
+gfortran -O2 -ffree-line-length-none -c src/SPheno.f90 -o lib/SPheno.o
+gfortran -O2 -ffree-line-length-none -c src/Spectrum.f90 -o lib/Spectrum.o
+gfortran -O2 -ffree-line-length-none -c src/StandardModel.f90 -o lib/StandardModel.o
+gfortran -O2 -ffree-line-length-none -c src/SusyDecays.f90 -o lib/SusyDecays.o
+gfortran -O2 -ffree-line-length-none -c src/TwoLoopHiggs.f90 -o lib/TwoLoopHiggs.o
+gfortran -O2 -ffree-line-length-none -c src/Vertices.f90 -o lib/Vertices.o
+gfortran -O2 -ffree-line-length-none -c src/WidthFunctions.f90 -o lib/WidthFunctions.o
+gfortran -O2 -ffree-line-length-none -c src/SusyMasses.f90 -o lib/SusyMasses.o
+gfortran -O2 -ffree-line-length-none -c src/ThreeBodyDecays.f90 -o lib/ThreeBodyDecays.o
+gfortran -O2 -ffree-line-length-none -c src/LoopMasses.f90 -o lib/LoopMasses.o
+gfortran -O2 -ffree-line-length-none -c src/RenormalizationGroup.f90 -o lib/RenormalizationGroup.o
+src/RenormalizationGroup.f90:142:18:
+  142 |   Real(kind=rp) :: beta_coeff(3,10)
+      |                  1
+Error: Rank mismatch in array reference at (1) (1/2 vs 2/2)
+src/RenormalizationGroup.f90:198:5:
+  198 |     beta_coeff(1,1) = 33.0_rp / 5.0_rp
+      |     1
+Error: Incompatible ranks 1 and 2 in assignment at (1)
+src/RenormalizationGroup.f90:205:5:
+  205 |   Do i_loop = 1, n_loop
+      |     1
+Error: Symbol 'n_loop' at (1) has no IMPLICIT type
+src/RenormalizationGroup.f90:231:9:
+  231 |         gauge_running(i_loop) = gauge_running(i_loop) + delta
+      |         1
+Error: Symbol 'gauge_running' at (1) has no IMPLICIT type
+gfortran: error: src/RenormalizationGroup.f90: compilation failed
+make[1]: *** [Makefile:38: lib/RenormalizationGroup.o] Error 1
+make[1]: *** Waiting for unfinished jobs....
+gfortran -O2 -ffree-line-length-none -c src/InputOutput.f90 -o lib/InputOutput.o
+gfortran -O2 -ffree-line-length-none -c src/DecayWidths.f90 -o lib/DecayWidths.o
+make[1]: *** [Makefile:38: lib/RenormalizationGroup.o] Error 1
+make[1]: Leaving directory '/opt/SPheno-4.0.5'
+make: *** [Makefile:10: all] Error 2

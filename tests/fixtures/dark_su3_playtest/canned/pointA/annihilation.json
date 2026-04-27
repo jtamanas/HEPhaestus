@@ -1,0 +1,10 @@
+{
+  "schema_version": "annihilation/v1",
+  "m_dm_gev": 100.0,
+  "sigma_v_zero": 2.31e-26,
+  "channel_fractions": {"bb": 0.45, "ww": 0.30, "hh": 0.25},
+  "source": "micromegas",
+  "source_run": "tests/fixtures/dark_su3_playtest/canned/pointA",
+  "model_class": "darksu3",
+  "model": "darksu3"
+}

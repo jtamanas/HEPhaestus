@@ -1,0 +1,60 @@
+#*********************************************************************
+# run_card.dat — SM pp > t t~ at 13.6 TeV NLO
+# Known-good reference configuration
+#*********************************************************************
+#
+#*********************************************************************
+# Tag name for the run
+#*********************************************************************
+  run_01 = run_tag
+#
+#*********************************************************************
+# Number of events and calculation parameters
+#*********************************************************************
+  100000 = nevents          ! Number of unweighted events
+       0 = iseed            ! Random seed (0=automatic)
+#
+#*********************************************************************
+# Collider parameters
+#*********************************************************************
+     1   = lpp1             ! Beam 1 type (1=proton)
+     1   = lpp2             ! Beam 2 type (1=proton)
+  6800.0 = ebeam1           ! Beam 1 energy [GeV]
+  6800.0 = ebeam2           ! Beam 2 energy [GeV]
+#
+#*********************************************************************
+# PDF choice
+#*********************************************************************
+  331100 = lhaid            ! LHAPDF set ID (NNPDF4.0 NLO)
+#
+#*********************************************************************
+# Renormalization and factorization scales
+#*********************************************************************
+ .false. = fixed_ren_scale  ! Use dynamic renormalization scale
+ .false. = fixed_fac_scale  ! Use dynamic factorization scale
+      -1 = dynamical_scale_choice ! Default MG5 dynamic scale
+     1.0 = scalefact        ! Scale factor
+#
+#*********************************************************************
+# Kinematic cuts
+#*********************************************************************
+  20.0 = ptj               ! Min jet pT [GeV]
+  10.0 = ptl               ! Min lepton pT [GeV]
+  -1.0 = ptjmax            ! Max jet pT (no cut)
+  -1.0 = ptlmax            ! Max lepton pT (no cut)
+   5.0 = etaj              ! Max jet |eta|
+   2.5 = etal              ! Max lepton |eta|
+   0.4 = drjj              ! Min delta R(j,j)
+   0.4 = drll              ! Min delta R(l,l)
+   0.4 = drjl              ! Min delta R(j,l)
+  10.0 = mmll              ! Min m(l+l-) [GeV]
+#
+#*********************************************************************
+# Matching / merging
+#*********************************************************************
+     0   = ickkw            ! No matching (pure NLO)
+#
+#*********************************************************************
+# Systematics
+#*********************************************************************
+ .true.  = use_syst         ! Enable systematics

@@ -1,0 +1,751 @@
+{
+  "model_id": "dark-su3",
+  "mode": "default",
+  "exit_code": 0,
+  "json_report": {
+    "schema_version": 1,
+    "model_id": "dark-su3",
+    "observables": [
+      "relic",
+      "dd",
+      "id"
+    ],
+    "verdict": "ROUTE_TO_ANALYTIC",
+    "model_props": {
+      "analytic_module_status": "unregistered"
+    },
+    "per_observable": {
+      "relic": {
+        "observable": "relic",
+        "status": "ROUTED",
+        "active_chain": {
+          "prereq_id": "analytic_backend",
+          "role": "escape_hatch",
+          "status": "ROUTED",
+          "blockers": [],
+          "blocker_classes": [],
+          "caveats": [
+            "chain_override: MG5 dt1 dark-color tensor wall; analytic backend required"
+          ],
+          "runtime_install_required": false,
+          "matrix_acknowledgement_missing": false
+        },
+        "ranked_alternatives": [
+          {
+            "prereq_id": "sarah-build",
+            "role": "none",
+            "status": "ROUTED",
+            "blockers": [],
+            "blocker_classes": [],
+            "caveats": [
+              "SARAH can emit files but UFO import into MG5 will fail (MG5_DARK_COLOR_TENSOR_WALL). Use analytic backend or hand-author SARAH model."
+            ],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "spheno-build",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "SPHENO_NOT_REQUESTED"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "madgraph",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MG5_DARK_COLOR_TENSOR_WALL"
+            ],
+            "blocker_classes": [
+              "fundamental-group-theory-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "maddm",
+            "role": "primary",
+            "status": "BLOCKED",
+            "blockers": [
+              "MG5_DARK_COLOR_TENSOR_WALL"
+            ],
+            "blocker_classes": [
+              "fundamental-group-theory-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "micromegas",
+            "role": "validator",
+            "status": "BLOCKED",
+            "blockers": [
+              "CALCHEP_MDL_MISSING"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "drake",
+            "role": "specialty",
+            "status": "BLOCKED",
+            "blockers": [
+              "DRAKE_SINGLE_SPECIES_ONLY"
+            ],
+            "blocker_classes": [
+              "regime-mismatch"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "ddcalc",
+            "role": "none",
+            "status": "ROUTED",
+            "blockers": [],
+            "blocker_classes": [],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "higgstools",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "HIGGSTOOLS_SLHA_MISSING_BLOCKS"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "analytic_backend",
+            "role": "escape_hatch",
+            "status": "BLOCKED",
+            "blockers": [
+              "ANALYTIC_MODULE_MISSING"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "feynrules",
+            "role": "validator",
+            "status": "BLOCKED",
+            "blockers": [
+              "MG5_DARK_COLOR_TENSOR_WALL"
+            ],
+            "blocker_classes": [
+              "fundamental-group-theory-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "feynarts",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MATRIX_COVERAGE_GAP"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "formcalc",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MATRIX_COVERAGE_GAP"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "looptools",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MATRIX_COVERAGE_GAP"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          }
+        ],
+        "blockers": [],
+        "blocker_classes": [],
+        "caveats": [],
+        "per_candidate": [
+          {
+            "candidate_name": "V",
+            "candidate_field_type": "vector",
+            "candidate_mediator_regime": "off-resonance",
+            "candidate_uv_provenance": "analytic-only",
+            "active_chain": {
+              "prereq_id": "analytic_backend",
+              "role": "escape_hatch",
+              "status": "ROUTED",
+              "blockers": [],
+              "blocker_classes": [],
+              "caveats": [],
+              "runtime_install_required": false,
+              "matrix_acknowledgement_missing": false
+            },
+            "expected_observable_label": "Omega_V_h2"
+          },
+          {
+            "candidate_name": "Psi",
+            "candidate_field_type": "Dirac fermion",
+            "candidate_mediator_regime": "off-resonance",
+            "candidate_uv_provenance": "analytic-only",
+            "active_chain": {
+              "prereq_id": "analytic_backend",
+              "role": "escape_hatch",
+              "status": "ROUTED",
+              "blockers": [],
+              "blocker_classes": [],
+              "caveats": [],
+              "runtime_install_required": false,
+              "matrix_acknowledgement_missing": false
+            },
+            "expected_observable_label": "Omega_Psi_h2"
+          }
+        ],
+        "matrix_acknowledgement_warnings": []
+      },
+      "dd": {
+        "observable": "dd",
+        "status": "ROUTED",
+        "active_chain": {
+          "prereq_id": "analytic_backend",
+          "role": "escape_hatch",
+          "status": "ROUTED",
+          "blockers": [],
+          "blocker_classes": [],
+          "caveats": [
+            "chain_override: MG5 dt1 dark-color tensor wall; analytic backend required"
+          ],
+          "runtime_install_required": false,
+          "matrix_acknowledgement_missing": false
+        },
+        "ranked_alternatives": [
+          {
+            "prereq_id": "sarah-build",
+            "role": "none",
+            "status": "ROUTED",
+            "blockers": [],
+            "blocker_classes": [],
+            "caveats": [
+              "SARAH can emit files but UFO import into MG5 will fail (MG5_DARK_COLOR_TENSOR_WALL). Use analytic backend or hand-author SARAH model."
+            ],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "spheno-build",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "SPHENO_NOT_REQUESTED"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "madgraph",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MG5_DARK_COLOR_TENSOR_WALL"
+            ],
+            "blocker_classes": [
+              "fundamental-group-theory-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "maddm",
+            "role": "primary",
+            "status": "BLOCKED",
+            "blockers": [
+              "MG5_DARK_COLOR_TENSOR_WALL"
+            ],
+            "blocker_classes": [
+              "fundamental-group-theory-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "micromegas",
+            "role": "validator",
+            "status": "BLOCKED",
+            "blockers": [
+              "CALCHEP_MDL_MISSING"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "drake",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "DRAKE_SINGLE_SPECIES_ONLY"
+            ],
+            "blocker_classes": [
+              "regime-mismatch"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "ddcalc",
+            "role": "primary",
+            "status": "ROUTED",
+            "blockers": [],
+            "blocker_classes": [],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "higgstools",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "HIGGSTOOLS_SLHA_MISSING_BLOCKS"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "analytic_backend",
+            "role": "escape_hatch",
+            "status": "BLOCKED",
+            "blockers": [
+              "ANALYTIC_MODULE_MISSING"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "feynrules",
+            "role": "validator",
+            "status": "BLOCKED",
+            "blockers": [
+              "MG5_DARK_COLOR_TENSOR_WALL"
+            ],
+            "blocker_classes": [
+              "fundamental-group-theory-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "feynarts",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MATRIX_COVERAGE_GAP"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "formcalc",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MATRIX_COVERAGE_GAP"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "looptools",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MATRIX_COVERAGE_GAP"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          }
+        ],
+        "blockers": [],
+        "blocker_classes": [],
+        "caveats": [],
+        "per_candidate": [
+          {
+            "candidate_name": "V",
+            "candidate_field_type": "vector",
+            "candidate_mediator_regime": "off-resonance",
+            "candidate_uv_provenance": "analytic-only",
+            "active_chain": {
+              "prereq_id": "analytic_backend",
+              "role": "escape_hatch",
+              "status": "ROUTED",
+              "blockers": [],
+              "blocker_classes": [],
+              "caveats": [],
+              "runtime_install_required": false,
+              "matrix_acknowledgement_missing": false
+            },
+            "expected_observable_label": "sigma_SI_V"
+          },
+          {
+            "candidate_name": "Psi",
+            "candidate_field_type": "Dirac fermion",
+            "candidate_mediator_regime": "off-resonance",
+            "candidate_uv_provenance": "analytic-only",
+            "active_chain": {
+              "prereq_id": "analytic_backend",
+              "role": "escape_hatch",
+              "status": "ROUTED",
+              "blockers": [],
+              "blocker_classes": [],
+              "caveats": [],
+              "runtime_install_required": false,
+              "matrix_acknowledgement_missing": false
+            },
+            "expected_observable_label": "sigma_SI_Psi"
+          }
+        ],
+        "matrix_acknowledgement_warnings": []
+      },
+      "id": {
+        "observable": "id",
+        "status": "ROUTED",
+        "active_chain": {
+          "prereq_id": "analytic_backend",
+          "role": "escape_hatch",
+          "status": "ROUTED",
+          "blockers": [],
+          "blocker_classes": [],
+          "caveats": [],
+          "runtime_install_required": false,
+          "matrix_acknowledgement_missing": false
+        },
+        "ranked_alternatives": [
+          {
+            "prereq_id": "sarah-build",
+            "role": "none",
+            "status": "ROUTED",
+            "blockers": [],
+            "blocker_classes": [],
+            "caveats": [
+              "SARAH can emit files but UFO import into MG5 will fail (MG5_DARK_COLOR_TENSOR_WALL). Use analytic backend or hand-author SARAH model."
+            ],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "spheno-build",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "SPHENO_NOT_REQUESTED"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "madgraph",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MG5_DARK_COLOR_TENSOR_WALL"
+            ],
+            "blocker_classes": [
+              "fundamental-group-theory-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "maddm",
+            "role": "primary",
+            "status": "BLOCKED",
+            "blockers": [
+              "MG5_DARK_COLOR_TENSOR_WALL"
+            ],
+            "blocker_classes": [
+              "fundamental-group-theory-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "micromegas",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "CALCHEP_MDL_MISSING"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "drake",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "DRAKE_SINGLE_SPECIES_ONLY"
+            ],
+            "blocker_classes": [
+              "regime-mismatch"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "ddcalc",
+            "role": "none",
+            "status": "ROUTED",
+            "blockers": [],
+            "blocker_classes": [],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "higgstools",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "HIGGSTOOLS_SLHA_MISSING_BLOCKS"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "analytic_backend",
+            "role": "escape_hatch",
+            "status": "BLOCKED",
+            "blockers": [
+              "ANALYTIC_MODULE_MISSING"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "feynrules",
+            "role": "validator",
+            "status": "BLOCKED",
+            "blockers": [
+              "MG5_DARK_COLOR_TENSOR_WALL"
+            ],
+            "blocker_classes": [
+              "fundamental-group-theory-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "feynarts",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MATRIX_COVERAGE_GAP"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "formcalc",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MATRIX_COVERAGE_GAP"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          },
+          {
+            "prereq_id": "looptools",
+            "role": "none",
+            "status": "BLOCKED",
+            "blockers": [
+              "MATRIX_COVERAGE_GAP"
+            ],
+            "blocker_classes": [
+              "spec-authoring-gap"
+            ],
+            "caveats": [],
+            "runtime_install_required": false,
+            "matrix_acknowledgement_missing": false
+          }
+        ],
+        "blockers": [],
+        "blocker_classes": [],
+        "caveats": [],
+        "per_candidate": [
+          {
+            "candidate_name": "V",
+            "candidate_field_type": "vector",
+            "candidate_mediator_regime": "off-resonance",
+            "candidate_uv_provenance": "analytic-only",
+            "active_chain": {
+              "prereq_id": "analytic_backend",
+              "role": "escape_hatch",
+              "status": "ROUTED",
+              "blockers": [],
+              "blocker_classes": [],
+              "caveats": [],
+              "runtime_install_required": false,
+              "matrix_acknowledgement_missing": false
+            },
+            "expected_observable_label": "Phi_id_V"
+          },
+          {
+            "candidate_name": "Psi",
+            "candidate_field_type": "Dirac fermion",
+            "candidate_mediator_regime": "off-resonance",
+            "candidate_uv_provenance": "analytic-only",
+            "active_chain": {
+              "prereq_id": "analytic_backend",
+              "role": "escape_hatch",
+              "status": "ROUTED",
+              "blockers": [],
+              "blocker_classes": [],
+              "caveats": [],
+              "runtime_install_required": false,
+              "matrix_acknowledgement_missing": false
+            },
+            "expected_observable_label": "Phi_id_Psi"
+          }
+        ],
+        "matrix_acknowledgement_warnings": []
+      }
+    },
+    "placements": [
+      {
+        "position": "before_per_observable",
+        "content": "**REGRESSION-ANCHOR ONLY \u2014 NOT A PHYSICS TARGET (dsu3-002).** Dark-SU(3)\nrelic density runs through the analytic backend (`analytic_models.dark_su3`)\nand currently uses `<sigma v>` approximations (`sigmav_approx=True`). The\nemitted \u03a9h\u00b2 values are roughly **25000\u00d7 the Planck target** and must be read\nas regression anchors for the analytic pipeline, **not** as a physics\nprediction or a paper-fidelity result. Paper fidelity (\u03a9_tot h\u00b2 \u2248 0.12) is\nout of reach this iteration and requires the upgrade roadmap in\n`analytic_models.dark_su3` (full Boltzmann integration + multi-component\nweighting in `/dark-matter-constraints`). Any downstream report that quotes\nthese numbers MUST embed this banner verbatim \u2014 do not silently strip it.\n",
+        "kind": "analytic",
+        "exception_id": "dsu3-002"
+      }
+    ],
+    "diagnostics": {},
+    "exit_code": 0,
+    "axis_snapshot": {
+      "A1": "SM + extra SU(N)",
+      "A2": "[{'factor': 'GD', 'kind': 'dark', 'pattern': 'Higgsed-partial'}]",
+      "A3": {
+        "has_dark_charged_fermion": false,
+        "has_majorana": false,
+        "has_chiral_bsm": false
+      },
+      "A4": {
+        "n_higgs_doublets": 0,
+        "cp_odd_scalar_present": false,
+        "replaces_higgs": false
+      },
+      "A5": null,
+      "A6": null,
+      "A7": {
+        "extra_colored_matter": false,
+        "fields": []
+      },
+      "A8": "complete"
+    }
+  }
+}

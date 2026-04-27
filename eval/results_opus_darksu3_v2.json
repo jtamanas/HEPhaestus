@@ -1,0 +1,282 @@
+{
+  "timestamp": "2026-04-17T02:12:27.604608+00:00",
+  "runner": "claude-code (opus)",
+  "n_trials": 1,
+  "total_tasks": 8,
+  "total_pass": 8,
+  "pass_at_1": 1.0,
+  "pass_at_k": 1.0,
+  "pass_power_k": 1.0,
+  "by_tier": {
+    "1": {
+      "total": 2,
+      "pass": 2
+    },
+    "2": {
+      "total": 6,
+      "pass": 6
+    }
+  },
+  "tasks": [
+    {
+      "id": "t1_dsu3_proc_card",
+      "tier": 1,
+      "model": "dark-su3",
+      "tags": [
+        "proc_card",
+        "dark-su3",
+        "setup"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "file_contains",
+              "key": "proc_card",
+              "status": "pass",
+              "expected": null,
+              "actual": null,
+              "message": "Pattern 'import model' found"
+            },
+            {
+              "grader": "file_contains",
+              "key": "proc_card",
+              "status": "pass",
+              "expected": null,
+              "actual": null,
+              "message": "Pattern 'generate.*V1.*>.*V1' found"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_dsu3_param_card",
+      "tier": 1,
+      "model": "dark-su3",
+      "tags": [
+        "param_card",
+        "dark-su3",
+        "setup"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "param_gtilde",
+              "status": "pass",
+              "expected": 1.0,
+              "actual": 1.0,
+              "message": "rel_diff=0.00e+00"
+            },
+            {
+              "grader": "numeric",
+              "key": "param_mV",
+              "status": "pass",
+              "expected": 200.0,
+              "actual": 200.0,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_vector_bp1",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "SI",
+        "tree-level",
+        "dark-su3",
+        "figure-7"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI_vector",
+              "status": "pass",
+              "expected": 1.0238673758116004e-43,
+              "actual": 1.0238673758116004e-43,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_vector_bp2",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "SI",
+        "tree-level",
+        "dark-su3",
+        "figure-7"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI_vector",
+              "status": "pass",
+              "expected": 2.2723683013493252e-45,
+              "actual": 2.2723683013493252e-45,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_vector_bp3",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "SI",
+        "tree-level",
+        "dark-su3",
+        "figure-7"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "numeric",
+              "key": "sigma_SI_vector",
+              "status": "pass",
+              "expected": 8.389482309499546e-49,
+              "actual": 8.389482309499546e-49,
+              "message": "rel_diff=0.00e+00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_blind_spot_1",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "blind-spot",
+        "dark-su3",
+        "exact"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "exact_zero",
+              "key": "blind_spot_amplitude",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": "|val| = 0.00e+00 <= 1.00e-12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_blind_spot_2",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "blind-spot",
+        "dark-su3",
+        "exact"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "exact_zero",
+              "key": "blind_spot_amplitude",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": "|val| = 0.00e+00 <= 1.00e-12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_dsu3_blind_spot_extreme",
+      "tier": 2,
+      "model": "dark-su3",
+      "tags": [
+        "blind-spot",
+        "dark-su3",
+        "exact",
+        "edge-case"
+      ],
+      "pass_rate": 1.0,
+      "any_pass": true,
+      "all_pass": true,
+      "trials": [
+        {
+          "trial": 1,
+          "passed": true,
+          "error": null,
+          "grades": [
+            {
+              "grader": "exact_zero",
+              "key": "blind_spot_amplitude",
+              "status": "pass",
+              "expected": 0.0,
+              "actual": 0.0,
+              "message": "|val| = 0.00e+00 <= 1.00e-10"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+ #*********************************************************************
+ #                       MadGraph5 run_card.dat
+ #     Process: pp > x1+ n2 j (arXiv:2509.15121, BP1-3)
+ #     sqrt(s) = 14 TeV, LO, NNPDF30_lo_as_0130, mu=H_T/2
+ #*********************************************************************
+ #
+ #  Run parameters
+ #
+ #*********************************************************************
+  50000 = nevents  ! Number of events
+  12345 = iseed    ! Random seed (0 = random)
+ #
+ #  Collider parameters
+ #
+ 7000.0 = ebeam1  ! Beam 1 energy [GeV] (7000 = 14 TeV COM)
+ 7000.0 = ebeam2  ! Beam 2 energy [GeV]
+ pp = collider    ! Collider type
+ #
+ #  PDF settings
+ #
+ T = pdlabel      ! Use LHAPDF
+ 262000 = lhaid   ! NNPDF30_lo_as_0130 (LHAPDF ID 262000)
+ #
+ #  Scale settings
+ #
+ 3 = dynamical_scale_choice  ! mu = H_T / 2 (central scale)
+ #
+ #  Integration parameters
+ #
+ 0.01 = req_acc    ! Required accuracy
+ LO = order        ! Leading order (no loop, no merging)
+ T = use_syst      ! Use systematics
+ #
+ #  No merging
+ #
+ 0 = ickkw          ! No MLM merging
+ 0 = ktscheme       ! No merging scheme

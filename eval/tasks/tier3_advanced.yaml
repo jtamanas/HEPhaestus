@@ -1,0 +1,928 @@
+# Tier 3 — Advanced: derived quantities, cross-checks, and limits
+#
+# These tasks require the agent to write and execute code for composite
+# calculations: finding blind spots, verifying algebraic identities,
+# cross-checking two independent code paths to the same quantity.
+
+# ======================================================================
+# Singlet-Doublet: find blind spot and verify coupling vanishes
+# ======================================================================
+
+- id: t3_sd_blind_spot_mS150
+  task_type: algebra
+  tier: 3
+  model: singlet-doublet
+  prompt: >
+    Using a Python script with scipy.optimize, find the blind spot in the
+    singlet-doublet model (arXiv:2506.19062). For m_S=150 GeV, m_D=500 GeV,
+    y=1: numerically solve for the mixing angle theta where the tree-level
+    SI cross-section vanishes. The blind spot condition is
+    m_chi1(theta) + m_D * sin(2*theta) = 0.
+
+    Your script must: (1) build the mass matrix, (2) diagonalize it as a
+    function of theta, (3) use brentq or similar to find theta_bs in [-pi/4, 0),
+    (4) verify the Higgs coupling y_h vanishes at theta_bs.
+
+    Write and execute the code. Report theta_bs, y_h_at_blind_spot,
+    and blind_spot_param.
+  reference_fn: sd_find_blind_spot
+  reference_args:
+    m_S: 150.0
+    m_D: 500.0
+    y: 1.0
+  graders:
+    - type: numeric
+      key: theta_bs
+      tolerance: 0.01
+    - type: exact_zero
+      key: y_h_at_blind_spot
+      tolerance: 1.0e-6
+    - type: exact_zero
+      key: blind_spot_param
+      tolerance: 1.0e-8
+  tags: [blind-spot, singlet-doublet, self-consistent]
+
+- id: t3_sd_blind_spot_mS300
+  task_type: algebra
+  tier: 3
+  model: singlet-doublet
+  prompt: >
+    Using a Python script with scipy.optimize, find the blind spot theta for
+    the singlet-doublet model at m_S=300 GeV, m_D=700 GeV, y=0.8. Verify the
+    Higgs coupling vanishes at that angle. Write and execute the code.
+  reference_fn: sd_find_blind_spot
+  reference_args:
+    m_S: 300.0
+    m_D: 700.0
+    y: 0.8
+  graders:
+    - type: numeric
+      key: theta_bs
+      tolerance: 0.01
+    - type: exact_zero
+      key: y_h_at_blind_spot
+      tolerance: 1.0e-6
+  tags: [blind-spot, singlet-doublet, self-consistent]
+
+# ======================================================================
+# 2HDM+a: tree-level SI is zero by CP symmetry
+# ======================================================================
+
+- id: t3_thdma_tree_si_zero
+  task_type: mg_required
+  tier: 3
+  model: 2HDM+a
+  prompt: >
+    In the 2HDM+a model, tree-level spin-independent scattering via
+    pseudoscalar exchange is forbidden by CP symmetry — a pseudoscalar mediator
+    cannot generate a scalar-type nucleon operator at tree level.
+
+    Write a Python script that attempts to compute the tree-level SI
+    cross-section for pseudoscalar exchange and confirms it is identically
+    zero for any parameter choice. Use y_chi=1, sin_theta=0.35, m_a=200,
+    m_chi=200 GeV. Execute the code and report sigma_SI_tree.
+  reference_fn: thdma_tree_si_zero
+  reference_args:
+    y_chi: 1.0
+    sin_theta: 0.35
+    m_a: 200.0
+    m_chi: 200.0
+  graders:
+    - type: exact_zero
+      key: sigma_SI_tree
+      tolerance: 1.0e-15
+  tags: [CP-symmetry, 2HDM+a, tree-level]
+
+# ======================================================================
+# SD+2HDM: two-Higgs cancellation condition
+# ======================================================================
+
+- id: t3_sd2hdm_cancel_mH300
+  task_type: algebra
+  tier: 3
+  model: singlet-doublet-2HDM
+  prompt: >
+    Using a Python script, find the two-Higgs blind spot in the SD+2HDM model.
+    When both h (125 GeV) and H contribute to SI scattering, the amplitude is:
+      A = y_h / m_h^2 + y_H / m_H^2
+    Find the value y_H that makes A=0 for y_h=0.1, m_H=300 GeV,
+    m_chi=200 GeV, then verify sigma_SI drops to zero. Execute the code.
+  reference_fn: sd_two_higgs_cancellation
+  reference_args:
+    m_chi: 200.0
+    y_h: 0.1
+    m_H_heavy: 300.0
+  graders:
+    - type: numeric
+      key: y_H_cancel
+      tolerance: 0.01
+    - type: exact_zero
+      key: sigma_SI_at_cancel
+      tolerance: 1.0e-60
+  tags: [blind-spot, two-higgs, cancellation]
+
+- id: t3_sd2hdm_cancel_mH600
+  task_type: algebra
+  tier: 3
+  model: singlet-doublet-2HDM
+  prompt: >
+    Using a Python script, find the two-Higgs cancellation y_H for m_H=600 GeV,
+    y_h=0.1, m_chi=200 GeV. Verify sigma_SI vanishes at that y_H. Execute code.
+  reference_fn: sd_two_higgs_cancellation
+  reference_args:
+    m_chi: 200.0
+    y_h: 0.1
+    m_H_heavy: 600.0
+  graders:
+    - type: numeric
+      key: y_H_cancel
+      tolerance: 0.01
+    - type: exact_zero
+      key: sigma_SI_at_cancel
+      tolerance: 1.0e-60
+  tags: [blind-spot, two-higgs, cancellation]
+
+# ======================================================================
+# Coupling cross-check: Eq.7 vs Eq.33 with Majorana factor
+# ======================================================================
+
+- id: t3_sd_coupling_xcheck_theta0
+  task_type: algebra
+  tier: 3
+  model: singlet-doublet
+  prompt: >
+    Using a Python script, cross-check two independent calculations of the
+    DM-Higgs coupling in the singlet-doublet model at m_S=150, m_D=500,
+    y=1, theta=0.
+
+    Implement BOTH routes in your code:
+    (1) Eq. 7: analytical formula for y_{h chi1 chi1}
+    (2) Eq. 33: compute from the mixing matrix U as
+        y_h = 2 * (1/sqrt(2)) * (y1 * U[1,0] * U[0,0] + y2 * U[2,0] * U[0,0])
+        (factor of 2 for Majorana diagonal coupling)
+
+    They must agree. Execute the code and report y_h_eq7, y_h_eq33, and
+    their absolute difference.
+  reference_fn: sd_coupling_cross_check
+  reference_args:
+    m_S: 150.0
+    m_D: 500.0
+    y: 1.0
+    theta: 0.0
+  graders:
+    - type: numeric
+      key: y_h_eq7
+      tolerance: 0.001
+    - type: numeric
+      key: y_h_eq33
+      tolerance: 0.001
+    - type: exact_zero
+      key: difference
+      tolerance: 1.0e-4
+  tags: [cross-check, coupling, singlet-doublet, majorana]
+
+- id: t3_sd_coupling_xcheck_neg_theta
+  task_type: algebra
+  tier: 3
+  model: singlet-doublet
+  prompt: >
+    Using a Python script, perform the same Eq.7 vs Eq.33 coupling cross-check
+    at theta=-0.1 (near the blind spot region): m_S=150, m_D=500, y=1.
+    Include the Majorana factor of 2 for the diagonal coupling. Execute code.
+  reference_fn: sd_coupling_cross_check
+  reference_args:
+    m_S: 150.0
+    m_D: 500.0
+    y: 1.0
+    theta: -0.1
+  graders:
+    - type: numeric
+      key: y_h_eq7
+      tolerance: 0.001
+    - type: numeric
+      key: y_h_eq33
+      tolerance: 0.001
+    - type: exact_zero
+      key: difference
+      tolerance: 1.0e-4
+  tags: [cross-check, coupling, singlet-doublet, majorana, blind-spot]
+
+# ======================================================================
+# sigma_SI quadratic scaling with y_h
+# ======================================================================
+
+- id: t3_si_yh_scaling
+  task_type: algebra
+  tier: 3
+  model: generic
+  prompt: >
+    Using a Python script, verify that sigma_SI scales as y_h^2.
+    Implement the Higgs-portal SI cross-section formula (Eq. 5 of
+    arXiv:2506.19062) and compute it at y_h=0.1 and y_h=0.2 for
+    m_chi=200 GeV. Report the ratio sigma(0.2)/sigma(0.1) — it
+    should be exactly 4. Execute the code.
+  reference_fn: sigma_si_yh_scaling
+  reference_args:
+    m_chi: 200.0
+    y_h_base: 0.1
+  graders:
+    - type: numeric
+      key: ratio
+      tolerance: 1.0e-10
+    - type: numeric
+      key: expected_ratio
+      tolerance: 1.0e-10
+  tags: [scaling, SI, generic]
+
+# ======================================================================
+# Heavy DM limit: mu -> m_p
+# ======================================================================
+
+- id: t3_heavy_dm_limit
+  task_type: algebra
+  tier: 3
+  model: generic
+  prompt: >
+    Using a Python script, verify the heavy DM limit. Compute the reduced
+    mass mu = m_chi * m_p / (m_chi + m_p) for m_chi = 1e6 GeV with
+    m_p = 0.93827 GeV. Report mu, m_p, and the ratio mu/m_p — it should
+    be within 1 ppm of 1. Execute the code.
+  reference_fn: heavy_dm_reduced_mass
+  reference_args:
+    m_chi: 1.0e+6
+  graders:
+    - type: numeric
+      key: ratio_mu_mp
+      tolerance: 1.0e-6
+  tags: [limit, reduced-mass, generic]
+
+# ======================================================================
+# Scalar Portal Singlet (arXiv:2601.13147) — Tier 3 advanced tasks
+# ======================================================================
+
+- id: t3_sps_mass_two_route_bp1
+  task_type: algebra
+  tier: 3
+  model: scalar-portal-singlet
+  prompt: >
+    For the scalar portal singlet model (arXiv:2601.13147) at BP1
+    (m_h1=125.25, m_h2=200, sin_theta=0.001, lambda_s=3.38, mu_3=-20):
+    compute the CP-even Higgs mass spectrum via TWO independent routes.
+
+    Route A: analytical closed-form formulas (Eqs. 11-12) using
+    m_h1_h2_analytical(M_hh, M_ss, M_hs).
+    Route B: numerical diagonalization using diagonalize_numerical(M_sq).
+
+    Both routes use the same mass matrix. Report the differences:
+    diff_m_h1 = route_A_m_h1 - route_B_m_h1
+    diff_m_h2 = route_A_m_h2 - route_B_m_h2
+    diff_sin_theta = route_A_sin_theta - route_B_sin_theta
+
+    These differences must be exactly zero (within floating-point tolerance).
+  reference_fn: sps_mass_two_route
+  reference_args:
+    m_h1: 125.25
+    m_h2: 200.0
+    sin_theta: 0.001
+    lambda_s: 3.38
+    mu_3: -20.0
+  graders:
+    - type: exact_zero
+      key: diff_m_h1
+      tolerance: 1.0e-10
+    - type: exact_zero
+      key: diff_m_h2
+      tolerance: 1.0e-10
+    - type: exact_zero
+      key: diff_sin_theta
+      tolerance: 1.0e-10
+  tags: [mass-spectrum, scalar-portal-singlet, two-route, BP1]
+
+- id: t3_sps_blind_spot_identity
+  task_type: algebra
+  tier: 3
+  model: scalar-portal-singlet
+  prompt: >
+    Verify the blind-spot identity for the scalar portal singlet model
+    (arXiv:2601.13147): when m_h2 = m_h1 (mass degeneracy), the
+    spin-independent cross-section must be EXACTLY zero.
+
+    This is a fundamental property: the blind-spot factor
+    (m_h2^2 - m_h1^2)/(m_h1^2 * m_h2^2) vanishes at degeneracy,
+    cancelling the amplitude exactly regardless of other parameters.
+
+    Use m_chi=222, g_chi=0.57, sin_theta=0.001, m_h1=m_h2=125.25.
+    Report sigma_SI_at_degeneracy in cm^2 — it must be identically zero.
+  reference_fn: sps_blind_spot
+  reference_args:
+    m_chi: 222.0
+    g_chi: 0.57
+    sin_theta: 0.001
+    m_h1: 125.25
+  graders:
+    - type: exact_zero
+      key: sigma_SI_at_degeneracy
+      tolerance: 0.0
+  tags: [blind-spot, scalar-portal-singlet, identity]
+
+- id: t3_sps_pn_ratio_bp1
+  task_type: algebra
+  tier: 3
+  model: scalar-portal-singlet
+  prompt: >
+    Verify the proton-to-neutron sigma_SI ratio for the scalar portal
+    singlet model (arXiv:2601.13147) at BP1:
+    m_chi=222, g_chi=0.57, sin_theta=0.001, m_h1=125.25, m_h2=200.
+
+    This ratio is a STRUCTURAL IDENTITY: sigma_SI_p / sigma_SI_n =
+    (f_N_proton / f_N_neutron)^2, where f_N are the nucleon form factors.
+    The ratio is independent of m_chi, g_chi, sin_theta, and the Higgs masses.
+
+    Compute sigma_SI for proton (using F_U_P, F_D_P, F_S_P) and for neutron
+    (using F_U_N, F_D_N, F_S_N). Report sigma_p_over_n = sigma_SI_p / sigma_SI_n.
+  reference_fn: sps_pn_ratio
+  reference_args:
+    m_chi: 222.0
+    g_chi: 0.57
+    sin_theta: 0.001
+    m_h1: 125.25
+    m_h2: 200.0
+  graders:
+    - type: numeric
+      key: sigma_p_over_n
+      tolerance: 1.0e-10
+  tags: [SI, scalar-portal-singlet, proton-neutron-ratio, BP1]
+
+- id: t3_sps_lagrangian_roundtrip_bp1
+  task_type: algebra
+  tier: 3
+  model: scalar-portal-singlet
+  prompt: >
+    Verify the Lagrangian round-trip for the scalar portal singlet model
+    (arXiv:2601.13147) at BP1:
+    m_h1=125.25, m_h2=200, sin_theta=0.001, lambda_s=3.38, mu_3=-20.
+
+    The round-trip test:
+    1. Convert physical params (m_h1, m_h2, sin_theta, lambda_s, mu_3) to
+       Lagrangian params (lambda_h, lambda_hs, mu_hs, mu_s_sq) via
+       lagrangian_params_from_physical.
+    2. Build the mass matrix from Lagrangian params.
+    3. Diagonalize numerically to recover (m_h1, m_h2, sin_theta).
+    4. Compare recovered values to inputs.
+
+    Report m_h1_recovered, m_h2_recovered, sin_theta_recovered.
+    They must match the input values to 1e-10 relative precision.
+  reference_fn: sps_lagrangian_roundtrip
+  reference_args:
+    m_h1: 125.25
+    m_h2: 200.0
+    sin_theta: 0.001
+    lambda_s: 3.38
+    mu_3: -20.0
+  graders:
+    - type: numeric
+      key: m_h1_recovered
+      tolerance: 1.0e-10
+    - type: numeric
+      key: m_h2_recovered
+      tolerance: 1.0e-10
+    - type: numeric
+      key: sin_theta_recovered
+      tolerance: 1.0e-10
+  tags: [round-trip, scalar-portal-singlet, lagrangian, BP1]
+
+- id: t3_sps_cross_paper_regression
+  task_type: algebra
+  tier: 3
+  model: scalar-portal-singlet
+  prompt: >
+    Verify the heavy-m_h2 limit of the scalar portal singlet sigma_SI formula
+    (Eq. 31, arXiv:2601.13147) against the single-Higgs result from
+    arXiv:2506.19062.
+
+    In the limit m_h2 >> m_h1, the blind-spot factor reduces to 1/m_h1^2,
+    and Eq. 31 becomes equivalent to the single-Higgs portal formula with
+    effective coupling y_h_eff = g_chi * sin_theta * sqrt(1 - sin_theta^2).
+
+    At m_chi=222, g_chi=0.57, sin_theta=0.001, m_h1=125.25, m_h2=1e7:
+    - Compute sigma_31 using the scalar portal singlet formula (Eq. 31)
+    - Compute sigma_ref using sigma_SI_higgs_portal from 2506.19062 with
+      y_h_eff = g_chi * sin_theta * sqrt(1 - sin_theta^2) and m_h=m_h1
+    - Report ratio_minus_one = sigma_31 / sigma_ref - 1.0
+
+    This must be within 1e-8 of zero.
+    (Note: m_h2=1e6 gives finite-correction 3.14e-8 > 1e-8 tolerance; 1e7
+    gives 3.14e-10 well within tolerance. See RECONCILIATION.md S6.)
+  reference_fn: sps_cross_paper_regression
+  reference_args:
+    m_chi: 222.0
+    g_chi: 0.57
+    sin_theta: 0.001
+    m_h1: 125.25
+    m_h2: 1.0e7
+  graders:
+    - type: exact_zero
+      key: ratio_minus_one
+      tolerance: 1.0e-8
+  tags: [scalar-portal-singlet, cross-paper-regression, heavy-limit]
+
+# ======================================================================
+# Scotogenic Inverse Seesaw (arXiv:2603.23040) — Tier 3 advanced tasks
+# ======================================================================
+
+- id: t3_scoto_Eq32_vs_Eq33_BP3
+  task_type: algebra
+  tier: 3
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    At BP3 (m_chi ~ 61 GeV), compute sigma^SD_full (Eq. 32) and sigma^SD_simplified
+    (Eq. 33) on Xe131. Paper claims < 10% agreement. Report both values and their ratio.
+  reference_fn: scoto_sigma_SD
+  reference_args:
+    M_R: 61.0
+    mu_S: 0.05
+    M_N: 61.0
+    bp: "BP3"
+    nucleus: "Xe131"
+  graders:
+    - type: numeric
+      key: ratio_full_simpl
+      tolerance: 0.10
+  tags: [SD, NREFT, cross-check, paper-2, BP3]
+
+- id: t3_scoto_isospin_identity
+  task_type: algebra
+  tier: 3
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    In this model DM is Majorana and the Z-axial coupling structure implies
+    a fixed c4_p/c4_n ratio determined purely by FLAG 2021 axial form factors.
+    The external hand-computed target is -677/592 (≈ -1.14358). Verify the
+    computed ratio matches this external pin to better than 1e-6 at BP2.
+  reference_fn: scoto_isospin_identity
+  reference_args:
+    M_R: 59.0
+    mu_S: 0.05
+    M_N: 59.0
+  graders:
+    - type: exact_zero
+      key: ratio_c4p_c4n_deviation
+      tolerance: 1.0e-6
+  tags: [SD, isospin, paper-2, external-pin]
+
+- id: t3_scoto_casas_ibarra_round_trip
+  task_type: algebra
+  tier: 3
+  model: scotogenic-inverse-seesaw
+  prompt: >
+    Round-trip the Casas-Ibarra parameterization at BP2 with R = I_3: compute y_phi,
+    reconstruct M^nu, diagonalize, verify recovery of m_nu and U_PMNS to 1e-10.
+  reference_fn: scoto_casas_ibarra_round_trip
+  reference_args:
+    M_R: 59.0
+    mu_S: 0.05
+    M_N: 59.0
+  graders:
+    - type: exact_zero
+      key: residual_Mnu
+      tolerance: 1.0e-10
+    - type: exact_zero
+      key: residual_PMNS
+      tolerance: 1.0e-10
+  tags: [casas-ibarra, neutrino, paper-2, identity]
+
+# ======================================================================
+# Paper 3 (arXiv:2509.08043) — 2HDM+a Advanced Tasks
+# ======================================================================
+
+- id: t3_thdma_scaling_identity_m_A
+  task_type: algebra
+  tier: 3
+  model: 2hdma
+  prompt: >
+    Verify the Eq. 50 scaling identity for sigma_SI in the 2HDM+a model:
+    sigma_SI(2*m_A)/sigma_SI(m_A) at fixed other params (anchor BP-A).
+    Report ratio and expected_ratio.
+  reference_fn: thdma_scaling_identity
+  reference_args:
+    axis: m_A
+    factor: 2.0
+    anchor: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: ratio,          tolerance: 1.0e-8}
+    - {type: numeric, key: expected_ratio, tolerance: 1.0e-8}
+  tags: [2hdma, identity, scaling, m_A, paper-3]
+
+- id: t3_thdma_scaling_identity_m_a
+  task_type: algebra
+  tier: 3
+  model: 2hdma
+  prompt: >
+    Verify the Eq. 50 scaling identity for sigma_SI in the 2HDM+a model:
+    sigma_SI(0.5*m_a)/sigma_SI(m_a) at fixed other params (anchor BP-A).
+    Report ratio and expected_ratio.
+  reference_fn: thdma_scaling_identity
+  reference_args:
+    axis: m_a
+    factor: 0.5
+    anchor: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: ratio,          tolerance: 1.0e-8}
+    - {type: numeric, key: expected_ratio, tolerance: 1.0e-8}
+  tags: [2hdma, identity, scaling, m_a, paper-3]
+
+- id: t3_thdma_scaling_identity_m_chi
+  task_type: algebra
+  tier: 3
+  model: 2hdma
+  prompt: >
+    Verify the Eq. 50 scaling identity for sigma_SI in the 2HDM+a model:
+    sigma_SI(2*m_chi)/sigma_SI(m_chi) at fixed other params (anchor BP-A).
+    Report ratio and expected_ratio.
+  reference_fn: thdma_scaling_identity
+  reference_args:
+    axis: m_chi
+    factor: 2.0
+    anchor: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: ratio,          tolerance: 1.0e-8}
+    - {type: numeric, key: expected_ratio, tolerance: 1.0e-8}
+  tags: [2hdma, identity, scaling, m_chi, paper-3]
+
+- id: t3_thdma_scaling_identity_theta
+  task_type: algebra
+  tier: 3
+  model: 2hdma
+  prompt: >
+    Verify the Eq. 50 scaling identity for sigma_SI in the 2HDM+a model:
+    sigma_SI(2*theta)/sigma_SI(theta) at fixed other params (anchor BP-A).
+    Report ratio and expected_ratio.
+  reference_fn: thdma_scaling_identity
+  reference_args:
+    axis: theta
+    factor: 2.0
+    anchor: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: ratio,          tolerance: 1.0e-8}
+    - {type: numeric, key: expected_ratio, tolerance: 1.0e-8}
+  tags: [2hdma, identity, scaling, theta, paper-3]
+
+- id: t3_thdma_scaling_identity_g_chi
+  task_type: algebra
+  tier: 3
+  model: 2hdma
+  prompt: >
+    Verify the Eq. 50 scaling identity for sigma_SI in the 2HDM+a model:
+    sigma_SI(2*g_chi)/sigma_SI(g_chi) at fixed other params (anchor BP-A).
+    Report ratio and expected_ratio.
+  reference_fn: thdma_scaling_identity
+  reference_args:
+    axis: g_chi
+    factor: 2.0
+    anchor: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0}
+  graders:
+    - {type: numeric, key: ratio,          tolerance: 1.0e-8}
+    - {type: numeric, key: expected_ratio, tolerance: 1.0e-8}
+  tags: [2hdma, identity, scaling, g_chi, paper-3]
+
+- id: t3_thdma_scaling_identity_sigma_q
+  task_type: algebra
+  tier: 3
+  model: 2hdma
+  prompt: >
+    Verify the Eq. 50 scaling identity for sigma_SI in the 2HDM+a model:
+    sigma_SI(2*sigma_q)/sigma_SI(sigma_q) at fixed other params (anchor BP-A).
+    Report ratio and expected_ratio.
+  reference_fn: thdma_scaling_identity
+  reference_args:
+    axis: sigma_q
+    factor: 2.0
+    anchor: {m_A: 800.0, m_a: 50.0, m_chi: 30.0, theta: 0.1, g_chi: 0.5, tan_beta: 1.0, sigma_mq: 0.330}
+  graders:
+    - {type: numeric, key: ratio,          tolerance: 1.0e-8}
+    - {type: numeric, key: expected_ratio, tolerance: 1.0e-8}
+  tags: [2hdma, identity, scaling, sigma_q, paper-3]
+
+- id: t3_thdma_G_threshold
+  task_type: algebra
+  tier: 3
+  model: 2hdma
+  prompt: >
+    Evaluate the Bauer loop function G(x, 0) at x=0.0. The paper states G(0,0)=1
+    (analytic boundary condition). Report G_value.
+  reference_fn: thdma_G_at
+  reference_args: {x: 0.0}
+  graders:
+    - {type: numeric, key: G_value, tolerance: 1.0e-6}
+  tags: [2hdma, loop-function, eq47, paper-3]
+
+
+# ===========================================================================
+# Paper 4 — arXiv:2511.21808 — GCE WIMP Comprehensive Study
+# ===========================================================================
+
+- id: t3_p4_Lmu_Le_table2_selfcheck_roundtrip
+  task_type: algebra
+  tier: 3
+  model: zprime-Lmu-Le
+  prompt: >
+    Self-consistency check (NOT an external paper anchor). For the Lmu-Le portal
+    with m_DM=44.1 GeV, m_Zp=120 GeV, g_chi=1.0, Dirac DM: evaluate sigma_v
+    at g_Zp=0.5, then solve for g_Zp that reproduces the same sigma_v value.
+    Re-evaluate sigma_v at the solved g_Zp. Report it under key "sigma_v_roundtrip".
+  reference_fn: p4_table2_inversion_roundtrip
+  reference_args:
+    portal: "Lmu_Le"
+    m_DM: 44.1
+    sigma_v_target: 7.58e-26
+    m_Zp: 120.0
+    g_chi: 1.0
+    dm_type: "Dirac"
+  graders:
+    - type: numeric
+      key: sigma_v_roundtrip
+      tolerance: 1.0e-10
+  tags: [paper-4, zprime, Lmu-Le, table-2, self-consistency]
+
+- id: t3_p4_Le_Ltau_table2_selfcheck_roundtrip
+  task_type: algebra
+  tier: 3
+  model: zprime-Le-Ltau
+  prompt: >
+    Self-consistency check (NOT an external paper anchor). For the Le-Ltau portal
+    with m_DM=19.2 GeV, m_Zp=120 GeV, g_chi=1.0, Dirac DM: evaluate sigma_v
+    at g_Zp=0.3, then solve for g_Zp that reproduces the same sigma_v value.
+    Re-evaluate sigma_v at the solved g_Zp. Report under key "sigma_v_roundtrip".
+  reference_fn: p4_table2_inversion_roundtrip
+  reference_args:
+    portal: "Le_Ltau"
+    m_DM: 19.2
+    sigma_v_target: 3.03e-26
+    m_Zp: 120.0
+    g_chi: 1.0
+    dm_type: "Dirac"
+  graders:
+    - type: numeric
+      key: sigma_v_roundtrip
+      tolerance: 1.0e-10
+  tags: [paper-4, zprime, Le-Ltau, table-2, self-consistency]
+
+- id: t3_p4_Lmu_Ltau_table2_selfcheck_roundtrip
+  task_type: algebra
+  tier: 3
+  model: zprime-Lmu-Ltau
+  prompt: >
+    Self-consistency check (NOT an external paper anchor). For the Lmu-Ltau portal
+    with m_DM=20.5 GeV, m_Zp=120 GeV, g_chi=1.0, Dirac DM: evaluate sigma_v
+    at g_Zp=0.4, then solve for g_Zp that reproduces the same sigma_v value.
+    Re-evaluate sigma_v at the solved g_Zp. Report under key "sigma_v_roundtrip".
+  reference_fn: p4_table2_inversion_roundtrip
+  reference_args:
+    portal: "Lmu_Ltau"
+    m_DM: 20.5
+    sigma_v_target: 3.76e-26
+    m_Zp: 120.0
+    g_chi: 1.0
+    dm_type: "Dirac"
+  graders:
+    - type: numeric
+      key: sigma_v_roundtrip
+      tolerance: 1.0e-10
+  tags: [paper-4, zprime, Lmu-Ltau, table-2, self-consistency]
+
+- id: t3_p4_BminusL_table2_selfcheck_roundtrip
+  task_type: algebra
+  tier: 3
+  model: zprime-BminusL
+  prompt: >
+    Self-consistency check (NOT an external paper anchor). For the B-L portal
+    with m_DM=37.5 GeV, m_Zp=120 GeV, g_chi=1.0, Dirac DM: evaluate sigma_v
+    at g_Zp=0.1, then solve for g_Zp that reproduces the same sigma_v value.
+    Re-evaluate sigma_v at the solved g_Zp. Report under key "sigma_v_roundtrip".
+  reference_fn: p4_table2_inversion_roundtrip
+  reference_args:
+    portal: "BminusL"
+    m_DM: 37.5
+    sigma_v_target: 4.67e-26
+    m_Zp: 120.0
+    g_chi: 1.0
+    dm_type: "Dirac"
+  graders:
+    - type: numeric
+      key: sigma_v_roundtrip
+      tolerance: 1.0e-10
+  tags: [paper-4, zprime, BminusL, table-2, self-consistency]
+
+- id: t3_p4_higgs_funnel_relic_ballpark
+  task_type: algebra
+  tier: 3
+  model: higgs-portal-scalar
+  prompt: >
+    Check that the Breit-Wigner enhancement at the Higgs funnel works correctly.
+    Compute sigma_v at m_DM=62.60 GeV (near funnel, lambda=2e-4) and at
+    m_DM=100 GeV (off-funnel, lambda=2e-4). Report the BW enhancement ratio
+    sigma_v(funnel)/sigma_v(off-funnel) under key "bw_enhancement_ratio".
+    Also report sigma_v_funnel and sigma_v_off_funnel in cm^3/s.
+  reference_fn: p4_higgs_funnel_relic_ballpark
+  reference_args:
+    m_DM: 62.60
+    lam: 2.0e-4
+    dm_type: "scalar"
+  graders:
+    - type: numeric
+      key: bw_enhancement_ratio
+      tolerance: 0.30
+  tags: [paper-4, higgs-portal, funnel, self-consistency]
+
+- id: t3_p4_two_route_thermal_avg_off_resonance
+  task_type: algebra
+  tier: 3
+  model: zprime-Lmu-Le
+  prompt: >
+    Convention spot-check: compare Taylor-expansion sigma_v and Gondolo-Gelmini
+    thermal average for the Lmu-Le portal at m_DM=50 GeV, m_Zp=200 GeV,
+    g_Zp=0.1, g_chi=0.1, Dirac DM (off-resonance). This tests the thermal
+    average integration convention, not the matrix element. Report
+    ratio sigma_v_GG / sigma_v_Taylor under key "ratio_gg_over_taylor".
+  reference_fn: p4_two_route_thermal_average
+  reference_args:
+    portal: "Lmu_Le"
+    m_DM: 50.0
+    m_Zp: 200.0
+    g_chi: 0.1
+    g_Zp: 0.1
+    dm_type: "Dirac"
+  graders:
+    - type: numeric
+      key: ratio_gg_over_taylor
+      tolerance: 0.30
+  tags: [paper-4, zprime, Lmu-Le, convention-check, self-consistency]
+
+- id: t3_p4_charge_sum_rule_Lmu_Le
+  task_type: algebra
+  tier: 3
+  model: zprime-Lmu-Le
+  prompt: >
+    Verify the charge sum rule for the Lmu-Le portal: the sum of all lepton
+    charges (charged leptons + neutrinos) must equal zero (antisymmetry).
+    Report the sum under key "lepton_charge_sum".
+  reference_fn: p4_charge_sum_rule
+  reference_args:
+    portal: "Lmu_Le"
+  graders:
+    - type: exact_zero
+      key: lepton_charge_sum
+      tolerance: 1.0e-12
+  tags: [paper-4, zprime, Lmu-Le, charge-sum-rule, self-consistency]
+
+- id: t3_p4_charge_sum_rule_Le_Ltau
+  task_type: algebra
+  tier: 3
+  model: zprime-Le-Ltau
+  prompt: >
+    Verify the charge sum rule for the Le-Ltau portal: the sum of all lepton
+    charges must equal zero. Report the sum under key "lepton_charge_sum".
+  reference_fn: p4_charge_sum_rule
+  reference_args:
+    portal: "Le_Ltau"
+  graders:
+    - type: exact_zero
+      key: lepton_charge_sum
+      tolerance: 1.0e-12
+  tags: [paper-4, zprime, Le-Ltau, charge-sum-rule, self-consistency]
+
+- id: t3_p4_charge_sum_rule_Lmu_Ltau
+  task_type: algebra
+  tier: 3
+  model: zprime-Lmu-Ltau
+  prompt: >
+    Verify the charge sum rule for the Lmu-Ltau portal: the sum of all lepton
+    charges must equal zero. Report the sum under key "lepton_charge_sum".
+  reference_fn: p4_charge_sum_rule
+  reference_args:
+    portal: "Lmu_Ltau"
+  graders:
+    - type: exact_zero
+      key: lepton_charge_sum
+      tolerance: 1.0e-12
+  tags: [paper-4, zprime, Lmu-Ltau, charge-sum-rule, self-consistency]
+
+- id: t3_p4_anomaly_free_BminusL_with_sterile_nu
+  task_type: algebra
+  tier: 3
+  model: zprime-BminusL
+  prompt: >
+    Verify B-L anomaly cancellation: the B-L charge assignments must match
+    the paper's definition (+1/3 for quarks, -1 for all leptons including
+    3 RH sterile neutrinos). Report max_deviation (entry-by-entry check vs
+    paper definition) under key "max_deviation" and sterile neutrino count
+    under key "n_sterile".
+  reference_fn: p4_anomaly_free_BminusL
+  reference_args: {}
+  graders:
+    - type: exact_zero
+      key: max_deviation
+      tolerance: 1.0e-12
+  tags: [paper-4, zprime, BminusL, anomaly-cancellation, self-consistency]
+
+
+# ============================================================
+# NMSSM bino/higgsino blind-spot benchmark — arXiv:2509.15121
+# ============================================================
+
+- id: t3_nmssm_blind_spot_eq7_on_bp1_3
+  task_type: algebra
+  tier: 3
+  model: nmssm-bino-higgsino
+  prompt: >
+    Evaluate the LHS of the NMSSM bino/higgsino blind-spot identity, Eq. (7) of
+    arXiv:2509.15121, at benchmark point BP1-3:
+      LHS = [m_chi1 + g1^2 * v^2 / (M1 - m_chi1)] / (mu_eff * sin(2*beta))
+    Parameters: M1=500 GeV, mu_eff=161.8 GeV, tan_beta=6.2.
+    Use the SIGNED m_chi1 eigenvalue from the 5x5 diagonalization (SLHA-1 convention).
+    g1 is SM-normalized (g1=0.3574, NOT GUT-normalized).
+    Also report denom_margin_gev = |M1 - m_chi1_signed|.
+    Write and execute Python code. Report lhs_eq7 and denom_margin_gev.
+    NOTE: With M1=500 GeV (decoupled bino), LHS is NOT ~1 at these BPs;
+    the expected value is determined by the reference implementation.
+  reference_fn: nmssm_blind_spot_eq7_on_bp
+  reference_args:
+    bp_name: BP1_3
+  graders:
+    - type: numeric
+      key: lhs_eq7
+      tolerance: 0.02
+  tags: [blind-spot, nmssm, identity, BP1_3, computed]
+
+- id: t3_nmssm_blind_spot_eq7_off_bp1_3
+  task_type: algebra
+  tier: 3
+  model: nmssm-bino-higgsino
+  prompt: >
+    Evaluate the LHS of Eq. (7) of arXiv:2509.15121 at the off-blind-spot cousin
+    of BP1-3: take all parameters from BP1-3 but flip the sign of mu_eff
+    (mu_eff -> -161.8 GeV, vS -> -5992.59 GeV, all others unchanged).
+    Report lhs_off (the LHS value), abs_lhs_off_minus_1 = |LHS - 1|, and
+    floor_excess = |LHS - 1| - 0.30 (should be positive if LHS is far from 1).
+    Use SIGNED m_chi1 from 5x5 diagonalization. g1 SM-normalized.
+  reference_fn: nmssm_blind_spot_eq7_off_bp
+  reference_args:
+    bp_name: BP1_3
+  graders:
+    - type: numeric
+      key: floor_excess
+      tolerance: 1.0
+  tags: [blind-spot, nmssm, identity, negative-control, computed]
+
+- id: t3_nmssm_blind_spot_eq7_synthetic
+  task_type: algebra
+  tier: 3
+  model: nmssm-bino-higgsino
+  prompt: >
+    Construct a synthetic 4x4 decoupled-limit blind spot for arXiv:2509.15121, Eq. (7).
+    Decouple the wino (M2=1e6) and singlino (kappa=1e-10, vS=0). Use mu_eff=400 GeV,
+    tan_beta=10, lambda=0.027. Iteratively find M1 such that the condition
+      m_chi1 + g1^2*v^2/(M1 - m_chi1) = mu_eff * sin(2*beta)
+    is self-consistently satisfied (where m_chi1 depends on M1 via 5x5 diag).
+    At the converged M1, compute LHS of Eq. (7). Report lhs_eq7.
+    Expected: LHS = 1.0 to < 1e-6 (exact blind spot by construction).
+    Use g1=0.3574 (SM-normalized), v=246.22 GeV. Write and execute Python code.
+  reference_fn: nmssm_blind_spot_eq7_synthetic
+  reference_args: {}
+  graders:
+    - type: numeric
+      key: lhs_eq7
+      tolerance: 1.0e-6
+  tags: [blind-spot, nmssm, identity, synthetic, computed]
+
+- id: t3_nmssm_spectrum_identities_bp1_3
+  task_type: algebra
+  tier: 3
+  model: nmssm-bino-higgsino
+  prompt: >
+    Verify algebraic identities for the NMSSM neutralino diagonalization
+    (arXiv:2509.15121, Eqs. 3-5) at BP1-3 (M1=500, M2=5000, mu_eff=161.8,
+    tan_beta=6.2, lambda=0.027, kappa=0.01243, vS=5992.59).
+    Using scipy.linalg.eigh:
+    1. trace_diff = sum(signed_eigenvalues) - trace(M) [should be ~0]
+    2. det_diff_rel = |prod(signed_eigenvalues) - det(M)| / |det(M)| [~0]
+    3. orthogonality_fnorm = ||N N^T - I_5||_F [should be < 1e-12]
+    4. fraction_sum_err = |Z_B + Z_W + Z_H + Z_S - 1| [should be < 1e-12]
+    Write and execute Python code. Report all four quantities.
+  reference_fn: nmssm_spectrum_identities
+  reference_args:
+    bp_name: BP1_3
+  graders:
+    - type: exact_zero
+      key: trace_diff
+      tolerance: 1.0e-9
+    - type: exact_zero
+      key: orthogonality_fnorm
+      tolerance: 1.0e-12
+    - type: exact_zero
+      key: fraction_sum_err
+      tolerance: 1.0e-12
+    - type: numeric
+      key: det_diff_rel
+      tolerance: 1.0e-8
+  tags: [identities, nmssm, BP1_3, computed]

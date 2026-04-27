@@ -1,0 +1,11 @@
+--- a/src/DDCalc_test.f90
++++ b/src/DDCalc_test.f90
+@@ -13,7 +13,7 @@
+   Halo = DDCalc_InitHalo()
+   Detector = DDCalc_InitDetector()
+
++  WRITE (*,'(A)') 'DDCalc 2.2.0'
+   WRITE (*,*) 'DDCalc successfully initialized'
+
+ END PROGRAM
+-

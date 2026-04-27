@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-04-17T01:49:40.997Z",
+  "session_seed": "1776390338656",
+  "cases": [
+    {
+      "case_id": "z_mass_peak",
+      "design_side": "left",
+      "vote": "right",
+      "design_won": false
+    },
+    {
+      "case_id": "pt_spectrum",
+      "design_side": "right",
+      "vote": "left",
+      "design_won": false
+    },
+    {
+      "case_id": "stacked_backgrounds",
+      "design_side": "right",
+      "vote": "right",
+      "design_won": true
+    },
+    {
+      "case_id": "exclusion_contour",
+      "design_side": "left",
+      "vote": "left",
+      "design_won": true
+    },
+    {
+      "case_id": "theory_data_ratio",
+      "design_side": "right",
+      "vote": "right",
+      "design_won": true
+    },
+    {
+      "case_id": "parameter_scan_2d",
+      "design_side": "right",
+      "vote": "tie",
+      "design_won": false
+    },
+    {
+      "case_id": "running_couplings",
+      "design_side": "left",
+      "vote": "left",
+      "design_won": true
+    },
+    {
+      "case_id": "angular_distribution",
+      "design_side": "right",
+      "vote": "left",
+      "design_won": false
+    },
+    {
+      "case_id": "cross_section_vs_sqrt_s",
+      "design_side": "left",
+      "vote": "left",
+      "design_won": true
+    },
+    {
+      "case_id": "missing_et",
+      "design_side": "left",
+      "vote": "right",
+      "design_won": false
+    },
+    {
+      "case_id": "branching_ratios",
+      "design_side": "left",
+      "vote": "tie",
+      "design_won": false
+    },
+    {
+      "case_id": "multi_panel_comparison",
+      "design_side": "right",
+      "vote": "right",
+      "design_won": true
+    }
+  ],
+  "summary": {
+    "design_wins": 6,
+    "baseline_wins": 4,
+    "ties": 2,
+    "total": 12
+  }
+}

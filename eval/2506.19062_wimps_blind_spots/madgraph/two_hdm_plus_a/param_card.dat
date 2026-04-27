@@ -1,0 +1,59 @@
+######################################################################
+## MadGraph5 param_card for 2HDM+a (DMPseudo_2HDM UFO)
+## Anchor benchmark point
+##
+## Parameters:
+##   m_chi = 30 GeV,  m_a = 50 GeV
+##   m_H = m_A = m_H+ = 800 GeV
+##   g_chi (ychi) = 0.5
+##   theta = 0.1 rad  =>  sinTheta = sin(0.1) = 0.09983341664682815
+##   tan(beta) = 1.0
+##   lambda_3 = 3.0, lambda_1P = 0.0, lambda_2P = 0.0
+######################################################################
+
+Block MASS
+  25  1.252500e+02  # MH1 (SM-like Higgs, 125 GeV)
+  35  8.000000e+02  # MH2 (heavy scalar H)
+  36  8.000000e+02  # MA2 (heavy pseudoscalar A, before mixing)
+  37  8.000000e+02  # MHC (charged Higgs H+/-)
+  ## Pseudoscalar mass eigenstates (after a-A mixing)
+  28  5.000000e+01  # MA1 (light pseudoscalar a)
+  ## DM
+  1000022  3.000000e+01  # MCHI (DM mass)
+  ## SM
+  23  9.118760e+01  # MZ
+  24  8.037700e+01  # MW
+   6  1.726900e+02  # MT
+   5  4.180000e+00  # MB
+  15  1.777000e+00  # MTA
+
+Block DMINPUTS  # DM sector parameters
+   1  5.000000e-01  # ychi (DM Yukawa coupling = g_chi)
+   2  9.983341665e-02  # sinTheta = sin(0.1 rad)
+
+Block HIGGSINPUTS  # 2HDM parameters
+   1  1.000000e+00  # tanBeta
+   2  3.000000e+00  # lambda3
+   3  0.000000e+00  # lambda1P (Phi_1 - a portal)
+   4  0.000000e+00  # lambda2P (Phi_2 - a portal)
+
+Block SMINPUTS
+   1  1.279000e+02  # aEWM1
+   2  1.166379e-05  # GF
+   3  1.184000e-01  # aS
+
+Block YUKAWA
+   5  4.180000e+00  # ymb
+   6  1.726900e+02  # ymt
+  15  1.777000e+00  # ymtau
+
+Block DECAY
+  25  4.070000e-03  # WH1
+  35  AUTO           # WH2
+  36  AUTO           # WA2
+  37  AUTO           # WHC
+  28  AUTO           # WA1
+  1000022  0.000000e+00  # WCHI (stable)
+  23  2.495200e+00  # WZ
+  24  2.085000e+00  # WW
+   6  1.420000e+00  # WT

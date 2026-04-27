@@ -1,0 +1,56 @@
+{
+  "_comment": "Alias table for FeynArts 3.11 built-in SM model (Models/SM.mod). Keys are human-readable labels; values are FeynArts ClassesDescription tuple strings. Curated from M$ClassesDescription entries in SM.mod.",
+  "_schema": "{ '<alias>': '<feynarts-tuple-string>' }",
+
+  "photon": "V[1]",
+  "A": "V[1]",
+  "gamma": "V[1]",
+
+  "Z": "V[2]",
+  "W+": "V[3]",
+  "W-": "-V[3]",
+
+  "g": "V[5]",
+  "gluon": "V[5]",
+
+  "H": "S[1]",
+  "Higgs": "S[1]",
+
+  "G0": "S[2]",
+  "G+": "S[3]",
+  "G-": "-S[3]",
+
+  "nu_e": "F[1, {1}]",
+  "anti-nu_e": "-F[1, {1}]",
+  "nu_mu": "F[1, {2}]",
+  "anti-nu_mu": "-F[1, {2}]",
+  "nu_tau": "F[1, {3}]",
+  "anti-nu_tau": "-F[1, {3}]",
+
+  "e-": "F[2, {1}]",
+  "e+": "-F[2, {1}]",
+  "mu-": "F[2, {2}]",
+  "mu+": "-F[2, {2}]",
+  "tau-": "F[2, {3}]",
+  "tau+": "-F[2, {3}]",
+
+  "u": "F[3, {1}]",
+  "ubar": "-F[3, {1}]",
+  "c": "F[3, {2}]",
+  "cbar": "-F[3, {2}]",
+  "t": "F[3, {3}]",
+  "tbar": "-F[3, {3}]",
+
+  "d": "F[4, {1}]",
+  "dbar": "-F[4, {1}]",
+  "s": "F[4, {2}]",
+  "sbar": "-F[4, {2}]",
+  "b": "F[4, {3}]",
+  "bbar": "-F[4, {3}]",
+
+  "gh_A": "U[1]",
+  "gh_Z": "U[2]",
+  "gh_W+": "U[3]",
+  "gh_W-": "-U[3]",
+  "gh_g": "U[5]"
+}

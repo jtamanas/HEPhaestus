@@ -1,0 +1,36 @@
+{
+  "m_chi": 100.0,
+  "m_a": 400.0,
+  "tan_beta": 10.0,
+  "gchi": 1.0,
+  "omega_h2": 10.494,
+  "on_resonance": false,
+  "status": "ok",
+  "relic_approx": false,
+  "model_source": "hand_crafted_sarah_model",
+  "model_fixture": "plugins/hep-ph-demo/skills/2hdm-a/fixtures/sarah_model/",
+  "maddm_results": "./demo_output/2hdm-a/maddm_run/output/run_04/MadDM_results.txt",
+  "dominant_channel": "chichibar_wphp",
+  "channel_fractions": {
+    "chichibar_ah2ah2": 0.0,
+    "chichibar_ah2ah3": 0.0,
+    "chichibar_ah3ah3": 0.0,
+    "chichibar_bbx": 0.65,
+    "chichibar_ccx": 0.06,
+    "chichibar_wphp": 49.62,
+    "chichibar_wmhm": 49.62,
+    "chichibar_hphm": 0.0,
+    "chichibar_tamtap": 0.04
+  },
+  "run_id": "run_04",
+  "param_card_notes": "patcher_regex_bug: DMSECTOR/PHASES/ZAMIX not set by patcher on first-run fresh MG5 cards; manually corrected in demo_output. MHm1=80.419 (Mw). THDMPOT=0. See issues.jsonl for blocker 2hdma-001.",
+  "target_omega_h2": 10.15,
+  "target_band": [9.95, 10.36],
+  "gate_check": {
+    "omega_in_band": false,
+    "omega_deviation_pct": 3.4,
+    "bbx_fraction": 0.65,
+    "bbx_threshold_pct": 30.0,
+    "bbx_gate_pass": false
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "1",
+  "benchmark_id": "synthetic-1",
+  "model": "model-x",
+  "parameter_point": {
+    "m_dm": 100,
+    "coupling": 1.0
+  },
+  "expectations": {
+    "omega_h2": {
+      "central": 0.12,
+      "band": [0.10, 0.14],
+      "tolerance": "±0.02"
+    }
+  },
+  "source": {
+    "paper": "synthetic — no paper citation",
+    "commit": "schema-fix-cycle-1"
+  }
+}

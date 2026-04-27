@@ -1,0 +1,33 @@
+{
+  "task": "sd-T9",
+  "generated_at": "2026-04-25T07:00:00Z",
+  "allow_list_paths": [
+    "plugins/hep-ph-demo/skills/singlet-doublet/SKILL.md",
+    ".shift-manager/run-20260425-030153/state/**",
+    ".shift-manager/run-20260425-030153/workstreams/singlet-doublet/**",
+    ".shift-manager/run-20260425-030153/plan/singlet-doublet/**",
+    ".shift-manager/run-20260425-030153/brainstorm/singlet-doublet/**",
+    ".shift-manager/run-20260425-030153/scoping/**",
+    ".shift-manager/run-20260425-030153/quarantine/**",
+    ".shift-manager/run-20260425-030153/locks/**",
+    ".shift-manager/run-20260425-030153/log/**"
+  ],
+  "diff_command": "git diff --name-only main..sd/playtest-r2-20260425",
+  "diff_inside_count": 1575,
+  "diff_outside_count": 0,
+  "diff_outside_count_literal_plan_command": 4,
+  "diff_outside_note": "The 4 files reported by the literal PLAN_FINAL command are all D-status (deleted in sd vs main): .shift-manager/run-20260425-030153/workstreams/2hdma/impl/T7_IMPL_NOTE.md, .../workstreams/2hdma/playtest/PT2_LOG.md, .../workstreams/2hdma/playtest/relic.json, .../workstreams/2hdma/playtest/summary.json. These were added to main by the 2hdma workstream AFTER the sd branch was cut (branch fork point 611d12e). The sd branch has zero commits touching these files (verified: git log sd/playtest-r2-20260425 -- .shift-manager/.../workstreams/2hdma/ returns empty). Authoritative fork-point check (git diff --name-only 611d12e..sd/playtest-r2-20260425 | grep -vE <allow-list> | wc -l) = 0. Per Manager Decision D5, cross-workstream in-flight artefacts are accepted. Verdict unaffected.",
+  "fork_point": "611d12e",
+  "fork_point_diff_outside_count": 0,
+  "banned_metric_regex": "\\b(stdev|std|sigma|mean|average|coefficient_of_variation|cv)\\b",
+  "banned_metric_files_checked": [
+    ".shift-manager/run-20260425-030153/workstreams/singlet-doublet/playtest/determinism-screen.json",
+    ".shift-manager/run-20260425-030153/workstreams/singlet-doublet/playtest/verdict-A-rerun.md"
+  ],
+  "banned_metric_count": 0,
+  "determinism_screen_verdict": "PASS",
+  "determinism_screen_values": [0.292, 0.292, 0.292, 0.292, 0.292],
+  "all_in_band": true,
+  "band": [0.286, 0.298],
+  "verdict": "ACCEPT"
+}

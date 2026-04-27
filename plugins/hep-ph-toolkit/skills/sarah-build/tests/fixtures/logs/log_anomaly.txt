@@ -1,0 +1,10 @@
+SARAH version 4.15.3
+Loading model DarkSU3...
+Checking model consistency...
+Anomalies are not cancelled.
+The following anomaly coefficients are non-zero:
+  SU(3)^3 coefficient = 3
+  U(1)-SU(3)^2 mixed coefficient = 1/6
+  Gravitational-U(1) mixed coefficient = 3
+Please check the fermion content and hypercharge assignments.
+Model loading stopped due to anomaly cancellation failure.

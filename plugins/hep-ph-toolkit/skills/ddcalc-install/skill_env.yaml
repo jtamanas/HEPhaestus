@@ -1,0 +1,21 @@
+# DDCalc install environment — consumed by install_ddcalc.sh and CI.
+# SHA256 was computed on 2026-04-19 via:
+#   curl -sL $HEPPH_DDCALC_URL -o /tmp/ddcalc_v220.tgz && shasum -a 256 /tmp/ddcalc_v220.tgz
+# The GitLab primary URL (gitlab.com/ddcalc/ddcalc) is private; GambitBSM GitHub is the canonical mirror.
+
+HEPPH_DDCALC_VERSION: "2.2.0"
+HEPPH_DDCALC_URL: "https://github.com/GambitBSM/DDCalc/archive/refs/tags/v2.2.0.tar.gz"
+HEPPH_DDCALC_SHA256: "b12d63f7baafc6ee43e090fa3d1df15d194bddb453b3d5173e895fb3ac517847"
+HEPPH_DDCALC_FETCH_DATE: "2026-04-19"
+HEPPH_DDCALC_UPSTREAM_COMMIT: "9364c02dca3d23e75558e3238229a6fa41a8ec1a"
+
+# Mirror URL list (probe order: index 0 → 1 → 2)
+HEPPH_DDCALC_MIRROR_URLS:
+  - "https://github.com/GambitBSM/DDCalc/archive/refs/tags/v2.2.0.tar.gz"
+  - "https://gitlab.com/ddcalc/ddcalc/-/archive/v2.2.0/ddcalc-v2.2.0.tar.gz"
+  - "https://web.archive.org/web/2024/https://github.com/GambitBSM/DDCalc/archive/refs/tags/v2.2.0.tar.gz"
+
+# Build flags for Apple Silicon / modern GCC/Clang compatibility
+HEPPH_DDCALC_FFLAGS: "-std=legacy -fallow-invalid-boz -O2"
+HEPPH_DDCALC_CFLAGS: "-Wno-implicit-function-declaration"
+# LDFLAGS injected at build time by check_macos_sdk helper (see install_ddcalc.sh)

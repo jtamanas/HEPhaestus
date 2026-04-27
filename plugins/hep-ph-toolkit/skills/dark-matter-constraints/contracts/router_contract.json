@@ -1,0 +1,159 @@
+{
+  "schema_version": "router_contract/v1",
+  "router_skill": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/SKILL.md",
+
+  "output_fields": [
+    {
+      "observable": "Omega_h2",
+      "downstream": "maddm",
+      "field_name": "Omegah2",
+      "produced_by": "agent_parsed",
+      "source_artifact": "MadDM_results.txt",
+      "source_locator": {"kind": "regex", "pattern": "^Omegah2\\s*=\\s*[0-9]"},
+      "defined_in": "plugins/hep-ph-toolkit/skills/maddm/SKILL.md#reading-maddm-output",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/maddm/MadDM_results_synthetic.txt",
+      "audit_status": "verified_against_synthetic",
+      "model_class_certification": "unproven",
+      "router_table_row": "Step 4 Omega-h2 MadDM"
+    },
+    {
+      "observable": "sigma_SI_proton",
+      "downstream": "maddm",
+      "field_name": "sigma_si_proton",
+      "produced_by": "agent_parsed",
+      "source_artifact": "MadDM_results.txt (via /gamlike parse_maddm_results.py → direct.results[].sig_cm2)",
+      "source_locator": {"kind": "regex", "pattern": "^Xenon1T_2018_SI\\s*=\\s*\\["},
+      "defined_in": "plugins/hep-ph-toolkit/skills/maddm/SKILL.md#reading-maddm-output",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/maddm/MadDM_results_synthetic.txt",
+      "audit_status": "verified_against_synthetic",
+      "model_class_certification": "unproven",
+      "router_table_row": "Step 4 sigma-SI(p) MadDM"
+    },
+    {
+      "observable": "sigma_SD_proton",
+      "downstream": "maddm",
+      "field_name": "sigma_sd_proton",
+      "produced_by": "agent_parsed",
+      "source_artifact": "MadDM_results.txt (via /gamlike parse_maddm_results.py → direct.results[].sig_cm2)",
+      "source_locator": {"kind": "regex", "pattern": "^Xenon1T_2018_SD_neutron\\s*=\\s*\\["},
+      "defined_in": "plugins/hep-ph-toolkit/skills/maddm/SKILL.md#reading-maddm-output",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/maddm/MadDM_results_synthetic.txt",
+      "audit_status": "verified_against_synthetic",
+      "model_class_certification": "unproven",
+      "router_table_row": "Step 4 sigma-SD(p) MadDM"
+    },
+    {
+      "observable": "sigmav_total",
+      "downstream": "maddm",
+      "field_name": "sigmav_total",
+      "produced_by": "agent_parsed",
+      "source_artifact": "MadDM_results.txt",
+      "source_locator": {"kind": "regex", "pattern": "^sigmav_total\\s*="},
+      "defined_in": "plugins/hep-ph-toolkit/skills/maddm/SKILL.md#reading-maddm-output",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/maddm/MadDM_results_synthetic.txt",
+      "audit_status": "pending_producer_doc_fix",
+      "model_class_certification": "unproven",
+      "router_table_row": "Step 4 sigma-v(v->0) MadDM"
+    },
+    {
+      "observable": "Omega_h2",
+      "downstream": "micromegas",
+      "field_name": "omega_h2",
+      "produced_by": "stdout_regex",
+      "source_artifact": "stdout.log",
+      "source_locator": {"kind": "stdout_regex", "pattern": "Omega h\\^2\\s*=\\s*[0-9]"},
+      "defined_in": "plugins/hep-ph-toolkit/skills/micromegas/SKILL.md#reading-micromegas-output",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/micromegas/stdout_synthetic.txt",
+      "audit_status": "pending_schema",
+      "model_class_certification": "stdout_regex_brittle",
+      "router_table_row": "Step 4 Omega-h2 micrOMEGAs"
+    },
+    {
+      "observable": "sigma_SI_proton",
+      "downstream": "micromegas",
+      "field_name": "sigma_si_proton_cm2",
+      "produced_by": "summary_json",
+      "source_artifact": "summary.json (scattering/v1)",
+      "source_locator": {"kind": "schema_ref", "schema": "scattering/v1", "json_pointer": "/properties/sigma_si_proton_cm2"},
+      "defined_in": "plugins/shared/schemas/scattering.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/micromegas/summary_singletDM.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "scatter_subcommand_only",
+      "router_table_row": "Step 4 sigma-SI(p) micrOMEGAs"
+    },
+    {
+      "observable": "sigma_SD_proton",
+      "downstream": "micromegas",
+      "field_name": "sigma_sd_proton_cm2",
+      "produced_by": "summary_json",
+      "source_artifact": "summary.json (scattering/v1)",
+      "source_locator": {"kind": "schema_ref", "schema": "scattering/v1", "json_pointer": "/properties/sigma_sd_proton_cm2"},
+      "defined_in": "plugins/shared/schemas/scattering.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/micromegas/summary_singletDM.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "scatter_subcommand_only",
+      "router_table_row": "Step 4 sigma-SD(p) micrOMEGAs"
+    },
+    {
+      "observable": "sigmav_v0",
+      "downstream": "micromegas",
+      "field_name": "sigma_v_zero",
+      "produced_by": "stdout_regex",
+      "source_artifact": "stdout.log",
+      "source_locator": {"kind": "stdout_regex", "pattern": "sigma_v\\(v=0\\)\\s*=\\s*[0-9]"},
+      "defined_in": "plugins/hep-ph-toolkit/skills/micromegas/SKILL.md#reading-micromegas-output",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/micromegas/stdout_synthetic.txt",
+      "audit_status": "pending_schema",
+      "model_class_certification": "stdout_regex_brittle",
+      "router_table_row": "Step 4 sigma-v(v->0) micrOMEGAs"
+    },
+    {
+      "observable": "Omega_h2",
+      "downstream": "drake",
+      "field_name": "omega_h2",
+      "produced_by": "agent_parsed",
+      "source_artifact": "DRAKE stdout",
+      "source_locator": {"kind": "regex", "pattern": "Oh2_(nBE|cBE|fBE)\\s*=\\s*([0-9eE.+\\-]+)"},
+      "defined_in": "plugins/hep-ph-toolkit/skills/drake/SKILL.md#reading-drake-output",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/drake/stdout_drake_synthetic.txt",
+      "audit_status": "verified_against_synthetic",
+      "model_class_certification": "wolfram_unstructured",
+      "router_table_row": "Step 5 Omega-h2 DRAKE"
+    }
+  ],
+
+  "config_keys": [
+    {
+      "key": "config.maddm_path",
+      "type": "path_or_bool",
+      "writer": "/maddm-install",
+      "reader": "/dark-matter-constraints SKILL.md Step 1",
+      "audit_status": "verified_in_writer_skill"
+    },
+    {
+      "key": "config.micromegas_path",
+      "type": "path_or_bool",
+      "writer": "/micromegas-install",
+      "reader": "/dark-matter-constraints SKILL.md Step 1",
+      "audit_status": "verified_in_writer_skill"
+    },
+    {
+      "key": "config.drake_path",
+      "type": "path_or_bool",
+      "writer": "/drake-install use-path",
+      "reader": "/dark-matter-constraints SKILL.md Step 5",
+      "audit_status": "verified_in_writer_skill"
+    }
+  ],
+
+  "status_enums": [
+    {
+      "enum_name": "drake_install_detect_status",
+      "literals": ["activation_required", "configured", "found", "missing"],
+      "writer": "/drake-install detect",
+      "reader": "/dark-matter-constraints SKILL.md Step 5 Branch 2",
+      "audit_status": "pending_producer_topology_fix",
+      "notes": "drake/SKILL.md lines 84-86: detect emits only configured|found|missing; activation_required is use-path-only. Router Step 5 Branch 2 reads activation_required from detect — topology mismatch. WS-4 W4-E must reconcile."
+    }
+  ]
+}

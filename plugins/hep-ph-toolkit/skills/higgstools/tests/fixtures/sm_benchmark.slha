@@ -1,0 +1,23 @@
+# SM benchmark SLHA fixture — used by install-time chi2_SM_ref cache step.
+# Single SM-like Higgs at 125.09 GeV with unit couplings.
+Block SPINFO
+     1   SPheno
+     2   4.0.5
+Block SMINPUTS
+    1   1.27934000e+02   # alpha_em^-1(MZ)
+    2   1.16637000e-05   # G_F [GeV^-2]
+    3   1.18900000e-01   # alpha_s(MZ)
+    4   9.11876000e+01   # MZ [GeV]
+    5   4.18000000e+00   # mb(mb)
+    6   1.73100000e+02   # mt [GeV]
+    7   1.77682000e+00   # mtau [GeV]
+Block MASS
+   25   1.25090000e+02   # h SM Higgs
+Block HiggsBoundsInputHiggsCouplingsBosons
+# n_Higgs n_neutral n_charged CP coupling_WW coupling_ZZ coupling_hh coupling_AA coupling_gg
+   1   1   0   1   1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+Block HiggsBoundsInputHiggsCouplingsFermions
+# n_Higgs n_neutral n_charged CP coupling_tt coupling_bb coupling_tautau
+   1   1   0   1   1.00000000e+00   1.00000000e+00   1.00000000e+00
+DECAY  25  4.07000000e-03   # h total width
+    1.00000000e+00   2  5  -5   # h -> b bbar (placeholder)

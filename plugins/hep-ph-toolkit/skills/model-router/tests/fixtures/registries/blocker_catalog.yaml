@@ -1,0 +1,46 @@
+# Mock blocker_catalog.yaml for WS3 tests
+schema_version: 1
+catalog_date: "2026-04-26"
+
+blockers:
+  MG5_DARK_COLOR_TENSOR_WALL:
+    class: fundamental-group-theory-gap
+    severity: fatal
+    emitted_by: [madgraph, maddm]
+    triggered_by_axes: [A1, A2]
+    description: >-
+      MG5 cannot import UFO models with dark-color tensor structures (dt1 NameError).
+      SU(N)_D with N>1 dark gauge group and dark-colored matter hits this wall.
+    workaround: "Use analytic backend or hand-author amplitude."
+    follow_up: "FU-wsa-03"
+
+  LHC_TOOLING_MISSING:
+    class: missing-skill
+    severity: fatal
+    emitted_by: [model-router]
+    triggered_by_axes: [A7]
+    description: >-
+      No collider-search skill installed. Leptoquark-class models require
+      CheckMATE / MadAnalysis / ColliderBit.
+    workaround: "File install-skill issues for /checkmate, /madanalysis, /colliderbit."
+    follow_up: null
+
+  MICROMEGAS_MISSING:
+    class: missing-tool-feature
+    severity: non-fatal
+    emitted_by: [micromegas]
+    triggered_by_axes: [A1]
+    description: "micrOMEGAs CalcHEP .mdl cannot express non-SM gauge structure."
+    workaround: "Use MadDM primary chain; skip micrOMEGAs cross-check."
+    follow_up: "FU-wsg-01"
+
+  MATRIX_COVERAGE_GAP:
+    class: spec-authoring-gap
+    severity: warning
+    emitted_by: [model-router]
+    triggered_by_axes: []
+    description: >-
+      No capability rule in the matrix matched the model's axis values for
+      this prereq. The matrix may need a new rule.
+    workaround: "Add a support rule to constraints.yaml prereqs.<id>.capabilities.support."
+    follow_up: null

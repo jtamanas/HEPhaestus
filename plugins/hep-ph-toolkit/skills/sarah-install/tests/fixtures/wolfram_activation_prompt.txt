@@ -1,0 +1,18 @@
+# TODO(W1-Day1): Wolfram Engine is not installed on this machine.
+#
+# To capture the real activation-prompt fixture, run the following on a machine
+# where Wolfram Engine is installed but NOT yet activated:
+#
+#   wolframscript -code '1+1' 2>&1 > tests/fixtures/wolfram_activation_prompt.txt
+#   echo "exit_code: $?" >> tests/fixtures/wolfram_activation_prompt.txt
+#
+# Then update the ACTIVATION_PATTERNS list in scripts/_activation_parse.py
+# based on the exact strings observed in the output.
+#
+# Provisional patterns in _activation_parse.py cover likely substrings:
+#   "activate", "Wolfram ID", "not activated", "activation required",
+#   "license", "no valid password"
+#
+# Once captured, also create tests/fixtures/wolfram_ok.txt with the
+# happy-path output from an activated Wolfram Engine:
+#   wolframscript -code '1+1' 2>&1 > tests/fixtures/wolfram_ok.txt

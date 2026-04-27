@@ -1,0 +1,24 @@
+{
+  "schema_version": "1",
+  "benchmark_id": "canonical-2026",
+  "model": "singlet-doublet",
+  "parameter_point": {
+    "MS": 150,
+    "MPsi": 500,
+    "yh1": 1.0,
+    "yh2": 0.0,
+    "theta": 0
+  },
+  "expectations": {
+    "omega_h2": {
+      "central": 0.292,
+      "band": [0.290, 0.294],
+      "tolerance": "±0.002"
+    }
+  },
+  "source": {
+    "paper": "arXiv:2506.19062",
+    "section": "II Fig. 1",
+    "commit": "20616cd"
+  }
+}

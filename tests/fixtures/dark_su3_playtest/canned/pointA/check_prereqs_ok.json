@@ -1,0 +1,16 @@
+{
+  "_fixture_meta": {
+    "synthetic": true,
+    "scenario": "pointA",
+    "source": "check_prereqs.py canned output — all prereqs present"
+  },
+  "status": "ok",
+  "blockers": [],
+  "notices": [
+    {
+      "code": "SLHA_MISSING_HINT",
+      "severity": "informational",
+      "message": "No latest_slha key in config; /maddm may request spectrum at runtime"
+    }
+  ]
+}

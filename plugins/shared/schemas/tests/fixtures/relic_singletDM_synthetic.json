@@ -1,0 +1,11 @@
+{
+  "schema_version": "relic/v1",
+  "m_dm_gev": 62.5,
+  "omega_h2": 0.1198,
+  "xf": 22.4,
+  "source": "micromegas",
+  "source_run": "micromegas_runs/20260425T120000Z",
+  "cosmology": "standard_thermal",
+  "model_class": "singletDM",
+  "model": "singletDM"
+}

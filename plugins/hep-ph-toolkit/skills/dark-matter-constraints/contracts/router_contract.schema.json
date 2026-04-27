@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hep-ph-agents/schemas/router_contract/v1",
+  "title": "Router contract manifest (router_contract/v1)",
+  "description": "Self-schema for router_contract.json — enumerates every cross-tool field, config key, and status enum the /dark-matter-constraints router consumes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "router_skill", "output_fields", "config_keys", "status_enums"],
+  "properties": {
+    "schema_version": {"const": "router_contract/v1"},
+    "router_skill": {"type": "string", "minLength": 1},
+
+    "output_fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observable", "downstream", "field_name", "produced_by",
+          "source_artifact", "source_locator", "defined_in", "fixture",
+          "audit_status", "model_class_certification", "router_table_row"
+        ],
+        "properties": {
+          "observable": {"type": "string", "minLength": 1},
+          "downstream": {"enum": ["drake", "maddm", "micromegas"]},
+          "field_name": {"type": "string", "minLength": 1},
+          "produced_by": {
+            "enum": ["agent_parsed", "install_detect_json", "stdout_regex", "summary_json"]
+          },
+          "source_artifact": {"type": "string", "minLength": 1},
+          "source_locator": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "pattern"],
+                "properties": {
+                  "kind": {"const": "regex"},
+                  "pattern": {"type": "string", "minLength": 1}
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "pattern"],
+                "properties": {
+                  "kind": {"const": "stdout_regex"},
+                  "pattern": {"type": "string", "minLength": 1}
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "schema", "json_pointer"],
+                "properties": {
+                  "kind": {"const": "schema_ref"},
+                  "schema": {"type": "string", "minLength": 1},
+                  "json_pointer": {"type": "string", "minLength": 1}
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "json_pointer"],
+                "properties": {
+                  "kind": {"const": "json_pointer"},
+                  "json_pointer": {"type": "string", "minLength": 1}
+                }
+              }
+            ]
+          },
+          "defined_in": {"type": "string", "minLength": 1},
+          "fixture": {"type": "string", "minLength": 1},
+          "audit_status": {
+            "enum": [
+              "documented_but_absent",
+              "pending_producer_doc_fix",
+              "pending_producer_topology_fix",
+              "pending_schema",
+              "schema_pinned",
+              "verified_against_synthetic",
+              "verified_in_writer_skill"
+            ]
+          },
+          "model_class_certification": {
+            "enum": [
+              "scatter_subcommand_only",
+              "stdout_regex_brittle",
+              "unproven",
+              "wolfram_unstructured"
+            ]
+          },
+          "router_table_row": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+
+    "config_keys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "type", "writer", "reader", "audit_status"],
+        "properties": {
+          "key": {"type": "string", "minLength": 1},
+          "type": {"type": "string", "minLength": 1},
+          "writer": {"type": "string", "minLength": 1},
+          "reader": {"type": "string", "minLength": 1},
+          "audit_status": {
+            "enum": [
+              "documented_but_absent",
+              "pending_producer_doc_fix",
+              "pending_producer_topology_fix",
+              "pending_schema",
+              "schema_pinned",
+              "verified_against_synthetic",
+              "verified_in_writer_skill"
+            ]
+          }
+        }
+      }
+    },
+
+    "status_enums": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["enum_name", "literals", "writer", "reader", "audit_status"],
+        "properties": {
+          "enum_name": {"type": "string", "minLength": 1},
+          "literals": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "writer": {"type": "string", "minLength": 1},
+          "reader": {"type": "string", "minLength": 1},
+          "audit_status": {
+            "enum": [
+              "documented_but_absent",
+              "pending_producer_doc_fix",
+              "pending_producer_topology_fix",
+              "pending_schema",
+              "schema_pinned",
+              "verified_against_synthetic",
+              "verified_in_writer_skill"
+            ]
+          },
+          "notes": {"type": "string"}
+        }
+      }
+    }
+  }
+}

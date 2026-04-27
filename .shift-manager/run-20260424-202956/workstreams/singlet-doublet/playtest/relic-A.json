@@ -1,0 +1,34 @@
+{
+  "m_chi1": 132.692344,
+  "sin_2theta": 0.0,
+  "omega_h2": 0.292,
+  "status": "ok",
+  "benchmark": {
+    "MS": 150.0,
+    "MPsi": 500.0,
+    "yh1": 1.0,
+    "yh2": 0.0
+  },
+  "slha_path": "/Users/yianni/.local/share/hep-ph-agents/models/singlet_doublet/runs/2026-04-22T2241Z-aee644cc/SPheno.spc",
+  "maddm_results": "/Users/yianni/Projects/hep-ph-agents.worktrees/sd-A/demo_output/singlet-doublet/maddm_run/output/run_01/MadDM_results.txt",
+  "channels": {
+    "zz": 17.84,
+    "zh": 20.03,
+    "hh": 12.23,
+    "wpwm": 33.55,
+    "ddx": 0.87,
+    "uux": 0.68,
+    "ssx": 0.88,
+    "ccx": 1.59,
+    "bbx": 10.76,
+    "ttx": 0.0,
+    "emep": 0.2,
+    "mummup": 0.2,
+    "tamtap": 0.79,
+    "gg": 0.0,
+    "aa": 0.0,
+    "vevex": 0.39
+  },
+  "within_3sigma_planck": false,
+  "planck_value": 0.12
+}

@@ -1,0 +1,287 @@
+---
+name: dark-matter-constraints
+description: Meta-skill — given a BSM model and a DM question (relic density, direct detection, indirect detection, or all), routes to the right underlying tool(s) (MadDM, micrOMEGAs, DRAKE), runs them, compares results where appropriate, and returns a merged answer with caveats. Does no physics itself.
+---
+
+# /dark-matter-constraints
+
+Pure router / meta-skill. Routes to MadDM, micrOMEGAs, and/or DRAKE; compares results; returns a merged answer with caveats. Does no physics itself.
+
+---
+
+## Invocation
+
+```
+/dark-matter-constraints <model> [observables] [options]
+```
+
+| Argument | Meaning |
+|----------|---------|
+| `<model>` | Model name in `config.models` (`ufo_path` required) |
+| `[observables]` | `relic`, `direct`, `indirect`, or `all` (default: `all`) |
+| `--spec <yaml>` | Path to `spec.yaml` with `dm_candidate` |
+| `--skip-crosscheck` | Suppress micrOMEGAs cross-check |
+| `--skip-drake` | Suppress DRAKE (emits resonance-regime warning) |
+| `--drake` | Force DRAKE regardless of resonance geometry |
+
+---
+
+## Decision tree
+
+This is the canonical routing logic. Follow it exactly and in order.
+
+### Step 1 — Prerequisite check
+
+```bash
+python "$REPO_ROOT/plugins/constraints/skills/dark-matter-constraints/scripts/check_prereqs.py" \
+    --config <config_path> --model <model>
+```
+
+Parse JSON. If `status == "blocked"`, surface each blocker and stop. `SLHA_MISSING_HINT` is informational.
+
+### Step 2 — Default pipeline: MadDM (always)
+
+Invoke `/maddm` for the requested observables. Rationale: MadDM's MG5/UFO path
+handles exotic Lorentz and color structures, loop-induced annihilation channels,
+and same-sign coannihilation initial states correctly. micrOMEGAs' CalcHEP path
+can silently mishandle non-standard Lorentz/color structures without raising an
+error.
+
+Subcommand mapping:
+
+| Observable requested | `/maddm` invocation |
+|----------------------|---------------------|
+| `relic` | `generate relic_density` |
+| `direct` | `generate direct_detection` |
+| `indirect` | `generate indirect_detection` |
+| `all` | all three in sequence |
+
+Collect the MadDM output JSON (see `/maddm` SKILL.md §Reading MadDM output).
+
+### Step 3 — Spectrum analysis: detect cross-check triggers
+
+After MadDM completes (or while reading the SLHA spectrum / param_card), parse
+the particle mass spectrum to detect:
+
+**Trigger A — Coannihilation:** any BSM particle with mass within 10% of m_χ
+(i.e. |m_i − m_χ| / m_χ ≤ 0.10).
+
+**Trigger B — Near-threshold resonance (relic):** any s-channel mediator with
+mass within 10% of 2·m_χ, measured as:
+
+```
+|m_med − 2·m_χ| / (2·m_χ) ≤ 0.10
+```
+
+This 10% window is chosen to catch the broad "resonance shoulder" region where
+micrOMEGAs' coannihilation bookkeeping provides an independent cross-check on
+the velocity-expansion-based relic density. The denominator is `2·m_χ`
+throughout — this is the half-width of the resonance in units of the threshold
+momentum, not in units of the mediator mass.
+
+If either trigger fires, proceed to Step 4. Otherwise skip to Step 5.
+
+### Step 4 — Cross-check via micrOMEGAs (conditional)
+
+If `--skip-crosscheck`: emit `CROSSCHECK_SKIPPED` (recoverable) and jump to Step 5.
+If micrOMEGAs absent: emit `MICROMEGAS_MISSING` (recoverable) and continue.
+Subcommands: `relic`→`micromegas relic`, `direct`→`micromegas scatter`,
+`indirect`→`micromegas annihilate` + `micromegas indirect`.
+
+| Observable | MadDM field | micrOMEGAs field | Disagreement threshold | Action |
+|------------|-------------|------------------|------------------------|--------|
+| Ωh² | `Omegah2` | `omega_h2` | > 10% relative | **FLAG to user** |
+| σ_SI(p) | `sigma_si_proton` | `sigma_si_proton_cm2` | > 10% relative | **FLAG to user** |
+| σ_SD(p) | `sigma_sd_proton` | `sigma_sd_proton_cm2` | > 10% relative | **FLAG to user** |
+| ⟨σv⟩(v→0) | `sigmav_total` | `sigma_v_zero` | > 10% relative | **FLAG to user** |
+
+### Step 4b — Disagreement comparison (LLM-driven, calls `extract_field`)
+
+For each row in the cross-check table below, acquire both values then compute
+the relative difference in prose:
+
+1. **MadDM side.** Read `<maddm_run>/MadDM_results.txt` and extract the field
+   per `/maddm` SKILL.md "Reading MadDM output." (No helper — agent-parses
+   prose until MadDM ships a pinned JSON schema.)
+2. **micrOMEGAs side.** Run:
+       python "$REPO_ROOT/plugins/constraints/skills/dark-matter-constraints/scripts/extract_field.py" \
+           --json "<mo_run>/<file>" --key "<canonical_name>" --schema-version "<id>"
+   Use `relic.json` + `relic/v1` for Ωh², `annihilation.json` + `annihilation/v1`
+   for ⟨σv⟩(v→0), `summary.json` + `scattering/v1` for σ_SI/σ_SD. If
+   `extract_field` exits 1 with `KEY_ABSENT`, treat as null and render `—`.
+3. **Compute.** `rel_diff = abs(a - b) / max(abs(a), abs(b))` if both non-null.
+   Flag at `> 0.10` by default. Expert may override the threshold.
+4. **Skip rules.** Skip the row when the model class makes the comparison
+   meaningless: multi-component DM (sum vs per-component pairing is undefined),
+   asymmetric DM (⟨σv⟩ ≈ 0 by design — flag would be cosmetic), Majorana DM
+   with σ_SD-only schemas (null vs 0 distinction is a producer rule). Render
+   `—` and explain the skip in one sentence.
+5. You may use the MadDM value if the disagreement is less than 20%. For larger
+   disagreements, surface both values to the user.
+```
+
+This snippet is the bridge between helper-land and prose-land. It tells the LLM exactly which primitive to call (`extract_field`) and exactly which judgment is the LLM's own (skip rules, threshold, render-vs-flag).
+
+### Step 5 — DRAKE invocation (narrow-resonance)
+
+Invoke `/drake` when: (1) relic requested, (2) `|m_med − 2·m_χ| / (2·m_χ) ≤ 0.05`,
+(3) `--skip-drake` not set. If `--skip-drake` fires: emit `DRAKE_SKIPPED` (recoverable).
+
+```bash
+python "$REPO_ROOT/plugins/constraints/skills/dark-matter-constraints/scripts/detect_drake.py" \
+    --config <config_path>
+```
+
+- **Branch 1 — config.drake_path absent:** emit `DRAKE_MISSING` (recoverable) with
+  resonance warning (MadDM Ωh² may be inaccurate near 2·m_χ; install via `/drake-install`).
+- **Branch 2 — config.drake_path set:** dispatch on `status`: `"configured"` → invoke `/drake`
+  and extract `omega_h2` (lowercase):
+  `scripts/extract_field.py --json <drake_run>/relic.json --key omega_h2 --schema-version relic/v1`.
+  Flag `DRAKE_MADDM_DISAGREEMENT` if Ωh² differs > 10%. `"missing"` / `"found"` → `DRAKE_MISSING`.
+  `"activation_required"` → `DRAKE_ACTIVATION_REQUIRED` (`wolframscript --activate`).
+  `"unparseable"` → `DRAKE_UNAVAILABLE`. Do not abort on any recoverable outcome.
+
+---
+
+## Tool failure modes (required reading)
+
+This skill deliberately does not hide these from the user. Each tool has distinct
+failure modes that affect when you should trust its results.
+
+### MadDM (primary)
+
+- Correctly handles exotic Lorentz/color structures via the MG5/UFO path.
+- Uses `generate relic_density` to assemble the full coannihilation set
+  automatically. A bare process generation (`generate chi chi~ > all all`) drops
+  coannihilation channels — the high-level entry is mandatory.
+- Does NOT solve the coupled Boltzmann equation. The velocity expansion
+  `⟨σv⟩ = a + b·v²` is used; fails near narrow s-channel resonances and when
+  Sommerfeld enhancement is significant.
+- Loop-induced DD cross-sections require `loop = ON` in `maddm_card.dat` (off
+  by default); results at tree level may miss blind-spot cancellations.
+
+### micrOMEGAs (cross-check only)
+
+- CalcHEP path can silently mishandle non-standard Lorentz/color structures.
+  Results for exotic mediators (higher-spin, colored DM, etc.) should be
+  treated with skepticism without independent validation.
+- Pre-wired experimental likelihood library and mature coannihilation
+  bookkeeping are the primary reasons to use it as a cross-check.
+- Same velocity-expansion limitation as MadDM for resonance regimes.
+
+### DRAKE (narrow-resonance only)
+
+- Solves the coupled Boltzmann equation numerically. Does not use the velocity
+  expansion — the correct approach near resonances and for Sommerfeld enhancement.
+- Requires user-provided Wolfram cross-section functions `sv[s_]` and `gam[x_]`.
+  Does not import cross sections from MadDM or micrOMEGAs output automatically.
+- Not a dependency of MadDM or micrOMEGAs; completely independent computation path.
+- VRES and SE pre-implemented models (shipped with DRAKE) cover the most common
+  resonance/Sommerfeld cases. Verify that the shipped model matches your BSM
+  spectrum before using.
+
+---
+
+## Merged output format
+
+After all invoked skills complete, emit a single merged report:
+
+```
+## Dark matter constraints: <model>
+
+### Tools invoked
+- MadDM [maddm_run_dir]
+- micrOMEGAs [micromegas_run_dir]  (cross-check: coannihilation/near-resonance trigger)
+- DRAKE [drake_run_dir]            (narrow-resonance regime)
+
+### Results
+| Observable      | MadDM  | micrOMEGAs | DRAKE  | Status    |
+|-----------------|--------|------------|--------|-----------|
+| Ωh²             | ...    | ...        | ...    | OK / FLAG |
+| σ_SI(p) [cm²]  | ...    | ...        | —      | OK / FLAG |
+| σ_SD(p) [cm²]  | ...    | ...        | —      | OK / FLAG |
+| ⟨σv⟩ [cm³/s]   | ...    | ...        | —      | OK        |
+
+Planck 2018 target: Ωh² = 0.1200 ± 0.0012
+(Planck Collaboration 2018, arXiv:1807.06209, Table 2, TT,TE,EE+lowE+lensing)
+
+### Flags
+(none — no significant disagreement detected above threshold)
+
+### Caveats
+[List any DRAKE_MISSING, DRAKE_UNAVAILABLE, MICROMEGAS_MISSING, or --skip-* warnings here]
+```
+
+Omit columns for tools that were not invoked. Replace `—` with the value if
+the tool was run for that observable. If a FLAG row is present, the word
+"ADJUDICATION REQUIRED" must appear prominently before the caveats section.
+
+---
+
+## Blocker / notice codes
+
+| Code | Mode | Trigger | User instruction |
+|------|------|---------|-----------------|
+| `MADDM_MISSING` | fatal | MadDM not found in MG5 or `config.maddm_path` absent | Run `/maddm-install` |
+| `UFO_MISSING` | fatal | `config.models[<model>].ufo_path` absent | Run `/sarah-build` |
+| `SLHA_MISSING` | fatal | `/maddm` runtime fails with a spectrum-related error and `latest_slha` is absent | Run `/spheno-build` |
+| `MICROMEGAS_MISSING` | recoverable | micrOMEGAs not installed; cross-check triggered but skipped | Run `/micromegas-install`; cross-check results unavailable |
+| `CROSSCHECK_SKIPPED` | recoverable | `--skip-crosscheck` passed by user; Step 4 bypassed | Cross-check results unavailable; rerun without flag to enable |
+| `DRAKE_MISSING` | recoverable | `config.drake_path` absent (Branch 1), or `/drake-install detect` returns `"missing"` / `"found"` (Branch 2) | Run `/drake-install`; MadDM Ωh² may be inaccurate |
+| `DRAKE_UNAVAILABLE` | recoverable | `config.drake_path` set (Branch 2) but `/drake-install detect` invocation failed or returned unparseable output | Run `/drake-install`; resonance-regime accuracy warning applies |
+| `DRAKE_ACTIVATION_REQUIRED` | recoverable | Wolfram Engine not activated | Run `wolframscript --activate`; DRAKE skipped |
+| `DRAKE_SKIPPED` | recoverable | `--skip-drake` passed by user; narrow-resonance regime detected but DRAKE bypassed | Resonance-regime accuracy warning applies; rerun without flag to enable DRAKE |
+| `CROSSCHECK_FLAG` | recoverable | MadDM vs micrOMEGAs > 20% on any observable | Consider adjudicating if difference is large |
+| `DRAKE_MADDM_DISAGREEMENT` | recoverable | DRAKE vs MadDM Ωh² > 10% | User must adjudicate |
+
+---
+
+## Config keys read (not written)
+
+> **MIRROR — see `contracts/router_contract.json` `config_keys` for canonical contract.**
+
+This skill writes no config keys — it is a router. It reads:
+
+| Key | Source skill |
+|-----|-------------|
+| `config.models[<model>].ufo_path` | `/sarah-build` |
+| `config.models[<model>].latest_slha` | `/spheno-build` (required only when `/maddm` itself requires it) |
+| `config.models[<model>].spec_yaml` | User-authored |
+| `config.micromegas_path` | `/micromegas-install` |
+| `config.maddm_path` | `/maddm-install` |
+| `config.drake_path` | `/drake-install` |
+
+---
+
+## Cross-skill dependencies
+
+| Skill | Role | Required? |
+|-------|------|-----------|
+| `/maddm` | Primary DM observable driver | Always (fatal if absent) |
+| `/micromegas` | Cross-check for coannihilation / near-resonance spectra | Conditional (Step 4) |
+| `/drake` | Narrow-resonance relic density | Conditional (Step 5) |
+| `/maddm-install` | MadDM install / detect | Prerequisite check |
+| `/micromegas-install` | micrOMEGAs install / detect | Prerequisite check (Step 4) |
+| `/drake-install` | DRAKE availability check | Step 5 availability check (optional; `config.drake_path` checked first) |
+| `/sarah-build` | UFO model generation | Prerequisite (provides `ufo_path`) |
+| `/spheno-build` | SLHA spectrum generation | Conditional prerequisite (provides `latest_slha` when needed by `/maddm`) |
+
+---
+
+## What this skill does NOT do
+
+- It does not reimplement freeze-out, relic density integrals, cross-section
+  formulae, or experimental bound comparisons in Python.
+- It does not interpolate between tool results or silently discard disagreements.
+- It does not invoke micrOMEGAs or DRAKE routinely — only when the spectrum
+  analysis in Step 3/Step 5 triggers them.
+- It does not evaluate whether kinetic decoupling is early, whether the velocity
+  expansion converges, or any other physics criterion. Resonance geometry is
+  used as a proxy for regime detection; anything more requires the user to set
+  `--drake` explicitly.
+- It does not generate plots or exclusion contours — hand off to `/hep-plotting`
+  after collecting the merged JSON output.
+- The `compare_dm` comparison logic (Step 4b) is deliberately NOT a deterministic
+  helper. Model-class skip rules (multi-component DM, asymmetric DM, Majorana null
+  σ_SD), threshold judgment, and rel-diff rendering are LLM-owned per the routing
+  lens. Only `extract_field` is a deterministic primitive called from within Step 4b.

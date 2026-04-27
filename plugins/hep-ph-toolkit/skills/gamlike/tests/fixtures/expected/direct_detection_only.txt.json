@@ -1,0 +1,81 @@
+{
+  "schema_version": "gamlike/v1",
+  "_meta": {
+    "source_file": "<SCRUBBED>",
+    "parser_version": "0.1.0",
+    "maddm_version": "3.2",
+    "parsed_at": "<SCRUBBED>"
+  },
+  "relic": {
+    "present": false,
+    "Omegah2": null,
+    "Omegah_Planck": null,
+    "xsi": null,
+    "x_f": null,
+    "sigmav_xf": null,
+    "initial_states": [],
+    "channels": {},
+    "channels_sum_pct": null
+  },
+  "direct": {
+    "present": true,
+    "results": [
+      {
+        "name": "Xenon1T_2018_SI",
+        "experiment_label": "XENON1T 2018 (SI)",
+        "sig_cm2": 1.23e-45,
+        "lim_cm2": 3.4e-46
+      },
+      {
+        "name": "Xenon1T_2018_SD_neutron",
+        "experiment_label": "XENON1T 2018 (SD)",
+        "sig_cm2": 5.5e-42,
+        "lim_cm2": 5.67e-42
+      },
+      {
+        "name": "LUX_2016_SI",
+        "experiment_label": "LUX 2016 (SI)",
+        "sig_cm2": 2e-45,
+        "lim_cm2": 1.2e-46
+      }
+    ]
+  },
+  "indirect": {
+    "present": false,
+    "sigmav_method": null,
+    "continuum": {
+      "present": false,
+      "channels": {}
+    },
+    "lines": {
+      "present": false,
+      "channels": {}
+    },
+    "global": {
+      "flux_method": null,
+      "Total_xsec": null,
+      "TotalSM_xsec": null,
+      "Fermi_Likelihood": null,
+      "Fermi_pvalue": null,
+      "Fermi_Likelihood_Thermal": null,
+      "Fermi_pvalue_Thermal": null,
+      "thermal_emitted": false
+    }
+  },
+  "spectral": {
+    "present": false,
+    "experiments": []
+  },
+  "fluxes_source": {
+    "present": false,
+    "method": null,
+    "fluxes": {
+      "neutrinos_e": null,
+      "neutrinos_mu": null,
+      "neutrinos_tau": null,
+      "gammas": null,
+      "positrons": null
+    }
+  },
+  "warnings": []
+}

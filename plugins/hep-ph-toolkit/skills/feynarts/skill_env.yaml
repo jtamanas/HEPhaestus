@@ -1,0 +1,19 @@
+# feynarts skill environment configuration
+
+# Diagram count cap: abort before CreateFeynAmp if Length[ins] exceeds this.
+# Chosen conservatively for v1; will be raised in v1.1 if paper benchmarks need it.
+# Override at runtime with FEYNARTS_DIAGRAM_CAP env var.
+FEYNARTS_DIAGRAM_CAP: 2000
+
+# Amplitude file size cap in megabytes: abort after Put if FeynAmpList.m exceeds this.
+# FeynAmpList.m remains on disk for inspection; no cache key written on cap hit.
+# Override at runtime with FEYNARTS_AMP_SIZE_CAP_MB env var.
+FEYNARTS_AMP_SIZE_CAP_MB: 200
+
+# Wall-clock timeout in seconds for the wolframscript subprocess (SIGKILL on expiry).
+# Override at runtime with FEYNARTS_DEFAULT_TIMEOUT_S env var.
+FEYNARTS_DEFAULT_TIMEOUT_S: 600
+
+# Canonicalizer version: increment when the cache-key hash function changes.
+# This invalidates all existing cache entries.
+canonicalizer_version: 1

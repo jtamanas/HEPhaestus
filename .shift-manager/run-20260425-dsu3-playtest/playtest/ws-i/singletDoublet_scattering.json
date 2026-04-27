@@ -1,0 +1,14 @@
+{
+  "schema_version": "scattering/v1",
+  "m_dm_gev": 150.0,
+  "sigma_si_proton_cm2": 5.0e-46,
+  "sigma_si_neutron_cm2": 5.0e-46,
+  "sigma_sd_proton_cm2": 0.0,
+  "sigma_sd_neutron_cm2": 0.0,
+  "source": "micromegas",
+  "source_run": "ws-i-playtest-synthetic-singletDoublet-MS150-MPsi500-yh1eq1",
+  "halo": null,
+  "nucleon_form_factors": {
+    "preset": "default_2018"
+  }
+}

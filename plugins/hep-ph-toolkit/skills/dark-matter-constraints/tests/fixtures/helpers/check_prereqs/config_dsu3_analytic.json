@@ -1,0 +1,11 @@
+{
+  "maddm_path": "__TMPDIR__/fake_maddm",
+  "micromegas_path": "__TMPDIR__/fake_micromegas",
+  "drake_path": "__TMPDIR__/fake_drake",
+  "models": {
+    "dark-su3": {
+      "ufo_path": "/nonexistent/dark_su3_UFO",
+      "spec_yaml": "__SPEC_YAML__"
+    }
+  }
+}

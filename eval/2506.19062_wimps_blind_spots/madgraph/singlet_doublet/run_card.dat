@@ -1,0 +1,54 @@
+#*********************************************************************
+#* MadGraph5 run_card for DM cross-section calculations              *
+#*                                                                   *
+#* For DM-nucleon scattering, we compute the matrix element at       *
+#* threshold (non-relativistic limit). For annihilation, we scan     *
+#* over center-of-mass energies near 2*m_chi.                        *
+#*********************************************************************
+
+#*********************************************************************
+# Tag name for the run (one word)
+#*********************************************************************
+  SD_benchmark  = run_tag
+
+#*********************************************************************
+# Number of events and calculation parameters
+#*********************************************************************
+  10000  = nevents       ! Number of unweighted events requested
+  0      = iseed         ! rnd seed (0=assigned automatically)
+
+#*********************************************************************
+# Collider type and target
+#*********************************************************************
+# For DM-nucleon: use fixed-target mode
+# For DM annihilation: use DM pair in COM frame
+  0      = lpp1          ! 0 = no PDF (fixed particle)
+  0      = lpp2          ! 0 = no PDF (fixed particle)
+  500.0  = ebeam1        ! beam 1 energy in GeV
+  500.0  = ebeam2        ! beam 2 energy in GeV
+
+#*********************************************************************
+# Renormalization and factorization scales
+#*********************************************************************
+  F      = fixed_ren_scale   ! if .true. use fixed ren scale
+  F      = fixed_fac_scale   ! if .true. use fixed fac scale
+  91.188 = scale              ! central scale value
+  91.188 = dsqrt_q2fact1      ! factorization scale
+  91.188 = dsqrt_q2fact2      ! factorization scale
+
+#*********************************************************************
+# Matching / Merging
+#*********************************************************************
+  0      = ickkw          ! 0 = no matching
+
+#*********************************************************************
+# Cuts
+#*********************************************************************
+# Minimal cuts for DM processes
+  0.0    = ptj            ! min jet pT
+  0.0    = etaj           ! max jet |eta|
+  0.0    = ptl            ! min lepton pT
+  0.0    = etal           ! max lepton |eta|
+  0.0    = drjj           ! min deltaR(j,j)
+  0.0    = drll           ! min deltaR(l,l)
+  0.0    = drlj           ! min deltaR(l,j)

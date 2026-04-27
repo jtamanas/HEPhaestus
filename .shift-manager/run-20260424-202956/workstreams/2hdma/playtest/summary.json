@@ -1,0 +1,14 @@
+{
+  "model": "2hdm-a",
+  "run_at": "2026-04-25T01:43:54Z",
+  "ran": ["relic"],
+  "relic_approx": false,
+  "model_source": "hand_crafted_sarah_model",
+  "model_fixture": "plugins/hep-ph-demo/skills/2hdm-a/fixtures/sarah_model/",
+  "skipped_constraints": [
+    {"id": "dd", "reason": "blocked on /feynarts, /formcalc, /package-x, /ddcalc (loop-only DD; tree SI is CP-forbidden)"},
+    {"id": "id", "reason": "blocked on /gamlike"}
+  ],
+  "artifacts_dir": "./demo_output/2hdm-a/",
+  "headline": "Relic computed at off-resonance benchmark (Mchi=100, Ma=400, gchi=1, tan_beta=10): Omega h^2 = 10.494. Dominant channel: chi chibar -> W+H- (49.6%) + W-H+ (49.6%), not bbx (0.65%). Ωh^2 outside synthesis band [9.95,10.36] by 3.4%; patcher_regex_bug prevents correct DMSECTOR/PHASES/ZAMIX initialization on fresh MG5 cards — manually corrected. Model source: hand-crafted SARAH model (renderer backport pending). DD/ID skipped."
+}

@@ -1,0 +1,9 @@
+{
+  "maddm_path": "__TMPDIR__/fake_maddm",
+  "micromegas_path": "__TMPDIR__/fake_micromegas",
+  "models": {
+    "singletDM": {
+      "ufo_path": "__TMPDIR__/singletDM_UFO"
+    }
+  }
+}

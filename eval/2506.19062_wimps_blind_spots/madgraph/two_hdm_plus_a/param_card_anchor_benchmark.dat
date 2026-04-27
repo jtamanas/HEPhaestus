@@ -1,0 +1,57 @@
+######################################################################
+## MadGraph5 param_card — 2HDM+a anchor benchmark
+## UFO: DMPseudo_2HDM (Bauer:2017ota / LHC DM WG Pseudoscalar_2HDM)
+##
+## Benchmark inputs:
+##   m_A    = 800  GeV   -> MA2 (heavy CP-odd, PDG 36), MH2 (heavy scalar, PDG 35)
+##   m_a    = 50   GeV   -> MA1 (light pseudoscalar mass eigenstate, PDG 28)
+##   m_chi  = 30   GeV   -> MCHI (Dirac DM, PDG 1000022)
+##   theta  = 0.1  rad   -> sinp = sin(0.1) = 0.09983341664682815
+##   g_chi  = 0.5        -> yxd (DM Yukawa coupling)
+##   tan_β  = 1.0        -> tanbeta
+##   lambda3 = 3.0 (SM-derived default), lambda'_1 = lambda'_2 = 0
+######################################################################
+
+Block MASS
+   25  1.252500e+02  # MH1  SM-like Higgs
+   35  8.000000e+02  # MH2  heavy CP-even H
+   36  8.000000e+02  # MA2  heavy CP-odd A  (= m_A input)
+   37  8.000000e+02  # MHC  charged Higgs H±
+   28  5.000000e+01  # MA1  light pseudoscalar a  (= m_a input)
+   1000022  3.000000e+01  # MCHI  DM mass  (= m_chi input)
+   23  9.118760e+01  # MZ
+   24  8.037700e+01  # MW
+    6  1.726900e+02  # MT
+    5  4.180000e+00  # MB
+   15  1.777000e+00  # MTA
+
+Block DMINPUTS
+   1  5.000000e-01  # yxd   DM Yukawa = g_chi
+   2  9.983341664682815e-02  # sinp  sin(theta=0.1 rad)
+
+Block HIGGSINPUTS
+   1  1.000000e+00  # tanbeta  tan(beta)
+   2  3.000000e+00  # lam3     trilinear lambda_3
+   3  0.000000e+00  # lamP1    portal lambda'_1
+   4  0.000000e+00  # lamP2    portal lambda'_2
+
+Block SMINPUTS
+   1  1.279000e+02  # aEWM1  1/alpha_em
+   2  1.166379e-05  # Gf     Fermi constant [GeV^-2]
+   3  1.184000e-01  # aS     alpha_s(MZ)
+
+Block YUKAWA
+    5  4.180000e+00  # ymb
+    6  1.726900e+02  # ymt
+   15  1.777000e+00  # ymtau
+
+Block DECAY
+   25  4.070000e-03  # WH1   SM Higgs width
+   35  AUTO           # WH2
+   36  AUTO           # WA2
+   37  AUTO           # WHC
+   28  AUTO           # WA1
+   1000022  0.000000e+00  # WCHI  stable DM
+   23  2.495200e+00  # WZ
+   24  2.085000e+00  # WW
+    6  1.420000e+00  # WT

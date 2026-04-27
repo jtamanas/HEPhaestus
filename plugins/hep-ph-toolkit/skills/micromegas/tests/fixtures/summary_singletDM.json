@@ -1,0 +1,14 @@
+{
+  "halo": null,
+  "m_dm_gev": 100.0,
+  "nucleon_form_factors": {
+    "preset": "default_2018"
+  },
+  "schema_version": "scattering/v1",
+  "sigma_sd_neutron_cm2": 0.0,
+  "sigma_sd_proton_cm2": 0.0,
+  "sigma_si_neutron_cm2": 1.1e-46,
+  "sigma_si_proton_cm2": 1.13e-46,
+  "source": "micromegas",
+  "source_run": "micromegas-fixture"
+}

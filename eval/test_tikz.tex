@@ -1,0 +1,45 @@
+% Minimal test for hephaestus-tikz.sty
+% Compile with: lualatex test_tikz.tex
+\documentclass[border=10pt]{standalone}
+
+% Add styles/ directory to the TeX search path
+\makeatletter
+\def\input@path{{../styles/}}
+\makeatother
+
+\usepackage{hephaestus-tikz}
+
+\begin{document}
+
+\begin{tikzpicture}
+\begin{feynman}
+  \vertex (i1) at (-3, 1.5);
+  \vertex (i2) at (-3, -1.5);
+  \vertex [hep vertex] (a) at (0, 0);
+  \vertex [hep vertex] (b) at (3, 0);
+  \vertex (f1) at (6, 1.5);
+  \vertex (f2) at (6, -1.5);
+
+  \diagram* {
+    (i1) -- [fermion] (a),
+    (i2) -- [anti fermion] (a),
+    (a)  -- [photon, edge label={\color{hepAccent}$\gamma/Z$}] (b),
+    (b)  -- [fermion] (f1),
+    (b)  -- [anti fermion] (f2),
+  };
+
+  % External leg labels — hep label style (italic, gray, 2pt offset)
+  \node [hep label, left=3pt of i1] {$e^-$};
+  \node [hep label, left=3pt of i2] {$e^+$};
+  \node [hep label, right=3pt of f1] {$\mu^-$};
+  \node [hep label, right=3pt of f2] {$\mu^+$};
+
+  % Propagator label — accent color
+  \node [hep propagator label, above=5pt of a] {QED};
+
+  % Subsidiary annotation
+  \node [hep annotation, below=12pt of b] {$\sqrt{s} = 91.2\;\mathrm{GeV}$};
+\end{feynman}
+\end{tikzpicture}
+
+\end{document}

@@ -1,0 +1,477 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model",
+    "gauge_groups",
+    "global_symmetries",
+    "fermions",
+    "scalars",
+    "parameters",
+    "lagrangian",
+    "ewsb",
+    "particles"
+  ],
+  "properties": {
+    "model": { "$ref": "#/$defs/Model" },
+    "gauge_groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/GaugeGroup" }
+    },
+    "global_symmetries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/GlobalSym" }
+    },
+    "fermions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Fermion" }
+    },
+    "scalars": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Scalar" }
+    },
+    "parameters": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Param" }
+    },
+    "lagrangian": { "$ref": "#/$defs/Lagrangian" },
+    "ewsb": { "$ref": "#/$defs/EWSB" },
+    "particles": { "$ref": "#/$defs/Particles" },
+    "sarah_raw": { "type": "string" }
+  },
+  "$defs": {
+    "Model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "latex", "authors", "date"],
+      "properties": {
+        "name": { "type": "string", "minLength": 2 },
+        "slug": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,30}$" },
+        "latex": { "type": "string" },
+        "authors": { "type": "string" },
+        "date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        }
+      }
+    },
+    "GaugeGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol", "type", "label", "coupling", "ssb"],
+      "properties": {
+        "symbol": { "type": "string" },
+        "type": {
+          "type": "string",
+          "pattern": "^(U\\(1\\)|SU\\(2\\)|SU\\(3\\)|SU\\([0-9]+\\))$"
+        },
+        "label": { "type": "string" },
+        "coupling": { "type": "string" },
+        "ssb": { "type": "boolean" },
+        "discrete_charges": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "boson_name": { "type": "string" },
+        "ghost_name": { "type": "string" }
+      }
+    },
+    "GlobalSym": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "pattern": "^(Z\\([0-9]+\\)|U\\(1\\))$"
+        },
+        "name": { "type": "string" }
+      }
+    },
+    "Charge": { "type": ["number", "string"] },
+    "Components": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    },
+    "Fermion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "generations", "components", "reps"],
+      "properties": {
+        "name": { "type": "string" },
+        "generations": { "type": "integer", "minimum": 1 },
+        "components": { "$ref": "#/$defs/Components" },
+        "reps": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/Charge" }
+        },
+        "discrete_charges": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "dirac_partner": { "type": "string" }
+      }
+    },
+    "Scalar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "generations", "components", "reps", "real"],
+      "properties": {
+        "name": { "type": "string" },
+        "generations": { "type": "integer", "minimum": 1 },
+        "components": { "$ref": "#/$defs/Components" },
+        "reps": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/Charge" }
+        },
+        "real": { "type": "boolean" },
+        "vev": { "type": "string" },
+        "discrete_charges": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        }
+      }
+    },
+    "Param": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "latex": { "type": "string" },
+        "real": { "type": "boolean" },
+        "shape": {
+          "type": "string",
+          "pattern": "^(scalar|matrix:[0-9]+x[0-9]+|vector:[0-9]+)$"
+        },
+        "dependence_num": { "type": "string" },
+        "dependence": { "type": "string" },
+        "dependence_spheno": { "type": "string" },
+        "output_name": { "type": "string" },
+        "les_houches": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "prefixItems": [
+                { "type": "string" },
+                { "type": "integer" }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "positive": { "type": "boolean" }
+      }
+    },
+    "LagTerm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["term"],
+      "properties": {
+        "term": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "Lagrangian": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hc", "no_hc"],
+      "properties": {
+        "hc": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/LagTerm" }
+        },
+        "no_hc": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/LagTerm" }
+        }
+      }
+    },
+    "Vev": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "vev", "goldstone", "physical"],
+      "properties": {
+        "component": { "type": "string" },
+        "vev": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "number" }
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "goldstone": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "number" }
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "physical": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "number" }
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "GaugeMix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rotate", "to", "matrix"],
+      "properties": {
+        "rotate": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "to": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "matrix": { "type": "string" }
+      }
+    },
+    "MixingOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "mixing"],
+      "properties": {
+        "name": { "type": "string" },
+        "mixing": { "type": "string" }
+      }
+    },
+    "MixingDirac": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "lh", "rh", "outputs"],
+      "properties": {
+        "kind": { "const": "dirac" },
+        "stage": {
+          "type": "string",
+          "enum": ["GaugeES", "EWSB"]
+        },
+        "lh": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rh": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lh", "rh"],
+          "properties": {
+            "lh": { "$ref": "#/$defs/MixingOutput" },
+            "rh": { "$ref": "#/$defs/MixingOutput" }
+          }
+        }
+      }
+    },
+    "MixingMajorana": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "weyls", "output"],
+      "properties": {
+        "kind": { "const": "majorana" },
+        "stage": {
+          "type": "string",
+          "enum": ["GaugeES", "EWSB"]
+        },
+        "weyls": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "output": { "$ref": "#/$defs/MixingOutput" }
+      }
+    },
+    "MixingScalar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "weyls", "output"],
+      "properties": {
+        "kind": { "const": "scalar" },
+        "stage": {
+          "type": "string",
+          "enum": ["GaugeES", "EWSB"]
+        },
+        "weyls": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "output": { "$ref": "#/$defs/MixingOutput" }
+      }
+    },
+    "Mixing": {
+      "oneOf": [
+        { "$ref": "#/$defs/MixingDirac" },
+        { "$ref": "#/$defs/MixingMajorana" },
+        { "$ref": "#/$defs/MixingScalar" }
+      ]
+    },
+    "Phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "phase"],
+      "properties": {
+        "field": { "type": "string" },
+        "phase": { "type": "string" }
+      }
+    },
+    "SpinorComponent": {
+      "oneOf": [
+        { "type": "string" },
+        { "const": 0 }
+      ]
+    },
+    "Spinor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "components"],
+      "properties": {
+        "name": { "type": "string" },
+        "components": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SpinorComponent" },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "EWSB": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vevs",
+        "gauge_sector",
+        "mixing_sector",
+        "phases",
+        "dirac_spinors_pre_ewsb",
+        "dirac_spinors_post_ewsb"
+      ],
+      "properties": {
+        "vevs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Vev" }
+        },
+        "gauge_sector": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/GaugeMix" }
+        },
+        "mixing_sector": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Mixing" }
+        },
+        "phases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Phase" }
+        },
+        "dirac_spinors_pre_ewsb": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Spinor" }
+        },
+        "dirac_spinors_post_ewsb": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Spinor" }
+        },
+        "real_scalars": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "Mass": {
+      "oneOf": [
+        { "const": "Automatic" },
+        { "const": "LesHouches" },
+        { "type": "integer" },
+        { "type": "array", "items": { "type": "integer" } }
+      ]
+    },
+    "Width": {
+      "oneOf": [
+        { "const": "Automatic" },
+        { "type": "integer" },
+        { "type": "array", "items": { "type": "integer" } }
+      ]
+    },
+    "Particle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "latex": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "output_name": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "pdg": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "pdg_ix": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "mass": { "$ref": "#/$defs/Mass" },
+        "width": { "$ref": "#/$defs/Width" },
+        "feynarts_nr": { "type": "integer" },
+        "electric_charge": { "$ref": "#/$defs/Charge" },
+        "goldstone": { "type": "string" }
+      }
+    },
+    "Particles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gauge_es", "ewsb", "weyl_intermediate"],
+      "properties": {
+        "gauge_es": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Particle" }
+        },
+        "ewsb": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Particle" }
+        },
+        "weyl_intermediate": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Particle" }
+        }
+      }
+    }
+  }
+}

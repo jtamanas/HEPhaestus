@@ -1,0 +1,19 @@
+# Dark SU(3) spectrum spec — Point B (off-resonance control, trigger-negative)
+# SYNTHETIC FIXTURE — not a real physics run. Values chosen to exercise
+# trigger-negative routing (no Step 3/4/5 invocation). See fixture README.
+#
+# Routing expectations (documented for human reviewers):
+#   - delta/(2*m_chi) = |230 - 200| / 200 = 0.15  -> OUTSIDE 5% Step-5 window
+#   - no coannihilator partner -> Step-3 Trigger A does NOT fire
+#   - Expected: Step 1 -> Step 2 (MadDM only) -> stop
+#   - Gamma_med/m_med = 0.005 (same as Point A; pure mass offset is the variable)
+
+dm_candidate:
+  name: "chi"
+  m_chi: 100
+  m_med: 230
+  # no partner field — Point B has no coannihilator
+  width_over_mass: 0.005
+
+model: "darksu3"
+observables: "all"

@@ -1,0 +1,53 @@
+# Applies to: DRAKE_v1.0/test/test.wls
+# Discovered by: ws-h-impl-3 (dsu3-pt2/ws-h-r1-20260425)
+# Problem: Stock test.wls omits $Path setup before <<DRAKE` and uses bare
+#          symbol names (model, parameters, settings) that get shadowed by
+#          DRAKE`Private` after the package loads, causing Get[] calls to fail
+#          with Get::noopen.
+# Fix:
+#   1. AppendTo[$Path,".."] and AppendTo[$Path,"../src/"] BEFORE <<DRAKE`
+#      so the package loader can find DRAKE.wl and its internal dependencies.
+#   2. Assign $ScriptCommandLine values to Global`model, Global`parameters,
+#      Global`settings (explicit context) so they remain accessible after
+#      DRAKE` package loads and introduces its own Private` context.
+# Verified: Oh2_nBE = 0.12052366691892884, runtime 7.6s, exit 0 (WIMP benchmark)
+#
+--- a/DRAKE_v1.0/test/test.wls
++++ b/DRAKE_v1.0/test/test.wls
+@@ -9,19 +9,21 @@
+
+ (* For Wolfram Engine user: read model and paramter file name from the terminal command line.*)
+ If[Length[$ScriptCommandLine]==4,
++AppendTo[$Path, ".."];     (* ws-h-impl-3: add DRAKE_v1.0/ to $Path so <<DRAKE` resolves *)
++AppendTo[$Path, "../src/"]; (* ws-h-impl-3: add DRAKE_v1.0/src/ to $Path so DRAKE.wl's internal Get calls resolve *)
+ <<DRAKE`;
+ Print["*************************"];
+ Print[$ScriptCommandLine[[4]],$ScriptCommandLine[[3]],$ScriptCommandLine[[2]]];
+-  settings   = $ScriptCommandLine[[4]];
+-  parameters = $ScriptCommandLine[[3]];
+-  model      = $ScriptCommandLine[[2]];
++  Global`settings   = $ScriptCommandLine[[4]];  (* ws-h-impl-3: use explicit context to avoid DRAKE`Private` shadowing *)
++  Global`parameters = $ScriptCommandLine[[3]];
++  Global`model      = $ScriptCommandLine[[2]];
+ SetDirectory[".."];  (* if not called from the ./test/ directory this needs to be modified to direct to DRAKE main directory *)
+ ];
+
+
+-Get["./models/"<>model<>"/"<>model<>".wl"];
+-Get["./test/"<>parameters<>".wl"];
+-Get["./test/"<>settings<>".wl"];
++Get["./models/"<>Global`model<>"/"<>Global`model<>".wl"];   (* ws-h-impl-3: explicit Global` context to bypass DRAKE`Private` shadow *)
++Get["./test/"<>Global`parameters<>".wl"];
++Get["./test/"<>Global`settings<>".wl"];
+ (* import the degrees of freedom *)
+ dofimport[dof];
+
+@@ -79,7 +81,7 @@
+ (* comparison with preset results *)
+ calcualtedresult = {{"calculated", Oh2nBE, Oh2cBE, Oh2fBE, runtime0}};
+ (* load results from the test run *)
+-Get["./test/test_res_bm_" <> model <> ".wl"];
++Get["./test/test_res_bm_" <> Global`model <> ".wl"];  (* ws-h-impl-3: explicit Global` context *)
+ presetresult = {{"precomputed", Oh2nBE, Oh2cBE, Oh2fBE, runtime}};
+ (* compare *)
+ Print["**************************************"];

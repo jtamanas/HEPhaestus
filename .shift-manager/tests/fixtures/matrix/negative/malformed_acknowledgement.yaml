@@ -1,0 +1,36 @@
+# Negative fixture: chain_overrides has a matrix_acknowledgement where
+# accepted_blockers is a string instead of a list — schema must reject this.
+# Used by test_capability_matrix_schema.py (Blocker 7).
+schema_version: 2
+prereqs:
+  madgraph:
+    status: exists
+    hours:
+      cold: [0.25, 0.5]
+      cached: [0.08, 0.17]
+constraints:
+  relic:
+    chain: [madgraph]
+    default_time:
+      cold: [1.0, 2.0]
+      cached: [0.33, 0.67]
+models:
+  test-model:
+    display:
+      title: "Test Model"
+      hook: "Test"
+    dm_candidates:
+      - {name: chi, spin: "1/2", notes: "test"}
+    plot_axes:
+      x: {symbol: "m", range: [100, 1000], units: "GeV", scale: linear}
+      y: {symbol: "g", range: [0, 1], scale: linear}
+    multi_component: false
+    chain_overrides:
+      relic:
+        chain: [analytic_backend]
+        reason: "Analytic override"
+        matrix_acknowledgement:
+          # INVALID: accepted_blockers must be a list, not a string
+          accepted_blockers: "MG5_DARK_COLOR_TENSOR_WALL"
+          authority: "test"
+          last_audited: "2026-04-26"

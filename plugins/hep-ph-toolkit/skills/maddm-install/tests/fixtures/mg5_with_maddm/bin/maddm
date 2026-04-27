@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Fake MadDM launcher shim.
+echo "MadDM launcher stub"

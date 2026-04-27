@@ -1,0 +1,73 @@
+tools:
+  madgraph:
+    version: "3.5.6"
+    source: "https://launchpad.net/mg5amcnlo/3.0/3.5.x/+download/MG5_aMC_v3.5.6.tar.gz"
+    sha256: "TODO"  # TODO: verify SHA256 before v1
+    install_dir_default: "~/MG5_aMC"
+    versioned_dirname: "MG5_aMC_v3_5_6"
+    size_gb_approx: 0.5
+    requires: [gfortran]
+
+  wolfram_engine:
+    version: "14.1"
+    # Landing page; the tarball itself is gated behind a Wolfram-ID login so we
+    # cannot fetch it directly. install_wolfram.sh prints manual-install steps
+    # and then configures via `use-path` once the user has activated it.
+    source: "https://www.wolfram.com/engine/"  # TODO: verify SHA256 before v1 (once a stable direct-download URL is available)
+    sha256: "TODO"  # TODO: verify SHA256 before v1
+    size_gb_approx: 4.0
+    smoke_test: "wolframscript -code '2+2' -> 4"
+    notes: >-
+      Activation is interactive (browser + Wolfram ID). install_wolfram.sh
+      cannot fully automate; it detects existing installs and otherwise prints
+      instructions. SARAH depends on this being configured first.
+
+  sarah:
+    version: "4.15.3"
+    source: "https://sarah.hepforge.org/downloads/SARAH-4.15.3.tar.gz"  # TODO: verify SHA256 before v1
+    sha256: "TODO"  # TODO: verify SHA256 before v1
+    install_dir_default: "~/SARAH"
+    size_gb_approx: 0.5
+    requires: [wolfram_engine]
+    smoke_test: "wolframscript -code '<<SARAH`; SARAH`SA`Version' -> version string"
+
+  spheno:
+    version: "4.0.5"
+    source: "https://spheno.hepforge.org/downloads/SPheno-4.0.5.tar.gz"  # TODO: verify SHA256 before v1
+    sha256: "TODO"  # TODO: verify SHA256 before v1
+    install_dir_default: "~/SPheno"
+    size_gb_approx: 0.3
+    requires: [gfortran, lapack]
+    smoke_test: "~/SPheno/bin/SPheno (no args) -> usage banner"
+
+total_disk_gb_approx: 5.3  # wolfram (~4) + sarah (~0.5) + spheno (~0.3) + mg5 (~0.5)
+
+python_deps:
+  # Required Python packages for /hep-plot and any /demo plotting step.
+  # check_python_deps.py pip-installs these into config.python if absent
+  # and records their versions + python_deps_checked_at in the shared config.
+  matplotlib:
+    pip_spec: "matplotlib>=3.8"  # floor from the plotting README (now consolidated)
+  numpy:
+    pip_spec: "numpy"
+
+config:
+  path: "${XDG_CONFIG_HOME:-~/.config}/hephaestus/config.json"
+  schema:
+    madgraph_path: "absolute path to mg5_aMC binary"
+    madgraph_version: "x.y.z"
+    wolfram_engine_path: "absolute path to wolframscript binary"
+    wolfram_engine_version: "x.y[.z]"
+    sarah_path: "absolute path to the SARAH package dir (contains SARAH.m)"
+    sarah_version: "x.y.z"
+    spheno_path: "absolute path to SPheno binary (e.g. ~/SPheno/SPheno-4.0.5/bin/SPheno)"
+    spheno_version: "x.y.z"
+    last_configured: "UTC ISO8601 timestamp"
+    python: "absolute path to python3"
+    matplotlib_version: "x.y[.z] — recorded by check_python_deps.py"
+    numpy_version: "x.y[.z] — recorded by check_python_deps.py"
+    python_deps_checked_at: "UTC ISO8601 timestamp of last successful check_python_deps.py run"
+
+notes:
+  - "All sha256 values are placeholders. Before v1 release, compute real checksums for MG5, SARAH, and SPheno tarballs and update both this file and the matching install_*.sh script. Wolfram Engine has no automation path yet."
+  - "Wolfram Engine activation requires a browser + Wolfram ID. The installer cannot fully automate this step; users must activate manually and then re-run /install."

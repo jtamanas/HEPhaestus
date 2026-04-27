@@ -1,0 +1,84 @@
+# hephaestus Cool Analytic — Palette A (theory-vs-data)
+# Reference: docs/design-system.md
+#
+# Color cycle: theory blue, data black, violet secondary, teal tertiary,
+# accent orange, then lightness-shifted variants for multi-curve escalation.
+
+# --- Color cycle (escalation ladder built in) ---
+axes.prop_cycle: cycler('color', ['0284c7', '1a1a1a', '7c3aed', '0f766e', 'ea580c', '0369a1', '0ea5e9', '7dd3fc', '4c1d95', 'a78bfa'])
+
+# --- Figure ---
+figure.figsize: 3.346, 2.510
+figure.dpi: 300
+figure.facecolor: white
+figure.edgecolor: white
+savefig.dpi: 300
+savefig.bbox: tight
+savefig.pad_inches: 0.02
+savefig.transparent: False
+
+# --- Font (Computer Modern via LaTeX) ---
+text.usetex: True
+text.latex.preamble: \usepackage{amsmath}\usepackage{amssymb}
+font.family: serif
+font.serif: cmr10
+mathtext.fontset: cm
+axes.formatter.use_mathtext: True
+
+# --- Axis labels: 9pt italic ---
+axes.labelsize: 9
+axes.labelweight: normal
+axes.labelpad: 4.0
+axes.labelcolor: 1a1a1a
+
+# --- Tick labels: 8pt ---
+xtick.labelsize: 8
+ytick.labelsize: 8
+xtick.labelcolor: 1a1a1a
+ytick.labelcolor: 1a1a1a
+
+# --- Axes styling: no bounding box, left + bottom only ---
+axes.linewidth: 0.5
+axes.edgecolor: 1a1a1a
+axes.facecolor: white
+axes.spines.top: False
+axes.spines.right: False
+axes.grid: False
+
+# --- Ticks: inward, 0.5pt wide ---
+xtick.direction: in
+ytick.direction: in
+xtick.major.width: 0.5
+ytick.major.width: 0.5
+xtick.minor.width: 0.5
+ytick.minor.width: 0.5
+xtick.major.size: 3.0
+ytick.major.size: 3.0
+xtick.minor.size: 1.5
+ytick.minor.size: 1.5
+xtick.minor.visible: True
+ytick.minor.visible: True
+xtick.major.pad: 4.0
+ytick.major.pad: 4.0
+xtick.color: 1a1a1a
+ytick.color: 1a1a1a
+
+# --- Lines: 1.0pt primary curves ---
+lines.linewidth: 1.0
+lines.markersize: 4
+
+# --- Error bars ---
+errorbar.capsize: 0
+
+# --- Legend: off by default (use direct labels) ---
+legend.frameon: False
+legend.fontsize: 7
+legend.labelcolor: 9ca3af
+
+# --- Patch (for fills) ---
+patch.linewidth: 0.5
+patch.edgecolor: 1a1a1a
+patch.facecolor: 0284c7
+
+# --- Hatch ---
+hatch.linewidth: 0.5

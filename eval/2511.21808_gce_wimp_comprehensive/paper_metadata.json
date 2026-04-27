@@ -1,0 +1,94 @@
+{
+  "arxiv_id": "2511.21808",
+  "version": "v2",
+  "title": "A Comprehensive Study of WIMP Models Explaining the Fermi-LAT Galactic Center Excess",
+  "authors": ["Chuiyang Kong", "Mattia Di Mauro"],
+  "date": "2025-11-26",
+  "revised": "2026-04-04",
+  "categories": ["hep-ph"],
+  "url": "https://arxiv.org/abs/2511.21808",
+  "html_url": "https://arxiv.org/html/2511.21808v2",
+  "models": [
+    {
+      "name": "U(1) Lmu-Le Z' portal",
+      "label": "Lmu_Le",
+      "mediator": "Z'",
+      "dm_type": "Dirac",
+      "N_nu_active": 2,
+      "N_nu_sterile": 0,
+      "quark_charges": "none (leptonic only)",
+      "ufo_model": null
+    },
+    {
+      "name": "U(1) Le-Ltau Z' portal",
+      "label": "Le_Ltau",
+      "mediator": "Z'",
+      "dm_type": "Dirac",
+      "N_nu_active": 2,
+      "N_nu_sterile": 0,
+      "quark_charges": "none (leptonic only)",
+      "ufo_model": null
+    },
+    {
+      "name": "U(1) Lmu-Ltau Z' portal",
+      "label": "Lmu_Ltau",
+      "mediator": "Z'",
+      "dm_type": "Dirac",
+      "N_nu_active": 2,
+      "N_nu_sterile": 0,
+      "quark_charges": "none (leptonic only)",
+      "ufo_model": null
+    },
+    {
+      "name": "U(1) B-L Z' portal",
+      "label": "BminusL",
+      "mediator": "Z'",
+      "dm_type": "Dirac",
+      "N_nu_active": 3,
+      "N_nu_sterile": 3,
+      "quark_charges": "+1/3 for all quarks",
+      "ufo_model": "U1B-L (Plan C: not vendored in v1)"
+    },
+    {
+      "name": "Higgs portal scalar DM",
+      "label": "HiggsPortalScalar",
+      "mediator": "SM Higgs",
+      "dm_type": "scalar",
+      "N_nu_active": 0,
+      "N_nu_sterile": 0,
+      "quark_charges": "via Yukawa",
+      "ufo_model": "DMScalar (DMSimp)"
+    }
+  ],
+  "experimental_limits": {
+    "indirect_detection": [
+      "Fermi-LAT GCE morphological fit (main result)",
+      "Fermi-LAT dSphs"
+    ],
+    "direct_detection": [
+      "LZ (2024)",
+      "XENONnT"
+    ]
+  },
+  "computational_tools": {
+    "relic_density": "micrOMEGAs",
+    "annihilation_cross_section": "MadDM / CalcHEP",
+    "direct_detection": "standard sigma_SI/SD formulas (valence quark counting for vector Z')",
+    "nucleon_form_factors": "Valence quark counting for vector Z' (Eq. 15 paper); Hoferichter 2017 for scalar portal"
+  },
+  "table2_best_fits": {
+    "note": "Best-fit parameters from GCE morphological fit. m_Zp=120 GeV, g_chi=1.0, Dirac DM.",
+    "Lmu_Le":  {"m_DM_GeV": 44.1, "sigma_v_cm3s": 7.58e-26, "chi2": 5.2},
+    "Le_Ltau": {"m_DM_GeV": 19.2, "sigma_v_cm3s": 3.03e-26, "chi2": 16.5},
+    "Lmu_Ltau":{"m_DM_GeV": 20.5, "sigma_v_cm3s": 3.76e-26, "chi2": 28.5},
+    "BminusL": {"m_DM_GeV": 37.5, "sigma_v_cm3s": 4.67e-26, "chi2": 6.2}
+  },
+  "phase05_decisions": {
+    "D1_quark_mass_scheme": "MSbar at 2 GeV for form factors; pole masses for kinematic thresholds",
+    "D2_higgs_lambda_convention": "(1/2)lambda|H|^2 S^2 — paper explicit; h-chi-chi vertex = lambda*v_h",
+    "D3_sigma_SI_FF": "CASE_A: valence quark counting, f_p = g_Zp*(2*Q_V[u]+Q_V[d]), f_n = g_Zp*(Q_V[u]+2*Q_V[d]). For B-L: f_p=f_n=g_Zp. Tolerance 5%.",
+    "D4_N_nu": "Lmu-Le/Le-Ltau/Lmu-Ltau: N_nu_active=2, N_nu_sterile=0. B-L: N_nu_active=3, N_nu_sterile=3.",
+    "D5_dirac_majorana": "Dirac for all Z' portals; scalar for Higgs portal",
+    "D6_ufo": "Plan C: no UFO vendored; generate_mg_tasks.py emits nothing; 10 Tier-3 tasks"
+  }
+}

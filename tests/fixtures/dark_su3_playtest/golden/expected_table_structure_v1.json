@@ -1,0 +1,41 @@
+{
+  "_schema_version": "v1",
+  "_note": "Expected merged output table structure per scenario. HARD assertion: table must have exactly the required rows and columns. '—' cells indicate absent values (tool not run for that observable).",
+  "required_observable_rows": ["Ωh²", "σ_SI", "σ_SD", "⟨σv⟩"],
+  "required_row_count": 4,
+  "scenarios": {
+    "pointA_configured": {
+      "required_columns": ["Observable", "MadDM", "micrOMEGAs", "DRAKE", "Status"],
+      "drake_column": true,
+      "flag_required": true,
+      "adjudication_required_text": true,
+      "note": "DRAKE configured: all columns present; CROSSCHECK_DISAGREEMENT in Flags section"
+    },
+    "pointA_missing": {
+      "required_columns": ["Observable", "MadDM", "micrOMEGAs", "Status"],
+      "drake_column": false,
+      "flag_required": true,
+      "adjudication_required_text": true
+    },
+    "pointA_activation_required": {
+      "required_columns": ["Observable", "MadDM", "micrOMEGAs", "Status"],
+      "drake_column": false,
+      "flag_required": true,
+      "adjudication_required_text": true
+    },
+    "pointA_unset": {
+      "required_columns": ["Observable", "MadDM", "micrOMEGAs", "Status"],
+      "drake_column": false,
+      "flag_required": true,
+      "adjudication_required_text": true,
+      "note": "Branch 1 (drake_path absent): DRAKE column absent; micrOMEGAs still runs per Step 3 Trigger A"
+    },
+    "pointB": {
+      "required_columns": ["Observable", "MadDM", "Status"],
+      "drake_column": false,
+      "flag_required": false,
+      "adjudication_required_text": false,
+      "note": "Point B off-resonance: MadDM only; no micrOMEGAs column; no flags"
+    }
+  }
+}

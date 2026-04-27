@@ -1,0 +1,10 @@
+{
+  "_fixture_meta": {
+    "synthetic": true,
+    "scenario": "pointA_activation_required",
+    "source": "detect_drake.py canned output — Wolfram Engine not activated"
+  },
+  "status": "activation_required",
+  "drake_path": "/usr/local/lib/drake",
+  "version": null
+}

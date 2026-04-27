@@ -1,0 +1,46 @@
+#************************************************************
+#* MadGraph5_aMC@NLO process card for Singlet-Doublet Model *
+#* arXiv:2506.19062 benchmark comparisons                   *
+#************************************************************
+
+# Import the singlet-doublet UFO model
+import model SingletDoublet_UFO
+
+# -------------------------------------------------------
+# Process 1: DM-quark elastic scattering (SI cross-section)
+# Tree-level: chi1 q -> chi1 q via Higgs exchange
+# -------------------------------------------------------
+
+# DM-up scattering
+generate chi1 u > chi1 u / z    # exclude Z to isolate Higgs contribution
+add process chi1 u~ > chi1 u~
+output SD_chi1_u_scattering
+
+# DM-down scattering
+generate chi1 d > chi1 d / z
+add process chi1 d~ > chi1 d~
+output SD_chi1_d_scattering
+
+# -------------------------------------------------------
+# Process 2: DM-quark scattering via Z (SD cross-section)
+# -------------------------------------------------------
+generate chi1 u > chi1 u / h    # exclude Higgs to isolate Z contribution
+add process chi1 d > chi1 d / h
+output SD_chi1_q_Z_scattering
+
+# -------------------------------------------------------
+# Process 3: DM pair annihilation (for relic density)
+# -------------------------------------------------------
+generate chi1 chi1 > w+ w-
+add process chi1 chi1 > z z
+add process chi1 chi1 > h h
+add process chi1 chi1 > t t~
+add process chi1 chi1 > b b~
+add process chi1 chi1 > ta+ ta-
+output SD_chi1_annihilation
+
+# -------------------------------------------------------
+# Process 4: Charged fermion pair production (collider)
+# -------------------------------------------------------
+generate p p > psi+ psi-
+output SD_charged_pair

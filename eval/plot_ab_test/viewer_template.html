@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HEP Plot A/B Test — Blind Voting</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0f0f0f; color: #e0e0e0;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  header {
+    padding: 16px 24px; border-bottom: 1px solid #2a2a2a;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  header h1 { font-size: 18px; font-weight: 500; }
+  .progress { font-size: 14px; color: #888; }
+  .progress-bar {
+    width: 200px; height: 4px; background: #2a2a2a; border-radius: 2px;
+    margin-top: 4px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: #0284c7; transition: width 0.3s; }
+
+  main { flex: 1; display: flex; flex-direction: column; padding: 24px; }
+
+  .case-label {
+    text-align: center; margin-bottom: 16px;
+    font-size: 14px; color: #888;
+  }
+
+  .comparison {
+    flex: 1; display: flex; gap: 24px; align-items: flex-start;
+    justify-content: center; margin-bottom: 24px;
+  }
+  .plot-side {
+    flex: 1; max-width: 48%; display: flex; flex-direction: column; align-items: center;
+  }
+  .plot-side h2 {
+    font-size: 16px; font-weight: 500; margin-bottom: 8px;
+    padding: 4px 16px; border-radius: 4px;
+  }
+  .plot-side img {
+    max-width: 100%; max-height: 65vh; border: 1px solid #2a2a2a;
+    border-radius: 4px; background: #fff;
+  }
+  .plot-side .missing {
+    width: 400px; height: 300px; display: flex; align-items: center;
+    justify-content: center; border: 1px dashed #444; border-radius: 4px;
+    color: #666; font-style: italic;
+  }
+
+  .vote-buttons {
+    display: flex; gap: 16px; justify-content: center; margin-bottom: 16px;
+  }
+  .vote-buttons button {
+    padding: 10px 32px; font-size: 15px; border: 1px solid #444;
+    border-radius: 6px; background: #1a1a1a; color: #e0e0e0;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .vote-buttons button:hover { border-color: #0284c7; background: #1a2a3a; }
+  .vote-buttons button.selected { border-color: #0284c7; background: #0284c7; color: #fff; }
+  .vote-buttons button.tie.selected { border-color: #666; background: #444; }
+
+  .nav-buttons {
+    display: flex; gap: 12px; justify-content: center; margin-top: 8px;
+  }
+  .nav-buttons button {
+    padding: 8px 24px; font-size: 14px; border: 1px solid #333;
+    border-radius: 4px; background: #1a1a1a; color: #aaa; cursor: pointer;
+  }
+  .nav-buttons button:hover { color: #e0e0e0; border-color: #555; }
+  .nav-buttons button:disabled { opacity: 0.3; cursor: default; }
+
+  /* Results page */
+  .results-page { display: none; padding: 40px; max-width: 700px; margin: 0 auto; }
+  .results-page h2 { font-size: 24px; margin-bottom: 24px; }
+  .results-page table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  .results-page th, .results-page td {
+    padding: 8px 12px; text-align: left; border-bottom: 1px solid #2a2a2a;
+  }
+  .results-page th { color: #888; font-weight: 500; font-size: 13px; }
+  .results-page .win { color: #22c55e; }
+  .results-page .loss { color: #ef4444; }
+  .results-page .tie-result { color: #888; }
+  .summary { font-size: 20px; margin-bottom: 24px; padding: 20px; background: #1a1a1a; border-radius: 8px; }
+  .download-btn {
+    padding: 12px 32px; font-size: 15px; border: none; border-radius: 6px;
+    background: #0284c7; color: #fff; cursor: pointer;
+  }
+  .download-btn:hover { background: #0369a1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>HEP Plot A/B Test</h1>
+  <div style="text-align: right">
+    <div class="progress"><span id="progressText">0 / 0 voted</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</header>
+
+<main id="votingPage">
+  <div class="case-label" id="caseLabel"></div>
+  <div class="comparison">
+    <div class="plot-side">
+      <h2>Plot A</h2>
+      <div id="leftPlot"></div>
+    </div>
+    <div class="plot-side">
+      <h2>Plot B</h2>
+      <div id="rightPlot"></div>
+    </div>
+  </div>
+  <div class="vote-buttons">
+    <button onclick="vote('left')">Prefer Left</button>
+    <button onclick="vote('tie')" class="tie">Tie</button>
+    <button onclick="vote('right')">Prefer Right</button>
+  </div>
+  <div class="nav-buttons">
+    <button id="prevBtn" onclick="navigate(-1)">&#8592; Previous</button>
+    <button id="nextBtn" onclick="navigate(1)">Next &#8594;</button>
+    <button id="finishBtn" onclick="showResults()" style="display:none">See Results</button>
+  </div>
+  <div style="text-align:center; margin-top:12px; font-size:12px; color:#555;">
+    &#8592; Left = Prefer Left &nbsp;|&nbsp; &#8594; Right = Prefer Right &nbsp;|&nbsp; &#8595; or T = Tie &nbsp;|&nbsp; Shift+&#8592; / Shift+&#8594; = Navigate
+  </div>
+</main>
+
+<div class="results-page" id="resultsPage">
+  <h2>Results</h2>
+  <div class="summary" id="summaryBox"></div>
+  <table>
+    <thead><tr><th>Case</th><th>Your Vote</th><th>Design Side</th><th>Outcome</th></tr></thead>
+    <tbody id="resultsBody"></tbody>
+  </table>
+  <button class="download-btn" onclick="downloadResults()">Download Results JSON</button>
+</div>
+
+<script>
+const CASES = /*__CASES_DATA__*/[];
+
+// Randomize left/right assignment per session (seeded)
+let sessionSeed = localStorage.getItem("hep_ab_seed");
+if (!sessionSeed) {
+  sessionSeed = String(Date.now());
+  localStorage.setItem("hep_ab_seed", sessionSeed);
+}
+
+function seededRandom(seed) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  }
+  return function() {
+    h = (h * 1103515245 + 12345) & 0x7fffffff;
+    return (h >>> 0) / 0x7fffffff;
+  };
+}
+
+const rng = seededRandom(sessionSeed);
+const assignments = CASES.map(() => rng() > 0.5 ? "left" : "right");
+// assignments[i] = which side gets the "with_skills" plot
+
+let currentIdx = 0;
+let votes = JSON.parse(localStorage.getItem("hep_ab_votes") || "{}");
+
+function render() {
+  const c = CASES[currentIdx];
+  const designSide = assignments[currentIdx];
+
+  document.getElementById("caseLabel").textContent =
+    `Case ${currentIdx + 1} / ${CASES.length}: ${c.id.replace(/_/g, " ")}`;
+
+  const leftImg = designSide === "left" ? c.with_skills_img : c.without_skills_img;
+  const rightImg = designSide === "right" ? c.with_skills_img : c.without_skills_img;
+  const leftOk = designSide === "left" ? c.with_skills_ok : c.without_skills_ok;
+  const rightOk = designSide === "right" ? c.with_skills_ok : c.without_skills_ok;
+
+  document.getElementById("leftPlot").innerHTML = leftOk
+    ? `<img src="${leftImg}" alt="Plot A">`
+    : `<div class="missing">Plot not generated</div>`;
+  document.getElementById("rightPlot").innerHTML = rightOk
+    ? `<img src="${rightImg}" alt="Plot B">`
+    : `<div class="missing">Plot not generated</div>`;
+
+  // Highlight current vote
+  document.querySelectorAll(".vote-buttons button").forEach(b => b.classList.remove("selected"));
+  const currentVote = votes[c.id];
+  if (currentVote) {
+    const btns = document.querySelectorAll(".vote-buttons button");
+    if (currentVote === "left") btns[0].classList.add("selected");
+    else if (currentVote === "tie") btns[1].classList.add("selected");
+    else if (currentVote === "right") btns[2].classList.add("selected");
+  }
+
+  document.getElementById("prevBtn").disabled = currentIdx === 0;
+  document.getElementById("nextBtn").style.display = currentIdx < CASES.length - 1 ? "" : "none";
+
+  const votedCount = CASES.filter(c2 => votes[c2.id]).length;
+  document.getElementById("finishBtn").style.display = votedCount === CASES.length ? "" : "none";
+  document.getElementById("progressText").textContent = `${votedCount} / ${CASES.length} voted`;
+  document.getElementById("progressFill").style.width = `${(votedCount / CASES.length) * 100}%`;
+}
+
+function vote(side) {
+  votes[CASES[currentIdx].id] = side;
+  localStorage.setItem("hep_ab_votes", JSON.stringify(votes));
+  render();
+  // Auto-advance after a short delay
+  if (currentIdx < CASES.length - 1) {
+    setTimeout(() => { currentIdx++; render(); }, 300);
+  }
+}
+
+function navigate(delta) {
+  currentIdx = Math.max(0, Math.min(CASES.length - 1, currentIdx + delta));
+  render();
+}
+
+function showResults() {
+  document.getElementById("votingPage").style.display = "none";
+  document.getElementById("resultsPage").style.display = "block";
+
+  let designWins = 0, baselineWins = 0, ties = 0;
+  const tbody = document.getElementById("resultsBody");
+  tbody.innerHTML = "";
+
+  CASES.forEach((c, i) => {
+    const v = votes[c.id];
+    const designSide = assignments[i];
+    let outcome, cls;
+    if (v === "tie") { ties++; outcome = "Tie"; cls = "tie-result"; }
+    else if (v === designSide) { designWins++; outcome = "Design wins"; cls = "win"; }
+    else { baselineWins++; outcome = "Baseline wins"; cls = "loss"; }
+
+    tbody.innerHTML += `<tr>
+      <td>${c.id.replace(/_/g, " ")}</td>
+      <td>${v === "left" ? "Left" : v === "right" ? "Right" : "Tie"}</td>
+      <td>${designSide === "left" ? "Left" : "Right"}</td>
+      <td class="${cls}">${outcome}</td>
+    </tr>`;
+  });
+
+  document.getElementById("summaryBox").innerHTML =
+    `Design wins: <strong>${designWins}</strong> &nbsp;|&nbsp; ` +
+    `Baseline wins: <strong>${baselineWins}</strong> &nbsp;|&nbsp; ` +
+    `Ties: <strong>${ties}</strong>`;
+}
+
+function downloadResults() {
+  const results = {
+    timestamp: new Date().toISOString(),
+    session_seed: sessionSeed,
+    cases: CASES.map((c, i) => {
+      const v = votes[c.id];
+      const designSide = assignments[i];
+      return {
+        case_id: c.id,
+        design_side: designSide,
+        vote: v,
+        design_won: v === designSide,
+      };
+    }),
+    summary: {
+      design_wins: CASES.reduce((n, c, i) => n + (votes[c.id] === assignments[i] ? 1 : 0), 0),
+      baseline_wins: CASES.reduce((n, c, i) => n + (votes[c.id] !== assignments[i] && votes[c.id] !== "tie" ? 1 : 0), 0),
+      ties: CASES.reduce((n, c) => n + (votes[c.id] === "tie" ? 1 : 0), 0),
+      total: CASES.length,
+    },
+  };
+
+  const blob = new Blob([JSON.stringify(results, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `votes_${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+  a.click();
+}
+
+// Keyboard shortcuts
+document.addEventListener("keydown", (e) => {
+  if (document.getElementById("resultsPage").style.display === "block") return;
+  if (e.key === "ArrowLeft") {
+    if (e.shiftKey) navigate(-1);
+    else vote("left");
+  }
+  if (e.key === "ArrowRight") {
+    if (e.shiftKey) navigate(1);
+    else vote("right");
+  }
+  if (e.key === "ArrowDown" || e.key === "t") vote("tie");
+  if (e.key === "Enter" && document.getElementById("finishBtn").style.display !== "none") showResults();
+});
+
+render();
+</script>
+</body>
+</html>

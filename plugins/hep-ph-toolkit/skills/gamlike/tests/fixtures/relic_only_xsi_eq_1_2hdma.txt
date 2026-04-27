@@ -1,0 +1,62 @@
+################################################
+#                 MadDM v. 3.2                 #
+################################################
+
+
+################################################
+# Relic Density                                #
+################################################
+
+Omegah2                       = 1.05e+01
+Omegah_Planck                 = 1.20e-01
+xsi                           = 1.00e+00 	 # xsi = (Omega/Omega_Planck)
+x_f                           = 1.60e+01
+sigmav_xf                     = 1.33e-28 	 # cm^3 s^-1
+# % of the relic density channels
+%_chichibar_ah2ah2            = 0.00 %
+%_chichibar_ah2ah3            = 0.00 %
+%_chichibar_ah3ah3            = 0.00 %
+%_chichibar_ddx               = 0.00 %
+%_chichibar_dsx               = 0.00 %
+%_chichibar_dbx               = 0.00 %
+%_chichibar_uux               = 0.00 %
+%_chichibar_ucx               = 0.00 %
+%_chichibar_utx               = 0.00 %
+%_chichibar_sdx               = 0.00 %
+%_chichibar_ssx               = 0.00 %
+%_chichibar_sbx               = 0.00 %
+%_chichibar_cux               = 0.00 %
+%_chichibar_ccx               = 0.06 %
+%_chichibar_ctx               = 0.00 %
+%_chichibar_bdx               = 0.00 %
+%_chichibar_bsx               = 0.00 %
+%_chichibar_bbx               = 0.65 %
+%_chichibar_tux               = 0.00 %
+%_chichibar_tcx               = 0.00 %
+%_chichibar_ttx               = 0.00 %
+%_chichibar_zhh1              = 0.00 %
+%_chichibar_zh2               = 0.00 %
+%_chichibar_wphp              = 49.62 %
+%_chichibar_wmhm              = 49.62 %
+%_chichibar_wphm2             = 0.00 %
+%_chichibar_wmhm2c            = 0.00 %
+%_chichibar_hh1hh1            = 0.00 %
+%_chichibar_hh1h2             = 0.00 %
+%_chichibar_hh1ah2            = 0.00 %
+%_chichibar_hh1ah3            = 0.00 %
+%_chichibar_h2h2              = 0.00 %
+%_chichibar_h2ah2             = 0.00 %
+%_chichibar_h2ah3             = 0.00 %
+%_chichibar_hphm              = 0.00 %
+%_chichibar_hphm2c            = 0.00 %
+%_chichibar_hm2hm             = 0.00 %
+%_chichibar_hm2hm2c           = 0.00 %
+%_chichibar_emep              = 0.00 %
+%_chichibar_emmup             = 0.00 %
+%_chichibar_emtap             = 0.00 %
+%_chichibar_mumep             = 0.00 %
+%_chichibar_mummup            = 0.00 %
+%_chichibar_mumtap            = 0.00 %
+%_chichibar_tamep             = 0.00 %
+%_chichibar_tammup            = 0.00 %
+%_chichibar_tamtap            = 0.04 %

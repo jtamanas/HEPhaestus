@@ -1,0 +1,18 @@
+agent: t15-impl-2
+branch: tier1/t15-drake-path-regex-r1-20260426
+base_sha: b8e1b5c6f0d303d64070ade6223b8c79422b5a09
+date: 2026-04-25
+
+regex_change_locations:
+  - plugins/monte-carlo-tools/skills/drake/SKILL.md (line ~198): narrative updated
+    before: "Look for a line containing `Omega h^2` or `OmegaH2`"
+    after:  "DRAKE prints Oh2_nBE / Oh2_cBE / Oh2_fBE; acceptance regex: Oh2_(nBE|cBE|fBE)\s*=\s*([0-9eE.+\-]+)"
+  - plugins/constraints/skills/dark-matter-constraints/contracts/router_contract.json (line 116):
+    before: "Omega[\\s_]*[hH]\\^?2[^=]*=\\s*[0-9]"
+    after:  "Oh2_(nBE|cBE|fBE)\\s*=\\s*([0-9eE.+\\-]+)"
+  - plugins/constraints/skills/dark-matter-constraints/tests/fixtures/drake/stdout_drake_synthetic.txt:
+    updated to use Oh2_nBE/cBE/fBE format matching real DRAKE output
+
+patch_file: plugins/monte-carlo-tools/skills/drake/upstream-patches/test_wls_path.patch
+patch_lines: 55
+patch_summary: AppendTo[$Path] + Global` context fix for DRAKE_v1.0/test/test.wls

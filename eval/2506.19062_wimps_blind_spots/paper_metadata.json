@@ -1,0 +1,60 @@
+{
+  "arxiv_id": "2506.19062",
+  "version": "v1",
+  "title": "WIMPs Below the Radar: Blind Spots and Benchmarks Beyond the Neutrino Floor",
+  "authors": ["Giorgio Arcadi", "Stefano Profumo"],
+  "affiliations": [
+    "Universita degli Studi di Messina",
+    "INFN Sezione di Catania",
+    "UC Santa Cruz",
+    "SCIPP, UCSC"
+  ],
+  "date": "2025-06-23",
+  "categories": ["hep-ph"],
+  "url": "https://arxiv.org/abs/2506.19062",
+  "html_url": "https://arxiv.org/html/2506.19062v1",
+  "models": [
+    {
+      "name": "Singlet-Doublet fermion",
+      "label": "SD",
+      "lagrangian_eq": 1,
+      "scan_ranges_eq": 11,
+      "ufo_model": "custom (FeynRules)",
+      "references": ["Calibbi:2015nha"]
+    },
+    {
+      "name": "Singlet-Doublet + 2HDM",
+      "label": "SD2HDM",
+      "lagrangian_eq": 12,
+      "scan_ranges_eq": 19,
+      "ufo_model": "custom (FeynRules)",
+      "references": ["Calibbi:2015nha"]
+    },
+    {
+      "name": "2HDM+a",
+      "label": "2HDMa",
+      "lagrangian_eq": 20,
+      "scan_ranges_eq": 24,
+      "ufo_model": "DMPseudo_2HDM (LHC DM WG)",
+      "references": ["Bauer:2017ota"]
+    },
+    {
+      "name": "Dark SU(3)",
+      "label": "DSU3",
+      "lagrangian_eq": 26,
+      "scan_ranges_eq": 30,
+      "ufo_model": "custom (FeynRules)",
+      "references": ["Gross:2015cwa", "Arcadi:2016kmk"]
+    }
+  ],
+  "experimental_limits": {
+    "direct_detection": ["LZ (2024)", "XLZD projected (200 tonne-year)"],
+    "indirect_detection": ["FERMI DSph (b-bbar)", "CTA projected"],
+    "neutrino_floor": "O'Hare 2021 (xenon)"
+  },
+  "computational_tools": {
+    "loop_integrals": "LoopTools (Hahn & Perez-Victoria 1999)",
+    "relic_density": "Boltzmann equation (micrOMEGAs-style)",
+    "nucleon_form_factors": "Hoferichter:2017olk, Alarcon:2012nr"
+  }
+}

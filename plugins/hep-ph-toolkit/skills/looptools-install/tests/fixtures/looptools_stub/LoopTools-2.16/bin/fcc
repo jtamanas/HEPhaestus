@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Stub LoopTools fcc C++ wrapper.
+echo "fcc stub"

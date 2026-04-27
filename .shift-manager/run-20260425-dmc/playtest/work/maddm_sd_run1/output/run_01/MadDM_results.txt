@@ -1,0 +1,49 @@
+################################################
+#                 MadDM v. 3.2                 #
+################################################
+
+
+################################################
+# Relic Density                                #
+################################################
+
+Omegah2                       = -1.00e+00
+Omegah_Planck                 = 1.20e-01
+xsi                           = 1.00e+00 	 # xsi = (Omega/Omega_Planck)
+x_f                           = 0.00e+00
+sigmav_xf                     = 0.00e+00 	 # cm^3 s^-1
+# % of the relic density channels
+%_chi1chi1_zz                 = nan %
+%_chi1chi1_zh                 = nan %
+%_chi1chi1_hh                 = nan %
+%_chi1chi1_wpwm               = nan %
+%_chi1chi1_ddx                = nan %
+%_chi1chi1_uux                = nan %
+%_chi1chi1_ssx                = nan %
+%_chi1chi1_ccx                = nan %
+%_chi1chi1_bbx                = nan %
+%_chi1chi1_ttx                = nan %
+%_chi1chi1_emep               = nan %
+%_chi1chi1_mummup             = nan %
+%_chi1chi1_tamtap             = nan %
+%_chi1chi1_gg                 = nan %
+%_chi1chi1_aa                 = nan %
+%_chi1chi1_vevex              = nan %
+%_chi1chi1_dsx                = nan %
+%_chi1chi1_dbx                = nan %
+%_chi1chi1_ucx                = nan %
+%_chi1chi1_utx                = nan %
+%_chi1chi1_sdx                = nan %
+%_chi1chi1_sbx                = nan %
+%_chi1chi1_cux                = nan %
+%_chi1chi1_ctx                = nan %
+%_chi1chi1_bdx                = nan %
+%_chi1chi1_bsx                = nan %
+%_chi1chi1_tux                = nan %
+%_chi1chi1_tcx                = nan %
+%_chi1chi1_emmup              = nan %
+%_chi1chi1_emtap              = nan %
+%_chi1chi1_mumep              = nan %
+%_chi1chi1_mumtap             = nan %
+%_chi1chi1_tamep              = nan %
+%_chi1chi1_tammup             = nan %

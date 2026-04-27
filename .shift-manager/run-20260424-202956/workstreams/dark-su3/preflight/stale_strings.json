@@ -1,0 +1,23 @@
+{
+  "hits": [
+    {
+      "file": "plugins/hep-ph-demo/skills/demo/SKILL.md",
+      "line": 73,
+      "text": "    {\"id\": \"dark-su3\",        \"label\": \"Dark SU(3)      (~6–12 hr cold, all constraints)\",        \"description\": \"Confining dark sector, two DM candidates with exact blind spot. Currently fully blocked on /dark-matter-constraints.\"}"
+    },
+    {
+      "file": "plugins/hep-ph-demo/skills/_shared/constraints.yaml",
+      "line": 148,
+      "text": "      hook:  \"Confining dark sector, two DM candidates with exact parameter-independent blind spot.\""
+    },
+    {
+      "file": "plugins/hep-ph-demo/skills/_shared/tests/MANUAL_WALKTHROUGH.md",
+      "line": 90,
+      "text": "      Description: Confining dark sector, two DM candidates with exact blind spot."
+    }
+  ],
+  "hit_count": 3,
+  "banner_template_line": null,
+  "banner_status": "missing",
+  "notes": "All 3 hits confirmed at expected lines (SKILL.md:73, constraints.yaml:148, MANUAL_WALKTHROUGH.md:90). Banner template search for 'regression-anchors', 'sigmav_approx=True', 'out of reach this run' found 0 matches in demo/SKILL.md and dark-su3/SKILL.md. Banner status: missing. Per plan G6: overall gate will be 'warning' (not fail) for missing banner. Phase 2 scope-guard widens to include banner-insertion line."
+}

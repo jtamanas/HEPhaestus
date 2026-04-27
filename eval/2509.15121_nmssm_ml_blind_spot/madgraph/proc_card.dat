@@ -1,0 +1,7 @@
+# MadGraph5 proc_card for arXiv:2509.15121 benchmark
+# Process: pp > chi1+ chi20 j (associated chargino + neutralino + jet)
+# UFO model: nmssm (MadGraph5 built-in)
+
+import model nmssm
+generate p p > x1+ n2 j
+output nmssm_x1pn2j
