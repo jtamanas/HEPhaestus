@@ -23,7 +23,7 @@ analytic-Python escape hatches where they make sense.
 
 ```bash
 # Add the marketplace
-/plugin marketplace add github:jtamanas/hephaestus
+/plugin marketplace add jtamanas/hephaestus
 
 # Install the toolkit and run the guided demo
 /plugin install hep-ph-toolkit@hephaestus
