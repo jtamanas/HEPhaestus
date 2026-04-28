@@ -119,6 +119,28 @@ class TestDirectSection:
         assert d["direct"]["present"] is False
         assert d["direct"]["results"] == []
 
+    def test_real_maddm32_emits_named_nucleon_fields(self):
+        """
+        Real MadDM 3.2 emits SigmaN_SI_p/SigmaN_SI_n/SigmaN_SD_p/SigmaN_SD_n with
+        [sigma, exp_limit] brackets. The parser must surface these as named fields
+        under `direct` so downstream consumers (e.g. singlet-doublet Step 4e) don't
+        have to know the MadDM key convention.
+        """
+        d = _parse("direct_detection_real_maddm32.txt")
+        direct = d["direct"]
+        assert direct["present"] is True
+        assert direct["sigma_si_proton_cm2"] == pytest.approx(7.69e-45, rel=1e-4)
+        assert direct["sigma_si_neutron_cm2"] == pytest.approx(7.79e-45, rel=1e-4)
+        assert direct["sigma_sd_proton_cm2"] == pytest.approx(5.19e-40, rel=1e-4)
+        assert direct["sigma_sd_neutron_cm2"] == pytest.approx(3.95e-40, rel=1e-4)
+        assert direct["lim_si_proton_cm2"] == pytest.approx(1.17e-46, rel=1e-4)
+        assert direct["lim_si_neutron_cm2"] == pytest.approx(1.17e-46, rel=1e-4)
+        assert direct["lim_sd_proton_cm2"] == pytest.approx(6.52e-41, rel=1e-4)
+        assert direct["lim_sd_neutron_cm2"] == pytest.approx(3.56e-41, rel=1e-4)
+        # results list is preserved (generic per-key transport)
+        names = {r["name"] for r in direct["results"]}
+        assert {"SigmaN_SI_p", "SigmaN_SI_n", "SigmaN_SD_p", "SigmaN_SD_n"} <= names
+
 
 # ── TestIndirectSection ───────────────────────────────────────────────────────
 
