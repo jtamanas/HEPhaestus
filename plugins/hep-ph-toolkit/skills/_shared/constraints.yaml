@@ -549,12 +549,12 @@ prereqs:
           verdict: supported
 
   feynarts:
-    status: planned
+    status: exists
     hours:
       cold:   [0.5, 1.0]
       cached: [0.17, 0.33]
     capabilities:
-      description: "FeynArts 3.11 — Feynman diagram generator (skill exists at plugins/hep-ph-toolkit/skills/feynarts/; loop-DD chain integration pending)"
+      description: "FeynArts 3.11 — Feynman diagram generator (skill at plugins/hep-ph-toolkit/skills/feynarts/; loop-DD chain integration still pending the /looptools eval runtime)"
       install_skill: feynarts-install
       role:
         collider: none
@@ -581,12 +581,12 @@ prereqs:
           verdict: not_applicable
 
   formcalc:
-    status: planned
+    status: exists
     hours:
       cold:   [0.5, 1.0]
       cached: [0.17, 0.33]
     capabilities:
-      description: "FormCalc 9.10 — amplitude reduction (skill exists at plugins/hep-ph-toolkit/skills/formcalc/; loop-DD chain integration pending)"
+      description: "FormCalc 9.10 — amplitude reduction (skill at plugins/hep-ph-toolkit/skills/formcalc/; loop-DD chain integration still pending the /looptools eval runtime)"
       install_skill: formcalc-install
       role:
         collider: none
@@ -756,7 +756,18 @@ models:
       x: {symbol: "m_chi",      range: [100, 1500], units: "GeV", scale: linear}
       y: {symbol: "sin_2theta", range: [-1, 1],                   scale: linear}
     multi_component: false
-    time_overrides: {}   # uses defaults above
+    time_overrides:
+      dd: {cold: [1.0, 2.0]}    # tree-DD via MadDM; same shape as relic chain
+    chain_overrides:
+      dd:
+        chain: [sarah-build, spheno-build, madgraph, maddm, ddcalc]
+        reason: >-
+          Tree-level σ_SI/σ_SD via MadDM `generate direct_detection` on the
+          existing UFO; the canonical θ=0 benchmark sits far off the blind-spot
+          locus (m_χ₁ + M_Ψ·sin(2θ) = 0), so tree contributions are non-zero
+          and dominate. The loop-DD chain (FeynArts → FormCalc → /looptools eval
+          → /ddcalc) is the natural extension near the blind-spot locus and is
+          deferred until the /looptools eval runtime ships.
 
   2hdm-a:
     spec_path: plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/2hdm_a.yaml
@@ -780,16 +791,27 @@ models:
     spec_authoring_blockers:
       dd:
         - "spec-authoring-incomplete"
-      id:
-        - "spec-authoring-incomplete"
     spec_authoring_reason: >-
       Relic density: UNBLOCKED via hand-crafted SARAH model fixture
       (plugins/hep-ph-toolkit/skills/2hdm-a/fixtures/sarah_model/).
-      DD/ID remain blocked: two_hdm_a.yaml renderer cannot yet emit a
-      physics-correct UFO for the loop-only DD subchain, and /feynarts,
-      /gamlike is a PLANNED skill; /feynarts, /formcalc, /ddcalc exist as standalone skills but the loop-DD chain is not yet integrated end-to-end.
+      Indirect detection: UNBLOCKED-with-caveat — MadDM `generate
+      indirect_detection` on the fixture UFO produces ⟨σv⟩ + Fermi-LAT
+      likelihood rows, which /gamlike v0 parses into gamlike/v1 JSON.
+      Pull computation (likelihood deltas, exclusion verdicts) is deferred
+      to a future dm-pull skill; ID outputs are tagged
+      dm_indirect_detection_status="parser-only".
+      DD remains blocked: two_hdm_a.yaml renderer cannot yet emit a
+      physics-correct UFO for the loop-only DD subchain, and the /looptools
+      eval runtime that bridges FormCalc to /ddcalc has not shipped.
       Renderer backport is tracked in demo_output/2hdm-a/fix_loop/POST_MORTEM.md
       §Remaining debt item 1.
+    chain_overrides:
+      id:
+        chain: [madgraph, maddm, gamlike]
+        reason: >-
+          Fixture-based UFO (no /sarah-build, no /spheno-build); MadDM
+          `generate indirect_detection` → /gamlike v0 parser. Pull
+          computation deferred to dm-pull (v1+).
     time_overrides:
       dd: {cold: [3.0, 6.0]}    # loop-only DD is primary signal; slower
 

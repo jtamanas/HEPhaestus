@@ -69,7 +69,7 @@ Canonical field names:
 | `sigma_si_neutron_cm2` | number ≥ 0 | Required |
 | `sigma_sd_proton_cm2` | number ≥ 0 | Required |
 | `sigma_sd_neutron_cm2` | number ≥ 0 | Required |
-| `source` | `"micromegas"` or `"looptools"` | Required |
+| `source` | `"micromegas"`, `"looptools"`, or `"maddm"` | Required (`"maddm"` for tree-level σ_SI/σ_SD parsed from `MadDM_results.txt`) |
 | `source_run` | path string | Required |
 | `halo` | object or null | Optional; see below |
 | `nucleon_form_factors` | `{"preset": "default_2018"|"A1"}` | Required |

@@ -17,7 +17,7 @@
     "sigma_si_neutron_cm2":{"type": "number", "minimum": 0},
     "sigma_sd_proton_cm2": {"oneOf": [{"type": "number", "minimum": 0}, {"type": "null"}]},
     "sigma_sd_neutron_cm2":{"oneOf": [{"type": "number", "minimum": 0}, {"type": "null"}]},
-    "source":     {"enum": ["micromegas", "looptools"]},
+    "source":     {"enum": ["micromegas", "looptools", "maddm"]},
     "source_run": {"type": "string", "minLength": 1},
     "halo": {
       "oneOf": [

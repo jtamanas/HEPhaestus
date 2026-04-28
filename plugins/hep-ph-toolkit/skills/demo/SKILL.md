@@ -95,9 +95,9 @@ On `not_now`, stop cleanly with no output.
 {
   "question": "Which model do you want to explore?",
   "options": [
-    {"id": "singlet-doublet", "label": "Singlet-Doublet (~3–5 hr cold, all constraints)", "description": "3×3 neutralino-like mixing, tree-level blind spot, loop floor."},
-    {"id": "2hdm-a", "label": "2HDM + a (~1–2 hr cold, relic READY; DD/ID BLOCKED)", "description": "Pseudoscalar mediator, CP-forbidden tree SI, loop-only DD. Relic READY via hand-crafted SARAH model (Ω h² ≈ 10.494 at off-resonance benchmark). DD blocked on loop-DD chain integration; ID blocked on /gamlike."},
-    {"id": "dark-su3", "label": "Dark SU(3) (~1–3 hr cold, relic only; DD/ID blocked)", "description": "Higgsed SU(3)_D → SU(2)_D dark sector with two DM candidates and exact parameter-independent SI blind spot. Relic READY via analytic-only branch in /dark-matter-constraints; DD/ID still blocked on /feynarts, /formcalc, /ddcalc, /gamlike."}
+    {"id": "singlet-doublet", "label": "Singlet-Doublet (~2–4 hr cold; relic + tree-DD READY, ID BLOCKED)", "description": "3×3 neutralino-like mixing, tree-level blind spot, loop floor. Relic READY via /maddm. Direct detection READY tree-only via MadDM `generate direct_detection` → /ddcalc 90%-CL exclusion (canonical θ=0 benchmark sits far off the blind-spot locus); loop floor near the blind spot pending /looptools eval runtime. Indirect detection BLOCKED on pull computation (v1+)."},
+    {"id": "2hdm-a", "label": "2HDM + a (~2–5 hr cold; relic + parser-only ID READY, DD BLOCKED)", "description": "Pseudoscalar mediator, CP-forbidden tree SI, loop-only DD. Relic READY via hand-crafted SARAH model (Ω h² ≈ 10.494 at off-resonance benchmark). Indirect detection READY-with-caveat: MadDM `generate indirect_detection` → /gamlike v0 emits ⟨σv⟩ + channels + Fermi-LAT likelihood rows; pull computation deferred to dm-pull v1+. DD BLOCKED on /looptools eval runtime + SARAH renderer backport."},
+    {"id": "dark-su3", "label": "Dark SU(3) (~1–3 hr cold, relic only; DD/ID blocked or vacuous)", "description": "Higgsed SU(3)_D → SU(2)_D dark sector with two DM candidates. Relic READY via analytic-only branch in /dark-matter-constraints. V DD/ID: BLOCKED — MG5_DARK_COLOR_TENSOR_WALL fundamentally walls MadGraph/MadDM and no analytic DD/ID escape hatch is registered. Psi DD: PHYSICS-VACUOUS — σ_SI ≈ 0 by exact parameter-independent symmetry (Eq. 29), so the constraint is trivially satisfied rather than tool-blocked. Psi ID: BLOCKED on the same MG5 wall."}
   ],
   "allowMultiple": false,
   "required": true

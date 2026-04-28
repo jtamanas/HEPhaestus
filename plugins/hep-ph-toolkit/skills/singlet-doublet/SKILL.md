@@ -48,7 +48,7 @@ python3 plugins/hep-ph-toolkit/skills/_shared/time_budget.py \
 | Constraint | Status | Chain | Cold (hr) | Cached (hr) |
 |---|---|---|---|---|
 | Relic density | **READY** | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` | 1–2 | 0.4–0.8 |
-| Direct detection | **BLOCKED** — loop-DD chain integration pending | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/feynarts [EXISTS]` → `/formcalc [EXISTS]` → `/ddcalc [EXISTS]` | 2–4 | 0.5–1.0 |
+| Direct detection | **READY (tree-only)** — loop floor near the blind-spot locus pending `/looptools eval` runtime | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` (`generate direct_detection`) → `/ddcalc [EXISTS]` | 1–2 | 0.4–0.8 |
 | Indirect detection | **BLOCKED** — pull computation pending (v1); `/gamlike` v0 produces parsed input | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` → `/gamlike [v0 — parser only; pull-computation v1+]` | 1–3 | 0.4–0.8 |
 
 All-constraints cold total (overlap-adjusted): **3.2–8.0 hr**
@@ -95,7 +95,7 @@ Ask the user which constraints to compute:
   "question": "Which constraints do you want computed for this model?",
   "options": [
     {"id": "relic",    "label": "Relic density",            "description": "Ω h² via MadDM"},
-    {"id": "dd",       "label": "Direct detection",         "description": "σ_SI (tree + loop) via MadGraph + FeynArts/FormCalc/LoopTools + DDCalc"},
+    {"id": "dd",       "label": "Direct detection (tree-only)", "description": "Tree σ_SI/σ_SD via MadDM `generate direct_detection` → /ddcalc 90%-CL exclusion. Loop floor near the blind-spot locus pending /looptools eval runtime."},
     {"id": "id",       "label": "Indirect detection",       "description": "Annihilation spectra via MadDM → GamLike / NuLike"},
     {"id": "collider", "label": "Collider (coming soon)",   "description": "Placeholder — execution is a no-op"}
   ],
@@ -119,10 +119,12 @@ Planned chain for Singlet-Doublet:
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS] → /maddm [EXISTS]
     cold: 1–2 hr   cached: 25–50 min
 
-  Direct detection    [BLOCKED — missing: /feynarts, /formcalc, /ddcalc]
+  Direct detection    [READY — tree-only; loop floor pending /looptools eval]
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS]
-      → /feynarts [EXISTS] → /formcalc [EXISTS] → /ddcalc [EXISTS]
-    cold: 2–4 hr   cached: 35–65 min
+      → /maddm [EXISTS] (generate direct_detection) → /ddcalc [EXISTS]
+    cold: 1–2 hr   cached: 25–50 min
+    Note: tree σ_SI is non-zero at the canonical θ=0 benchmark
+    (blind-spot locus is m_χ₁ + M_Ψ·sin(2θ) = 0 — far from this point).
 
   Indirect detection  [BLOCKED — pull computation pending (v1)]
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS] → /maddm [EXISTS]
@@ -176,7 +178,7 @@ On `run_ready` or `go`: proceed to Step 4 with only the READY subset.
 
 ### Step 4 — Execute
 
-Execute the READY subset of the selected constraints in order. The relic density constraint is READY today; DD and ID are BLOCKED and are skipped with a note recorded in `summary.json`.
+Execute the READY subset of the selected constraints in order. Relic density and tree-level direct detection are READY today. Indirect detection is BLOCKED on pull-computation and is skipped with a note recorded in `summary.json`.
 
 ---
 
@@ -463,16 +465,118 @@ Key requirements per HEP convention:
 
 ---
 
-##### 4e. DD and ID branches (BLOCKED)
+##### 4e. Direct detection branch (READY, tree-only)
 
-Direct detection and indirect detection constraints are BLOCKED on unimplemented prereq skills. Record these as skipped in `summary.json`:
+**Overview:** drive `/maddm` a second time at the same canonical benchmark to produce tree-level `sigma_SI` and `sigma_SD` on proton and neutron, parse the result via `/gamlike` v0, wrap it as `scattering/v1` JSON, and dispatch `/ddcalc run` to obtain the per-experiment 90%-CL exclusion verdict.
 
-- **Direct detection** — blocked on `/feynarts [EXISTS]`, `/formcalc [EXISTS]`, `/ddcalc [EXISTS]` (loop-DD chain integration pending). The tree-level SI cross-section `sigma_SI_tree` vanishes at the blind spot; the physical signal is dominated by the loop-level contribution requiring FeynArts/FormCalc/LoopTools for the one-loop diagram computation, then DDCalc for the nuclear matrix element and experimental limit comparison.
+The canonical benchmark `(MS, MPsi, y, θ) = (150, 500, 1, 0)` sits at θ=0 (single-Yukawa limit). The tree-level blind-spot locus is `m_χ₁ + M_Ψ·sin(2θ) = 0` (paper Eq. 8); at θ=0 this collapses to `m_χ₁ = 0`, so the benchmark is far from the cancellation and tree σ_SI is non-zero. Loop-floor enhancement near the blind spot is a v2 extension that requires the `/looptools eval` runtime to bridge `/formcalc` to `/ddcalc`.
+
+```python
+import json, shutil, subprocess, sys
+from pathlib import Path
+
+dd_out_dir = Path("./demo_output/singlet-doublet/maddm_run_dd/")
+shutil.rmtree(dd_out_dir, ignore_errors=True)  # MG5 `output` refuses to overwrite
+dd_out_dir.parent.mkdir(parents=True, exist_ok=True)
+
+setup_dd, launch_dd = generate_maddm_script(
+    ufo_path=ufo_path,
+    dm_candidate="chi1",
+    out_dir=dd_out_dir,
+    observables=["direct_detection"],
+    split_for_param_overlay=True,
+)
+(dd_out_dir.parent / "setup_dd.mg5").write_text(setup_dd)
+(dd_out_dir.parent / "launch_dd.mg5").write_text(launch_dd)
+
+# Phase 1: write Cards/param_card.dat
+subprocess.run(
+    [mg5_bin, "--mode=maddm", str(dd_out_dir.parent / "setup_dd.mg5")],
+    cwd=dd_out_dir.parent, check=True,
+)
+
+# Overlay the SPheno SLHA from 4b before launch
+shutil.copy(slha_path, dd_out_dir / "Cards" / "param_card.dat")
+
+# Phase 2: launch MadDM with direct_detection target
+subprocess.run(
+    [mg5_bin, "--mode=maddm", str(dd_out_dir.parent / "launch_dd.mg5")],
+    cwd=dd_out_dir.parent, check=True,
+)
+
+# Parse via /gamlike v0
+maddm_dd_results = dd_out_dir / "output" / "run_01" / "MadDM_results.txt"
+gamlike_dd_json  = dd_out_dir / "gamlike.json"
+subprocess.run([
+    sys.executable,
+    "plugins/hep-ph-toolkit/skills/gamlike/scripts/parse_maddm_results.py",
+    str(maddm_dd_results),
+    "--out", str(gamlike_dd_json),
+], check=True)
+gamlike_dd = json.loads(gamlike_dd_json.read_text())
+
+# Build scattering/v1 JSON for /ddcalc.
+# /gamlike's `direct.results` mirrors MadDM's per-experiment table; the raw
+# nucleon cross-sections are emitted in the same MadDM_results.txt as
+# `sigma_SI_proton`, `sigma_SI_neutron`, `sigma_SD_proton`, `sigma_SD_neutron`.
+# Use whichever field /gamlike v0 surfaces under `direct` for this run.
+scattering = {
+    "schema_version":         "scattering/v1",
+    "m_dm_gev":               m_chi1,                   # parsed in 4c
+    "sigma_si_proton_cm2":    gamlike_dd["direct"]["sigma_si_proton_cm2"],
+    "sigma_si_neutron_cm2":   gamlike_dd["direct"]["sigma_si_neutron_cm2"],
+    "sigma_sd_proton_cm2":    gamlike_dd["direct"]["sigma_sd_proton_cm2"],
+    "sigma_sd_neutron_cm2":   gamlike_dd["direct"]["sigma_sd_neutron_cm2"],
+    "source":                 "maddm",
+    "source_run":             str(dd_out_dir.resolve()),
+    "halo":                   None,
+    "nucleon_form_factors":   {"preset": "default_2018"},
+}
+sigma_json = dd_out_dir / "scattering.json"
+sigma_json.write_text(json.dumps(scattering, indent=2))
+
+# Run /ddcalc
+ddcalc_proc = subprocess.run(
+    ["python3", "-m", "plugins.hep_ph_toolkit.skills.ddcalc.scripts.run_ddcalc",
+     "run", "--sigma-json", str(sigma_json)],
+    capture_output=True, text=True, check=True,
+)
+ddcalc_result = json.loads(ddcalc_proc.stdout)
+```
+
+> **Field-name caveat.** The exact field path inside `gamlike.direct` may evolve as `/gamlike` matures past v0 — if the keys above are absent, fall back to scraping `MadDM_results.txt` directly per `/maddm` SKILL.md "Reading MadDM output" (lines starting `sigma_SI_proton =`, `sigma_SI_neutron =`, etc.). The `scattering/v1` schema accepts `null` for spin-dependent cross-sections; emit `null` rather than `0.0` if MadDM's output omits them.
+
+Record the result to `./demo_output/singlet-doublet/dd.json`:
+
+```json
+{
+  "m_chi1":              <m_chi1>,
+  "sin_2theta":          0.0,
+  "blind_spot_distance": <m_chi1 + 500.0 * 0.0 = m_chi1; far from 0>,
+  "sigma_si_proton_cm2":   <from MadDM>,
+  "sigma_si_neutron_cm2":  <from MadDM>,
+  "sigma_sd_proton_cm2":   <from MadDM or null>,
+  "sigma_sd_neutron_cm2":  <from MadDM or null>,
+  "ddcalc": <verbatim ddcalc_result/v1 JSON>,
+  "regime":              "tree-only",
+  "loop_floor_pending":  true,
+  "status":              "ok" | "failed",
+  "scattering_json":     "<abs path>",
+  "maddm_results":       "<abs path to MadDM DD results>"
+}
+```
+
+`regime: "tree-only"` and `loop_floor_pending: true` make the tree-only scope explicit; downstream consumers know the loop contribution at the blind-spot locus is not yet included.
+
+##### 4f. Indirect detection branch (BLOCKED)
+
+Indirect detection remains BLOCKED on pull-computation. Record it as skipped in `summary.json`:
+
 - **Indirect detection** — blocked on pull-computation skill [future: dm-pull (v1+)]; `/gamlike [v0 — parser only; pull-computation v1+]` provides parsed MadDM output but does not compute likelihood pulls. Would require MadDM annihilation spectra as input to GamLike for gamma-ray and neutrino flux limits.
 
 ---
 
-##### 4f. Write summary.json
+##### 4g. Write summary.json
 
 At the end of Step 4 (after all READY constraints have run), write `./demo_output/singlet-doublet/summary.json` conforming to `plugins/hep-ph-toolkit/skills/singlet-doublet/summary.schema.json` (which `$ref`s `_shared/summary.core.schema.json`).
 
@@ -481,20 +585,21 @@ Create the output directory first:
 mkdir -p ./demo_output/singlet-doublet/
 ```
 
-Then write the file. Example for the case where only relic ran:
+Then write the file. Example for the case where relic and DD ran (the default READY subset):
 
 ```json
 {
   "schema_version": "1",
   "model": "singlet-doublet",
   "run_at": "<ISO-8601 timestamp>",
-  "ran": ["relic"],
+  "ran": ["relic", "dd"],
+  "dd_regime": "tree-only",
+  "loop_floor_pending": true,
   "skipped_constraints": [
-    {"id": "dd", "reason": "blocked on /feynarts, /formcalc, /ddcalc"},
-    {"id": "id", "reason": "blocked on /gamlike"}
+    {"id": "id", "reason": "blocked on pull-computation skill (v1+); /gamlike v0 parses MadDM output but does not compute likelihood pulls"}
   ],
   "artifacts_dir": "./demo_output/singlet-doublet/",
-  "headline": "Relic computed at single benchmark (MS=150, MPsi=500, y=1, θ=0): Ω h² = <value>. DD/ID skipped."
+  "headline": "Relic + tree-DD at canonical benchmark (MS=150, MPsi=500, y=1, θ=0): Ω h² = <value>; σ_SI(p) = <value> cm² (tree-only; loop floor pending /looptools eval). ID skipped."
 }
 ```
 
@@ -537,7 +642,10 @@ Plans MUST cite that fixture in any gate that compares against `omega_h2`.
 | `$STATE_ROOT/models/singlet_doublet/SPheno.spc.singlet_doublet` | `/spheno-build` | Mass spectrum at the benchmark point |
 | `./demo_output/singlet-doublet/relic.json` | Step 4c | `Omega h²` + channel breakdown at the benchmark point |
 | `./demo_output/singlet-doublet/summary.png` | Step 4d | Annihilation-channel bar chart |
-| `./demo_output/singlet-doublet/summary.json` | Step 4f | Per-model summary consumed by `/demo` closing block |
+| `./demo_output/singlet-doublet/maddm_run_dd/` | Step 4e | MadDM direct-detection session output |
+| `./demo_output/singlet-doublet/maddm_run_dd/scattering.json` | Step 4e | `scattering/v1` JSON consumed by `/ddcalc` |
+| `./demo_output/singlet-doublet/dd.json` | Step 4e | Tree σ_SI/σ_SD + DDCalc per-experiment verdict |
+| `./demo_output/singlet-doublet/summary.json` | Step 4g | Per-model summary consumed by `/demo` closing block |
 
 ---
 
