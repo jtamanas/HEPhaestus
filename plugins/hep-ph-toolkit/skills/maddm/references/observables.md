@@ -129,11 +129,14 @@ set loop OFF               # Tree-level only (default)
 ### Output
 
 ```
-sigma_SI (proton)  = 1.23e-46 cm^2
-sigma_SI (neutron) = 1.19e-46 cm^2
-sigma_SD (proton)  = 4.56e-42 cm^2
-sigma_SD (neutron) = 3.89e-42 cm^2
+SigmaN_SI_p                   = [1.23e-46, 4.30e-47]   # Xenon1ton
+SigmaN_SI_n                   = [1.19e-46, 4.30e-47]   # Xenon1ton
+SigmaN_SD_p                   = [4.56e-42, 6.50e-41]   # Pico60
+SigmaN_SD_n                   = [3.89e-42, 3.50e-41]   # Lux2017
 ```
+
+Each bracket is `[σ_DM_predicted_at_this_mass, σ_experiment_90CL_limit_at_this_mass]`;
+the comment after `#` names the experiment whose limit appears in the second slot.
 
 ## Indirect Detection
 

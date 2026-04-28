@@ -89,7 +89,16 @@ point. MadDM 3.2+ writes results to
 `<output_dir>/output/run_01/MadDM_results.txt`.
 
 ```python
+import re
 from pathlib import Path
+
+_BRACKET_RE = re.compile(r"\[\s*([\deE.+-]+)\s*,\s*([\deE.+-]+)\s*\]")
+_SIGMAN_KEYS = {
+    "SigmaN_SI_p": "sigma_si_proton",
+    "SigmaN_SI_n": "sigma_si_neutron",
+    "SigmaN_SD_p": "sigma_sd_proton",
+    "SigmaN_SD_n": "sigma_sd_neutron",
+}
 
 results = []
 for i, point in enumerate(grid):
@@ -98,20 +107,22 @@ for i, point in enumerate(grid):
     text = results_file.read_text()
     obs = dict(point)  # start with parameter values
 
-    # Extract Omega h^2: line matching "Omegah2 = <value>" (MadDM 3.2+)
-    # or "Omega h^2 = <value>" (legacy)
+    # Omega h^2: line matching "Omegah2 = <value>" (MadDM 3.2+) or
+    # "Omega h^2 = <value>" (legacy).
     for line in text.splitlines():
-        if "Omegah2" in line or "Omega h^2" in line:
-            obs["omega_h2"] = float(line.split("=")[1].strip())
+        if line.lstrip().startswith(("Omegah2", "Omega h^2")):
+            obs["omega_h2"] = float(line.split("=", 1)[1].strip())
             break
 
-    # Extract sigma_SI_proton, sigma_SI_neutron, sigma_SD_proton, sigma_SD_neutron
-    # lines matching "sigma_SI_proton = <value>" etc.
+    # Per-nucleon σ: MadDM 3.2 emits `SigmaN_SI_p = [sigma, exp_limit]` etc.
+    # We capture only the first bracket element (the predicted σ at this mass).
     for line in text.splitlines():
-        for key in ("sigma_SI_proton", "sigma_SI_neutron",
-                    "sigma_SD_proton", "sigma_SD_neutron"):
-            if line.strip().startswith(key):
-                obs[key.lower()] = float(line.split("=")[1].strip())
+        stripped = line.lstrip()
+        for maddm_key, out_key in _SIGMAN_KEYS.items():
+            if stripped.startswith(maddm_key):
+                m = _BRACKET_RE.search(line)
+                if m:
+                    obs[out_key] = float(m.group(1))
 
     results.append(obs)
 ```
@@ -122,7 +133,9 @@ field-extraction patterns (including per-channel percentages). Do not use
 
 ### Result format
 
-Each result dict contains the grid point parameters plus computed observables:
+Each result dict contains the grid point parameters plus computed observables.
+Per-nucleon σ values are the predicted cross-section at this DM mass (first
+element of MadDM's `[sigma, exp_limit]` bracket pair):
 
 ```python
 {

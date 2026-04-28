@@ -160,30 +160,43 @@ After `launch -f` completes, MadDM 3.2+ writes results to
 
 - **Omega h^2**: line matching `Omegah2 = <value>` (MadDM 3.2+) or
   `Omega h^2 = <value>` (legacy). Example: `Omegah2                       = 2.92e-01`
-- **Spin-independent cross-sections**: lines matching
-  `sigma_SI_proton = <value>` and `sigma_SI_neutron = <value>` (cm²)
-- **Spin-dependent cross-sections**: lines matching
-  `sigma_SD_proton = <value>` and `sigma_SD_neutron = <value>` (cm²)
+- **Spin-independent cross-sections (per-nucleon)**: lines matching
+  `SigmaN_SI_p = [<sigma>, <exp_limit>]` and `SigmaN_SI_n = [<sigma>, <exp_limit>]`
+  (cm²). The bracket-pair is `[σ_DM_at_this_mass, σ_experiment_90CL_limit]`;
+  the comment after `#` names the experiment used for the limit (e.g. `# Xenon1ton`).
+- **Spin-dependent cross-sections (per-nucleon)**: lines matching
+  `SigmaN_SD_p = [<sigma>, <exp_limit>]` and `SigmaN_SD_n = [<sigma>, <exp_limit>]`
+  (cm²). Same bracket convention as SI.
 - **Total annihilation cross-section**: line matching
-  `sigmav_total = <value>` (cm³/s); or the section header `<sigma v>`.
-  (Back-compat note: earlier MadDM 3.2 outputs may label this line `sigmav_xf` — treat `sigmav_xf` as an alias for `sigmav_total` if present.)
+  `sigmav_xf = <value>` (cm³/s) inside the Relic Density section. (Earlier
+  MadDM 3.2 outputs labeled this `sigmav_total`; treat the two as aliases.)
 - **Per-channel percentages** (MadDM 3.2+): lines matching
   `%_chi1chi1_<channel> = <pct> %` (e.g. `%_chi1chi1_zz = 17.84 %`)
 
-Emit JSON:
+The canonical `gamlike/v1` shape for the DD section:
+
 ```json
-{
-  "Omegah2": <float>,
-  "sigma_si_proton": <float or null>,
-  "sigma_si_neutron": <float or null>,
-  "sigma_sd_proton": <float or null>,
-  "sigma_sd_neutron": <float or null>,
-  "sigmav_total": <float or null>,
-  "channels": {"zz": 17.84, "ww": 12.3, ...}
+"direct": {
+  "present": true,
+  "sigma_si_proton_cm2":  <float>,
+  "sigma_si_neutron_cm2": <float>,
+  "sigma_sd_proton_cm2":  <float>,
+  "sigma_sd_neutron_cm2": <float>,
+  "lim_si_proton_cm2":    <float>,
+  "lim_si_neutron_cm2":   <float>,
+  "lim_sd_proton_cm2":    <float>,
+  "lim_sd_neutron_cm2":   <float>,
+  "results": [
+    {"name": "SigmaN_SI_p", "experiment_label": "Xenon1ton", "sig_cm2": ..., "lim_cm2": ...},
+    ...
+  ]
 }
 ```
-If a field is absent from the file, emit `null`. Fail loudly if
-`MadDM_results.txt` is not found — do not return empty values.
+
+Each named field is `null` if MadDM's output omitted that nucleon line (rare;
+fail loud rather than silently consuming `null` downstream). The `results` list
+preserves the generic per-key transport, including the experiment label parsed
+from the inline comment. Fail loudly if `MadDM_results.txt` is not found.
 
 ### Cross-Skill Dependencies
 
