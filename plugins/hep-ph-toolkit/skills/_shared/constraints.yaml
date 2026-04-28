@@ -745,11 +745,20 @@ models:
     display:
       title: "Singlet-Doublet"
       hook:  "3×3 neutralino-like mixing, tree-level blind spot, loop floor."
-    # spec_path: INTENTIONALLY ABSENT (singlet-doublet v3 spec present at
+    # spec_path INTENTIONALLY ABSENT until the spec migrates to _schema_version: 2.
+    #
+    # The singlet-doublet v3 spec lives at
     #   plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/singlet_doublet.yaml
-    # but not yet wired here — /model-router singlet-doublet degrades to the
-    # diagnostics path (no axis_snapshot). Wire when the constraint chain is ready.
-    # spec_path: plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/singlet_doublet.yaml
+    # but lacks the `_schema_version: 2` + `dm_phenomenology` blocks that
+    # `taxonomy.read_axes` (plugins/hep-ph-toolkit/skills/_shared/taxonomy.py:261)
+    # now requires. Wiring spec_path here would upgrade the soft "no axis_snapshot"
+    # degradation into a hard `RegistryCorrupt` exception inside
+    # /model-router (matching the pre-existing dark-su3 failure in
+    # tests/test_cli_smoke.py::test_cli_smoke_runs_against_production_registry).
+    #
+    # Migrate the spec (add _schema_version: 2 + dm_phenomenology) and then
+    # uncomment:
+    #   spec_path: plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/singlet_doublet.yaml
     dm_candidates:
       - {name: chi1, spin: "1/2", notes: "Majorana, lightest eigenstate of the singlet-doublet mixing."}
     plot_axes:
