@@ -514,19 +514,29 @@ subprocess.run([
     "--out", str(gamlike_dd_json),
 ], check=True)
 gamlike_dd = json.loads(gamlike_dd_json.read_text())
+direct = gamlike_dd["direct"]
 
-# Build scattering/v1 JSON for /ddcalc.
-# /gamlike's `direct.results` mirrors MadDM's per-experiment table; the raw
-# nucleon cross-sections are emitted in the same MadDM_results.txt as
-# `sigma_SI_proton`, `sigma_SI_neutron`, `sigma_SD_proton`, `sigma_SD_neutron`.
-# Use whichever field /gamlike v0 surfaces under `direct` for this run.
+# /gamlike surfaces MadDM's four `SigmaN_*` per-nucleon σ as named fields.
+# All four are required by scattering/v1; if any are missing here the upstream
+# MadDM run did not produce the canonical DD lines and we should fail loud.
+missing = [k for k in (
+    "sigma_si_proton_cm2", "sigma_si_neutron_cm2",
+    "sigma_sd_proton_cm2", "sigma_sd_neutron_cm2",
+) if direct.get(k) is None]
+if missing:
+    raise RuntimeError(
+        f"gamlike.direct missing required nucleon σ fields: {missing}. "
+        f"Check that MadDM's DD section emitted the SigmaN_SI_p/n and SigmaN_SD_p/n "
+        f"lines in {maddm_dd_results}."
+    )
+
 scattering = {
     "schema_version":         "scattering/v1",
     "m_dm_gev":               m_chi1,                   # parsed in 4c
-    "sigma_si_proton_cm2":    gamlike_dd["direct"]["sigma_si_proton_cm2"],
-    "sigma_si_neutron_cm2":   gamlike_dd["direct"]["sigma_si_neutron_cm2"],
-    "sigma_sd_proton_cm2":    gamlike_dd["direct"]["sigma_sd_proton_cm2"],
-    "sigma_sd_neutron_cm2":   gamlike_dd["direct"]["sigma_sd_neutron_cm2"],
+    "sigma_si_proton_cm2":    direct["sigma_si_proton_cm2"],
+    "sigma_si_neutron_cm2":   direct["sigma_si_neutron_cm2"],
+    "sigma_sd_proton_cm2":    direct["sigma_sd_proton_cm2"],
+    "sigma_sd_neutron_cm2":   direct["sigma_sd_neutron_cm2"],
     "source":                 "maddm",
     "source_run":             str(dd_out_dir.resolve()),
     "halo":                   None,
@@ -544,8 +554,6 @@ ddcalc_proc = subprocess.run(
 ddcalc_result = json.loads(ddcalc_proc.stdout)
 ```
 
-> **Field-name caveat.** The exact field path inside `gamlike.direct` may evolve as `/gamlike` matures past v0 — if the keys above are absent, fall back to scraping `MadDM_results.txt` directly per `/maddm` SKILL.md "Reading MadDM output" (lines starting `sigma_SI_proton =`, `sigma_SI_neutron =`, etc.). The `scattering/v1` schema accepts `null` for spin-dependent cross-sections; emit `null` rather than `0.0` if MadDM's output omits them.
-
 Record the result to `./demo_output/singlet-doublet/dd.json`:
 
 ```json
@@ -553,10 +561,10 @@ Record the result to `./demo_output/singlet-doublet/dd.json`:
   "m_chi1":              <m_chi1>,
   "sin_2theta":          0.0,
   "blind_spot_distance": <m_chi1 + 500.0 * 0.0 = m_chi1; far from 0>,
-  "sigma_si_proton_cm2":   <from MadDM>,
-  "sigma_si_neutron_cm2":  <from MadDM>,
-  "sigma_sd_proton_cm2":   <from MadDM or null>,
-  "sigma_sd_neutron_cm2":  <from MadDM or null>,
+  "sigma_si_proton_cm2":   <copied from scattering.json — non-null>,
+  "sigma_si_neutron_cm2":  <copied from scattering.json — non-null>,
+  "sigma_sd_proton_cm2":   <copied from scattering.json — non-null>,
+  "sigma_sd_neutron_cm2":  <copied from scattering.json — non-null>,
   "ddcalc": <verbatim ddcalc_result/v1 JSON>,
   "regime":              "tree-only",
   "loop_floor_pending":  true,
