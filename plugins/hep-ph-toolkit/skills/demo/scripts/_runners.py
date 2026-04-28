@@ -191,15 +191,20 @@ def _parse_maddm_results(path: Path) -> dict:
     m = re.search(r"Omega\s*h\^?2\s*[=:]\s*([\deE.+-]+)", text)
     if m:
         out["omega_h2"] = float(m.group(1))
-    for pat, key in [
-        (r"sigma_SI.*proton", "sigma_si_proton"),
-        (r"sigma_SI.*neutron", "sigma_si_neutron"),
-        (r"sigma_SD.*proton", "sigma_sd_proton"),
-        (r"sigma_SD.*neutron", "sigma_sd_neutron"),
-    ]:
-        mm = re.search(rf"{pat}\s*[=:]\s*([\deE.+-]+)", text, re.IGNORECASE)
+    # MadDM 3.2 emits per-nucleon σ as `SigmaN_SI_p = [σ, exp_limit]` etc.
+    # Capture only the first bracket element (the predicted σ at this mass).
+    for maddm_key, out_key in (
+        ("SigmaN_SI_p", "sigma_si_proton"),
+        ("SigmaN_SI_n", "sigma_si_neutron"),
+        ("SigmaN_SD_p", "sigma_sd_proton"),
+        ("SigmaN_SD_n", "sigma_sd_neutron"),
+    ):
+        mm = re.search(
+            rf"^{maddm_key}\s*=\s*\[\s*([\deE.+-]+)",
+            text, re.MULTILINE,
+        )
         if mm:
-            out[key] = float(mm.group(1))
+            out[out_key] = float(mm.group(1))
     sv = re.search(r"<sigma\s*v>\s*(?:total)?\s*[=:]\s*([\deE.+-]+)", text)
     if sv:
         out["sigmav_total"] = float(sv.group(1))
