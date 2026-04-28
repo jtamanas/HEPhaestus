@@ -77,10 +77,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"dry-run: {n} path(s) would be rewritten", file=sys.stderr)
         return 0
 
-    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    # Backup with microsecond-resolution UTC timestamp to avoid same-second
+    # collisions across multiple invocations in tight loops or test fixtures.
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ")
     backup = args.config.with_suffix(args.config.suffix + f".bak.{ts}")
     backup.write_text(raw)
-    args.config.write_text(json.dumps(rewritten, indent=2) + "\n")
+
+    # Atomic write: stage to a tempfile in the same directory, then os.replace.
+    # Same-directory ensures the rename is on the same filesystem (POSIX rename
+    # is atomic only within a single fs).
+    tmp = args.config.with_suffix(args.config.suffix + ".tmp")
+    tmp.write_text(json.dumps(rewritten, indent=2) + "\n")
+    os.replace(tmp, args.config)
+
     print(f"rewrote {n} path(s); backup at {backup}", file=sys.stderr)
     return 0
 

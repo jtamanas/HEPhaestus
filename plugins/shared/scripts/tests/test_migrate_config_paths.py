@@ -90,6 +90,39 @@ def test_idempotent(tmp_path):
     assert len(backups) == 1
 
 
+def test_no_tmp_file_left_behind(tmp_path):
+    """Atomic write uses a .tmp staging file; it must not leak past success."""
+    real = tmp_path / ".local/share/hephaestus/x"
+    real.mkdir(parents=True)
+    cfg = _write_config(tmp_path, {
+        "x": str(tmp_path / ".local/share/hep-ph-agents/x"),
+    })
+    proc = _run(cfg)
+    assert proc.returncode == 0
+    leftover = list(tmp_path.glob("config.json.tmp"))
+    assert leftover == [], f"tmp file leaked: {leftover}"
+
+
+def test_back_to_back_invocations_get_distinct_backups(tmp_path):
+    """Two invocations within the same second must produce distinct backups —
+    timestamp resolution is microseconds, not seconds."""
+    cfg_data = lambda: {
+        "x": str(tmp_path / ".local/share/hep-ph-agents/x"),
+    }
+    real = tmp_path / ".local/share/hephaestus/x"
+    real.mkdir(parents=True)
+
+    # First migration
+    cfg = _write_config(tmp_path, cfg_data())
+    _run(cfg)
+    # Reset config to legacy state and migrate again immediately
+    cfg.write_text(json.dumps(cfg_data(), indent=2))
+    _run(cfg)
+
+    backups = list(tmp_path.glob("config.json.bak.*"))
+    assert len(backups) == 2, f"expected 2 distinct backups, got {len(backups)}: {backups}"
+
+
 def test_dry_run_does_not_mutate(tmp_path):
     real = tmp_path / ".local/share/hephaestus/x"
     real.mkdir(parents=True)
