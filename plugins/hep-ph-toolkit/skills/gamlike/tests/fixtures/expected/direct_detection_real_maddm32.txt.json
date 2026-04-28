@@ -21,32 +21,38 @@
     "present": true,
     "results": [
       {
-        "name": "Xenon1T_2018_SI",
-        "experiment_label": "XENON1T 2018 (SI)",
-        "sig_cm2": 1.23e-45,
-        "lim_cm2": 3.4e-46
+        "name": "SigmaN_SI_p",
+        "experiment_label": "Xenon1ton",
+        "sig_cm2": 7.69e-45,
+        "lim_cm2": 1.17e-46
       },
       {
-        "name": "Xenon1T_2018_SD_neutron",
-        "experiment_label": "XENON1T 2018 (SD)",
-        "sig_cm2": 5.5e-42,
-        "lim_cm2": 5.67e-42
+        "name": "SigmaN_SI_n",
+        "experiment_label": "Xenon1ton",
+        "sig_cm2": 7.79e-45,
+        "lim_cm2": 1.17e-46
       },
       {
-        "name": "LUX_2016_SI",
-        "experiment_label": "LUX 2016 (SI)",
-        "sig_cm2": 2e-45,
-        "lim_cm2": 1.2e-46
+        "name": "SigmaN_SD_p",
+        "experiment_label": "Pico60",
+        "sig_cm2": 5.19e-40,
+        "lim_cm2": 6.52e-41
+      },
+      {
+        "name": "SigmaN_SD_n",
+        "experiment_label": "Lux2017",
+        "sig_cm2": 3.95e-40,
+        "lim_cm2": 3.56e-41
       }
     ],
-    "sigma_si_proton_cm2": null,
-    "sigma_si_neutron_cm2": null,
-    "sigma_sd_proton_cm2": null,
-    "sigma_sd_neutron_cm2": null,
-    "lim_si_proton_cm2": null,
-    "lim_si_neutron_cm2": null,
-    "lim_sd_proton_cm2": null,
-    "lim_sd_neutron_cm2": null
+    "sigma_si_proton_cm2": 7.69e-45,
+    "sigma_si_neutron_cm2": 7.79e-45,
+    "sigma_sd_proton_cm2": 5.19e-40,
+    "sigma_sd_neutron_cm2": 3.95e-40,
+    "lim_si_proton_cm2": 1.17e-46,
+    "lim_si_neutron_cm2": 1.17e-46,
+    "lim_sd_proton_cm2": 6.52e-41,
+    "lim_sd_neutron_cm2": 3.56e-41
   },
   "indirect": {
     "present": false,

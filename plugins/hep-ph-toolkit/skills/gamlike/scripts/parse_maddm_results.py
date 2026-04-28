@@ -302,9 +302,35 @@ def _parse_relic(lines: list, section_slice: slice, warnings: list) -> dict:
     return result
 
 
+# MadDM 3.2 canonical key → (sigma_field, lim_field) in gamlike output
+_SIGMAN_KEY_MAP = {
+    "SigmaN_SI_p": ("sigma_si_proton_cm2",  "lim_si_proton_cm2"),
+    "SigmaN_SI_n": ("sigma_si_neutron_cm2", "lim_si_neutron_cm2"),
+    "SigmaN_SD_p": ("sigma_sd_proton_cm2",  "lim_sd_proton_cm2"),
+    "SigmaN_SD_n": ("sigma_sd_neutron_cm2", "lim_sd_neutron_cm2"),
+}
+
+
 def _parse_direct(lines: list, section_slice: slice, warnings: list) -> dict:
-    """Parse the Direct Detection section."""
-    results_list = []
+    """Parse the Direct Detection section.
+
+    MadDM 3.2 emits four canonical per-nucleon lines (`SigmaN_SI_p` etc.) with
+    `[sigma, exp_limit]` brackets. Surface those as named top-level fields *and*
+    preserve the generic per-key list under `results` so consumers that want
+    the full transport (or experiment names from the comment) still work.
+    """
+    result = {
+        "present": True,
+        "results": [],
+        "sigma_si_proton_cm2":  None,
+        "sigma_si_neutron_cm2": None,
+        "sigma_sd_proton_cm2":  None,
+        "sigma_sd_neutron_cm2": None,
+        "lim_si_proton_cm2":    None,
+        "lim_si_neutron_cm2":   None,
+        "lim_sd_proton_cm2":    None,
+        "lim_sd_neutron_cm2":   None,
+    }
     for line in lines[section_slice]:
         stripped = line.rstrip()
         if not stripped or stripped.startswith('#'):
@@ -315,17 +341,19 @@ def _parse_direct(lines: list, section_slice: slice, warnings: list) -> dict:
         key, val_str, comment = kv
         if val_str.startswith('['):
             a, b = _parse_bracket(val_str, f"direct.{key}", warnings)
-            results_list.append({
+            result["results"].append({
                 "name": key,
                 "experiment_label": comment.strip() if comment else None,
                 "sig_cm2": a,
                 "lim_cm2": b,
             })
+            mapped = _SIGMAN_KEY_MAP.get(key)
+            if mapped:
+                sig_field, lim_field = mapped
+                result[sig_field] = a
+                result[lim_field] = b
 
-    return {
-        "present": True,
-        "results": results_list,
-    }
+    return result
 
 
 def _parse_indirect(lines: list, section_slice: slice, warnings: list) -> dict:

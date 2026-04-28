@@ -40,7 +40,15 @@
         "sig_cm2": 5.5e-42,
         "lim_cm2": 5.67e-42
       }
-    ]
+    ],
+    "sigma_si_proton_cm2": null,
+    "sigma_si_neutron_cm2": null,
+    "sigma_sd_proton_cm2": null,
+    "sigma_sd_neutron_cm2": null,
+    "lim_si_proton_cm2": null,
+    "lim_si_neutron_cm2": null,
+    "lim_sd_proton_cm2": null,
+    "lim_sd_neutron_cm2": null
   },
   "indirect": {
     "present": true,

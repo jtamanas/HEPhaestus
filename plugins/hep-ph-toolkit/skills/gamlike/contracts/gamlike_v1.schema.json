@@ -67,7 +67,15 @@
               "lim_cm2": { "type": ["number", "null"] }
             }
           }
-        }
+        },
+        "sigma_si_proton_cm2":  { "type": ["number", "null"] },
+        "sigma_si_neutron_cm2": { "type": ["number", "null"] },
+        "sigma_sd_proton_cm2":  { "type": ["number", "null"] },
+        "sigma_sd_neutron_cm2": { "type": ["number", "null"] },
+        "lim_si_proton_cm2":    { "type": ["number", "null"] },
+        "lim_si_neutron_cm2":   { "type": ["number", "null"] },
+        "lim_sd_proton_cm2":    { "type": ["number", "null"] },
+        "lim_sd_neutron_cm2":   { "type": ["number", "null"] }
       }
     },
     "indirect": {
