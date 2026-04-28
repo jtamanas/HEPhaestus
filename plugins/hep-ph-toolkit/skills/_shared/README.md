@@ -12,8 +12,9 @@ time estimates. The primary input for `time_budget.py` and the
 `/dark-matter-constraints` prereq checker. See skill docs for schema details.
 
 **`time_budget.py`** — render-chain logic. Given a model + selected constraints,
-produces a `TimeReport` with `READY`/`BLOCKED` status per constraint and
-overlap-adjusted time estimates. CLI: `python3 time_budget.py --model dark-su3 --constraints relic dd id`.
+produces a `TimeReport` with `READY`/`BLOCKED` status per constraint (printed to
+users as `READY` / `COMING SOON`) and overlap-adjusted time estimates. CLI:
+`python3 time_budget.py --model dark-su3 --constraints relic dd id`.
 
 **`analytic_exceptions.yaml`** — registry of mandatory regression-anchor and
 proxy-run disclosures. Each entry pins a verbatim banner that must appear at

@@ -30,7 +30,7 @@ still resolve to a real, intentional design decision.
 
 Per-model constraint workflow for the Dark SU(3) dark-Higgs benchmark from Arcadi & Profumo (arXiv:2506.19062 §IV). The model is SU(3)_D → SU(2)_D Higgsing: a dark Higgs doublet in the fundamental of SU(3)_D acquires a VEV, breaking the gauge group and producing two DM candidates — `V`, the massive dark gauge boson (spin-1, tree-level SI non-zero), and `Psi`, the CP-odd component of the dark Higgs doublet (spin-0, exact parameter-independent SI blind spot at tree level).
 
-This is a multi-component dark matter model. Relic density per candidate is available now via `analytic_models.dark_su3` (see its header docstring for the current integration method and approximation caveats), driven through the analytic-only branch of `/dark-matter-constraints [EXISTS]`. Multi-component combination of per-candidate relic densities into a paper-fidelity total `Ω_tot h²` is on the upgrade roadmap (see the `dsu3-002` banner above) — values emitted today are regression anchors only. DD and ID chains remain `[BLOCKED]` on `/feynarts`/`/formcalc` (DD) and `/gamlike` (ID); `/dark-matter-constraints` itself is **EXISTS**.
+This is a multi-component dark matter model. Relic density per candidate is available now via `analytic_models.dark_su3` (see its header docstring for the current integration method and approximation caveats), driven through the analytic-only branch of `/dark-matter-constraints [EXISTS]`. Multi-component combination of per-candidate relic densities into a paper-fidelity total `Ω_tot h²` is on the upgrade roadmap (see the `dsu3-002` banner above) — values emitted today are regression anchors only. DD and ID chains remain `[COMING SOON]` on `/feynarts`/`/formcalc` (DD) and `/gamlike` (ID); `/dark-matter-constraints` itself is **EXISTS**.
 
 ---
 
@@ -76,8 +76,8 @@ python3 plugins/hep-ph-toolkit/skills/_shared/time_budget.py \
 | Constraint | Status | Chain | Cold (hr) | Cached (hr) |
 |---|---|---|---|---|
 | Relic density | **READY** (analytic-only branch) | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/dark-matter-constraints [EXISTS]` | 1.5–3 | 0.3–0.7 |
-| Direct detection | **BLOCKED** — loop-DD chain integration pending; multi-component combiner pending | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/feynarts [EXISTS]` → `/formcalc [EXISTS]` → `/ddcalc [EXISTS]` → `/dark-matter-constraints [EXISTS]` | 3–5 | 0.5–1 |
-| Indirect detection | **BLOCKED** — `/gamlike [v0 — parser only; pull-computation v1+]` (parser shipped; pull-computation v1+) | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` → `/gamlike [v0 — parser only; pull-computation v1+]` → `/dark-matter-constraints [EXISTS]` | 1.5–4 | 0.3–0.7 |
+| Direct detection | **COMING SOON** — loop-DD chain integration pending; multi-component combiner pending | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/feynarts [EXISTS]` → `/formcalc [EXISTS]` → `/ddcalc [EXISTS]` → `/dark-matter-constraints [EXISTS]` | 3–5 | 0.5–1 |
+| Indirect detection | **COMING SOON** — `/gamlike [v0 — parser only; pull-computation v1+]` (parser shipped; pull-computation v1+) | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` → `/gamlike [v0 — parser only; pull-computation v1+]` → `/dark-matter-constraints [EXISTS]` | 1.5–4 | 0.3–0.7 |
 
 All-constraints cold total (overlap-adjusted, hypothetical if all prereqs existed): **3.5–9 hr**.
 Selected + ready (relic only): cold ~1–3 hr, cached ~0.3–0.6 hr.
@@ -103,7 +103,7 @@ Print verbatim:
 >   - `V`   — Dark vector boson (spin-1); couples to nucleons via H_1 + H_2 Higgs portal; tree-level SI non-zero.
 >   - `Psi` — Dark pseudoscalar (spin-0); CP-odd component of the dark Higgs doublet; exact parameter-independent SI blind spot (Eq. 29).
 >
-> This is a **multi-component** model. Per-candidate observables must be combined using relic-weighted fractions `f_i = Ω_i / Ω_tot`. Per-candidate relic density is available now via the analytic-only branch of `/dark-matter-constraints [EXISTS]` (see the module's header docstring for the current method; paper uses micrOMEGAs). Paper-fidelity multi-component weighting into a total `Ω_tot h²` is on the upgrade roadmap (per the `dsu3-002` banner above) — emitted values are regression anchors only. DD and ID chains remain `[BLOCKED]` on `/feynarts`/`/formcalc` (DD) and `/gamlike` (ID).
+> This is a **multi-component** model. Per-candidate observables must be combined using relic-weighted fractions `f_i = Ω_i / Ω_tot`. Per-candidate relic density is available now via the analytic-only branch of `/dark-matter-constraints [EXISTS]` (see the module's header docstring for the current method; paper uses micrOMEGAs). Paper-fidelity multi-component weighting into a total `Ω_tot h²` is on the upgrade roadmap (per the `dsu3-002` banner above) — emitted values are regression anchors only. DD and ID chains remain `[COMING SOON]` on `/feynarts`/`/formcalc` (DD) and `/gamlike` (ID).
 >
 > **Reference Lagrangian** — this is the physics the analytic module reproduces (arXiv:2506.19062 §IV, Eqs. 26-29). SU(3)_D is broken to SU(2)_D by a dark Higgs doublet Φ_D in the fundamental of SU(3)_D that acquires a VEV `v_D`:
 >
@@ -158,13 +158,13 @@ Planned chain for Dark SU(3):
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /dark-matter-constraints [EXISTS]
     cold: 1.5–3 hr   cached: 0.3–0.7 hr
 
-  Direct detection      BLOCKED [BLOCKED — missing: /feynarts, /formcalc, /ddcalc]
+  Direct detection      [COMING SOON — pending: /feynarts, /formcalc, /ddcalc loop chain]
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS]
       → /feynarts [EXISTS] → /formcalc [EXISTS] → /ddcalc [EXISTS]
       → /dark-matter-constraints [EXISTS]
     cold: 3–5 hr   cached: 0.5–1 hr
 
-  Indirect detection    BLOCKED [BLOCKED — /gamlike [v0 — parser only; pull-computation v1+] (parser shipped; pull-computation v1+)]
+  Indirect detection    [COMING SOON — /gamlike v0 parser shipped; pull-computation v1+]
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS] → /maddm [EXISTS]
       → /gamlike [v0 — parser only; pull-computation v1+] → /dark-matter-constraints [EXISTS]
     cold: 1.5–4 hr   cached: 0.3–0.7 hr
@@ -176,7 +176,7 @@ Overlap-adjusted totals (shared prereqs counted once):
 
 Adapt the printed block to the user's actual selection (not always all three).
 
-**Relic is now READY via the analytic-only branch of `/dark-matter-constraints [EXISTS]`.** When the user selects only relic, the ready-branch gate fires; when DD or ID are selected, those are BLOCKED on `/feynarts`/`/formcalc`/`/ddcalc` (DD) and `/gamlike` (ID) — `/dark-matter-constraints` itself is no longer the blocker. The blocked-branch gate fires:
+**Relic is now READY via the analytic-only branch of `/dark-matter-constraints [EXISTS]`.** When the user selects only relic, the ready-branch gate fires; when DD or ID are selected, those are COMING SOON (waiting on `/feynarts`/`/formcalc`/`/ddcalc` for DD and `/gamlike` for ID) — `/dark-matter-constraints` itself is ready. The coming-soon-branch gate fires:
 
 ```json
 {
@@ -222,7 +222,7 @@ This branch fires only if the user selected DD and/or ID exclusively (without re
 
 ### Step 4 — Execute
 
-**Relic is READY via the analytic-only branch; DD and ID remain `[BLOCKED]`** on
+**Relic is READY via the analytic-only branch; DD and ID are `[COMING SOON]`,** waiting on
 `/feynarts`/`/formcalc`/`/ddcalc` (DD) and `/gamlike` (ID). The relic chain runs
 `/sarah-build` → `/spheno-build (analytic backend)` → `/dark-matter-constraints
 (analytic-only branch)` and produces per-component Ω_V h² and Ω_Psi h² with the
@@ -281,7 +281,7 @@ Record per-candidate relic densities to `./demo_output/dark-su3/relic_V_<n>.json
 
 ---
 
-#### Step 4 — Direct detection branch (BLOCKED)
+#### Step 4 — Direct detection branch (COMING SOON)
 
 Direct detection for the Dark SU(3) model is blocked on the loop-DD prereq chain `/feynarts [EXISTS] → /formcalc [EXISTS] → /ddcalc [EXISTS] → /dark-matter-constraints [EXISTS]`. The `/dark-matter-constraints` meta-skill is available; the loop-DD chain integration is not yet integrated end-to-end. Two sub-issues:
 
@@ -293,7 +293,7 @@ When the FeynArts/FormCalc prereqs ship, the relic density branch results would 
 
 ---
 
-#### Step 4 — Indirect detection branch (BLOCKED)
+#### Step 4 — Indirect detection branch (COMING SOON)
 
 Indirect detection is blocked on `/gamlike [v0 — parser only; pull-computation v1+]`. The full ID chain is `… → /maddm [EXISTS] → /gamlike [v0 — parser only; pull-computation v1+] → /dark-matter-constraints [EXISTS]`; `/dark-matter-constraints` itself is available, the missing piece is `/gamlike` (gamma-ray flux conversion). When `/gamlike` ships:
 

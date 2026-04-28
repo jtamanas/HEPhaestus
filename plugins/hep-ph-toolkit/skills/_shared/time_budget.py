@@ -279,7 +279,7 @@ def _print_report(report: TimeReport) -> None:
         blocked_str = ""
         if row.status == "BLOCKED":
             missing_strs = ", ".join(f"/{p}" for p in row.missing)
-            blocked_str = f" [BLOCKED — missing: {missing_strs}]"
+            blocked_str = f" [COMING SOON — pending: {missing_strs}]"
         label = row.constraint.capitalize().replace("_", " ")
         if row.constraint == "dd":
             label = "Direct detection"
@@ -287,7 +287,11 @@ def _print_report(report: TimeReport) -> None:
             label = "Indirect detection"
         elif row.constraint == "relic":
             label = "Relic density"
-        print(f"  {label:<22}{row.status}{blocked_str}")
+        # Render the status with optimistic phrasing while keeping the internal
+        # enum (row.status) unchanged so downstream consumers and tests that
+        # branch on "BLOCKED" still work.
+        display_status = "COMING SOON" if row.status == "BLOCKED" else row.status
+        print(f"  {label:<22}{display_status}{blocked_str}")
         chain_str = " → ".join(
             f"/{prereq} [{tag}]" for prereq, tag in row.chain_annotated
         )

@@ -55,7 +55,7 @@ python3 plugins/hep-ph-toolkit/skills/_shared/time_budget.py \
 | Constraint | Status | Chain | Cold (hr) | Cached (hr) |
 |---|---|---|---|---|
 | Relic density | **READY** (hand-crafted SARAH model) | fixture copy → `/madgraph [EXISTS]` → `/maddm [EXISTS]` | 1–2 | 0.3–0.7 |
-| Direct detection | **BLOCKED** — loop-only (CP-forbidden tree SI); requires `/looptools eval` runtime to bridge `/formcalc` → `/ddcalc` | fixture copy → `/madgraph [EXISTS]` → `/feynarts [EXISTS]` → `/formcalc [EXISTS]` → `/ddcalc [EXISTS]` | 3–6 | 0.5–1.0 |
+| Direct detection | **COMING SOON** — loop-only (CP-forbidden tree SI); requires `/looptools eval` runtime to bridge `/formcalc` → `/ddcalc` | fixture copy → `/madgraph [EXISTS]` → `/feynarts [EXISTS]` → `/formcalc [EXISTS]` → `/ddcalc [EXISTS]` | 3–6 | 0.5–1.0 |
 | Indirect detection | **READY-with-caveat** — parser-only; pull computation pending (v1+) | fixture copy → `/madgraph [EXISTS]` → `/maddm [EXISTS]` (`generate indirect_detection`) → `/gamlike [v0 parser]` | 1–3 | 0.3–0.7 |
 
 > **Note on SPheno**: MadDM's internal Boltzmann solver is fed directly from the patched param_card; SPheno spectrum is not required on this path. `/spheno-build` was removed from the relic-density prereq chain.
@@ -67,7 +67,7 @@ parser-only: `/gamlike` v0 emits gamlike/v1 JSON with ⟨σv⟩, channel fractio
 and Fermi-LAT likelihood rows, but pull computation (likelihood deltas,
 exclusion verdicts) is deferred to a future dm-pull skill.
 
-Direct detection remains BLOCKED. For 2HDM+a the tree-level SI cross-section
+Direct detection is COMING SOON. For 2HDM+a the tree-level SI cross-section
 is CP-forbidden (the mediator `a` is CP-odd), so the physical signal is
 loop-only. Closing this needs a `/looptools eval` runtime to numerically
 evaluate the FormCalc-reduced amplitude into a `scattering/v1` JSON for
@@ -120,7 +120,7 @@ Ask the user which constraints to compute:
   "question": "Which constraints do you want computed for this model?",
   "options": [
     {"id": "relic",    "label": "Relic density",            "description": "Ω h² via MadDM (a-resonance region) — READY"},
-    {"id": "dd",       "label": "Direct detection",         "description": "Loop-only σ_SI via MadGraph + FeynArts/FormCalc + DDCalc — BLOCKED"},
+    {"id": "dd",       "label": "Direct detection",         "description": "Loop-only σ_SI via MadGraph + FeynArts/FormCalc + DDCalc — COMING SOON"},
     {"id": "id",       "label": "Indirect detection (parser-only)", "description": "MadDM `generate indirect_detection` → /gamlike v0 → gamlike/v1 JSON with ⟨σv⟩, channels, and Fermi-LAT likelihood rows. Pull computation (exclusion verdicts) deferred to dm-pull v1+."},
     {"id": "collider", "label": "Collider (coming soon)",   "description": "Placeholder — execution is a no-op"}
   ],
@@ -148,7 +148,7 @@ Planned chain for 2HDM + a:
     MadDM's internal Boltzmann solver is fed directly from the patched param_card;
     SPheno spectrum is not required on this path.
 
-  Direct detection    [BLOCKED — missing: /spec-authoring-incomplete, /feynarts, /formcalc, /ddcalc]
+  Direct detection    [COMING SOON — pending: spec-authoring backport, /looptools eval runtime]
     fixture copy → /madgraph [EXISTS]
       → /feynarts [EXISTS] → /formcalc [EXISTS] → /ddcalc [EXISTS]
     cold: 3–6 hr   cached: 30–60 min
@@ -168,7 +168,7 @@ Overlap-adjusted totals (shared prereqs counted once):
 
 Adapt the printed block to the user's actual selection (not always all three).
 
-**If any selected constraint is BLOCKED:**
+**If any selected constraint is COMING SOON:**
 
 ```json
 {
@@ -208,7 +208,7 @@ On `run_ready` or `go`: proceed to Step 4 with only the READY subset.
 
 ### Step 4 — Execute
 
-Execute the READY subset of the selected constraints in order. Relic density runs end-to-end (Boltzmann solve via MadDM). Indirect detection runs as a parser-only branch (MadDM `generate indirect_detection` → `/gamlike` v0; no pull computation). DD remains BLOCKED on the loop-DD chain and is skipped with a note recorded in `summary.json`.
+Execute the READY subset of the selected constraints in order. Relic density runs end-to-end (Boltzmann solve via MadDM). Indirect detection runs as a parser-only branch (MadDM `generate indirect_detection` → `/gamlike` v0; no pull computation). DD is COMING SOON (waiting on the loop-DD chain) and is skipped with a note recorded in `summary.json`.
 
 ---
 
@@ -582,9 +582,9 @@ Path("./demo_output/2hdm-a/id.json").write_text(json.dumps(id_doc, indent=2))
 > **Caveat banner.** Every consumer of `id.json` MUST surface
 > `dm_indirect_detection_status: "parser-only"`. Do not present `indirect.global.Total_xsec` as an exclusion-verdict input; the Fermi-LAT and IceCube pull computations are not implemented. Conditional-emission gates G13/G16 etc. (see `/gamlike` SKILL §"Conditional emission gates") may suppress fields with `FIELD_GATED` warnings — propagate them rather than coercing to zero.
 
-##### 4f. Direct detection branch (BLOCKED)
+##### 4f. Direct detection branch (COMING SOON)
 
-Direct detection remains BLOCKED on the loop-DD chain. Record it as skipped in `summary.json`:
+Direct detection is COMING SOON, pending the loop-DD chain. Record it as skipped in `summary.json`:
 
 - **Direct detection** — blocked on the `/looptools eval` runtime (the bridge from `/formcalc`'s `amp_reduced.m` to a `scattering/v1` JSON for `/ddcalc`) plus a SARAH-renderer backport so the loop-only UFO is physics-correct. For 2HDM+a the tree-level SI cross-section is CP-forbidden (the mediator `a` is CP-odd, so `σ_SI_tree ≈ 0`), so loop is the only physical channel — there is no tree-DD shortcut analogous to singlet-doublet's MadDM `generate direct_detection` path.
 

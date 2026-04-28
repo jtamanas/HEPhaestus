@@ -49,7 +49,7 @@ python3 plugins/hep-ph-toolkit/skills/_shared/time_budget.py \
 |---|---|---|---|---|
 | Relic density | **READY** | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` | 1–2 | 0.4–0.8 |
 | Direct detection | **READY (tree-only)** — loop floor near the blind-spot locus pending `/looptools eval` runtime | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` (`generate direct_detection`) → `/ddcalc [EXISTS]` | 1–2 | 0.4–0.8 |
-| Indirect detection | **BLOCKED** — pull computation pending (v1); `/gamlike` v0 produces parsed input | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` → `/gamlike [v0 — parser only; pull-computation v1+]` | 1–3 | 0.4–0.8 |
+| Indirect detection | **COMING SOON** — pull computation pending (v1); `/gamlike` v0 produces parsed input | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` → `/gamlike [v0 — parser only; pull-computation v1+]` | 1–3 | 0.4–0.8 |
 
 All-constraints cold total (overlap-adjusted): **3.2–8.0 hr**
 
@@ -126,7 +126,7 @@ Planned chain for Singlet-Doublet:
     Note: tree σ_SI is non-zero at the canonical θ=0 benchmark
     (blind-spot locus is m_χ₁ + M_Ψ·sin(2θ) = 0 — far from this point).
 
-  Indirect detection  [BLOCKED — pull computation pending (v1)]
+  Indirect detection  [COMING SOON — pull computation pending (v1)]
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS] → /maddm [EXISTS]
       → /gamlike [v0 — parser only; pull-computation v1+]
     cold: 1–3 hr   cached: 25–50 min
@@ -138,7 +138,7 @@ Overlap-adjusted totals (shared prereqs counted once):
 
 Adapt the printed block to the user's actual selection (not always all three).
 
-**If any selected constraint is BLOCKED:**
+**If any selected constraint is COMING SOON:**
 
 ```json
 {
@@ -178,7 +178,7 @@ On `run_ready` or `go`: proceed to Step 4 with only the READY subset.
 
 ### Step 4 — Execute
 
-Execute the READY subset of the selected constraints in order. Relic density and tree-level direct detection are READY today. Indirect detection is BLOCKED on pull-computation and is skipped with a note recorded in `summary.json`.
+Execute the READY subset of the selected constraints in order. Relic density and tree-level direct detection are READY today. Indirect detection is COMING SOON (pending pull-computation) and is skipped with a note recorded in `summary.json`.
 
 ---
 
@@ -568,9 +568,9 @@ Record the result to `./demo_output/singlet-doublet/dd.json`:
 
 `regime: "tree-only"` and `loop_floor_pending: true` make the tree-only scope explicit; downstream consumers know the loop contribution at the blind-spot locus is not yet included.
 
-##### 4f. Indirect detection branch (BLOCKED)
+##### 4f. Indirect detection branch (COMING SOON)
 
-Indirect detection remains BLOCKED on pull-computation. Record it as skipped in `summary.json`:
+Indirect detection is COMING SOON, pending pull-computation. Record it as skipped in `summary.json`:
 
 - **Indirect detection** — blocked on pull-computation skill [future: dm-pull (v1+)]; `/gamlike [v0 — parser only; pull-computation v1+]` provides parsed MadDM output but does not compute likelihood pulls. Would require MadDM annihilation spectra as input to GamLike for gamma-ray and neutrino flux limits.
 

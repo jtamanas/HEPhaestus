@@ -59,7 +59,7 @@ This demo walks the full pipeline for one of three paper-benchmark models — La
 → SARAH → SPheno → MadGraph/MadDM → a figure — with constraint selection (relic,
 direct, indirect) driving which sub-skills run. Some prereq skills (FeynArts,
 FormCalc, DDCalc, GamLike, and the multi-component DM combiner) are on the roadmap
-but not yet implemented; those constraints will surface as [BLOCKED] and you can
+but not yet implemented; those constraints will surface as [COMING SOON] and you can
 choose to run only the ready subset.
 ```
 
@@ -126,7 +126,7 @@ options with their descriptions. The `allowMultiple: true` flag was honoured —
 
 ---
 
-## Step 4 — Select relic + dd, observe Step 3 chain table with BLOCKED annotation
+## Step 4 — Select relic + dd, observe Step 3 chain table with COMING SOON annotation
 
 **Action:** select both `relic` and `dd` at the per-model Step 2 constraint picker.
 
@@ -139,7 +139,7 @@ Planned chain for Singlet-Doublet:
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS] → /maddm [EXISTS]
     cold: 1–2 hr   cached: 20–40 min
 
-  Direct detection    [BLOCKED — missing: /feynarts, /formcalc, /ddcalc]
+  Direct detection    [COMING SOON — pending: /feynarts, /formcalc, /ddcalc]
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS]
       → /feynarts [PLANNED] → /formcalc [PLANNED] → /ddcalc [PLANNED]
     cold: 2–4 hr   cached: 30–60 min
@@ -149,7 +149,7 @@ Overlap-adjusted totals (shared prereqs counted once):
   selected total   : cold ~3.2–8 hr,  cached ~1–2 hr  (if all prereqs existed)
 ```
 
-Because `dd` is BLOCKED, the blocked-branch gate fires (not the ready-branch gate):
+Because `dd` is COMING SOON, the coming-soon-branch gate fires (not the ready-branch gate):
 
 ```
 AskUserQuestion: "Some selected constraints have unimplemented prereqs. How to proceed?"
@@ -159,12 +159,12 @@ AskUserQuestion: "Some selected constraints have unimplemented prereqs. How to p
 ```
 
 **Observed: (dry-run, 2026-04-19)**
-The chain table printed as expected with `relic [READY]` and `dd [BLOCKED — missing:
-/feynarts, /formcalc, /ddcalc]`. The missing-prereq list in the BLOCKED
+The chain table printed as expected with `relic [READY]` and `dd [COMING SOON — pending:
+/feynarts, /formcalc, /ddcalc]`. The pending-prereq list in the COMING SOON
 annotation matched exactly what `constraints.yaml` specifies as `planned` in the `dd`
-chain. The blocked-branch `AskUserQuestion` fired (option ids `run_ready`, `back`,
+chain. The coming-soon-branch `AskUserQuestion` fired (option ids `run_ready`, `back`,
 `cancel`), confirming that the ready-branch gate (`go`/`back`/`cancel`) is NOT shown
-when any selected constraint is blocked.
+when any selected constraint is coming soon.
 
 ---
 
