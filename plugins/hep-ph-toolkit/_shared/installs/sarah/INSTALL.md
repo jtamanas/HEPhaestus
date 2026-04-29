@@ -13,9 +13,15 @@ Idempotent: if SARAH is already configured the scripts return
 responsible for:
 - Removing or migrating the previous install tree (e.g.
   `~/SARAH/SARAH-4.15.3` → `~/SARAH/SARAH-<new>`).
-- **Cleaning the previous version's `init.m` entry** (SARAH `install.sh`
-  appends a path line to `~/.WolframEngine/Kernel/init.m`; old
-  version-locked entries must be removed before the new path is added).
+- **Cleaning the previous version's `init.m` entry**. `install.sh`
+  guards its block with `BEGIN/END` markers
+  (`(* hephaestus SARAH path BEGIN *)` / `(* hephaestus SARAH path END *)`)
+  in `~/.WolframEngine/Kernel/init.m` (Linux) /
+  `~/Library/WolframEngine/Kernel/init.m` (macOS). On every
+  `install.sh install` it strips the old block — including the legacy
+  single-line `(* hephaestus SARAH path *)` shape from earlier
+  hephaestus versions — before appending the new entry, so a SARAH
+  upgrade does not leave both parent dirs live on `$Path`.
 - Writing the new version to `config.json` only after the install
   verifies, so a half-finished upgrade does not leave the config
   pointing at a stale path.

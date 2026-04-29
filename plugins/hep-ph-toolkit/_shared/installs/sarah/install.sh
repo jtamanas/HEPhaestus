@@ -74,7 +74,10 @@ scan_candidates() {
 
 # ---------------------------------------------------------------------------
 # register_path: append SARAH's parent dir to Wolfram's $Path via init.m.
-# Idempotent.
+# Idempotent across version bumps: strips any prior hephaestus-SARAH
+# block (BEGIN/END markers OR legacy single-line marker) before
+# inserting the new one. This prevents stale parent-dir entries from
+# accumulating when SARAH is upgraded.
 # ---------------------------------------------------------------------------
 register_path() {
   local pkg_dir="$1"
@@ -90,28 +93,44 @@ register_path() {
   fi
   mkdir -p "$init_dir"
   local init_file="$init_dir/init.m"
-  local marker="(* hephaestus SARAH path *)"
-  if [ -f "$init_file" ] && grep -q "hephaestus SARAH path" "$init_file"; then
-    python3 - "$init_file" "$parent" "$marker" <<'PY'
+  local begin="(* hephaestus SARAH path BEGIN *)"
+  local end="(* hephaestus SARAH path END *)"
+  local legacy_marker="(* hephaestus SARAH path *)"
+  touch "$init_file"
+
+  python3 - "$init_file" "$parent" "$begin" "$end" "$legacy_marker" <<'PY'
 import sys, re
-path, parent, marker = sys.argv[1], sys.argv[2], sys.argv[3]
+path, parent, begin, end, legacy_marker = sys.argv[1:6]
 with open(path) as f:
     src = f.read()
-new = re.sub(
-    re.escape(marker) + r".*\n.*\n",
-    f"{marker}\nIf[!MemberQ[$Path, \"{parent}\"], AppendTo[$Path, \"{parent}\"]];\n",
-    src,
+
+# 1. Strip any BEGIN/END marker block (current shape).
+pattern_block = re.compile(
+    re.escape(begin) + r".*?" + re.escape(end) + r"\n?",
+    re.DOTALL,
 )
+src = pattern_block.sub("", src)
+
+# 2. Strip the legacy single-line marker plus the AppendTo line that
+#    followed it (older installs from this repo). Removing avoids two
+#    different SARAH parent dirs being live at once after an upgrade.
+pattern_legacy = re.compile(
+    re.escape(legacy_marker) + r"\n[^\n]*\n",
+)
+src = pattern_legacy.sub("", src)
+
+# 3. Append the canonical block.
+block = (
+    f"{begin}\n"
+    f'If[!MemberQ[$Path, "{parent}"], AppendTo[$Path, "{parent}"]];\n'
+    f"{end}\n"
+)
+sep = "" if src.endswith("\n") or src == "" else "\n"
+src = src + sep + "\n" + block
+
 with open(path, "w") as f:
-    f.write(new)
+    f.write(src)
 PY
-  else
-    {
-      echo ""
-      echo "$marker"
-      echo "If[!MemberQ[\$Path, \"$parent\"], AppendTo[\$Path, \"$parent\"]];"
-    } >> "$init_file"
-  fi
   log "Registered SARAH parent dir ($parent) in $init_file"
 }
 
