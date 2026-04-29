@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# _blocker.sh — emit_blocker helper for /looptools-install.
+# _blocker.sh — emit_blocker helper for _shared/installs/looptools.
 # Sourced by install.sh, check_gfortran.sh, probe_looptools.sh.
 # Usage: emit_blocker <code> <mode> <message> [user_instruction]
 #

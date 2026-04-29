@@ -11,9 +11,29 @@ Produces `amp_reduced.m` (Mathematica) and `amp_reduced.meta.json` (sidecar).
 
 Prerequisites:
 
-1. `/formcalc-install` must have run (`formcalc_path`, `form_binary` in config).
-2. Wolfram Engine must be activated.
-3. `/feynarts generate` must have produced `FeynAmpList.m` + `FeynAmpList.meta.json`.
+1. FormCalc must be installed (`formcalc_path`, `form_binary` in config) —
+   see `## Preflight: FormCalc` below.
+2. LoopTools must be installed — see `## Preflight: LoopTools` below.
+3. Wolfram Engine must be activated.
+4. `/feynarts generate` must have produced `FeynAmpList.m` + `FeynAmpList.meta.json`.
+
+---
+
+## Preflight: LoopTools
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/looptools/detect.sh
+
+- **exit 0** → LoopTools is installed and registered in config; proceed.
+- **exit non-zero** → LoopTools is missing or misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/looptools/INSTALL.md` into
+  context and follow it. When the install completes, re-run `detect.sh`
+  before proceeding. If it still fails, halt with the blocker code from
+  the install reference.
+
+(FormCalc itself has its own preflight — see `## Preflight: FormCalc`
+below, added when FormCalc migrates to `_shared/installs/formcalc/`.)
 
 ---
 

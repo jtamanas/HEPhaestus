@@ -1,13 +1,22 @@
----
-name: looptools-install
-description: Detect, validate, or build LoopTools (Thomas Hahn's numerical one-loop integral library) from source. Records looptools_path plus the gfortran version used at build time for downstream compiler-coherence checks.
----
+# LoopTools — Install Reference
 
-# /looptools-install
+Reference doc for installing **LoopTools** (numerical one-loop scalar and
+tensor integrals, companion to FeynArts/FormCalc, built on FF). Driven by
+`detect.sh` and `install.sh` in this directory; consumed by the `formcalc`
+runner skill's preflight and by `/install`.
 
-Detects, validates, or compiles **LoopTools** (numerical one-loop scalar and
-tensor integrals, companion to FeynArts/FormCalc, built on FF). Works in three
-modes: **detect**, **use-path**, and **install**.
+Three install modes are provided: **detect**, **use-path**, and **install**.
+
+## Version pin
+
+`detect.sh` pins LoopTools to **2.16**. Override with
+`HEPPH_LOOPTOOLS_VERSION=x.y`. When this pin bumps, `install.sh` must
+remove or migrate the previous install tree (e.g. `~/LoopTools/LoopTools-2.16`
+→ `~/LoopTools/LoopTools-<new>`); old version-locked entries in
+`init.m` or shell rc files (none for LoopTools) must also be cleaned up.
+The new version is only written to `config.json` after the new install
+verifies, so a half-finished upgrade does not leave the config pointing
+at a stale binary.
 
 ## Disk footprint
 
@@ -23,19 +32,10 @@ never emulate loop integrals analytically or in Python.
 
 ---
 
-## When to invoke
-
-- Before any FormCalc-generated Fortran build that links `-looptools`.
-- Before any SARAH/SPheno-generated module that imports `looptools.h`.
-- Before reproducing the Profumo 2HDM+a calculation.
-- When the user supplies an existing LoopTools install prefix.
-
----
-
 ## Decision flow
 
 ```
-/looptools-install
+LoopTools install
     │
     ├─ detect         Check current state. Returns one of:
     │                   {"status":"missing"}
@@ -59,7 +59,7 @@ never emulate loop integrals analytically or in Python.
 ## gfortran precondition
 
 `gfortran` must be present on `$PATH` before `install` runs. Checked by
-`scripts/check_gfortran.sh`.
+`check_gfortran.sh`.
 
 | OS | Command to install gfortran |
 |----|----------------------------|
@@ -94,7 +94,8 @@ To protect downstream skills, this skill:
    | `looptools_gfortran_version` | `GNU Fortran (Homebrew GCC 13.2.0) 13.2.0` |
    | `looptools_gfortran_path` | `/opt/homebrew/bin/gfortran-13` |
 
-2. Downstream skills (`/spheno-install`, `/formcalc-build`, `/madgraph-install`)
+2. Downstream installers (`_shared/installs/spheno/install.sh`,
+   `_shared/installs/formcalc/install.sh`, MG5/MadGraph build scripts)
    **must** read `looptools_gfortran_version` from config before compiling
    anything that links `-looptools`. If their own gfortran string differs,
    they should either:
@@ -224,11 +225,11 @@ Tarball URL: `https://feynarts.de/looptools/LoopTools-2.16.tar.gz`
 
 | File | Purpose |
 |------|---------|
-| `scripts/install.sh` | Main entry point (`detect` / `use-path` / `install` / `validate`) |
-| `scripts/check_gfortran.sh` | Checks for gfortran; records version + path |
-| `scripts/probe_looptools.sh` | Smoke test (light: file presence; full: compile B0 test) |
-| `scripts/b0_test.F` | Minimal Fortran program for `--full-smoke` |
-| `scripts/_blocker.sh` | `emit_blocker` / `emit_blocker_with_context` bash helpers |
+| `install.sh` | Main entry point (`detect` / `use-path` / `install` / `validate`) |
+| `check_gfortran.sh` | Checks for gfortran; records version + path |
+| `probe_looptools.sh` | Smoke test (light: file presence; full: compile B0 test) |
+| `b0_test.F` | Minimal Fortran program for `--full-smoke` |
+| `_blocker.sh` | `emit_blocker` / `emit_blocker_with_context` bash helpers |
 
 ## Tests
 
@@ -240,7 +241,7 @@ Tarball URL: `https://feynarts.de/looptools/LoopTools-2.16.tar.gz`
 Run:
 
 ```bash
-bash plugins/hep-ph-toolkit/skills/looptools-install/tests/test_detect.sh
+bash plugins/hep-ph-toolkit/_shared/installs/looptools/tests/test_detect.sh
 ```
 
 ---
@@ -254,7 +255,7 @@ Light mode (`probe_looptools.sh <prefix>`):
 - Asserts `<prefix>/include/clooptools.h` is readable
 
 Full mode (`probe_looptools.sh --full-smoke <prefix>`):
-- Compiles `scripts/b0_test.F` against `<prefix>` (requires `gfortran`)
+- Compiles `b0_test.F` against `<prefix>` (requires `gfortran`)
 - Runs the resulting binary
 - Parses stdout for `B0(1000, 50, 80) = (-4.40593283, 2.7041431)`
 - Tolerates floating-point differences to 4 decimal places

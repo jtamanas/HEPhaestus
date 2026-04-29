@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install.sh — /looptools-install skill entry point.
+# install.sh — _shared/installs/looptools entry point.
 #
 # Subcommands:
 #   detect                  Print JSON state of existing LoopTools install.

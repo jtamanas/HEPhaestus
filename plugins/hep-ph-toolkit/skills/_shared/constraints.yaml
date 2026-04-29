@@ -619,7 +619,7 @@ prereqs:
       cached: [0.17, 0.33]
     capabilities:
       description: "LoopTools 2.16 — Passarino-Veltman loop integrals; downstream of FormCalc"
-      install_skill: looptools-install
+      install_skill: _shared/installs/looptools
       role:
         collider: none
         dd: none
@@ -637,7 +637,7 @@ prereqs:
           verdict: blocked
           blocker: LOOP_DD_TOOLING_PLANNED
           blocker_class: missing-skill
-          evidence: "intel/digest.md §§371-381 (looptools-install; LOOP_DD_TOOLING_PLANNED)"
+          evidence: "intel/digest.md §§371-381 (_shared/installs/looptools; LOOP_DD_TOOLING_PLANNED)"
         # All other: not applicable (looptools is only for loop integral evaluation)
         - axis: A1
           match: "*"

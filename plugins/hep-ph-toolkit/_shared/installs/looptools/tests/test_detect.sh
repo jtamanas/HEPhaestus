@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_detect.sh — smoke tests for /looptools-install.
+# test_detect.sh — smoke tests for _shared/installs/looptools/.
 #
 # Tests:
 #   1. detect with no config → {"status":"missing"}, exit 0.
@@ -17,8 +17,8 @@
 set -euo pipefail
 
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT="$TEST_DIR/../scripts/install.sh"
-PROBE="$TEST_DIR/../scripts/probe_looptools.sh"
+SCRIPT="$TEST_DIR/../install.sh"
+PROBE="$TEST_DIR/../probe_looptools.sh"
 FIXTURE="$TEST_DIR/fixtures/looptools_stub/LoopTools-2.16"
 
 pass=0
