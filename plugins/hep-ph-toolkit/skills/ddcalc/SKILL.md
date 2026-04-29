@@ -237,4 +237,4 @@ Do not attempt to pass a SLHA file or raw Wilson coefficients.
 - Blocker schema: `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json`
 - Install skill: `_shared/installs/ddcalc/INSTALL.md`
 - Data: `data/neutrino_fog_ohare_2021.csv` + `data/NOTICE`
-- Overlays: `plugins/hep-ph-toolkit/skills_shared/installs/ddcalc/INSTALL.md/overlays/`
+- Overlays: `plugins/hep-ph-toolkit/_shared/installs/ddcalc/overlays/`

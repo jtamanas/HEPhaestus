@@ -183,7 +183,8 @@ if [ $make_rc -ne 0 ]; then
   make_tail="$(tail -40 "$MAKE_LOG_FILE" | tr '\n' '|' | sed 's/"/\\"/g')"
   # LAPACK signature detection: if the tail mentions lapack-family symbols,
   # emit the more specific LAPACK_ABSENT blocker with a per-OS install hint
-  # (migrated from monte-carlo-tools_shared/installs/micromegas v0).
+  # (migrated from the v0 monte-carlo-tools/micromegas-install skill into
+  # _shared/installs/micromegas).
   lapack_re='lapack|liblapack|-llapack|dgesv|dgemm|dgetrf|dsyev'
   if tail -40 "$MAKE_LOG_FILE" | grep -Eqi "$lapack_re"; then
     case "$(os_name)" in

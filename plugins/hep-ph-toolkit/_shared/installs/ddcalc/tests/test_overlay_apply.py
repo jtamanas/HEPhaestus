@@ -62,8 +62,9 @@ class TestOverlayApply:
         )
 
         # Patch OVERLAYS_DIR and SHARED_COMMON in apply_overlay.sh by creating a modified version
-        # Path from skill root: plugins/hep-ph-toolkit/skills_shared/installs/ddcalc
-        # Go up 4 more to reach plugins/, then shared/install-helpers/_common.sh
+        # SKILL_DIR is plugins/hep-ph-toolkit/_shared/installs/ddcalc.
+        # Go up 4 (ddcalc → installs → _shared → hep-ph-toolkit → plugins),
+        # then shared/install-helpers/_common.sh.
         common_sh_path = (SKILL_DIR.parent.parent.parent.parent / "shared" / "install-helpers" / "_common.sh").resolve()
         apply_content = APPLY_OVERLAY_SH.read_text()
         patched_apply = tmp_path / "apply_overlay_test.sh"

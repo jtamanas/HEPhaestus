@@ -214,7 +214,7 @@ Pre-implemented models shipped with DRAKE (useful for downstream
 
 - Shared Bash helpers: `plugins/shared/install-helpers/_common.sh`
 - Blocker schema: `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json`
-- Related sibling: `plugins/hep-ph-toolkit/skills_shared/installs/maddm`
+- Related sibling: `plugins/hep-ph-toolkit/_shared/installs/maddm`
   (MadDM is the primary relic-density driver; DRAKE is complementary, not a
   dependency)
 - Profumo eval target: `eval/2506.19062_wimps_blind_spots/` (DRAKE is the

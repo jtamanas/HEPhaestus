@@ -718,7 +718,7 @@ cmd_install() {
   if ! apply_maddm_upstream_patches "$maddm_dir"; then
     emit_blocker "MADDM_PATCH_FAILED" "fatal" \
       "Failed to apply upstream-bug patches to MadDM plugin at $maddm_dir." \
-      "Inspect $MG5_LOG_TMP. The patches are documented in plugins/hep-ph-toolkit/skills_shared/installs/maddm/SKILL.md § Upstream patches; they can be applied manually and the install re-validated with 'bash _shared/installs/maddm/install.sh validate'."
+      "Inspect $MG5_LOG_TMP. The patches are documented in plugins/hep-ph-toolkit/_shared/installs/maddm/INSTALL.md § Upstream patches; they can be applied manually and the install re-validated with 'bash _shared/installs/maddm/install.sh validate'."
     exit 13
   fi
 

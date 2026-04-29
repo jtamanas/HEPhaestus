@@ -8,7 +8,7 @@ bash _shared/installs/ddcalc/install.sh install --with-overlay lz_xenonnt_pandax
 
 Each overlay bundle lives at:
 ```
-plugins/hep-ph-toolkit/skills_shared/installs/ddcalc/overlays/<name>/
+plugins/hep-ph-toolkit/_shared/installs/ddcalc/overlays/<name>/
 ```
 
 See that directory for:

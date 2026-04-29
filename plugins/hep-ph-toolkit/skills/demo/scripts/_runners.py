@@ -161,7 +161,7 @@ def run_maddm(
     # --mode=maddm loads the MadDM plugin into the MG5 interpreter. Bare
     # mg5_aMC <script> runs the base interpreter and `generate
     # relic_density` raises InvalidCmd. See
-    # plugins/hep-ph-toolkit/skills_shared/installs/maddm/references/maddm-workarounds.md §8.
+    # plugins/hep-ph-toolkit/_shared/installs/maddm/references/maddm-workarounds.md §8.
     result = subprocess.run(
         [str(mg5_bin), "--mode=maddm", str(cmd_file)],
         capture_output=True, text=True, timeout=timeout,

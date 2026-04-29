@@ -212,6 +212,6 @@ Mathematica / Wolfram Engine 12.1+. For 12.2+ a compatibility shim exists:
 - Shared Bash helpers: `plugins/shared/install-helpers/_common.sh`
 - Blocker schema: `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json`
 - Shared conventions: `plugins/hep-ph-toolkit/SHARED-model-building.md`
-- Sibling: `plugins/hep-ph-toolkit/skills_shared/installs/sarah/` (structural parent)
+- Sibling: `plugins/hep-ph-toolkit/_shared/installs/sarah/` (structural parent)
 - Downstream consumer: hand-written `.fr` files → UFO export; NOT used by
   `/lagrangian-builder` (SARAH-first).

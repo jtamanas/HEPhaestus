@@ -15,7 +15,8 @@
 #
 # Emits MICROMEGAS_SMOKE_TEST_FAILED if the smoke test fails.
 #
-# Origin: migrated from monte-carlo-tools_shared/installs/micromegas v0 as part of
+# Origin: migrated from the v0 monte-carlo-tools/micromegas-install skill into
+# _shared/installs/micromegas as part of
 # the consolidation with the v1 constraints skill. Complements `detect`
 # (which emits {status:configured|found|missing}) by eagerly running the
 # smoke test — useful for CI or post-install verification.

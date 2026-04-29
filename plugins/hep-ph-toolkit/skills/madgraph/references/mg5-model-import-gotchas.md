@@ -51,6 +51,6 @@ downstream `/madgraph` or `/maddm` use. Mirrors the catalogue style of
   modified; only the in-memory particle registry.
 - **Mitigation:** Use the lowercased name when referring to particles
   in MG5/MadDM commands. Cross-reference: see
-  `plugins/hep-ph-toolkit/skills_shared/installs/maddm/references/maddm-workarounds.md`
+  `plugins/hep-ph-toolkit/_shared/installs/maddm/references/maddm-workarounds.md`
   § 11 for the analogous trap on `define darkmatter`.
 - **Where:** — (upstream convention; unchanged since MG5 2.x).
