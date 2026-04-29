@@ -41,6 +41,12 @@ fi
 check_disk 1 2
 
 # 3. Resolve install directory
+# First positional arg may be a subcommand (`install`), kept for orchestrator
+# compatibility (`bundle_install.sh` always prefixes `install`). Otherwise,
+# the first positional is treated as the install directory.
+if [ "${1:-}" = "install" ]; then
+  shift
+fi
 INSTALL_DIR="${1:-}"
 if [ -z "$INSTALL_DIR" ]; then
   # Resolve $UserBaseDirectory via wolframscript

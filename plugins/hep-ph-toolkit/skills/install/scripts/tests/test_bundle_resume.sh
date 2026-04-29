@@ -30,6 +30,11 @@ sys.exit(0 if d.get("${tool}_path") else 1)
 EOF
   cat > "$STUB_INSTALLS/$tool/install.sh" <<EOF
 #!/usr/bin/env bash
+# Assert orchestrator passes "install" as first argument (P0 #1 contract).
+if [ "\${1:-}" != "install" ]; then
+  echo "FAIL: install.sh for $tool got first arg [\${1:-}], expected [install]" >&2
+  exit 99
+fi
 echo "INSTALLED $tool" >> "$TOUCH_LOG"
 python3 -c '
 import json, os, sys

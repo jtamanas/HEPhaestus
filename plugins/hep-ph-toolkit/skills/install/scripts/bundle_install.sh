@@ -56,6 +56,37 @@ print(",".join(b[sys.argv[2]]["tools"]))
 tools_csv="$(resolve_tools)"
 IFS=',' read -ra tools <<<"$tools_csv"
 
+# Halt-status JSON keys we honor from install.sh stdout. When install.sh
+# emits a status of activation_required (SARAH/Wolfram) or
+# manual_download_required (DRAKE Anubis gate), the orchestrator surfaces
+# the user_instruction and halts the bundle without re-running detect.
+# The user resumes by re-invoking /install <bundle> after the manual step.
+parse_halt_status() {
+  python3 - "$1" <<'PY'
+import json, re, sys
+text = sys.argv[1]
+# Pull the last JSON object on stdout (install.sh may emit log lines too).
+candidates = re.findall(r'\{[^{}]*"status"[^{}]*\}', text)
+status = ""
+instruction = ""
+message = ""
+for c in reversed(candidates):
+    try:
+        d = json.loads(c)
+    except Exception:
+        continue
+    s = d.get("status", "")
+    if s in ("activation_required", "manual_download_required"):
+        status = s
+        instruction = d.get("user_instruction", "")
+        message = d.get("message", "")
+        break
+print(status)
+print(instruction)
+print(message)
+PY
+}
+
 for tool in "${tools[@]}"; do
   detect="$INSTALLS_ROOT/$tool/detect.sh"
   install="$INSTALLS_ROOT/$tool/install.sh"
@@ -69,11 +100,47 @@ for tool in "${tools[@]}"; do
     continue
   fi
   echo "[GO]   installing $tool"
-  if ! bash "$install"; then
-    code=$?
+  install_out_file="$(mktemp)"
+  set +e
+  bash "$install" install 2> >(tee /dev/stderr) > >(tee "$install_out_file")
+  code=$?
+  set -e
+  install_out="$(cat "$install_out_file")"
+  rm -f "$install_out_file"
+
+  # Special case: hepforge Anubis gate (DRAKE) → exit 18.
+  if [ "$code" -eq 18 ]; then
+    halt_info="$(parse_halt_status "$install_out")"
+    halt_status="$(printf '%s\n' "$halt_info" | sed -n '1p')"
+    halt_instruction="$(printf '%s\n' "$halt_info" | sed -n '2p')"
+    halt_message="$(printf '%s\n' "$halt_info" | sed -n '3p')"
+    echo "[HALT] $tool requires manual action (status=${halt_status:-manual_download_required})" >&2
+    [ -n "$halt_message" ]     && echo "       $halt_message" >&2
+    [ -n "$halt_instruction" ] && echo "       Next step: $halt_instruction" >&2
+    echo "       See $install_md. Re-invoke /install <bundle> after completing the manual step." >&2
+    exit 18
+  fi
+
+  if [ "$code" -ne 0 ]; then
     echo "[FAIL] $tool install exited $code -- see $install_md" >&2
     exit "$code"
   fi
+
+  # exit 0 path: check for activation_required (SARAH/Wolfram) or
+  # manual_download_required emitted with exit 0 (defensive — DRAKE now
+  # uses exit 18, but legacy code paths may still emit the JSON).
+  halt_info="$(parse_halt_status "$install_out")"
+  halt_status="$(printf '%s\n' "$halt_info" | sed -n '1p')"
+  if [ -n "$halt_status" ]; then
+    halt_instruction="$(printf '%s\n' "$halt_info" | sed -n '2p')"
+    halt_message="$(printf '%s\n' "$halt_info" | sed -n '3p')"
+    echo "[HALT] $tool requires manual action (status=$halt_status)" >&2
+    [ -n "$halt_message" ]     && echo "       $halt_message" >&2
+    [ -n "$halt_instruction" ] && echo "       Next step: $halt_instruction" >&2
+    echo "       See $install_md. Re-invoke /install <bundle> after completing the manual step." >&2
+    exit 18
+  fi
+
   if ! bash "$detect" >/dev/null 2>&1; then
     echo "[FAIL] $tool: install.sh exited 0 but detect.sh still fails -- see $install_md" >&2
     exit 4

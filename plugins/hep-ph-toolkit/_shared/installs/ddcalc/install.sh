@@ -30,6 +30,13 @@ DDCALC_FFLAGS="$(_yaml_get HEPPH_DDCALC_FFLAGS)"
 DDCALC_CFLAGS="$(_yaml_get HEPPH_DDCALC_CFLAGS)"
 
 # ── Parse arguments ─────────────────────────────────────────────────────────
+# First positional arg may be a subcommand (`install`), kept for orchestrator
+# compatibility (`bundle_install.sh` always prefixes `install`). Otherwise,
+# the first positional is treated as the install directory.
+if [ "${1:-}" = "install" ]; then
+  shift
+fi
+
 INSTALL_DIR=""
 OVERLAY=""
 while [ $# -gt 0 ]; do
