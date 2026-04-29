@@ -73,20 +73,18 @@ User input
     ├─ (b) Existing spec YAML  ───┤─→ validated ModelSpec YAML
     └─ (c) Named model (config) ──┘
                  │
-    Step 1: Check state (check_state.py)
+    Step 1: Check state (check_state.py — model registration only)
                  │
-    Step 2: Install SARAH if missing (/sarah-install)
-          ↳  if activation_required: pause + show user_instruction, stop
+    Step 2: Run /sarah-build <spec.yaml>
+          ↳  /sarah-build's preflight self-heals SARAH+Wolfram if missing
+          ↳  if install returns activation_required: pause, stop
                  │
-    Step 3: Run /sarah-build <spec.yaml>
-                 │
-    Step 3b: SARAH output verification  (check_vertices + check_mass_matrix)
+    Step 2b: SARAH output verification  (check_vertices + check_mass_matrix)
           ↳  on blocker: consult sarah-gotchas.md, patch spec (Q3/Q4),
-             re-validate, re-run Step 3. Max 3 attempts.
+             re-validate, re-run Step 2. Max 3 attempts.
                  │
-    Step 4: Install SPheno if missing (/spheno-install)
-                 │
-    Step 5: Run /spheno-build <name>
+    Step 3: Run /spheno-build <name>
+          ↳  /spheno-build's preflight self-heals SPheno if missing
                  │
     Step 5b: SPheno spectrum verification  (check_spectrum)
           ↳  on blocker: consult sarah-gotchas.md. If SARAH-stage,
@@ -150,7 +148,7 @@ python3 plugins/hep-ph-toolkit/skills/lagrangian-builder/scripts/check_state.py 
 
 ---
 
-## Step 1: Check state
+## Step 1: Check state (model registration only)
 
 ```bash
 python3 plugins/hep-ph-toolkit/skills/lagrangian-builder/scripts/check_state.py
@@ -159,49 +157,43 @@ python3 plugins/hep-ph-toolkit/skills/lagrangian-builder/scripts/check_state.py
 Output JSON:
 ```json
 {
-  "sarah_install": "configured|missing",
-  "spheno_install": "configured|missing",
-  "wolfram_install": "configured|missing",
   "model": {"status": "present|missing", "name": "<name-or-null>"}
 }
 ```
 
-Use this JSON to decide which steps are skippable:
-- `sarah_install == "configured"` → skip Step 2 (SARAH install).
-- `spheno_install == "configured"` → skip Step 4 (SPheno install).
-- `model.status == "present"` and the user did not ask to rebuild → stop at
-  Step 0(c) and report existing outputs.
+Install state is no longer probed here. `/sarah-build` and `/spheno-build`
+each carry their own preflight (`_shared/installs/sarah/detect.sh` and
+`_shared/installs/spheno/detect.sh`) and self-heal if their tool is
+missing. Use this skill's check_state output only to decide whether the
+named model is already registered.
+
+- `model.status == "present"` and the user did not ask to rebuild → stop
+  at Step 0(c) and report existing outputs.
 
 ---
 
-## Step 2: Sequence installs + builds
+## Step 2: Run /sarah-build (self-heals SARAH+Wolfram)
 
-### 2a. SARAH install (if sarah_install == "missing")
-
-Invoke `/sarah-install` subskill. The decision tree inside `/sarah-install`:
-
-```
-/sarah-install detect
-    │
-    ├─ configured → skip (already in config)
-    ├─ found → ask user if they want to use the found path
-    └─ missing → invoke /sarah-install install
-```
+Invoke `/sarah-build`. Its preflight runs
+`_shared/installs/sarah/detect.sh` and, if SARAH or Wolfram are missing,
+loads `_shared/installs/sarah/INSTALL.md` and walks the user through the
+install. `lagrangian-builder` carries no install logic of its own.
 
 **Handling `activation_required`** (CRITICAL):
 
-If `/sarah-install` returns `{"status":"activation_required","user_instruction":"..."}`:
+If the install path inside `/sarah-build` returns
+`{"status":"activation_required","user_instruction":"..."}`:
 
 1. Show the user exactly the `user_instruction` field from the JSON.
 2. **Stop the pipeline here.** Do not continue to SARAH build.
 3. Tell the user: "Once you have activated Wolfram Engine, run
-   `/lagrangian-builder` again — it will detect SARAH as configured and
-   skip the install step."
+   `/lagrangian-builder` again — `/sarah-build`'s preflight will detect
+   SARAH as configured and skip the install step."
 
 This is NOT a blocker. It is a user-actionable pause. Do not emit a fatal
 blocker JSON for this condition.
 
-### 2b. SARAH build
+### 2a. SARAH build
 
 ```bash
 python3 plugins/hep-ph-toolkit/skills/sarah-build/scripts/build.py \
@@ -293,17 +285,12 @@ manually or update the gotchas doc with the novel failure mode.
 genuine fatal — do not swallow it, do not retry. Surface the raw stderr
 and stop.
 
-### 2c. SPheno install (if spheno_install == "missing")
+### 2c. Run /spheno-build (self-heals SPheno)
 
-Invoke `/spheno-install` subskill:
-
-```
-/spheno-install detect
-    │
-    ├─ configured → skip
-    ├─ version_mismatch → /spheno-install install (fresh alongside)
-    └─ missing → /spheno-install install
-```
+Invoke `/spheno-build`. Its preflight runs
+`_shared/installs/spheno/detect.sh` and self-heals SPheno if missing
+(version-mismatch handling — fresh-alongside install — is documented in
+`_shared/installs/spheno/INSTALL.md`).
 
 ### 2d. SPheno build
 
@@ -733,14 +720,14 @@ These conditions stop the pipeline. Show the full blocker JSON from stderr.
 
 | Blocker code | Source skill | Meaning | Resolution |
 |---|---|---|---|
-| `WOLFRAM_KERNEL_ABSENT` | `/sarah-install` | Wolfram Engine not configured | Run `/install` first; install Wolfram Engine |
-| `SARAH_DOWNLOAD_FAILED` | `/sarah-install` | Tarball download failed | Check network; retry |
-| `SARAH_SMOKE_TEST_FAILED` | `/sarah-install` | SARAH installed but version probe fails | Check Wolfram activation; try `wolframscript --activate` |
+| `WOLFRAM_KERNEL_ABSENT` | `_shared/installs/sarah` | Wolfram Engine not configured | See `_shared/installs/sarah/INSTALL.md` |
+| `SARAH_DOWNLOAD_FAILED` | `_shared/installs/sarah` | Tarball download failed | Check network; retry |
+| `SARAH_SMOKE_TEST_FAILED` | `_shared/installs/sarah` | SARAH installed but version probe fails | Check Wolfram activation; try `wolframscript --activate` |
 | `MODELSPEC_INVALID` | `/sarah-build` | Spec fails schema or semantic validation | Fix the spec per the error context; see `validate_spec.py` output |
 | `ANOMALY_CANCELLATION_FAILED` | `/sarah-build` | Gauge anomalies do not cancel | See `references/anomaly-ledger.md`; modify the field content |
 | `SARAH_OUTPUT_MISSING` | `/sarah-build` | SARAH ran but produced no UFO directory | Check `sarah.log`; may indicate SARAH version mismatch |
-| `GFORTRAN_ABSENT` | `/spheno-install` | `gfortran` not on PATH | Install per OS (see `/spheno-install` SKILL.md) |
-| `SPHENO_BASE_BUILD_FAILED` | `/spheno-install` | `make` failed during SPheno base install | See `context.make_log_tail` and `likely_cause` |
+| `GFORTRAN_ABSENT` | `_shared/installs/spheno` | `gfortran` not on PATH | Install per OS (see `_shared/installs/spheno/INSTALL.md`) |
+| `SPHENO_BASE_BUILD_FAILED` | `_shared/installs/spheno` | `make` failed during SPheno base install | See `context.make_log_tail` and `likely_cause` |
 | `SPHENO_COMPILE_FAILED` | `/spheno-build` | Model-specific SPheno compile failed | Check `make.log` in `context`; verify SARAH output is complete |
 | `SPHENO_NO_OUTPUT` | `/spheno-build` | SPheno binary ran but produced no `.spc` | Check SLHA input card; inspect stderr from run |
 | `MODELSPEC_FEATURE_UNSUPPORTED` | (W5 guard) | User requested out-of-schema feature | See "Unsupported features" section below |
@@ -804,13 +791,12 @@ SU(3)_dark, singlet under SU(2)_L and U(1)_Y.
 
 3. Runs `check_state.py`. Output:
    ```json
-   {"sarah_install":"missing","spheno_install":"missing","wolfram_install":"missing","model":{"status":"missing","name":null}}
+   {"model":{"status":"missing","name":null}}
    ```
 
-4. SARAH is missing; Wolfram is missing. Shows the user:
-   "SARAH requires Wolfram Engine (free). Invoking `/sarah-install`..."
-   Runs `/sarah-install detect` → `{"status":"missing"}`.
-   Runs `/sarah-install install`.
+4. Invokes `/sarah-build /tmp/dark_su3_spec.yaml`. `/sarah-build`'s
+   preflight runs `_shared/installs/sarah/detect.sh` → exit non-zero;
+   loads `_shared/installs/sarah/INSTALL.md` and runs `install.sh`.
    SARAH tarball downloads and extracts.
    `check_wolfram_activation.sh` runs.
    Returns: `{"status":"activation_required","user_instruction":"Run `wolframscript --activate` in your terminal..."}`.
@@ -829,9 +815,9 @@ SU(3)_dark, singlet under SU(2)_L and U(1)_Y.
 
 ---
 
-6. `check_state.py` now returns `sarah_install: "configured"`. Skip install.
+6. `/sarah-build`'s preflight now exits 0; SARAH install is skipped.
 
-7. Runs `build.py /tmp/dark_su3_spec.yaml`.
+7. `/sarah-build` runs `build.py /tmp/dark_su3_spec.yaml`.
    SARAH renders `DarkSU3.m`, runs `wolframscript -code
    'AppendTo[$Path,"~/SARAH/SARAH-4.15.3/.."]; <<SARAH`; Start["DarkSU3"]; ...'`.
    `CheckModel[]` passes (anomaly cancellation OK for vector-like quarks).
@@ -839,7 +825,10 @@ SU(3)_dark, singlet under SU(2)_L and U(1)_Y.
    UFO at `$STATE_ROOT/models/dark_su3/ufo/`.
    SARAH output at `$STATE_ROOT/models/dark_su3/sarah_output/`.
 
-8. SPheno is missing. Runs `/spheno-install install`. `gfortran` present.
+8. Invokes `/spheno-build`. Its preflight runs
+   `_shared/installs/spheno/detect.sh` → exit non-zero; loads
+   `_shared/installs/spheno/INSTALL.md` and runs `install.sh` with
+   `gfortran` present.
    Tarball downloads; `make` compiles (~5 min). Both keys written.
 
 9. Runs `run_spheno.py dark_su3`.
@@ -898,9 +887,9 @@ v3 reference specs in `plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/
 | Blocker schema | `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json` |
 | SARAH name canonicalization | `plugins/hep-ph-toolkit/skills/_shared/sarah_name.py` |
 | Shared conventions | `plugins/hep-ph-toolkit/SHARED-model-building.md` |
-| Sub-skill: SARAH install | `plugins/hep-ph-toolkit/skills/sarah-install/SKILL.md` |
+| Install reference: SARAH | `plugins/hep-ph-toolkit/_shared/installs/sarah/INSTALL.md` |
 | Sub-skill: SARAH build | `plugins/hep-ph-toolkit/skills/sarah-build/SKILL.md` |
-| Sub-skill: SPheno install | `plugins/hep-ph-toolkit/skills/spheno-install/SKILL.md` |
+| Install reference: SPheno | `plugins/hep-ph-toolkit/_shared/installs/spheno/INSTALL.md` |
 | Sub-skill: SPheno build | `plugins/hep-ph-toolkit/skills/spheno-build/SKILL.md` |
 | Named model resolver | `plugins/hep-ph-toolkit/skills/madgraph/scripts/resolve_named_model.py` |
 | Constraint: micrOMEGAs | `plugins/hep-ph-toolkit/skills/micromegas/SKILL.md` |

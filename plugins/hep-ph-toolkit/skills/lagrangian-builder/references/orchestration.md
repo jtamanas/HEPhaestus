@@ -38,21 +38,16 @@ ENTRY
  │
 VALIDATED_SPEC
  │
- ├─ check_state.py
- │     ├─ sarah_install == "configured" → SARAH_READY
- │     └─ sarah_install == "missing"
- │           └─ /sarah-install detect
- │                 ├─ configured → SARAH_READY
- │                 ├─ found → ask user; /sarah-install use-path <path> → SARAH_READY
- │                 └─ missing → /sarah-install install
- │                       ├─ ok → SARAH_READY
- │                       ├─ activation_required
- │                       │     └─ PAUSE: show user_instruction; STOP (not a blocker)
- │                       └─ fatal blocker → surface full JSON; STOP
- │
-SARAH_READY
- │
- └─ /sarah-build (build.py <spec.yaml> [--force])
+ └─ /sarah-build (preflight self-heals SARAH+Wolfram)
+       │   bash _shared/installs/sarah/detect.sh
+       │     ├─ exit 0 → proceed to build
+       │     └─ exit non-zero → load _shared/installs/sarah/INSTALL.md
+       │           ├─ install ok → exit 0 on re-detect → proceed to build
+       │           ├─ activation_required
+       │           │     └─ PAUSE: show user_instruction; STOP (not a blocker)
+       │           └─ fatal blocker → surface full JSON; STOP
+       │
+       └─ build.py <spec.yaml> [--force]
        ├─ {"status":"cached"} → skip; already built → SARAH_BUILT
        ├─ success → SARAH_BUILT
        └─ fatal blocker (stderr) → surface full JSON; STOP
@@ -61,20 +56,16 @@ SARAH_READY
  │
 SARAH_BUILT
  │
- ├─ check_state.py
- │     ├─ spheno_install == "configured" → SPHENO_READY
- │     └─ spheno_install == "missing"
- │           └─ /spheno-install detect
- │                 ├─ configured or version_mismatch+fresh → SPHENO_READY
- │                 └─ missing → /spheno-install install
- │                       ├─ ok → SPHENO_READY
- │                       └─ fatal blocker → surface; STOP
- │                             Codes: GFORTRAN_ABSENT, SPHENO_DOWNLOAD_FAILED,
- │                                    SPHENO_BASE_BUILD_FAILED
- │
-SPHENO_READY
- │
- └─ /spheno-build (run_spheno.py <name>)
+ └─ /spheno-build (preflight self-heals SPheno)
+       │   bash _shared/installs/spheno/detect.sh
+       │     ├─ exit 0 → proceed to build
+       │     └─ exit non-zero → load _shared/installs/spheno/INSTALL.md
+       │           ├─ install ok → exit 0 on re-detect → proceed to build
+       │           └─ fatal blocker → surface; STOP
+       │                 Codes: GFORTRAN_ABSENT, SPHENO_DOWNLOAD_FAILED,
+       │                        SPHENO_BASE_BUILD_FAILED
+       │
+       └─ run_spheno.py <name>
        ├─ success → SPHENO_RAN
        ├─ recoverable blocker (stderr)
        │     Codes: SPHENO_SPECTRUM_PROBLEM, SPHENO_RGE_NONCONVERGENT
@@ -96,8 +87,8 @@ A step is skipped entirely when:
 
 | Step | Skip condition |
 |---|---|
-| `/sarah-install` | `check_state.py → sarah_install == "configured"` |
-| `/spheno-install` | `check_state.py → spheno_install == "configured"` |
+| `_shared/installs/sarah` | `bash _shared/installs/sarah/detect.sh exits 0` |
+| `_shared/installs/spheno` | `bash _shared/installs/spheno/detect.sh exits 0` |
 | `/sarah-build` | `build.py` returns `{"status":"cached"}` (spec unchanged + cache key matches) |
 | `/spheno-build` compile stage | `compile_model.py` finds matching `.build_key` and binary present |
 | Entire pipeline | `check_state.py --model <name> → model.status == "present"` and user does not ask to rebuild |
@@ -124,7 +115,7 @@ is added).  Do NOT emit `reference_only` from within this pipeline.
 ### Activation-required is NOT a blocker
 
 `{"status":"activation_required","user_instruction":"..."}` is printed on
-**stdout** by `/sarah-install install`, not on stderr.  Claude must:
+**stdout** by `bash _shared/installs/sarah/install.sh install`, not on stderr.  Claude must:
 1. Read this JSON from stdout.
 2. Show `user_instruction` to the user.
 3. Stop the pipeline without emitting any blocker.
@@ -140,13 +131,13 @@ atomic (via `config_helpers.merge_config`).
 
 | Stage | Config key | Value |
 |---|---|---|
-| `/sarah-install` | `sarah_path` | SARAH package dir |
-| `/sarah-install` | `sarah_version` | e.g. `4.15.3` |
-| `/sarah-install` | `sarah_installed_at` | UTC ISO 8601 |
-| `/spheno-install` | `spheno_path` | binary path |
-| `/spheno-install` | `spheno_src_path` | source tree root |
-| `/spheno-install` | `spheno_version` | e.g. `4.0.5` |
-| `/spheno-install` | `spheno_installed_at` | UTC ISO 8601 |
+| `_shared/installs/sarah` | `sarah_path` | SARAH package dir |
+| `_shared/installs/sarah` | `sarah_version` | e.g. `4.15.3` |
+| `_shared/installs/sarah` | `sarah_installed_at` | UTC ISO 8601 |
+| `_shared/installs/spheno` | `spheno_path` | binary path |
+| `_shared/installs/spheno` | `spheno_src_path` | source tree root |
+| `_shared/installs/spheno` | `spheno_version` | e.g. `4.0.5` |
+| `_shared/installs/spheno` | `spheno_installed_at` | UTC ISO 8601 |
 | `/sarah-build` | `config.models[name].spec` | spec YAML path |
 | `/sarah-build` | `config.models[name].ufo` | UFO dir path |
 | `/sarah-build` | `config.models[name].sarah_built_at` | UTC ISO 8601 |

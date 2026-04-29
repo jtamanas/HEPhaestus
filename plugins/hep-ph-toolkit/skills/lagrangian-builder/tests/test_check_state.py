@@ -1,6 +1,11 @@
 """
 test_check_state.py — unit tests for scripts/check_state.py.
 
+After the install-skill refactor, check_state.py only probes model
+registration. SARAH/SPheno/Wolfram install state is now self-detected by
+the runner skills (`/sarah-build`, `/spheno-build`) via their
+`_shared/installs/<tool>/detect.sh` preflight.
+
 Each test uses isolated XDG_CONFIG_HOME and HEPPH_STATE_ROOT directories.
 No real tools required.
 """
@@ -10,8 +15,6 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-
-import pytest
 
 _SCRIPT = (
     Path(__file__).resolve().parent.parent / "scripts" / "check_state.py"
@@ -37,8 +40,7 @@ def _run_check_state(
 
 
 class TestEmptyConfig:
-    def test_all_missing(self, tmp_path: Path) -> None:
-        """Empty config → all statuses missing."""
+    def test_no_model_arg_returns_missing(self, tmp_path: Path) -> None:
         cfg = tmp_path / "cfg"
         cfg.mkdir()
         state = tmp_path / "state"
@@ -46,71 +48,12 @@ class TestEmptyConfig:
         result = _run_check_state(cfg, state)
         assert result.returncode == 0
         out = json.loads(result.stdout)
-        assert out["sarah_install"] == "missing"
-        assert out["spheno_install"] == "missing"
-        assert out["wolfram_install"] == "missing"
+        # Install status keys are intentionally absent post-refactor.
+        assert "sarah_install" not in out
+        assert "spheno_install" not in out
+        assert "wolfram_install" not in out
         assert out["model"]["status"] == "missing"
         assert out["model"]["name"] is None
-
-
-class TestSARAHConfigured:
-    def test_sarah_configured_when_dir_and_sarah_m_exist(self, tmp_path: Path) -> None:
-        cfg = tmp_path / "cfg"
-        state = tmp_path / "state"
-        state.mkdir()
-
-        # Create a fake SARAH package dir with SARAH.m
-        sarah_dir = tmp_path / "SARAH"
-        sarah_dir.mkdir()
-        (sarah_dir / "SARAH.m").write_text("(* fake *)")
-
-        _write_config(cfg, {"sarah_path": str(sarah_dir)})
-        result = _run_check_state(cfg, state)
-        assert result.returncode == 0
-        out = json.loads(result.stdout)
-        assert out["sarah_install"] == "configured"
-
-    def test_sarah_missing_when_sarah_m_absent(self, tmp_path: Path) -> None:
-        cfg = tmp_path / "cfg"
-        state = tmp_path / "state"
-        state.mkdir()
-        # Dir exists but no SARAH.m
-        sarah_dir = tmp_path / "SARAH"
-        sarah_dir.mkdir()
-        _write_config(cfg, {"sarah_path": str(sarah_dir)})
-        result = _run_check_state(cfg, state)
-        out = json.loads(result.stdout)
-        assert out["sarah_install"] == "missing"
-
-
-class TestSphenoConfigured:
-    def test_spheno_configured_when_binary_executable(self, tmp_path: Path) -> None:
-        cfg = tmp_path / "cfg"
-        state = tmp_path / "state"
-        state.mkdir()
-
-        spheno_bin = tmp_path / "SPheno"
-        spheno_bin.write_text("#!/bin/sh\necho SPheno\n")
-        spheno_bin.chmod(0o755)
-
-        _write_config(cfg, {"spheno_path": str(spheno_bin)})
-        result = _run_check_state(cfg, state)
-        out = json.loads(result.stdout)
-        assert out["spheno_install"] == "configured"
-
-    def test_spheno_missing_when_not_executable(self, tmp_path: Path) -> None:
-        cfg = tmp_path / "cfg"
-        state = tmp_path / "state"
-        state.mkdir()
-
-        spheno_bin = tmp_path / "SPheno"
-        spheno_bin.write_text("#!/bin/sh\n")
-        spheno_bin.chmod(0o644)  # not executable
-
-        _write_config(cfg, {"spheno_path": str(spheno_bin)})
-        result = _run_check_state(cfg, state)
-        out = json.loads(result.stdout)
-        assert out["spheno_install"] == "missing"
 
 
 class TestModelFlag:
