@@ -8,6 +8,12 @@
 #
 # Blockers are emitted as single-line JSON on stderr per blocker.schema.json.
 # Status JSON (for detect / use-path success / activation_required) goes to stdout.
+#
+# TODO(post-refactor): plugins/hep-ph-toolkit/skills/install/scripts/install_sarah.sh
+# is a divergent variant carrying a `verify` subcommand, install_with_rollback,
+# unregister_path, the VERSION:-marker probe, and HEPPH_SARAH_FORCE_SMOKE_FAIL
+# test knob (with passing tests under that script's tests/ tree). When those
+# features are absorbed here, the variant + its tests should be deleted.
 set -euo pipefail
 
 _LOG_TAG="install_sarah"
@@ -74,8 +80,14 @@ register_path() {
   local pkg_dir="$1"
   local parent
   parent="$(cd "$pkg_dir/.." && pwd)"
-  local init_dir="$HOME/Library/Wolfram/Kernel"  # macOS default
+  # macOS WolframEngine init.m lives under ~/Library/WolframEngine/Kernel — NOT
+  # ~/Library/Wolfram/Kernel (that's the Mathematica directory). B2 fix; see
+  # install/scripts/install_sarah.sh:108 + tests/test_sarah_rollback.sh.
+  local init_dir="$HOME/Library/WolframEngine/Kernel"  # macOS default
   [ "$(os_name)" = "linux" ] && init_dir="$HOME/.WolframEngine/Kernel"
+  if [ -n "${HEPPH_WOLFRAM_USER_BASE:-}" ]; then
+    init_dir="$HEPPH_WOLFRAM_USER_BASE/Kernel"
+  fi
   mkdir -p "$init_dir"
   local init_file="$init_dir/init.m"
   local marker="(* hephaestus SARAH path *)"

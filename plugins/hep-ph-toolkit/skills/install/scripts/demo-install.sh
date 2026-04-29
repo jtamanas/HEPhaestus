@@ -1,4 +1,28 @@
 #!/usr/bin/env bash
+# LEGACY DEMO-BUNDLE WRAPPER
+# -------------------------
+# This script predates the 2026-04-29 install refactor. It dispatches to the
+# four per-tool install scripts in install/scripts/ (install_wolfram.sh,
+# install_sarah.sh, install_spheno.sh, install_mg5.sh) and is the harness
+# behind the demo skill's interactive Wolfram walkthrough + AskUserQuestion
+# loop. It is NOT the canonical bundle orchestrator; the new orchestrator
+# is `bundle_install.sh` (sibling), which talks directly to
+# `_shared/installs/<tool>/install.sh`.
+#
+# It is left in place because:
+#   - The per-tool scripts here (install_sarah.sh, install_spheno.sh) are
+#     a divergent, more-featured variant (verify subcommand, install_with_rollback,
+#     B2 init.m path fix on macOS) that the canonical _shared/installs/<tool>/
+#     versions have not yet absorbed. See cleanup commit notes.
+#   - Sub-commands `bundle-preflight`, `validate`, `python-deps`, `detect-all`,
+#     and per-tool `use-path` are referenced by docs/wolfram-ux-contract.md and
+#     scripts/tests/test_bundle_preflight.sh — semantics specific to the demo
+#     interactive UX, not subsumed by `bundle_install.sh`.
+#
+# When the canonical _shared/installs/<tool>/install.sh files absorb the
+# verify+rollback features, this script's `install <tool>` dispatch should
+# be repointed at them and install/scripts/install_{sarah,spheno}.sh deleted.
+#
 # Orchestrator: dispatches to the four per-tool install scripts in dependency
 # order (wolfram -> sarah -> spheno -> mg5). The AskUserQuestion loop lives in
 # the skill prose; this script only does `detect` / `use-path` / `install` /

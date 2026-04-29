@@ -12,6 +12,13 @@
 # subdirectory; update both keys to the fresh install.
 #
 # HEPPH_SPHENO_VERSION env override respected (defaults to 4.0.5).
+#
+# TODO(post-refactor): plugins/hep-ph-toolkit/skills/install/scripts/install_spheno.sh
+# is a divergent variant carrying a `verify` subcommand, spheno_probe_banner
+# (dylib-vs-banner classification under with_timeout), and the
+# HEPPH_F90_COMPILER override (with passing tests under that script's tests/
+# tree). When those features are absorbed here, the variant + its tests
+# should be deleted.
 set -euo pipefail
 
 _LOG_TAG="install_spheno"

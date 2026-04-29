@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
+# DIVERGENT VARIANT — pending consolidation into _shared/installs/sarah/install.sh.
+#
+# This script is invoked by the legacy demo-install.sh dispatcher. It carries
+# features the canonical _shared/installs/sarah/install.sh does not yet have:
+#   - `verify` subcommand with structured JSON contract (see test_verify_sarah.sh)
+#   - install_with_rollback / unregister_path (see test_sarah_rollback.sh)
+#   - VERSION: marker probe + StyleForm[...] banner fallback
+#   - HEPPH_SARAH_FORCE_SMOKE_FAIL test knob
+#   - HEPPH_WOLFRAM_USER_BASE override for init.m relocation
+# The canonical version, in turn, has features this one lacks:
+#   - emit_blocker JSON-on-stderr contract via _blocker.sh
+#   - HEPPH_SARAH_VERSION env override
+#   - sarah_installed_at timestamp
+#   - post-install activation check
+# Until the two are reconciled, both are kept. New install paths go through
+# `bundle_install.sh` -> `_shared/installs/sarah/install.sh`. The legacy
+# demo-install.sh harness still uses this script.
 set -euo pipefail
 
 _LOG_TAG="install_sarah"
