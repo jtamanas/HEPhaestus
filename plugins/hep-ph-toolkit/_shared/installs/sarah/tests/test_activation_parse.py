@@ -21,7 +21,7 @@ assert sys.version_info >= (3, 10), "hephaestus requires Python >= 3.10"
 # ---------------------------------------------------------------------------
 # Import _activation_parse without package structure.
 # ---------------------------------------------------------------------------
-SCRIPTS_DIR = pathlib.Path(__file__).parent.parent / "scripts"
+SCRIPTS_DIR = pathlib.Path(__file__).parent.parent
 FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
 
 

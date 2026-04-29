@@ -243,13 +243,13 @@ def run(
     if not wolfram_engine_path:
         _fatal(
             "WOLFRAM_KERNEL_ABSENT",
-            "wolfram_engine_path not set in config; run /sarah-install first",
+            "wolfram_engine_path not set in config; see _shared/installs/sarah/INSTALL.md",
         )
     sarah_path = config.get("sarah_path")
     if not sarah_path:
         _fatal(
             "SARAH_ABSENT",
-            "sarah_path not set in config; run /sarah-install first",
+            "sarah_path not set in config; see _shared/installs/sarah/INSTALL.md",
         )
     sarah_version = config.get("sarah_version", "unknown")
 

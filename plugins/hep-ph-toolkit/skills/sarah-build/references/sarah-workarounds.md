@@ -126,7 +126,7 @@ six more items; they're not repeated here.
   "Enter your Wolfram ID".
 - **Cause:** Activation binds the Engine to a free Wolfram ID and requires a
   browser round-trip. There is no headless activation API.
-- **Mitigation:** `/sarah-install` emits an explicit manual-step banner
+- **Mitigation:** `_shared/installs/sarah` emits an explicit manual-step banner
   ("Not possible to automate — activation requires a browser and a free
   Wolfram ID") and blocks the rest of the install until `wolframscript -code
   "1+1"` returns `2`.

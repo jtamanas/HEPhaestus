@@ -53,7 +53,7 @@ prereqs:
       cached: [0.08, 0.17]
     capabilities:
       description: "SARAH 4.15 model renderer — emits UFO, SPheno, CalcHEP model files"
-      install_skill: sarah-install
+      install_skill: _shared/installs/sarah
       role:
         collider: none
         dd: none

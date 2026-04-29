@@ -9,7 +9,7 @@
 #
 # Examples:
 #   emit_blocker SARAH_DOWNLOAD_FAILED fatal "Download failed after 2 retries." \
-#       "Check your network connection and retry /sarah-install install."
+#       "Check your network connection and retry bash _shared/installs/sarah/install.sh install."
 #   emit_blocker SARAH_SMOKE_TEST_FAILED fatal "SARAH smoke test returned no version."
 
 emit_blocker() {

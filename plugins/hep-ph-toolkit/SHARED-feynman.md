@@ -4,7 +4,7 @@
 
 | Tool | Version | Status |
 |---|---|---|
-| FeynArts | **3.11** (pinned) | Installed via `/feynarts-install` |
+| FeynArts | **3.11** (pinned) | Installed via `_shared/installs/feynarts` |
 | FormCalc | 10.0 | Reserved for `/formcalc` (Phase-B stage 2) |
 | LoopTools | 2.1x | Used by `/formcalc` for Passarino-Veltman evaluation (Phase-B stage 3) |
 
@@ -21,8 +21,8 @@ benchmarks quantify real-world requirements.
 | `FEYNARTS_AMP_SIZE_CAP_MB` | `200` | `/feynarts` | Override amp-file size cap in MB (fatal if exceeded after Put) |
 | `FEYNARTS_DEFAULT_TIMEOUT_S` | `600` | `/feynarts` | Override wolframscript wall-clock timeout (SIGKILL on expiry) |
 | `HEPPH_FEYNARTS_STATE_ROOT` | `~/.local/share/hephaestus` | `/feynarts` | Override state root for cache + SARAH model states |
-| `HEPPH_FEYNARTS_VERSION` | `3.11` | `/feynarts-install` | Override FeynArts version to install |
-| `HEPPH_NO_NETWORK` | `0` | `/feynarts-install` | Set to `1` to use offline cache (requires `HEPPH_OFFLINE_CACHE_DIR`) |
+| `HEPPH_FEYNARTS_VERSION` | `3.11` | `_shared/installs/feynarts` | Override FeynArts version to install |
+| `HEPPH_NO_NETWORK` | `0` | `_shared/installs/feynarts` | Set to `1` to use offline cache (requires `HEPPH_OFFLINE_CACHE_DIR`) |
 
 ---
 
@@ -37,7 +37,7 @@ consumed by both `model-building/` and `feynman-diagrams/` plugins:
 | `check_wolfram_activation.sh` | Probe `wolframscript -code '1+1'`; classify stdout via `_activation_parse.py` |
 | `_activation_parse.py` | Parse wolframscript output for activation/error/ok status |
 
-Both `/feynarts-install` and `/sarah-install` call these helpers via absolute
+Both `_shared/installs/feynarts` and `_shared/installs/sarah` call these helpers via absolute
 paths derived from `$SCRIPT_DIR`. Do not copy these files.
 
 ---

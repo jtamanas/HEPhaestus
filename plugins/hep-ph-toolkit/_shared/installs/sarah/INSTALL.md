@@ -1,13 +1,24 @@
----
-name: sarah-install
-description: Detect, validate, or auto-install SARAH (the Mathematica-based BSM model builder). Handles existing installs, custom paths, and Wolfram Engine activation status.
----
+# SARAH — Install Reference
 
-## When to invoke
+Reference doc for installing **SARAH** (the Mathematica-based BSM model
+builder). Driven by `detect.sh` and `install.sh` in this directory;
+consumed by the `sarah-build` runner skill's preflight and by `/install`.
+Idempotent: if SARAH is already configured the scripts return
+`{"status":"configured"}` immediately without touching disk.
 
-Use `/sarah-install` before running `/sarah-build` to ensure SARAH is present and
-the Wolfram Engine is reachable.  The skill is idempotent: if SARAH is already
-configured it returns `{"status":"configured"}` immediately without touching disk.
+## Version pin
+
+`detect.sh` pins SARAH to **4.15.3**. Override with
+`HEPPH_SARAH_VERSION=x.y.z`. When the pin bumps, `install.sh` is
+responsible for:
+- Removing or migrating the previous install tree (e.g.
+  `~/SARAH/SARAH-4.15.3` → `~/SARAH/SARAH-<new>`).
+- **Cleaning the previous version's `init.m` entry** (SARAH `install.sh`
+  appends a path line to `~/.WolframEngine/Kernel/init.m`; old
+  version-locked entries must be removed before the new path is added).
+- Writing the new version to `config.json` only after the install
+  verifies, so a half-finished upgrade does not leave the config
+  pointing at a stale path.
 
 ## Disk footprint
 
@@ -18,16 +29,16 @@ configured it returns `{"status":"configured"}` immediately without touching dis
 
 Typical invocation order:
 
-1. `/sarah-install detect` — check current state (no side-effects).
-2. `/sarah-install use-path <dir>` — register an existing SARAH directory.
-3. `/sarah-install install` — full auto-install (requires Wolfram Engine).
+1. `bash detect.sh` — check current state (no side-effects).
+2. `bash install.sh use-path <dir>` — register an existing SARAH directory.
+3. `bash install.sh install` — full auto-install (requires Wolfram Engine).
 
 ---
 
 ## Decision flow
 
 ```
-/sarah-install detect
+bash detect.sh
        │
        ├── config has sarah_path + valid SARAH.m + version probe succeeds
        │       └── {"status":"configured","path":"...","version":"..."}   exit 0
@@ -38,7 +49,7 @@ Typical invocation order:
        └── nothing found
                └── {"status":"missing"}                                   exit 0
 
-/sarah-install use-path <dir>
+bash install.sh use-path <dir>
        │
        ├── <dir>/SARAH.m exists AND wolframscript configured
        │       ├── version probe succeeds → writes sarah_path, sarah_version,
@@ -48,7 +59,7 @@ Typical invocation order:
        ├── <dir>/SARAH.m missing → SARAH_PATH_INVALID blocker             exit 16
        └── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT blocker    exit 20
 
-/sarah-install install [dir]
+bash install.sh install [dir]
        │
        ├── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT blocker    exit 20
        ├── disk check (need ≥1 GB free in $HOME)
@@ -91,7 +102,7 @@ Fields for `activation_required`:
 {
   "status": "activation_required",
   "message": "Wolfram Engine is installed but needs activation.",
-  "user_instruction": "Run `wolframscript --activate` in your terminal; it opens a browser for a free Wolfram ID signup. Then rerun /sarah-install."
+  "user_instruction": "Run `wolframscript --activate` in your terminal; it opens a browser for a free Wolfram ID signup. Then rerun _shared/installs/sarah."
 }
 ```
 
@@ -140,7 +151,7 @@ activation state is surfaced only via the `activation_required` status JSON.
 | `sarah_version` | Version string extracted by `probe_version` |
 | `sarah_installed_at` | UTC ISO 8601 timestamp |
 
-Keys **read** (must be set by `/install` or `/sarah-install use-path` for Wolfram):
+Keys **read** (must be set by `/install` or `bash install.sh use-path` for Wolfram):
 `wolfram_engine_path` — path to the `wolframscript` binary.
 
 ---
@@ -151,7 +162,7 @@ Pinned version: **4.15.3** (set in `skill_env.yaml` and `SHARED.md §Env-var ove
 
 Override via environment:
 ```bash
-HEPPH_SARAH_VERSION=4.14.0 /sarah-install install
+HEPPH_SARAH_VERSION=4.14.0 bash install.sh install
 ```
 
 ---

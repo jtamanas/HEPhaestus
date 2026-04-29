@@ -114,7 +114,7 @@ def run(
     if not fa_path or not Path(fa_path, "FeynArts.m").exists():
         _blocker(
             "FEYNARTS_ABSENT",
-            "FeynArts is not installed. Run /feynarts-install first.",
+            "FeynArts is not installed. Run _shared/installs/feynarts first.",
         )
 
     ws_path = wolfram_path or _read_config("wolfram_engine_path")
@@ -330,7 +330,7 @@ def _run_make_feynarts(
     if not sarah_path:
         _blocker(
             "FEYNARTS_SARAH_STATE_MISSING",
-            "sarah_path not configured. Run /sarah-install first.",
+            "sarah_path not configured. Run _shared/installs/sarah first.",
         )
 
     Path(feynarts_state_dir).mkdir(parents=True, exist_ok=True)

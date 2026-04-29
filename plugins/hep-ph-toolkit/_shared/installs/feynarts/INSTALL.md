@@ -120,7 +120,7 @@ Fields for `activation_required`:
 
 **`FEYNARTS_ACTIVATION_REQUIRED` is a status code, NOT a blocker.**
 
-This mirrors the pattern established by `/sarah-install`: Wolfram activation is a
+This mirrors the pattern established by `_shared/installs/sarah`: Wolfram activation is a
 one-time user action that requires a browser.  Emitting a fatal blocker would halt
 the pipeline permanently.  Instead, the `install` subcommand exits 0 with
 `{"status":"activation_required"}` so the orchestrator can surface the

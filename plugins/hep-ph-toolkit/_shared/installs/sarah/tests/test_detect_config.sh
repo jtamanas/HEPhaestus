@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# test_detect_config.sh — smoke tests for install_sarah.sh detect and use-path.
+# test_detect_config.sh — smoke tests for install.sh detect and use-path.
 # Uses isolated HEPPH_STATE_ROOT and XDG_CONFIG_HOME; does NOT touch real user config.
 #
 # Run: bash tests/test_detect_config.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_SARAH="$SCRIPT_DIR/../scripts/install_sarah.sh"
+INSTALL_SARAH="$SCRIPT_DIR/../install.sh"
 
 PASS=0
 FAIL=0

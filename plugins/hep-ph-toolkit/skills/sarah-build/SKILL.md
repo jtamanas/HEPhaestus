@@ -16,7 +16,24 @@ on the same spec are no-ops.
 
 - When `/lagrangian-builder` has a validated `ModelSpec` and needs SARAH output.
 - Directly by the user: `python3 build.py path/to/spec.yaml [--force]`.
-- Never invoke if `/sarah-install` has not run (or SARAH is not in config).
+
+---
+
+## Preflight: SARAH
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/sarah/detect.sh
+
+- **exit 0** → SARAH and Wolfram Engine are both ready (composite check
+  covering config, Wolfram reachability, activation status, and SARAH
+  on-disk presence); proceed.
+- **exit non-zero** → SARAH or Wolfram is missing/misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/sarah/INSTALL.md` into context
+  and follow it. When the install completes (or the install script
+  returns `activation_required`), re-run `detect.sh` before proceeding.
+  If it still fails, halt with the blocker code from the install
+  reference.
 
 ---
 
@@ -223,8 +240,8 @@ All blockers are emitted as single-line JSON on **stderr**, conforming to
 | Code | Mode | Trigger | Action |
 |------|------|---------|--------|
 | `MODELSPEC_INVALID` | fatal | Schema validation fails or semantic check fails (duplicate names, bad reps, bad hypercharge, empty outputs) | Fix the spec; re-run |
-| `WOLFRAM_KERNEL_ABSENT` | fatal | `wolfram_engine_path` not set in config | Run `/sarah-install` first |
-| `SARAH_ABSENT` | fatal | `sarah_path` not set in config | Run `/sarah-install` first |
+| `WOLFRAM_KERNEL_ABSENT` | fatal | `wolfram_engine_path` not set in config | See `_shared/installs/sarah/INSTALL.md` |
+| `SARAH_ABSENT` | fatal | `sarah_path` not set in config | See `_shared/installs/sarah/INSTALL.md` |
 | `ANOMALY_CANCELLATION_FAILED` | fatal | SARAH log contains `Anomalies are not cancelled` | Inspect coefficients in `context`; modify the model |
 | `MODELSPEC_INVALID` | fatal | SARAH log contains `Error: field <X> undefined` | Fix field name in spec |
 | `SARAH_OUTPUT_MISSING` | fatal | `sarah_output/UFO/<Name>/` absent after successful SARAH exit | Check `sarah.log`; may indicate SARAH version mismatch |

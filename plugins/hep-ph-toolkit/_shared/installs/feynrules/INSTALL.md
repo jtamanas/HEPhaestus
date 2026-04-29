@@ -133,7 +133,7 @@ Fields for `activation_required`:
 
 **`activation_required` is a status code, NOT a blocker.**
 
-This mirrors `/sarah-install` and diverges from the spec listing
+This mirrors `_shared/installs/sarah` and diverges from the spec listing
 `WOLFRAM_NEEDS_ACTIVATION` as a fatal blocker. The divergence is deliberate:
 Wolfram activation is a one-time user action that requires a browser; emitting
 a fatal blocker would halt the entire pipeline permanently, whereas returning
@@ -178,7 +178,7 @@ Exit codes (shared with sarah-install for caller consistency):
 | `feynrules_version` | Version string extracted by `probe_version` (e.g. `2.3.49`) |
 | `feynrules_installed_at` | UTC ISO 8601 timestamp |
 
-Keys **read** (must be set by `/install` or `/sarah-install use-path` for Wolfram):
+Keys **read** (must be set by `/install` or `bash _shared/installs/sarah/install.sh use-path` for Wolfram):
 `wolfram_engine_path` — path to the `wolframscript` binary.
 
 ---
@@ -212,6 +212,6 @@ Mathematica / Wolfram Engine 12.1+. For 12.2+ a compatibility shim exists:
 - Shared Bash helpers: `plugins/shared/install-helpers/_common.sh`
 - Blocker schema: `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json`
 - Shared conventions: `plugins/hep-ph-toolkit/SHARED-model-building.md`
-- Sibling: `plugins/hep-ph-toolkit/skills/sarah-install/` (structural parent)
+- Sibling: `plugins/hep-ph-toolkit/skills_shared/installs/sarah/` (structural parent)
 - Downstream consumer: hand-written `.fr` files → UFO export; NOT used by
   `/lagrangian-builder` (SARAH-first).

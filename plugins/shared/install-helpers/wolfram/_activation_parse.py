@@ -36,7 +36,7 @@ ACTIVATION_PATTERNS: list[re.Pattern] = [
 
 ACTIVATION_USER_INSTRUCTION = (
     "Run `wolframscript --activate` in your terminal; it opens a browser for a "
-    "free Wolfram ID signup. Then rerun /sarah-install."
+    "free Wolfram ID signup. Then rerun _shared/installs/sarah/install.sh."
 )
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install_sarah.sh — detect / use-path / install SARAH for model-building skills.
+# install.sh — detect / use-path / install SARAH for model-building skills.
 #
 # Subcommands:
 #   detect              Print JSON state of existing SARAH install (no side-effects).
@@ -215,7 +215,7 @@ cmd_install() {
   if [ -z "$ws" ]; then
     emit_blocker WOLFRAM_KERNEL_ABSENT fatal \
       "SARAH needs Wolfram Engine configured first." \
-      "Run \`/install\` to install Wolfram Engine, or \`/sarah-install use-path\` after installing it manually."
+      "Run \`/install\` to install Wolfram Engine, or \`bash _shared/installs/sarah/install.sh use-path\` after installing it manually."
     exit $EXIT_NO_WOLFRAM
   fi
 
@@ -281,7 +281,7 @@ cmd_install() {
 # ---------------------------------------------------------------------------
 usage() {
   cat >&2 <<EOF
-Usage: install_sarah.sh <command> [args]
+Usage: install.sh <command> [args]
 
 Commands:
   detect              Print JSON state of existing SARAH install (no side-effects)

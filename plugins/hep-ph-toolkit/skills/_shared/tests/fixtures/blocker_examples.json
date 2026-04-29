@@ -7,7 +7,7 @@
       "url": "https://sarah.hepforge.org/downloads/SARAH-4.15.3.tar.gz",
       "exit_code": 22
     },
-    "user_instruction": "Check your internet connection and retry /sarah-install."
+    "user_instruction": "Check your internet connection and retry _shared/installs/sarah."
   },
   {
     "code": "SPHENO_SPECTRUM_PROBLEM",
