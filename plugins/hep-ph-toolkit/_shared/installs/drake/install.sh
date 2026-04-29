@@ -182,20 +182,38 @@ cmd_use_path() {
 
   case "$status" in
     ok)
-      local version installed_at
+      local version installed_at provenance
       version="$(printf '%s' "$smoke" | python3 -c "import json,sys; print(json.load(sys.stdin).get('version',''))" 2>/dev/null || true)"
-      [ -n "$version" ] || version="1.0 (assumed)"
+      if [ -z "$version" ]; then
+        # Smoke test passed but the WL version stamp was empty. Pin the
+        # configured version cleanly to the env-var pin so detect.sh's
+        # fast-path comparison succeeds; record provenance separately.
+        version="$DRAKE_VERSION"
+        provenance="assumed"
+      else
+        provenance="reported"
+      fi
       installed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-      config_merge drake_path "$path" drake_version "$version" drake_installed_at "$installed_at"
-      log "Configured DRAKE at $path (v$version)"
+      config_merge \
+        drake_path "$path" \
+        drake_version "$version" \
+        drake_version_provenance "$provenance" \
+        drake_installed_at "$installed_at"
+      log "Configured DRAKE at $path (v$version, provenance=$provenance)"
       printf '{"status":"configured","path":"%s","version":"%s"}\n' "$path" "$version"
       ;;
     activation_required)
       # Surface as status, not a blocker. Still record the path so the user
       # can re-run ``bash _shared/installs/drake/detect.sh`` after activation.
+      # Use the clean pinned version so detect.sh fast-path can match
+      # post-activation; mark provenance as unverified.
       local installed_at
       installed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-      config_merge drake_path "$path" drake_version "1.0 (assumed, unverified)" drake_installed_at "$installed_at"
+      config_merge \
+        drake_path "$path" \
+        drake_version "$DRAKE_VERSION" \
+        drake_version_provenance "assumed_unverified" \
+        drake_installed_at "$installed_at"
       printf '%s\n' "$smoke"
       ;;
     *)
@@ -245,7 +263,7 @@ cmd_install() {
     cat <<JSON
 {"status":"manual_download_required","message":"Automated download from hepforge was blocked (curl rc=$dl_rc). The hepforge site uses Anubis bot-protection that curl/wget cannot solve.","user_instruction":"Open https://drake.hepforge.org/ in a browser, click Downloads, save the zipball, unpack it (e.g. to ~/drake), then rerun \``bash _shared/installs/drake/install.sh use-path` ~/drake\`."}
 JSON
-    exit 0
+    exit "$EXIT_HEPFORGE_GATED"
   fi
 
   if looks_like_anubis_challenge "$ZIPBALL"; then
@@ -254,7 +272,7 @@ JSON
     cat <<JSON
 {"status":"manual_download_required","message":"hepforge returned an Anubis bot-challenge page instead of the zipball.","user_instruction":"Open https://drake.hepforge.org/ in a browser, click Downloads, save the zipball, unpack it (e.g. to ~/drake), then rerun \``bash _shared/installs/drake/install.sh use-path` ~/drake\`."}
 JSON
-    exit 0
+    exit "$EXIT_HEPFORGE_GATED"
   fi
 
   # Optional checksum (will warn on placeholder).
