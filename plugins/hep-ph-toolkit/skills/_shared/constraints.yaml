@@ -516,7 +516,7 @@ prereqs:
       cached: [0.17, 0.33]
     capabilities:
       description: "FeynRules — alternative model file generator; tighter MG5 UFO compatibility than SARAH (PLANNED)"
-      install_skill: feynrules-install
+      install_skill: _shared/installs/feynrules
       role:
         collider: none
         dd: validator

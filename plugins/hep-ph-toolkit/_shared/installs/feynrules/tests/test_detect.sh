@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_FR="$SCRIPT_DIR/../scripts/install_feynrules.sh"
+INSTALL_FR="$SCRIPT_DIR/../install.sh"
 FIXTURE_STUB="$SCRIPT_DIR/fixtures/feynrules_stub"
 
 PASS=0
@@ -167,11 +167,11 @@ assert 'WOLFRAM' in d.get('code', ''), d
 fi
 
 # ---------------------------------------------------------------------------
-# Test 7: install.sh wrapper dispatches to install_feynrules.sh
+# Test 7: install.sh entry point dispatches detect
 # ---------------------------------------------------------------------------
 # Reset config to empty so detect returns `missing`.
 rm -f "$CFG_DIR/config.json"
-out="$(bash "$SCRIPT_DIR/../scripts/install.sh" detect 2>/dev/null)"
+out="$(bash "$SCRIPT_DIR/../install.sh" detect 2>/dev/null)"
 status="$(printf '%s' "$out" | python3 -c "import json,sys; print(json.load(sys.stdin).get('status',''))" 2>/dev/null || true)"
 if [ "$status" = "missing" ] || [ "$status" = "found" ]; then
   _pass "install.sh wrapper dispatches detect (status=$status)"

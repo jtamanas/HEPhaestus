@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install_feynrules.sh — detect / use-path / install FeynRules for model-building skills.
+# install.sh — _shared/installs/feynrules entry point. detect / use-path / install FeynRules for model-building skills.
 #
 # FeynRules is a pure Mathematica package (no native code, no compile step).
 # Install pattern mirrors sarah-install: extract tarball → register package

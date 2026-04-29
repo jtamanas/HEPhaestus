@@ -1,14 +1,31 @@
----
-name: feynrules-install
-description: Detect, validate, or auto-install FeynRules (the Mathematica package for deriving Feynman rules from a Lagrangian and exporting UFO/FeynArts/CalcHEP/Sherpa models). Handles existing installs, custom paths, and Wolfram Engine activation status.
----
+# FeynRules — Install Reference
 
-## When to invoke
+Reference doc for installing **FeynRules 2.3.49** (the Mathematica
+package for deriving Feynman rules from a Lagrangian and exporting
+UFO/FeynArts/CalcHEP/Sherpa models). Driven by `detect.sh` and
+`install.sh` in this directory; consumed by `/install` and
+`/install bsm-model-building`.
 
-Use `/feynrules-install` before invoking any skill that shells out to FeynRules
-directly (e.g. UFO export from a hand-written `.fr` model file). The skill is
-idempotent: if FeynRules is already configured it returns
-`{"status":"configured"}` immediately without touching disk.
+## Status: no runner today
+
+There is no `feynrules` runner skill in `plugins/hep-ph-toolkit/skills/`
+today. `/lagrangian-builder` is SARAH-first; FeynRules is downstream
+only. This install reference is reachable solely via `/install` (or
+`/install bsm-model-building`) — there is no per-skill preflight
+hop. If a future FeynRules runner skill is added, wire it to
+`bash plugins/hep-ph-toolkit/_shared/installs/feynrules/detect.sh`
+following the pattern established by `/spheno-build` and
+`/looptools`.
+
+## Version pin
+
+`detect.sh` pins FeynRules to **2.3.49**. Override with
+`HEPPH_FEYNRULES_VERSION=x.y.z`. When this pin bumps, `install.sh`
+must remove or migrate the previous install tree
+(e.g. `~/feynrules-current` → `~/feynrules-<new>`); the new version
+is only written to `config.json` after the new install verifies, so
+a half-finished upgrade does not leave the config pointing at a
+stale tree.
 
 ## Disk footprint
 
@@ -19,9 +36,9 @@ idempotent: if FeynRules is already configured it returns
 
 Typical invocation order:
 
-1. `/feynrules-install detect` — check current state (no side-effects).
-2. `/feynrules-install use-path <dir>` — register an existing FeynRules directory.
-3. `/feynrules-install install` — full auto-install (requires Wolfram Engine).
+1. `install.sh detect` — check current state (no side-effects).
+2. `install.sh use-path <dir>` — register an existing FeynRules directory.
+3. `install.sh install` — full auto-install (requires Wolfram Engine).
 
 ### Downstream-only note
 
@@ -36,7 +53,7 @@ backend.
 ## Decision flow
 
 ```
-/feynrules-install detect
+install.sh detect
        │
        ├── config has feynrules_path + valid FeynRules.m/FeynRulesPackage.m +
        │   version probe succeeds
@@ -48,7 +65,7 @@ backend.
        └── nothing found
                └── {"status":"missing"}                                   exit 0
 
-/feynrules-install use-path <dir>
+install.sh use-path <dir>
        │
        ├── <dir>/FeynRules.m + <dir>/FeynRulesPackage.m exist AND
        │   wolframscript configured
@@ -61,7 +78,7 @@ backend.
        │   FEYNRULES_PATH_INVALID blocker                                 exit 16
        └── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT blocker    exit 20
 
-/feynrules-install install [dir]
+install.sh install [dir]
        │
        ├── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT blocker    exit 20
        ├── disk check (need >=1 GB free in $HOME; FeynRules itself is ~50-200 MB)
@@ -106,7 +123,7 @@ Fields for `activation_required`:
 {
   "status": "activation_required",
   "message": "Wolfram Engine is installed but needs activation.",
-  "user_instruction": "Run `wolframscript --activate` in your terminal; it opens a browser for a free Wolfram ID signup. Then rerun /feynrules-install."
+  "user_instruction": "Run `wolframscript --activate` in your terminal; it opens a browser for a free Wolfram ID signup. Then rerun install.sh."
 }
 ```
 
@@ -174,7 +191,7 @@ Pinned version: **2.3.49** (set in `skill_env.yaml`; hardcoded
 
 Override via environment:
 ```bash
-HEPPH_FEYNRULES_VERSION=2.3.43 /feynrules-install install
+HEPPH_FEYNRULES_VERSION=2.3.43 install.sh install
 ```
 
 Default upstream tarball (single rolling "current" build):
