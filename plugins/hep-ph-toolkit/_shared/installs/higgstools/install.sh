@@ -1,27 +1,24 @@
 #!/usr/bin/env bash
-# install_higgstools.sh — install HiggsBounds-5 + HiggsSignals-2 (legacy Fortran default)
+# install.sh — _shared/installs/higgstools entry point.
+# Install HiggsBounds-5 + HiggsSignals-2 (legacy Fortran default)
 # or the unified HiggsTools C++ library (opt-in via HEPPH_HIGGSTOOLS_BACKEND=unified).
 #
 # Usage:
-#   install_higgstools.sh detect
-#   install_higgstools.sh use-path <hb_dir> <hs_dir>
-#   install_higgstools.sh install [--backend=legacy|unified]
-#   install_higgstools.sh install --force
+#   install.sh detect
+#   install.sh use-path <hb_dir> <hs_dir>
+#   install.sh install [--backend=legacy|unified]
+#   install.sh install --force
 # shellcheck disable=SC1090,SC1091
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMMON="$SCRIPT_DIR/../../../../../shared/install-helpers/_common.sh"
-if [ ! -f "$COMMON" ]; then
-  COMMON="$SCRIPT_DIR/../../../../shared/install-helpers/_common.sh"
-fi
+COMMON="$SCRIPT_DIR/../../../../shared/install-helpers/_common.sh"
 . "$COMMON"
 . "$SCRIPT_DIR/_blocker.sh"
 
 _LOG_TAG="higgstools-install"
 
-SKILL_DIR="$(dirname "$SCRIPT_DIR")"
-SKILL_ENV="$SKILL_DIR/skill_env.yaml"
+SKILL_ENV="$SCRIPT_DIR/skill_env.yaml"
 
 # ── Parse skill_env.yaml (pure Python, no PyYAML dependency) ─────────────────
 _read_yaml() {
@@ -52,7 +49,7 @@ shift || true
 
 # ── Subcommand: detect ────────────────────────────────────────────────────────
 if [ "$SUBCOMMAND" = "detect" ]; then
-  exec bash "$SCRIPT_DIR/detect_higgstools.sh"
+  exec bash "$SCRIPT_DIR/_probe.sh"
 fi
 
 # ── Subcommand: use-path ──────────────────────────────────────────────────────
@@ -429,5 +426,5 @@ fi
 
 # ── Unknown subcommand ─────────────────────────────────────────────────────────
 err "Unknown subcommand: $SUBCOMMAND"
-err "Usage: install_higgstools.sh detect|use-path|install [options]"
+err "Usage: install.sh detect|use-path|install [options]"
 exit 1

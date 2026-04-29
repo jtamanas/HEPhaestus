@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 
 SKILL_DIR = Path(__file__).parent.parent
-SCRIPTS_DIR = SKILL_DIR / "scripts"
-INSTALL_SCRIPT = SCRIPTS_DIR / "install_higgstools.sh"
+SCRIPTS_DIR = SKILL_DIR
+INSTALL_SCRIPT = SCRIPTS_DIR / "install.sh"
 
 
 def run_script(args, env_overrides=None, timeout=15):

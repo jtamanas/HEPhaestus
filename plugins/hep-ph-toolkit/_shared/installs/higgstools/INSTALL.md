@@ -1,13 +1,20 @@
----
-name: higgstools-install
-description: Detect, validate, or auto-install HiggsBounds-5 + HiggsSignals-2 (legacy Fortran, default) or the unified HiggsTools C++ library (opt-in). Handles existing installs, custom paths, and SM reference-chi2 caching.
----
+# HiggsTools — Install Reference
 
-## When to invoke
+Reference doc for installing **HiggsBounds-5.10.2 + HiggsSignals-2.6.2**
+(legacy Fortran, default) or the **unified HiggsTools 1.2 C++ library**
+(opt-in). Driven by `detect.sh` and `install.sh` in this directory;
+consumed by the `higgstools` runner skill's preflight and by
+`/install`. Handles existing installs, custom paths, and SM
+reference-chi2 caching.
 
-Use `/higgstools-install` before running `/higgstools` to ensure HiggsBounds and
-HiggsSignals are present. The skill is idempotent: if the tools are already
-configured it returns `{"status":"configured"}` immediately without touching disk.
+## Version pin
+
+`detect.sh` pins HiggsBounds to **5.10.2** (and HiggsSignals to
+**2.6.2**). Override with `HEPPH_HB_VERSION=x.y.z` /
+`HEPPH_HS_VERSION=x.y.z`. When a pin bumps, `install.sh` must remove
+or migrate the previous build trees; the new version is only written
+to `config.json` after the new install verifies, so a half-finished
+upgrade does not leave the config pointing at a stale binary.
 
 ## Disk footprint
 
@@ -18,17 +25,17 @@ configured it returns `{"status":"configured"}` immediately without touching dis
 
 Typical invocation order:
 
-1. `/higgstools-install detect` — check current state (no side-effects).
-2. `/higgstools-install use-path <hb_dir> <hs_dir>` — register existing builds.
-3. `/higgstools-install install` — full auto-install (legacy Fortran, default).
-4. `/higgstools-install install --backend=unified` — opt-in C++ build (requires `HEPPH_HIGGSTOOLS_BACKEND=unified`).
+1. `install.sh detect` — check current state (no side-effects).
+2. `install.sh use-path <hb_dir> <hs_dir>` — register existing builds.
+3. `install.sh install` — full auto-install (legacy Fortran, default).
+4. `install.sh install --backend=unified` — opt-in C++ build (requires `HEPPH_HIGGSTOOLS_BACKEND=unified`).
 
 ---
 
 ## Decision flow
 
 ```
-/higgstools-install detect
+install.sh detect
        │
        ├── config has higgsbounds_path + higgssignals_path + binaries present
        │       └── {"status":"configured","hb_version":"...","hs_version":"..."}  exit 0
@@ -39,7 +46,7 @@ Typical invocation order:
        └── nothing found
                └── {"status":"missing"}                                           exit 0
 
-/higgstools-install use-path <hb_dir> <hs_dir>
+install.sh use-path <hb_dir> <hs_dir>
        │
        ├── both dirs have HB/HS executables/libraries
        │       └── writes config keys; caches chi2_SM_ref               exit 0
@@ -47,7 +54,7 @@ Typical invocation order:
        ├── dir missing executables → HIGGSTOOLS_PATH_INVALID blocker    exit 16
        └── chi2_SM_ref cache fails → HIGGSTOOLS_SMOKE_TEST_FAILED       exit 15
 
-/higgstools-install install [--backend=legacy|unified]
+install.sh install [--backend=legacy|unified]
        │
        ├── HEPPH_NO_NETWORK=1 → HIGGSTOOLS_OFFLINE_NO_CACHE fatal       exit 12
        ├── check_disk 3
@@ -111,7 +118,7 @@ caches `chi2_SM_ref` to `$STATE_ROOT/cache/hs2_chi2_sm_ref.json`:
 
 The `/higgstools run` command reads this cache on every invocation. If the cache
 is absent, it emits a fatal `HIGGSTOOLS_SM_REF_MISSING` blocker with the
-instruction to re-run `/higgstools-install install`.
+instruction to re-run `install.sh install`.
 
 ---
 
@@ -126,7 +133,7 @@ All blockers are emitted on **stderr** as single-line JSON conforming to
 | `HIGGSTOOLS_OFFLINE_NO_CACHE` | `fatal` | `HEPPH_NO_NETWORK=1` and no cached source | Provide a cached source directory via `HEPPH_OFFLINE_CACHE_DIR` |
 | `HIGGSTOOLS_DOWNLOAD_FAILED` | `fatal` | git clone failed | Check network and GitLab accessibility |
 | `HIGGSTOOLS_BUILD_FAILED` | `fatal` | CMake/make non-zero | Check build.log in the build directory |
-| `HIGGSTOOLS_SMOKE_TEST_FAILED` | `fatal` | SM example output out of range | Reinstall with `/higgstools-install install --force` |
+| `HIGGSTOOLS_SMOKE_TEST_FAILED` | `fatal` | SM example output out of range | Reinstall with `install.sh install --force` |
 | `HIGGSTOOLS_PATH_INVALID` | `fatal` | `use-path` target missing HB/HS binaries | Provide path to a valid HiggsBounds/HiggsSignals build |
 | `HIGGSTOOLS_BACKEND_UNAVAILABLE` | `recoverable` | Unified backend import fails | Install higgstools Python module or use legacy backend |
 
@@ -161,7 +168,7 @@ Pinned versions (from `skill_env.yaml`):
 
 Override via environment:
 ```bash
-HEPPH_HB_VERSION=5.10.1 /higgstools-install install
+HEPPH_HB_VERSION=5.10.1 install.sh install
 ```
 
 ---

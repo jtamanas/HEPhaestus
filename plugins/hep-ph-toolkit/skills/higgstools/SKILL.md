@@ -3,11 +3,28 @@ name: higgstools
 description: Run HiggsBounds-5 + HiggsSignals-2 constraint checks on a model SLHA file. Computes hb_allowed (per-channel AND), hs_consistent (Δχ² < 6.18), p-values, and per-channel CSV. Supports single-point and scan-directory modes.
 ---
 
+## Preflight: HiggsTools
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/higgstools/detect.sh
+
+- **exit 0** → HiggsBounds + HiggsSignals are installed and registered
+  in config; proceed.
+- **exit non-zero** → HiggsTools is missing or misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/higgstools/INSTALL.md` into
+  context and follow it. When the install completes, re-run `detect.sh`
+  before proceeding. If it still fails, halt with the blocker code from
+  the install reference.
+
+---
+
 ## When to invoke
 
-Use `/higgstools` after `/higgstools-install` has configured HiggsBounds and
-HiggsSignals. Requires an SLHA2 file produced by `/spheno-build` with
-`WriteHiggsBoundsBlocks=True` in the SARAH `SPheno.m`.
+Use `/higgstools` after HiggsBounds + HiggsSignals are configured (see
+`## Preflight: HiggsTools` above). Requires an SLHA2 file produced by
+`/spheno-build` with `WriteHiggsBoundsBlocks=True` in the SARAH
+`SPheno.m`.
 
 One subcommand:
 
@@ -207,7 +224,7 @@ checks is the job of `run --scan-dir <dir>`.
 | Code | Mode | Trigger |
 |---|---|---|
 | `HIGGSTOOLS_SLHA_MISSING_BLOCKS` | `fatal` | required HB input blocks absent from SLHA |
-| `HIGGSTOOLS_SM_REF_MISSING` | `fatal` | chi2_SM_ref cache absent (re-run `/higgstools-install install`) |
+| `HIGGSTOOLS_SM_REF_MISSING` | `fatal` | chi2_SM_ref cache absent (re-run `_shared/installs/higgstools/install.sh install`) |
 | `HIGGSTOOLS_DATASET_MISMATCH` | `fatal` | (unified) dataset SHA ≠ config pin |
 | `HIGGSTOOLS_BACKEND_UNAVAILABLE` | `recoverable` | unified Python module import failed |
 | `HIGGSTOOLS_NUMERIC_CRASH` | `recoverable` | backend segfault on one scan row; row marked bad, scan continues |
@@ -229,5 +246,5 @@ SPheno `index` column — byte-identical across worker counts.
 - Shared Bash helpers: `plugins/shared/install-helpers/_common.sh`
 - Blocker schema: `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json`
 
-- Install skill: `plugins/hep-ph-toolkit/skills/higgstools-install/`
+- Install ref: `plugins/hep-ph-toolkit/_shared/installs/higgstools/INSTALL.md`
 - Implementation plan: `docs/roadmap/v1-constraints-work/higgstools/plan/final.md`

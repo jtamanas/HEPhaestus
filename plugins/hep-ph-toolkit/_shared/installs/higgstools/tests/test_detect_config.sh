@@ -26,7 +26,7 @@ t1_detect_missing() {
   local status
   status=$(XDG_CONFIG_HOME="$tmpdir/cfg" \
            HEPPH_STATE_ROOT="$tmpdir/state" \
-           bash "$SKILL_DIR/scripts/detect_higgstools.sh" 2>/dev/null \
+           bash "$SKILL_DIR/_probe.sh" 2>/dev/null \
            | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['status'])")
   if [ "$status" = "missing" ]; then
     _pass "detect → missing when no config + no tools"
@@ -62,7 +62,7 @@ JSON
   local status
   status=$(XDG_CONFIG_HOME="$tmpdir/cfg" \
            HEPPH_STATE_ROOT="$tmpdir/state" \
-           bash "$SKILL_DIR/scripts/detect_higgstools.sh" 2>/dev/null \
+           bash "$SKILL_DIR/_probe.sh" 2>/dev/null \
            | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['status'])")
   if [ "$status" = "configured" ]; then
     _pass "detect → configured when config + binaries present"
@@ -88,7 +88,7 @@ JSON
   local status
   status=$(XDG_CONFIG_HOME="$tmpdir/cfg" \
            HEPPH_STATE_ROOT="$tmpdir/state" \
-           bash "$SKILL_DIR/scripts/detect_higgstools.sh" 2>/dev/null \
+           bash "$SKILL_DIR/_probe.sh" 2>/dev/null \
            | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['status'])")
   if [ "$status" = "missing" ]; then
     _pass "detect → missing when config paths missing on disk"
@@ -122,7 +122,7 @@ JSON
   local output
   output=$(XDG_CONFIG_HOME="$tmpdir/cfg" \
            HEPPH_STATE_ROOT="$tmpdir/state" \
-           bash "$SKILL_DIR/scripts/detect_higgstools.sh" 2>/dev/null)
+           bash "$SKILL_DIR/_probe.sh" 2>/dev/null)
 
   local backend hb_version
   backend=$(echo "$output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('backend',''))")
@@ -150,7 +150,7 @@ t5_use_path_config_write() {
   local rc=0
   XDG_CONFIG_HOME="$tmpdir/cfg" \
   HEPPH_STATE_ROOT="$tmpdir/state" \
-  bash "$SKILL_DIR/scripts/install_higgstools.sh" use-path "$tmpdir/hb/build" "$tmpdir/hs/build" 2>/dev/null || rc=$?
+  bash "$SKILL_DIR/install.sh" use-path "$tmpdir/hb/build" "$tmpdir/hs/build" 2>/dev/null || rc=$?
 
   if [ $rc -eq 0 ]; then
     local backend

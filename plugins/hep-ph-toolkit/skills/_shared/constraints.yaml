@@ -416,7 +416,7 @@ prereqs:
       cached: [0.08, 0.17]
     capabilities:
       description: "HiggsBounds 5.10.2 + HiggsSignals 2.6.2 — Higgs sector exclusion + fit"
-      install_skill: higgstools-install
+      install_skill: _shared/installs/higgstools
       role:
         collider: none
         dd: none

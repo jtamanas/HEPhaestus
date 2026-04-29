@@ -13,11 +13,13 @@ from pathlib import Path
 import pytest
 
 SKILL_DIR = Path(__file__).parent.parent
-SCRIPTS_DIR = SKILL_DIR / "scripts"
+SCRIPTS_DIR = SKILL_DIR
 CACHE_SCRIPT = SCRIPTS_DIR / "cache_sm_reference.py"
 
-# The usage skill's run_higgstools.py to test SM ref absent check
-USAGE_SKILL_DIR = SKILL_DIR.parent / "higgstools"
+# The usage skill's run_higgstools.py to test SM ref absent check.
+# SKILL_DIR is _shared/installs/higgstools; the runner is at
+# plugins/hep-ph-toolkit/skills/higgstools/scripts/run_higgstools.py
+USAGE_SKILL_DIR = SKILL_DIR.parent.parent.parent / "skills" / "higgstools"
 RUN_SCRIPT = USAGE_SKILL_DIR / "scripts" / "run_higgstools.py"
 
 
