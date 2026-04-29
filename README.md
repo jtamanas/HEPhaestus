@@ -48,31 +48,42 @@ the paper's blind-spot figure.
 - **`/dark-su3`** — Per-model workflow for Dark SU(3) dark-Higgs benchmark (§IV). Vector V (tree-level SI) and pseudoscalar Ψ (exact blind spot); analytic-backend relic.
 - **`/singlet-doublet`** — Per-model workflow for Singlet-Doublet fermion DM (§II). Drives `sarah-build` → `spheno-build` → `madgraph` → `maddm`.
 
+### Installs (reference, not invokable)
+The eleven external tools below all install via the same self-healing
+contract. Each runner skill carries a `## Preflight` block that runs
+`plugins/hep-ph-toolkit/_shared/installs/<tool>/detect.sh`; on
+non-zero exit the runner loads `INSTALL.md` from the same directory
+and walks the user through the install. Bundle invocations
+(`/install profumo-paper`, `/install dm-relic`, etc.) drive the
+exact same scripts.
+
+`_shared/installs/<tool>/` for: `ddcalc`, `drake`, `feynarts`,
+`feynrules`, `formcalc`, `higgstools`, `looptools`, `maddm`,
+`micromegas`, `sarah`, `spheno`. Wolfram Engine and MG5_aMC are pulled
+in transitively (no separate `_shared/installs/` entry).
+
 ### Feynman diagrams & one-loop amplitudes
 - **`/draw-feynman`** — Generate diagrams in TikZ-Feynman, FeynMF, or ASCII.
-- **`/feynarts`** + **`/feynarts-install`** — FeynArts 3.11 for diagram and amplitude generation; outputs `FeynAmpList.m`, diagrams PDF, topology JSON.
-- **`/formcalc`** + **`/formcalc-install`** — FormCalc 9.10 (bundled with LoopTools 9.10 and FORM 4.3.1) to reduce FeynArts amplitudes; produces `amp_reduced.m` + `amp_reduced.meta.json`.
-- **`/looptools-install`** — Build LoopTools from source (records the gfortran version used).
+- **`/feynarts`** — FeynArts 3.11 for diagram and amplitude generation; outputs `FeynAmpList.m`, diagrams PDF, topology JSON.
+- **`/formcalc`** — FormCalc 9.10 (bundled with LoopTools 9.10 and FORM 4.3.1) to reduce FeynArts amplitudes; produces `amp_reduced.m` + `amp_reduced.meta.json`.
 - **`/feynman-tikz`** — Render diagrams in TikZ-Feynman with the project's `hephaestus-tikz.sty` style package.
 
 ### BSM model building
-- **`/lagrangian-builder`** — End-to-end pipeline: interview → ModelSpec → SARAH + SPheno → UFO + SLHA. Handles cold-start (Wolfram activation, SARAH install, model build, spectrum).
-- **`/feynrules-install`** — FeynRules (UFO/FeynArts/CalcHEP/Sherpa exporter).
-- **`/sarah-install`** + **`/sarah-build`** — Install SARAH; render SARAH `.m` files from a ModelSpec YAML and run SARAH headlessly.
-- **`/spheno-install`** + **`/spheno-build`** — Build SPheno from gfortran source; compile a model-specific SPheno binary and run spectrum/RGE calculations.
+- **`/lagrangian-builder`** — End-to-end pipeline: interview → ModelSpec → SARAH + SPheno → UFO + SLHA. Cold-start (Wolfram activation, SARAH install, model build, spectrum) is handled by `/sarah-build` and `/spheno-build` self-healing.
+- **`/sarah-build`** — Render SARAH `.m` files from a ModelSpec YAML and run SARAH headlessly.
+- **`/spheno-build`** — Compile a model-specific SPheno binary and run spectrum/RGE calculations.
 
 ### Constraints
 - **`/dark-matter-constraints`** — Meta-skill: routes a DM question (relic / DD / ID) to MadDM, micrOMEGAs, or DRAKE; merges answers with caveats.
-- **`/maddm`** + **`/maddm-install`** — MadDM relic density, DD/ID rates, parameter scans (runs inside an MG5 session).
-- **`/micromegas`** + **`/micromegas-install`** — micrOMEGAs 6.0.5 for relic density, SI/SD nucleon cross-sections, annihilation spectra.
-- **`/drake`** + **`/drake-install`** — DRAKE for relic density when ⟨σv⟩ Taylor expansion fails (resonances, kinetic decoupling, forbidden channels, Sommerfeld).
-- **`/ddcalc`** + **`/ddcalc-install`** — DDCalc 2.2.0 direct-detection likelihoods and 90%-CL exclusion verdicts (consumes `scattering/v1` JSON).
-- **`/higgstools`** + **`/higgstools-install`** — HiggsBounds-5 + HiggsSignals-2 against a model SLHA file (per-channel AND, Δχ² < 6.18, p-values).
+- **`/maddm`** — MadDM relic density, DD/ID rates, parameter scans (runs inside an MG5 session).
+- **`/micromegas`** — micrOMEGAs 6.0.5 for relic density, SI/SD nucleon cross-sections, annihilation spectra.
+- **`/drake`** — DRAKE for relic density when ⟨σv⟩ Taylor expansion fails (resonances, kinetic decoupling, forbidden channels, Sommerfeld).
+- **`/ddcalc`** — DDCalc 2.2.0 direct-detection likelihoods and 90%-CL exclusion verdicts (consumes `scattering/v1` JSON).
+- **`/higgstools`** — HiggsBounds-5 + HiggsSignals-2 against a model SLHA file (per-channel AND, Δχ² < 6.18, p-values).
 - **`/gamlike`** — `MadDM_results.txt → gamlike/v1` JSON parser (v0 — parser only; pull computation v1+).
 
 ### Monte Carlo
 - **`/madgraph`** — MadGraph5_aMC@NLO process generation, card writing, event generation, LHE parsing, parameter scans.
-- **`/maddm`** + **`/maddm-install`** — see Constraints (MadDM is the MG5 DM plugin).
 
 ### Plotting
 - **`/hep-plot`** — Distributions, stacked histograms, ratio panels, multi-panel figures with matplotlib + mplhep.

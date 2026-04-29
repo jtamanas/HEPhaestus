@@ -32,11 +32,12 @@ The marketplace index is at `.claude-plugin/marketplace.json`.
 
 | Category | Skills |
 |----------|--------|
+| Installs (reference) | `_shared/installs/<tool>/` for {ddcalc, drake, feynarts, feynrules, formcalc, higgstools, looptools, maddm, micromegas, sarah, spheno} — driven by runner-skill preflights and `/install` |
 | Onboarding & demo | `2hdm-a`, `dark-su3`, `demo`, `install`, `singlet-doublet`, `_test_model_x` |
-| Feynman / amplitudes | `draw-feynman`, `feynarts`, `feynarts-install`, `formcalc`, `formcalc-install` |
-| BSM model building | `feynrules-install`, `lagrangian-builder`, `looptools-install`, `sarah-build`, `sarah-install`, `spheno-build`, `spheno-install` |
-| Constraints | `dark-matter-constraints`, `ddcalc`, `ddcalc-install`, `gamlike`, `higgstools`, `higgstools-install`, `micromegas`, `micromegas-install` |
-| Monte Carlo | `drake`, `drake-install`, `maddm`, `maddm-install`, `madgraph` |
+| Feynman / amplitudes | `draw-feynman`, `feynarts`, `formcalc` |
+| BSM model building | `lagrangian-builder`, `sarah-build`, `spheno-build` |
+| Constraints | `dark-matter-constraints`, `ddcalc`, `gamlike`, `higgstools`, `micromegas` |
+| Monte Carlo | `drake`, `maddm`, `madgraph` |
 | Publishing | `feynman-tikz` |
 | Plotting | `exclusion-contour`, `hep-plot`, `theory-data-comparison` |
 | Workflow | `analytic-exception-detector`, `model-router` |
