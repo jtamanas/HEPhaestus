@@ -70,6 +70,8 @@ Two locations carry install knowledge, with a clean split:
 1. **`_shared/installs/<tool>/`** — *what to install and how.* Reference doc plus scripts.
 2. **Runner skill** (e.g. `sarah-build`) — *that* it depends on the tool, and where to find the reference. Does not carry install steps inline.
 
+**Tools without a current runner.** Of the 11 install targets, **FeynRules has no runner skill today** — it is only referenced by `/install` and `_shared/constraints.yaml`. Under this design, `_shared/installs/feynrules/` still exists and is reachable via `/install feynrules` and `/install bsm-model-building`. No preflight wiring is added until a runner that depends on FeynRules exists (anticipated when `lagrangian-builder` is rebuilt as a SARAH/FeynRules interface — out of scope for this refactor).
+
 ### 2. Preflight contract
 
 Each runner skill that depends on a tool gets a uniform preflight block at the top of its `SKILL.md`:
