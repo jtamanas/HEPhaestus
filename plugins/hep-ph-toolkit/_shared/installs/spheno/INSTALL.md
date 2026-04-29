@@ -1,12 +1,21 @@
----
-name: spheno-install
-description: Detect, validate, or build SPheno from source with gfortran. Manages both spheno_path (binary) and spheno_src_path (source tree).
----
+# SPheno — Install Reference
 
-# /spheno-install
+Reference doc for installing **SPheno** (Spectrum calculator for HEP)
+from source with gfortran. Driven by `detect.sh` and `install.sh` in
+this directory; consumed by the `spheno-build` runner skill's preflight
+and by `/install`.
 
-Detects, validates, or compiles SPheno (Spectrum calculator for HEP)
-from source. Works in three modes: **detect**, **use-path**, and **install**.
+Three install modes are provided: **detect**, **use-path**, and **install**.
+
+## Version pin
+
+`detect.sh` pins SPheno to **4.0.5**. Override with
+`HEPPH_SPHENO_VERSION=x.y.z`. When this pin bumps, `install.sh` must
+remove or migrate the previous install tree
+(e.g. `~/SPheno/SPheno-4.0.5` → `~/SPheno/SPheno-<new>`); the new
+version is only written to `config.json` after the new install
+verifies, so a half-finished upgrade does not leave the config
+pointing at a stale binary.
 
 ## Disk footprint
 
@@ -17,20 +26,10 @@ from source. Works in three modes: **detect**, **use-path**, and **install**.
 
 ---
 
-## When to invoke
-
-- Before any `/spheno-build` or `/lagrangian-builder` run that requires a
-  SPheno spectrum calculation.
-- When a user supplies an existing SPheno directory or binary.
-- After `/sarah-build` has generated `SPheno.m` and the user is ready to
-  compile a model-specific SPheno module.
-
----
-
 ## Decision flow
 
 ```
-/spheno-install
+SPheno install
     │
     ├─ detect         Check current state. Returns one of:
     │                   {"status":"missing"}
@@ -52,7 +51,7 @@ from source. Works in three modes: **detect**, **use-path**, and **install**.
 ## gfortran precondition
 
 `gfortran` must be present on `$PATH` before `install` runs. Checked by
-`scripts/check_gfortran.sh`.
+`check_gfortran.sh`.
 
 | OS | Command to install gfortran |
 |----|----------------------------|
@@ -186,7 +185,7 @@ All blockers are emitted on stderr as single-line JSON per
 
 ### `SPHENO_BASE_BUILD_FAILED` context
 
-When `make` fails, `scripts/_make_log_parse.py` is invoked on the full make
+When `make` fails, `_make_log_parse.py` is invoked on the full make
 log. The blocker `context` object contains:
 
 ```json
@@ -218,10 +217,10 @@ See `plugins/hep-ph-toolkit/SHARED-model-building.md` for the full env-var table
 
 | File | Purpose |
 |------|---------|
-| `scripts/install_spheno.sh` | Main entry point (detect / use-path / install) |
-| `scripts/check_gfortran.sh` | Checks for gfortran; emits `GFORTRAN_ABSENT` if missing |
-| `scripts/_blocker.sh` | `emit_blocker` / `emit_blocker_with_context` bash helpers |
-| `scripts/_make_log_parse.py` | Parses make.log; returns `SPHENO_BASE_BUILD_FAILED` blocker dict |
+| `install.sh` | Main entry point (detect / use-path / install) |
+| `check_gfortran.sh` | Checks for gfortran; emits `GFORTRAN_ABSENT` if missing |
+| `_blocker.sh` | `emit_blocker` / `emit_blocker_with_context` bash helpers |
+| `_make_log_parse.py` | Parses make.log; returns `SPHENO_BASE_BUILD_FAILED` blocker dict |
 
 ## Tests
 
@@ -234,11 +233,11 @@ See `plugins/hep-ph-toolkit/SHARED-model-building.md` for the full env-var table
 Run:
 ```bash
 # All Python unit tests:
-python3 -m pytest plugins/hep-ph-toolkit/skills/spheno-install/tests/ -v
+python3 -m pytest plugins/hep-ph-toolkit/_shared/installs/spheno/tests/ -v
 
 # Bash smoke tests (test isolation via tmp envs):
-bash plugins/hep-ph-toolkit/skills/spheno-install/tests/test_detect_derive_src.sh
-bash plugins/hep-ph-toolkit/skills/spheno-install/tests/test_version_mismatch.sh
+bash plugins/hep-ph-toolkit/_shared/installs/spheno/tests/test_detect_derive_src.sh
+bash plugins/hep-ph-toolkit/_shared/installs/spheno/tests/test_version_mismatch.sh
 ```
 
 ---

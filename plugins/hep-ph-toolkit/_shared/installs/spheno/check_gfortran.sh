@@ -2,7 +2,7 @@
 # check_gfortran.sh — Check for gfortran; emit GFORTRAN_ABSENT fatal blocker if absent.
 # Exit 0 if gfortran found; exit $EXIT_NO_GFORTRAN (10) if absent.
 #
-# Sourced or called directly by install_spheno.sh.
+# Sourced or called directly by install.sh.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

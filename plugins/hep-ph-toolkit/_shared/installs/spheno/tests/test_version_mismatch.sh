@@ -9,7 +9,7 @@
 # non-zero exit code to abort after the mismatch announcement is verified.
 set -euo pipefail
 
-SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/install_spheno.sh"
+SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/install.sh"
 
 pass=0
 fail=0

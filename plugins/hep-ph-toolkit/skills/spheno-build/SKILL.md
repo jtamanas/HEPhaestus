@@ -14,11 +14,26 @@ and produce an SLHA mass spectrum. Scan-friendly with deterministic recoverable-
 
 Invoke `/spheno-build` after `/sarah-build` has produced SARAH output for the named model.
 Prerequisites (checked before doing any work):
-- `config.spheno_src_path` set (by `/spheno-install`).
+- SPheno installed (see `## Preflight: SPheno` below).
 - `$STATE_ROOT/models/<name>/sarah_output/SPheno/<SarahName>/` exists (produced by `/sarah-build`).
 - `gfortran` available in PATH.
 
 If either prereq is missing the skill emits a fatal blocker and stops.
+
+---
+
+## Preflight: SPheno
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/spheno/detect.sh
+
+- **exit 0** → SPheno is installed and registered in config; proceed.
+- **exit non-zero** → SPheno is missing or misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/spheno/INSTALL.md` into
+  context and follow it. When the install completes, re-run `detect.sh`
+  before proceeding. If it still fails, halt with the blocker code from
+  the install reference.
 
 ---
 

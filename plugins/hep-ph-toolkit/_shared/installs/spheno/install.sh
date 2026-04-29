@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install_spheno.sh — W2 /spheno-install skill entry point.
+# install.sh — _shared/installs/spheno entry point (W2).
 #
 # Subcommands:
 #   detect                  Print JSON state of existing SPheno install.
@@ -343,7 +343,7 @@ cmd_install() {
 # ---------------------------------------------------------------------------
 usage() {
   cat >&2 <<'EOF'
-Usage: install_spheno.sh <command> [args]
+Usage: install.sh <command> [args]
 
 Commands:
   detect              Print JSON state of existing SPheno install.

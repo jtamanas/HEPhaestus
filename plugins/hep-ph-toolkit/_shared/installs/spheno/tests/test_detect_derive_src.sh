@@ -11,7 +11,7 @@
 # All tests use isolated HEPPH_STATE_ROOT and XDG_CONFIG_HOME.
 set -euo pipefail
 
-SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/install_spheno.sh"
+SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/install.sh"
 
 pass=0
 fail=0

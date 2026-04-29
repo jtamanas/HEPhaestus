@@ -104,7 +104,7 @@ prereqs:
       cached: [0.05, 0.1]
     capabilities:
       description: "SPheno 4.0.5 spectrum generator — reads SARAH output, emits SLHA2"
-      install_skill: spheno-install
+      install_skill: _shared/installs/spheno
       role:
         collider: none
         dd: none

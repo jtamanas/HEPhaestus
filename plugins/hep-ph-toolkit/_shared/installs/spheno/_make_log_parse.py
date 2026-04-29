@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """_make_log_parse.py — Parse a SPheno make.log and return a blocker dict.
 
-Pure-Python helper called by install_spheno.sh when `make` fails.
+Pure-Python helper called by install.sh when `make` fails.
 
 Usage (CLI):
     python3 _make_log_parse.py < /tmp/spheno_make.log

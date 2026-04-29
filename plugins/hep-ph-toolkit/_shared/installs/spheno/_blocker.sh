@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# _blocker.sh — emit_blocker helper for W2 spheno-install.
-# Sourced by install_spheno.sh and check_gfortran.sh.
+# _blocker.sh — emit_blocker helper for _shared/installs/spheno.
+# Sourced by install.sh and check_gfortran.sh.
 # Usage: emit_blocker <code> <mode> <message> [user_instruction]
 #
 # Prints a single-line JSON blocker to stderr conforming to
