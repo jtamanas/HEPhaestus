@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# NOTE: Tests that assert status=missing on an empty config use the real
+# $HOME, so a real SARAH install under ~/SARAH/ gets discovered by
+# scan_candidates() and the assertion can fail. This is a pre-existing
+# env-coupling bug, not a refactor regression — scan_candidates needs an
+# HEPPH_TEST_HOME override (or equivalent) before these tests will be
+# reliable on dev machines with a real SARAH install.
 # test_detect_config.sh — smoke tests for install.sh detect and use-path.
 # Uses isolated HEPPH_STATE_ROOT and XDG_CONFIG_HOME; does NOT touch real user config.
 #

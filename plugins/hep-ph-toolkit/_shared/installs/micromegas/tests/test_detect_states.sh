@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# NOTE: This test asserts status=missing on an empty config but uses the real
+# $HOME, so a real micrOMEGAs install at ~/micrOMEGAs/... gets discovered by
+# scan_candidates() and the assertion fails. This is a pre-existing
+# env-coupling bug, not a refactor regression — scan_candidates needs an
+# HEPPH_TEST_HOME override (or equivalent) before this test will be reliable
+# on dev machines with real installs.
 # test_detect_states.sh — unit tests for detect.sh
 # Tests the three states: missing, found, configured.
 # Uses temp XDG_CONFIG_HOME and HEPPH_STATE_ROOT to avoid polluting real config.

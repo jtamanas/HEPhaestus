@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# NOTE: Test 1 asserts status=missing on an empty config but uses the real
+# $HOME, so a real MadDM plugin under ~/MG5_aMC/.../PLUGIN/maddm gets
+# discovered by the fallback scanner and the assertion fails. This is a
+# pre-existing env-coupling bug, not a refactor regression — the scanner
+# needs an HEPPH_TEST_HOME override (or equivalent) before this test will
+# be reliable on dev machines with a real MG5+MadDM install.
 # test_detect.sh — Smoke tests for detect and use-path subcommands.
 #
 # Tests:
