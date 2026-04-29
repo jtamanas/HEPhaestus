@@ -13,11 +13,11 @@ MG5 is the starting point of the HEP Monte Carlo chain. It computes hard-process
 
 Before any other action, run:
 
-    bash _shared/installs/madgraph/detect.sh
+    bash plugins/hep-ph-toolkit/_shared/installs/madgraph/detect.sh
 
 - **exit 0** → MadGraph is installed and registered in config; proceed.
 - **exit non-zero** → MadGraph is missing or version-drifted. Load
-  `_shared/installs/madgraph/INSTALL.md` into context and follow it (or
+  `plugins/hep-ph-toolkit/_shared/installs/madgraph/INSTALL.md` into context and follow it (or
   invoke `/install madgraph`). When the install completes, re-run
   `detect.sh` before proceeding. If it still fails, halt with the
   blocker code from the install reference.
