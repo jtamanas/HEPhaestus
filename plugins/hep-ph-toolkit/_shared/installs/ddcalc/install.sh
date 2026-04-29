@@ -156,7 +156,11 @@ for prog in DDCalc_test DDCalc_exampleC; do
 done
 
 # ── Smoke test ────────────────────────────────────────────────────────────────
-DETECTED_VERSION="$(bash "$SCRIPT_DIR/_smoke_test.sh" "$INSTALL_DIR" 2>&1)" || {
+# Capture only stdout: _smoke_test.sh prints the version on stdout and writes
+# log lines (e.g. "[ddcalc-smoke]" via _common.sh's log()) to stderr. Folding
+# stderr into stdout pollutes ddcalc_version with prefixed log lines and the
+# detect.sh fast path then never matches "2.2.0".
+DETECTED_VERSION="$(bash "$SCRIPT_DIR/_smoke_test.sh" "$INSTALL_DIR")" || {
   exit "$EXIT_SMOKE"
 }
 log "Smoke test passed. DDCalc version: $DETECTED_VERSION"
