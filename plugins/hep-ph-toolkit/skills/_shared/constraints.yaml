@@ -573,7 +573,7 @@ prereqs:
           verdict: blocked
           blocker: LOOP_DD_TOOLING_PLANNED
           blocker_class: missing-skill
-          evidence: "intel/digest.md §§371-381 (feynarts-install; LOOP_DD_TOOLING_PLANNED)"
+          evidence: "intel/digest.md §§371-381 (_shared/installs/feynarts; LOOP_DD_TOOLING_PLANNED)"
         # All other models: not applicable (feynarts is only for loop chains)
         - axis: A1
           match: "*"
@@ -605,7 +605,7 @@ prereqs:
           verdict: blocked
           blocker: LOOP_DD_TOOLING_PLANNED
           blocker_class: missing-skill
-          evidence: "intel/digest.md §§371-381 (formcalc-install; LOOP_DD_TOOLING_PLANNED)"
+          evidence: "intel/digest.md §§371-381 (_shared/installs/formcalc; LOOP_DD_TOOLING_PLANNED)"
         # All other models: not applicable
         - axis: A1
           match: "*"

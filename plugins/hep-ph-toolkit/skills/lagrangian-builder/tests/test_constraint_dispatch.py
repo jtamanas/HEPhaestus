@@ -46,15 +46,17 @@ def test_data_flow_diagram_section_present(skill_text: str) -> None:
 
 
 def test_prerequisite_install_table_present(skill_text: str) -> None:
-    """A prerequisite install table must be present in the dispatch section."""
-    assert "micromegas-install" in skill_text, (
-        "SKILL.md must reference 'micromegas-install' prerequisite"
+    """A prerequisite install table must reference the shared install
+    references for each tool. Post-2026-04-29 refactor the *-install
+    skills are gone; consumers point at _shared/installs/<tool>/."""
+    assert "_shared/installs/micromegas" in skill_text, (
+        "SKILL.md must reference _shared/installs/micromegas prerequisite"
     )
-    assert "higgstools-install" in skill_text, (
-        "SKILL.md must reference 'higgstools-install' prerequisite"
+    assert "_shared/installs/higgstools" in skill_text, (
+        "SKILL.md must reference _shared/installs/higgstools prerequisite"
     )
-    assert "ddcalc-install" in skill_text, (
-        "SKILL.md must reference 'ddcalc-install' prerequisite"
+    assert "_shared/installs/ddcalc" in skill_text, (
+        "SKILL.md must reference _shared/installs/ddcalc prerequisite"
     )
 
 

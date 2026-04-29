@@ -104,11 +104,22 @@ class TestBlockerShape:
             assert code.startswith("HIGGSTOOLS_"), f"Code {code} missing HIGGSTOOLS_ prefix"
 
     def test_install_script_blocker_emission(self, tmp_path):
-        """_blocker.sh emits valid JSON via emit_blocker function."""
+        """_blocker.sh emits valid JSON via emit_blocker function.
+
+        Post-2026-04-29 refactor: lives under
+        plugins/hep-ph-toolkit/_shared/installs/higgstools/_blocker.sh.
+        """
         import subprocess
-        script = SKILL_DIR.parent / "higgstools-install" / "scripts" / "_blocker.sh"
-        if not script.exists():
-            pytest.skip("_blocker.sh not found")
+        script = (
+            SKILL_DIR.parent.parent
+            / "_shared"
+            / "installs"
+            / "higgstools"
+            / "_blocker.sh"
+        )
+        assert script.exists(), (
+            f"Expected {script} to exist after install-skill refactor"
+        )
 
         result = subprocess.run(
             ["bash", "-c",

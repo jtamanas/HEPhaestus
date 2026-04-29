@@ -1,6 +1,6 @@
 ---
 name: formcalc
-description: Reduce a FeynArts amplitude list with FormCalc 9.10. Produces amp_reduced.m and amp_reduced.meta.json sidecar conforming to amp_reduced.meta/v1. Gated on formcalc-install.
+description: Reduce a FeynArts amplitude list with FormCalc 9.10. Produces amp_reduced.m and amp_reduced.meta.json sidecar conforming to amp_reduced.meta/v1. Self-heals via _shared/installs/formcalc preflight.
 ---
 
 ## When to invoke

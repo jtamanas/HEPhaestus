@@ -10,8 +10,8 @@ Invocation: when running a generated script with mg5_aMC, always pass
 ``--mode=maddm``. Bare ``mg5_aMC <script>`` loads the base interpreter
 without the MadDM plugin, and any ``generate relic_density`` / ``generate
 direct_detection`` / ``generate indirect_detection`` line then raises
-``InvalidCmd: The command "generate" has an error``. See maddm-install
-workarounds §8.
+``InvalidCmd: The command "generate" has an error``. See
+``_shared/installs/maddm/INSTALL.md`` workarounds §8.
 """
 
 from __future__ import annotations

@@ -105,10 +105,18 @@ class TestScopeInvariants:
         )
 
     def test_no_gitlab_archive_tarballs_in_install(self):
-        """No GitLab archive tarball URLs in install scripts."""
-        install_scripts_dir = SKILL_DIR.parent / "higgstools-install" / "scripts"
-        if not install_scripts_dir.exists():
-            pytest.skip("higgstools-install/scripts not found")
+        """No GitLab archive tarball URLs in install scripts.
+
+        Post-2026-04-29 refactor: install logic lives at
+        plugins/hep-ph-toolkit/_shared/installs/higgstools/, not at
+        plugins/hep-ph-toolkit/skills/higgstools-install/scripts/.
+        """
+        install_scripts_dir = (
+            SKILL_DIR.parent.parent / "_shared" / "installs" / "higgstools"
+        )
+        assert install_scripts_dir.exists(), (
+            f"Expected {install_scripts_dir} to exist after install-skill refactor"
+        )
         matches = _grep(r"archive/.*\.tar\.gz", str(install_scripts_dir))
         assert len(matches) == 0, (
             "GitLab archive tarball URLs found (use git clone, not tarballs):\n"

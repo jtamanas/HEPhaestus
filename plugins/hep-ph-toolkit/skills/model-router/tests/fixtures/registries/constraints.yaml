@@ -21,7 +21,7 @@ prereqs:
       cached: [0.25, 0.5]
     capabilities:
       description: "MadDM relic density and DD cross-section via MG5-compatible UFO"
-      install_skill: maddm-install
+      install_skill: _shared/installs/maddm
       role:
         relic: primary
         dd: primary
@@ -51,7 +51,7 @@ prereqs:
       cached: [0.2, 0.4]
     capabilities:
       description: "micrOMEGAs relic density cross-check via CalcHEP .mdl"
-      install_skill: micromegas-install
+      install_skill: _shared/installs/micromegas
       role:
         relic: validator
         dd: validator
