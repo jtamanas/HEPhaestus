@@ -1,7 +1,7 @@
 """DRAKE runner for agent-driven relic density calculations.
 
 Handles:
-- Detecting DRAKE install by shelling out to drake-install/scripts/install.sh detect
+- Detecting DRAKE install by shelling out to _shared/installs/drake/install.sh detect
 - Blocking with DRAKE_NOT_INSTALLED if DRAKE is not configured
 - cd-ing to $DRAKE_PATH/test/ before invoking wolframscript
 - Capturing stdout+stderr to a log file
@@ -24,14 +24,14 @@ from typing import Any
 
 
 # ---------------------------------------------------------------------------
-# Locate drake-install/scripts/install.sh relative to this file.
+# Locate _shared/installs/drake/install.sh relative to this file.
 # Layout: plugins/hep-ph-toolkit/skills/drake/scripts/run_drake.py
-#         plugins/hep-ph-toolkit/skills/drake-install/scripts/install.sh
+#         plugins/hep-ph-toolkit/_shared/installs/drake/install.sh
 # ---------------------------------------------------------------------------
 
 _THIS_DIR = Path(__file__).parent
 _DRAKE_INSTALL_SH = (
-    _THIS_DIR.parent.parent / "drake-install" / "scripts" / "install.sh"
+    _THIS_DIR.parent.parent.parent / "_shared" / "installs" / "drake" / "install.sh"
 )
 
 
@@ -44,13 +44,13 @@ class DRAKERunFailedError(RuntimeError):
 
 
 # ---------------------------------------------------------------------------
-# Install detection via drake-install/scripts/install.sh
+# Install detection via _shared/installs/drake/install.sh
 # ---------------------------------------------------------------------------
 
 def _detect_install() -> dict[str, Any]:
     """Shell out to install.sh detect and return parsed JSON.
 
-    install.sh contract (from drake-install/SKILL.md):
+    install.sh contract (from _shared/installs/drake/INSTALL.md):
       - Status JSON (configured / found / missing / activation_required /
         manual_download_required) is emitted on stdout, exit 0.
       - Fatal blockers are emitted on stderr as single-line JSON, exit non-zero.
@@ -64,8 +64,8 @@ def _detect_install() -> dict[str, Any]:
     install_sh = _DRAKE_INSTALL_SH
     if not install_sh.exists():
         raise DRAKENotInstalledError(
-            "DRAKE_NOT_INSTALLED: drake-install/scripts/install.sh not found at "
-            f"{install_sh}. The drake-install skill is missing from this environment."
+            "DRAKE_NOT_INSTALLED: _shared/installs/drake/install.sh not found at "
+            f"{install_sh}. The _shared/installs/drake skill is missing from this environment."
         )
 
     result = subprocess.run(
@@ -127,16 +127,16 @@ def _require_drake() -> tuple[Path, Path]:
         raise DRAKENotInstalledError(
             f"DRAKE_NOT_INSTALLED: DRAKE tree found at "
             f"{status_json.get('path', '?')} but not fully configured. "
-            "Run /drake-install use-path <dir> to register it."
+            "Run bash _shared/installs/drake/install.sh use-path <dir> to register it."
         )
 
     # status == "missing" or unknown
     # Note: activation_required is NOT a valid detect output — the detect
-    # subcommand only returns configured / found / missing (see drake-install
+    # subcommand only returns configured / found / missing (see _shared/installs/drake
     # SKILL.md). activation_required is emitted only by use-path / validate.
     raise DRAKENotInstalledError(
         "DRAKE_NOT_INSTALLED: No DRAKE install found. "
-        "Run /drake-install to install DRAKE."
+        "Run /_shared/installs/drake to install DRAKE."
     )
 
 
@@ -198,7 +198,7 @@ def run_drake(
         settings (str): settings file name passed in
         log_path (str): absolute path to the combined stdout+stderr log
         drake_path (str): absolute path to the DRAKE root
-        drake_version (str): version string from config (written by drake-install)
+        drake_version (str): version string from config (written by _shared/installs/drake)
 
     Raises
     ------
@@ -237,13 +237,13 @@ def run_drake(
             f"Tail of log: {tail}. Full log: {log_path}"
         )
 
-    # Read drake_version from config (written by drake-install use-path).
+    # Read drake_version from config (written by _shared/installs/drake use-path).
     # If absent, block — do not substitute a fabricated version string.
     drake_version = _read_config().get("drake_version", "")
     if not drake_version:
         raise DRAKENotInstalledError(
             "DRAKE_NOT_INSTALLED: drake_version is not set in config. "
-            "Re-run /drake-install use-path <dir> to register DRAKE and write "
+            "Re-run bash _shared/installs/drake/install.sh use-path <dir> to register DRAKE and write "
             "the version to config."
         )
 

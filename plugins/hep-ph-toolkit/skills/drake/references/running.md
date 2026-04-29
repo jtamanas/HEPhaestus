@@ -37,7 +37,7 @@ All five models ship with DRAKE in the `test/` directory:
 | `TH` | Threshold / forbidden channel | `bm_TH` | `settings_TH` |
 | `ScalarSingletDM` | Scalar singlet DM, Higgs portal | `bm_ScalarSingletDM` | `settings_ScalarSingletDM` |
 
-Source: arXiv:2103.01944 and the `drake-install/tests/fixtures/drake_stub/test/test.wls`
+Source: arXiv:2103.01944 and the `_shared/installs/drake/tests/fixtures/drake_stub/test/test.wls`
 comment (lists WIMP, VRES, SE, TH, ScalarSingletDM as the shipped benchmarks).
 
 ---

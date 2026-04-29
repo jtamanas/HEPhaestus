@@ -1,15 +1,35 @@
----
-name: drake-install
-description: Detect, validate, or install DRAKE (Dark matter Relic Abundance beyond Kinetic Equilibrium) — a Wolfram Language package for solving the coupled Boltzmann equation. Handles the hepforge Anubis bot-protection gate by routing users through a manual-download path.
----
+# DRAKE — Install Reference
 
-## When to invoke
+Reference doc for installing **DRAKE** (Dark matter Relic Abundance beyond
+Kinetic Equilibrium) — a Wolfram Language package for solving the coupled
+Boltzmann equation. Driven by `detect.sh` and `install.sh` in this
+directory; consumed by the `drake` runner skill's preflight and by
+`/install`.
 
-Use `/drake-install` before invoking any DRAKE-driven workflow (narrow
-resonance relic density, Sommerfeld enhancement, early kinetic decoupling —
-typically the optional extension branch of `/dark-matter-constraints`).
 DRAKE is pure Wolfram Language; the only system prerequisite is a reachable
 Wolfram Engine or Mathematica ≥ 13.1.
+
+## Version pin
+
+`detect.sh` pins DRAKE to **1.0** (the public release tied to
+arXiv:2103.01944). Override with `HEPPH_DRAKE_VERSION=x.y`. When the pin
+bumps, `install.sh` must remove or migrate the previous install tree
+(default `~/drake`) and the new version is only written to `config.json`
+after the install verifies.
+
+## Anubis bot-protection gate
+
+DRAKE is hosted at hepforge behind an **Anubis bot-protection challenge**
+that cannot be solved non-interactively. When `install.sh` hits the gate
+it exits **18** (`manual_download_required`) with the manual-download URL
+in its blocker payload.
+
+**Runner contract:** `/drake`'s preflight, on `detect.sh` exit non-zero,
+runs `install.sh` once. If `install.sh` exits 18, the runner **halts**
+with a clear "open this URL, save the tarball to `~/Downloads/` (or
+`~/drake/`), then re-invoke" message. **The runner does NOT retry, and
+does NOT self-heal this exit code.** See the spec §Non-goals caveat for
+rationale.
 
 ## Disk footprint
 
@@ -24,9 +44,9 @@ functions — DRAKE does not import them from other tools.
 
 Typical invocation order:
 
-1. `/drake-install detect` — check current state (no side-effects).
-2. `/drake-install use-path <dir>` — register a user-downloaded DRAKE tree.
-3. `/drake-install install` — attempt auto-install (likely blocked by the
+1. `bash detect.sh` — check current state (no side-effects).
+2. `bash install.sh use-path <dir>` — register a user-downloaded DRAKE tree.
+3. `bash install.sh install` — attempt auto-install (likely blocked by the
    hepforge Anubis gate; routes the user through manual download).
 
 ---
@@ -34,7 +54,7 @@ Typical invocation order:
 ## Decision flow
 
 ```
-/drake-install detect
+bash detect.sh
        │
        ├── config has drake_path + valid test/test.wls + smoke test passes
        │       └── {"status":"configured","path":"...","version":"..."}   exit 0
@@ -45,7 +65,7 @@ Typical invocation order:
        └── nothing found
                └── {"status":"missing"}                                   exit 0
 
-/drake-install use-path <dir>
+bash install.sh use-path <dir>
        │
        ├── <dir>/test/test.wls exists AND wolframscript configured
        │       ├── smoke test passes → writes drake_path, drake_version,
@@ -57,7 +77,7 @@ Typical invocation order:
        ├── <dir>/test/test.wls missing → DRAKE_PATH_INVALID blocker       exit 16
        └── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT blocker    exit 20
 
-/drake-install install [dir]
+bash install.sh install [dir]
        │
        ├── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT blocker    exit 20
        ├── disk check (need ~50 MB free in $HOME — DRAKE itself is ~10 MB)
@@ -68,7 +88,7 @@ Typical invocation order:
        │                      "user_instruction":"Open https://drake.hepforge.org/
        │                                          in a browser, download the
        │                                          zipball, unpack it, then run
-       │                                          /drake-install use-path <dir>"}
+       │                                          bash install.sh use-path <dir>"}
        │               exit 18 (DRAKE_HEPFORGE_GATED)
        └── extraction/smoke failures follow the same pattern as sarah-install.
 ```
@@ -100,7 +120,7 @@ Fields for `manual_download_required`:
 {
   "status": "manual_download_required",
   "message": "Automated download from hepforge was blocked by bot-protection (Anubis PoW challenge).",
-  "user_instruction": "Open https://drake.hepforge.org/ in a browser, click Downloads, save the zipball, unpack it (e.g. to ~/drake), then rerun `/drake-install use-path ~/drake`."
+  "user_instruction": "Open https://drake.hepforge.org/ in a browser, click Downloads, save the zipball, unpack it (e.g. to ~/drake), then rerun `bash install.sh use-path ~/drake`."
 }
 ```
 
@@ -163,7 +183,7 @@ recorded as `"1.0 (assumed)"` to flag that the value is unverified.
 
 Override via environment:
 ```bash
-HEPPH_DRAKE_VERSION=1.0 /drake-install install
+HEPPH_DRAKE_VERSION=1.0 bash install.sh install
 ```
 
 ---

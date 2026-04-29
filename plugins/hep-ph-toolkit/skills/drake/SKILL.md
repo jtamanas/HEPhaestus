@@ -29,7 +29,24 @@ workflow is to run the standard tools first, identify a breakdown regime, then i
 | MadDM Ω h² disagrees with micrOMEGAs near a resonance (cross-tool discrepancy ≥ 20%) | **`/drake`** |
 
 If DRAKE is not installed, this skill blocks with a clear message — it does **not** fall
-back to an analytic approximation. Install DRAKE first with `/drake-install`.
+back to an analytic approximation. Install DRAKE first via the preflight below.
+
+---
+
+## Preflight: DRAKE
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/drake/detect.sh
+
+- **exit 0** → DRAKE is installed and registered in config; proceed.
+- **exit non-zero** → DRAKE is missing or misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/drake/INSTALL.md` into context
+  and follow it. If `install.sh` exits **18** (`manual_download_required`),
+  **halt**: print the manual-download URL from the blocker payload, ask
+  the user to download the tarball to `~/Downloads/` (or `~/drake/`),
+  then re-invoke `/drake`. **Do not retry the install non-interactively.**
+  See the spec §Non-goals caveat for rationale.
 
 ---
 
@@ -73,9 +90,9 @@ is expected and physically meaningful, and how to surface the comparison as a si
 
 ## Install detection (REQUIRED before any run)
 
-Before invoking DRAKE, confirm the install is configured. `scripts/run_drake.py`
-delegates detection entirely to `drake-install/scripts/install.sh detect`. Do not
-duplicate the detection logic here.
+`scripts/run_drake.py` delegates detection entirely to
+`_shared/installs/drake/install.sh detect` (called via the preflight above).
+Do not duplicate the detection logic here.
 
 The `detect` subcommand emits status JSON on stdout (exit 0) for all non-fatal outcomes.
 Fatal blockers go to stderr as single-line JSON (exit non-zero).
@@ -85,28 +102,29 @@ Expected `status` values from `install.sh detect`:
 | Value | Meaning | Action |
 |-------|---------|--------|
 | `configured` | `drake_path` set, `test/test.wls` present, WIMP smoke test passed | Proceed |
-| `found` | DRAKE tree on disk but not registered in config (or wolframscript absent) | Run `/drake-install use-path <dir>` |
-| `missing` | No DRAKE install found | **BLOCK — run `/drake-install` first** |
-| `activation_required` | DRAKE found and path set, but Wolfram Engine needs activation before smoke test can pass | Run `wolframscript --activate`, then re-run `/drake-install detect` |
+| `found` | DRAKE tree on disk but not registered in config (or wolframscript absent) | Run `bash _shared/installs/drake/install.sh use-path <dir>` |
+| `missing` | No DRAKE install found | **BLOCK — load `_shared/installs/drake/INSTALL.md`** |
+| `activation_required` | DRAKE found and path set, but Wolfram Engine needs activation before smoke test can pass | Run `wolframscript --activate`, then re-run the preflight |
+| `manual_download_required` | hepforge download blocked by Anubis | **HALT — print the URL; do not retry non-interactively** |
 
 Note: prior to W4-E, `activation_required` was emitted by the `use-path` subcommand only.
 Post-W4-E, `detect` also emits `activation_required` when the smoke test reveals an
 unactivated Wolfram Engine, so callers should handle it from `detect` output.
 
-**If status is `missing` or `found`, stop and direct the user to `/drake-install`.
-Do not attempt a fallback calculation.**
+**If status is `missing` or `found`, stop and load
+`_shared/installs/drake/INSTALL.md`. Do not attempt a fallback calculation.**
 
-Config keys read (written by `/drake-install use-path`):
+Config keys read (written by `install.sh use-path`):
 - `drake_path` — absolute path to DRAKE root (contains `test/test.wls`)
 - `wolfram_engine_path` — path to `wolframscript` binary
-- `drake_version` — version string written by `drake-install` (required; absence blocks)
+- `drake_version` — version string (required; absence blocks)
 
 ---
 
 ## Quick reference: invoking DRAKE
 
 DRAKE is invoked via `wolframscript` from the DRAKE `test/` directory. The canonical
-pattern (from `drake-install/scripts/probe_drake.sh` and the WIMP smoke test in
+pattern (from `_shared/installs/drake/probe_drake.sh` and the WIMP smoke test in
 arXiv:2103.01944):
 
 ```bash
@@ -164,7 +182,7 @@ from the shipped benchmark files and settings files present in `$DRAKE_PATH/test
 ## Running DRAKE via `scripts/run_drake.py`
 
 The `scripts/run_drake.py` script handles:
-- Detecting DRAKE by shelling out to `drake-install/scripts/install.sh detect`
+- Detecting DRAKE by shelling out to `_shared/installs/drake/install.sh detect`
 - Blocking with a clear error if DRAKE is not installed or `drake_version` is absent
 - Building the `wolframscript` invocation
 - `cd`-ing to `$DRAKE_PATH/test/` automatically
@@ -258,14 +276,14 @@ arXiv:2103.01944 and validates the use of DRAKE over the standard approach.
 
 | Code | Mode | Trigger | Action |
 |------|------|---------|--------|
-| `DRAKE_NOT_INSTALLED` | fatal | `install.sh detect` returns `missing` or `found` | Run `/drake-install` |
+| `DRAKE_NOT_INSTALLED` | fatal | `install.sh detect` returns `missing` or `found` | Run `_shared/installs/drake/INSTALL.md` |
 | `DRAKE_WOLFRAM_ABSENT` | fatal | `wolfram_engine_path` not set or binary not executable | Run `/install` for Wolfram Engine |
 | `DRAKE_RUN_FAILED` | fatal | `wolframscript test.wls` exited non-zero | Inspect log at `/tmp/drake_run.log`; check model file paths |
 | `DRAKE_OUTPUT_INVALID` | fatal | Ω h² absent, NaN, or negative in stdout | Inspect log; DRAKE may need a valid model benchmark |
 | `DRAKE_MODEL_FILE_MISSING` | fatal | Benchmark or settings file not found in `$DRAKE_PATH/test/` | Provide correct file names; use shipped `bm_*` files |
 
 No analytic fallback is provided when DRAKE is unavailable. Block and direct the user
-to `/drake-install`.
+to `_shared/installs/drake/INSTALL.md`.
 
 ---
 
@@ -284,7 +302,7 @@ to `/drake-install`.
 
 ## Cross-skill dependencies
 
-- **Install prerequisite**: `/drake-install` — must run first; configures `drake_path`.
+- **Install prerequisite**: `_shared/installs/drake/INSTALL.md` — must run first; configures `drake_path`.
 - **Wolfram prerequisite**: `/install` — installs Wolfram Engine / `wolframscript`.
 - **Standard relic density**: `/maddm` — run first; DRAKE validates in resonance regimes.
 - **Coannihilation validator**: `/micromegas` — complementary; does not need DRAKE.

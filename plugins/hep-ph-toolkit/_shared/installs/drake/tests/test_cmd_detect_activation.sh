@@ -10,7 +10,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_SH="$SCRIPT_DIR/../scripts/install.sh"
+INSTALL_SH="$SCRIPT_DIR/../install.sh"
 
 PASS=0
 FAIL=0

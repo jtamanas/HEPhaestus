@@ -17,7 +17,7 @@ DRAKE does NOT require MadDM, micrOMEGAs, MadGraph, or any compiler toolchain.
 
 ## Install detection
 
-Run `/drake-install detect` before any DRAKE workflow. The detect subcommand reads
+Run `bash _shared/installs/drake/detect.sh` before any DRAKE workflow. The detect subcommand reads
 `drake_path` from config and runs the canonical WIMP smoke test to confirm DRAKE is
 operational.
 
@@ -31,8 +31,8 @@ Output JSON (stdout):
 | `status` | Meaning | Action |
 |----------|---------|--------|
 | `configured` | `drake_path` set, `test/test.wls` present, WIMP smoke test passed | Proceed with `/drake` |
-| `found` | DRAKE tree found on disk but not registered in config (or wolframscript absent) | Run `/drake-install use-path <dir>` |
-| `missing` | No DRAKE install found | Run `/drake-install` — see below |
+| `found` | DRAKE tree found on disk but not registered in config (or wolframscript absent) | Run `bash _shared/installs/drake/install.sh use-path <dir>` |
+| `missing` | No DRAKE install found | Run `_shared/installs/drake/INSTALL.md` — see below |
 
 Note: `activation_required` is emitted by the `use-path` subcommand (not `detect`) when
 a smoke test fails only because Wolfram Engine needs activation. `detect` returns only
@@ -46,9 +46,9 @@ a smoke test fails only because Wolfram Engine needs activation. `detect` return
 
 | Key | Written by | Purpose |
 |-----|-----------|---------|
-| `drake_path` | `/drake-install use-path` | Absolute path to DRAKE root (directory containing `test/test.wls`) |
-| `drake_version` | `/drake-install use-path` | Version string from `probe_drake.sh`; `"1.0 (assumed)"` if probe returns empty; `"1.0 (assumed, unverified)"` if smoke test only failed activation |
-| `drake_installed_at` | `/drake-install use-path` | UTC ISO 8601 timestamp |
+| `drake_path` | `bash _shared/installs/drake/install.sh use-path` | Absolute path to DRAKE root (directory containing `test/test.wls`) |
+| `drake_version` | `bash _shared/installs/drake/install.sh use-path` | Version string from `probe_drake.sh`; `"1.0 (assumed)"` if probe returns empty; `"1.0 (assumed, unverified)"` if smoke test only failed activation |
+| `drake_installed_at` | `bash _shared/installs/drake/install.sh use-path` | UTC ISO 8601 timestamp |
 | `wolfram_engine_path` | `/install` | Absolute path to `wolframscript` binary |
 
 The `/drake` skill reads `drake_path` and `wolfram_engine_path`. If either is absent,
@@ -74,21 +74,21 @@ The smoke test runs in seconds. Log is written to `/tmp/drake_smoke.log`.
 
 The hepforge download server is protected by a JavaScript Proof-of-Work challenge.
 `curl` and `wget` receive the challenge HTML instead of the zipball, which causes a
-silent failure. The `/drake-install install` subcommand detects this and emits
+silent failure. The `bash _shared/installs/drake/install.sh install` subcommand detects this and emits
 `{"status":"manual_download_required", ...}` with instructions.
 
 Manual steps:
 1. Open https://drake.hepforge.org/ in a browser.
 2. Click **Downloads** and save the zipball (e.g. `drake.zip`).
 3. Unpack it: `unzip drake.zip -d ~/drake`
-4. Register with the skill: `/drake-install use-path ~/drake`
+4. Register with the skill: `bash _shared/installs/drake/install.sh use-path ~/drake`
 
 The unpack target must be the DRAKE root directory — the one that directly contains
 a `test/` subdirectory with `test.wls` inside it.
 
 ### Auto-install attempt
 
-`/drake-install install` will attempt `curl` download first. If the Anubis gate blocks
+`bash _shared/installs/drake/install.sh install` will attempt `curl` download first. If the Anubis gate blocks
 it, the subcommand exits 0 with `status: manual_download_required` (not a hard error).
 The user is routed to the manual path above.
 

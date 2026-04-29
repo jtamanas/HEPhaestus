@@ -328,7 +328,7 @@ prereqs:
       cached: [0.17, 0.33]
     capabilities:
       description: "DRAKE 1.0 — Boltzmann solver for narrow-resonance DM freeze-out"
-      install_skill: drake-install
+      install_skill: _shared/installs/drake
       role:
         collider: none
         dd: none

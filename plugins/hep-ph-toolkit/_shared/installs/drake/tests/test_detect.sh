@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_SH="$SCRIPT_DIR/../scripts/install.sh"
+INSTALL_SH="$SCRIPT_DIR/../install.sh"
 FIXTURE_DIR="$SCRIPT_DIR/fixtures/drake_stub"
 
 PASS=0

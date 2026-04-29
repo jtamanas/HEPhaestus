@@ -192,7 +192,7 @@ cmd_use_path() {
       ;;
     activation_required)
       # Surface as status, not a blocker. Still record the path so the user
-      # can re-run `/drake-install detect` after activation.
+      # can re-run ``bash _shared/installs/drake/detect.sh`` after activation.
       local installed_at
       installed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
       config_merge drake_path "$path" drake_version "1.0 (assumed, unverified)" drake_installed_at "$installed_at"
@@ -219,7 +219,7 @@ cmd_install() {
   if [ -z "$ws" ]; then
     emit_blocker WOLFRAM_KERNEL_ABSENT fatal \
       "DRAKE needs Wolfram Engine configured first." \
-      "Run \`/install\` to install Wolfram Engine, or \`/drake-install use-path\` after unpacking DRAKE manually."
+      "Run \`/install\` to install Wolfram Engine, or \``bash _shared/installs/drake/install.sh use-path`\` after unpacking DRAKE manually."
     exit $EXIT_NO_WOLFRAM
   fi
 
@@ -243,7 +243,7 @@ cmd_install() {
   if [ "$dl_rc" -ne 0 ] || [ ! -s "$ZIPBALL" ]; then
     warn "Download failed (curl rc=$dl_rc). hepforge's Anubis bot-challenge is the usual cause."
     cat <<JSON
-{"status":"manual_download_required","message":"Automated download from hepforge was blocked (curl rc=$dl_rc). The hepforge site uses Anubis bot-protection that curl/wget cannot solve.","user_instruction":"Open https://drake.hepforge.org/ in a browser, click Downloads, save the zipball, unpack it (e.g. to ~/drake), then rerun \`/drake-install use-path ~/drake\`."}
+{"status":"manual_download_required","message":"Automated download from hepforge was blocked (curl rc=$dl_rc). The hepforge site uses Anubis bot-protection that curl/wget cannot solve.","user_instruction":"Open https://drake.hepforge.org/ in a browser, click Downloads, save the zipball, unpack it (e.g. to ~/drake), then rerun \``bash _shared/installs/drake/install.sh use-path` ~/drake\`."}
 JSON
     exit 0
   fi
@@ -252,7 +252,7 @@ JSON
     warn "Downloaded file looks like an Anubis challenge page, not a zipball."
     rm -f "$ZIPBALL"
     cat <<JSON
-{"status":"manual_download_required","message":"hepforge returned an Anubis bot-challenge page instead of the zipball.","user_instruction":"Open https://drake.hepforge.org/ in a browser, click Downloads, save the zipball, unpack it (e.g. to ~/drake), then rerun \`/drake-install use-path ~/drake\`."}
+{"status":"manual_download_required","message":"hepforge returned an Anubis bot-challenge page instead of the zipball.","user_instruction":"Open https://drake.hepforge.org/ in a browser, click Downloads, save the zipball, unpack it (e.g. to ~/drake), then rerun \``bash _shared/installs/drake/install.sh use-path` ~/drake\`."}
 JSON
     exit 0
   fi
@@ -283,7 +283,7 @@ JSON
   if [ -z "$pkg_dir" ] || ! is_drake_dir "$pkg_dir"; then
     emit_blocker DRAKE_PATH_INVALID fatal \
       "Extracted archive did not contain test/test.wls under $install_dir." \
-      "Inspect $install_dir manually, or download the zipball via browser and use \`/drake-install use-path\`."
+      "Inspect $install_dir manually, or download the zipball via browser and use \``bash _shared/installs/drake/install.sh use-path`\`."
     exit $EXIT_BAD_PATH
   fi
 
@@ -301,7 +301,7 @@ cmd_validate() {
   if [ -z "$path" ] || ! is_drake_dir "$path"; then
     emit_blocker DRAKE_PATH_INVALID fatal \
       "No drake_path configured, or path is invalid." \
-      "Run \`/drake-install detect\` or \`/drake-install use-path <dir>\` first."
+      "Run \``bash _shared/installs/drake/detect.sh`\` or \``bash _shared/installs/drake/install.sh use-path` <dir>\` first."
     exit $EXIT_BAD_PATH
   fi
   ws="$(wolfram_path)"

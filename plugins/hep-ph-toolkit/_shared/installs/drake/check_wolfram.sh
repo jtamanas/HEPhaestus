@@ -59,7 +59,7 @@ elif "activat" in low or "license" in low or "entitlement" in low:
     print(json.dumps({
         "status": "activation_required",
         "message": "Wolfram Engine is installed but needs activation.",
-        "user_instruction": "Run \`wolframscript --activate\` in your terminal; it opens a browser for a free Wolfram ID signup. Then rerun /drake-install.",
+        "user_instruction": "Run \`wolframscript --activate\` in your terminal; it opens a browser for a free Wolfram ID signup. Then rerun _shared/installs/drake/install.sh.",
     }))
 elif rc != 0:
     print(json.dumps({"status": "error", "detail": out[:500]}))
