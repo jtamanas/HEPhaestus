@@ -32,10 +32,12 @@ from pathlib import Path
 # Default manifest: contracts/router_contract.json relative to this helper
 _DEFAULT_MANIFEST = Path(__file__).resolve().parent.parent / "contracts" / "router_contract.json"
 
-# Default install.sh path: relative to this file's location
+# Default install.sh path: relative to this file's location.
+# Post-refactor (2026-04-29) the canonical drake install scripts live
+# under `plugins/hep-ph-toolkit/_shared/installs/drake/`.
 _DEFAULT_INSTALL_SH = (
     Path(__file__).resolve().parent.parent.parent.parent.parent
-    / "hep-ph-toolkit" / "skills" / "drake-install" / "scripts" / "install.sh"
+    / "hep-ph-toolkit" / "_shared" / "installs" / "drake" / "install.sh"
 )
 
 
