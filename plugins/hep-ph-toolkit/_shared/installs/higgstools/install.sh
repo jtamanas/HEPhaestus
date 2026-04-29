@@ -249,10 +249,14 @@ _install_unified_backend() {
   actual_hbds_sha=$(git -C "$HBDS_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
   actual_hsds_sha=$(git -C "$HSDS_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
 
-  # Write unified config keys (additive — legacy keys already written)
+  # Write unified config keys (additive — legacy keys already written).
+  # higgstools_version pins the unified C++ HiggsTools release; legacy
+  # higgsbounds_version + higgssignals_version remain the source of
+  # truth for the legacy backend.
   config_merge \
     "higgstools_backend" "unified" \
     "higgstools_path" "$HT_BUILD" \
+    "higgstools_version" "$HT_VERSION" \
     "hbdataset_path" "$HBDS_DIR" \
     "hbdataset_commit" "$actual_hbds_sha" \
     "hsdataset_path" "$HSDS_DIR" \

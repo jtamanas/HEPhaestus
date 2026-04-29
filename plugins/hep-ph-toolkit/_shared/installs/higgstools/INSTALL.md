@@ -149,6 +149,7 @@ All blockers are emitted on **stderr** as single-line JSON conforming to
 | `higgssignals_path` | Absolute path to HS build directory |
 | `higgssignals_version` | `2.6.2` |
 | `higgstools_path` | (unified only) Absolute path to HiggsTools install |
+| `higgstools_version` | (unified only) Pinned HiggsTools C++ release |
 | `hbdataset_path` | (unified only) Absolute path to hbdataset clone |
 | `hbdataset_commit` | (unified only) Full SHA of hbdataset clone |
 | `hsdataset_path` | (unified only) Absolute path to hsdataset clone |
