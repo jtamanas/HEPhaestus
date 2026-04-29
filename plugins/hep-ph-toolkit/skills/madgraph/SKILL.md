@@ -9,6 +9,19 @@ Full interface for MadGraph5_aMC@NLO (MG5): define processes, write cards, gener
 
 MG5 is the starting point of the HEP Monte Carlo chain. It computes hard-process matrix elements and generates parton-level events in LHE format. Parton showering and hadronization of the LHE output is left to an external Pythia8 driver (a dedicated `pythia-config` skill is on the roadmap). For dark matter relic density and detection rates using a MG5 plugin, use the **maddm** skill.
 
+## Preflight
+
+Before any other action, run:
+
+    bash _shared/installs/madgraph/detect.sh
+
+- **exit 0** → MadGraph is installed and registered in config; proceed.
+- **exit non-zero** → MadGraph is missing or version-drifted. Load
+  `_shared/installs/madgraph/INSTALL.md` into context and follow it (or
+  invoke `/install madgraph`). When the install completes, re-run
+  `detect.sh` before proceeding. If it still fails, halt with the
+  blocker code from the install reference.
+
 ## Decision Tree
 
 **What are you trying to do?**
