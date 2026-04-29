@@ -10,7 +10,7 @@ from pathlib import Path
 
 TESTS_DIR = Path(__file__).parent
 SKILL_DIR = TESTS_DIR.parent
-SCRIPTS_DIR = SKILL_DIR / "scripts"
+SCRIPTS_DIR = SKILL_DIR
 APPLY_OVERLAY_SH = SCRIPTS_DIR / "apply_overlay.sh"
 OVERLAYS_DIR = SKILL_DIR / "overlays"
 
@@ -63,8 +63,8 @@ class TestOverlayApply:
 
         # Patch OVERLAYS_DIR and SHARED_COMMON in apply_overlay.sh by creating a modified version
         # Path from skill root: plugins/hep-ph-toolkit/skills/ddcalc-install
-        # Go up 3 more to reach plugins/, then shared/install-helpers/_common.sh
-        common_sh_path = (SKILL_DIR.parent.parent.parent / "shared" / "install-helpers" / "_common.sh").resolve()
+        # Go up 4 more to reach plugins/, then shared/install-helpers/_common.sh
+        common_sh_path = (SKILL_DIR.parent.parent.parent.parent / "shared" / "install-helpers" / "_common.sh").resolve()
         apply_content = APPLY_OVERLAY_SH.read_text()
         patched_apply = tmp_path / "apply_overlay_test.sh"
         # Replace OVERLAYS_DIR and SHARED_COMMON references

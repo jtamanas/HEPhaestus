@@ -1,12 +1,20 @@
----
-name: ddcalc-install
-description: Detect, validate, or auto-install DDCalc 2.2.0 (direct-detection likelihood library). Handles existing installs, custom paths, Apple Silicon build quirks, and offline cache mode.
----
+# DDCalc — Install Reference
 
-# /ddcalc-install
+Reference doc for installing **DDCalc 2.2.0** (direct-detection
+likelihood library). Driven by `detect.sh` and `install.sh` in this
+directory; consumed by the `ddcalc` runner skill's preflight and by
+`/install`. Handles existing installs, custom paths, Apple Silicon
+build quirks, and offline cache mode.
 
-Install or locate DDCalc 2.2.0 for use by `/ddcalc`. Idempotent: returns
-`{"status":"configured"}` immediately if DDCalc is already configured.
+## Version pin
+
+`detect.sh` pins DDCalc to **2.2.0**. Override with
+`HEPPH_DDCALC_VERSION=x.y.z`. When this pin bumps, `install.sh` must
+remove or migrate the previous install tree
+(e.g. `~/.local/share/hephaestus/tools/DDCalc-2.2.0`); the new version
+is only written to `config.json` after the new install verifies, so
+a half-finished upgrade does not leave the config pointing at a
+stale tree.
 
 ---
 
@@ -19,9 +27,8 @@ Install or locate DDCalc 2.2.0 for use by `/ddcalc`. Idempotent: returns
 
 ---
 
-## When to invoke
+## Prerequisites
 
-Use `/ddcalc-install` before running `/ddcalc`. Prerequisites checked:
 - `gfortran` in PATH (DDCalc is pure Fortran + C shim).
 - At least 2 GB disk free under `$HOME` (4 GB recommended).
 
@@ -33,7 +40,7 @@ the skill returns immediately without touching disk.
 ## Decision flow
 
 ```
-/ddcalc-install detect
+install.sh detect
        │
        ├── config has ddcalc_path + libDDCalc.a exists
        │       └── {"status":"configured","path":"...","version":"..."}   exit 0
@@ -44,7 +51,7 @@ the skill returns immediately without touching disk.
        └── nothing found
                └── {"status":"missing"}                                   exit 0
 
-/ddcalc-install use-path <dir>
+install.sh use-path <dir>
        │
        ├── <dir>/lib/libDDCalc.a exists
        │       ├── smoke test passes → writes ddcalc_path, ddcalc_version,
@@ -52,7 +59,7 @@ the skill returns immediately without touching disk.
        │       └── DDCALC_PATH_INVALID blocker (libDDCalc.a missing)      exit 16
        └── <dir> does not exist → DDCALC_PATH_INVALID blocker             exit 16
 
-/ddcalc-install install [<dir>]
+install.sh install [<dir>]
        │
        ├── gfortran absent → GFORTRAN_ABSENT blocker                      exit 10
        ├── check_disk 2 4
@@ -129,7 +136,7 @@ When `HEPPH_NO_NETWORK=1`:
 ## Overlay support (v1 status: DEFERRED to v1.1)
 
 `install --with-overlay <name>` applies a patch bundle from
-`plugins/hep-ph-toolkit/skills/ddcalc-install/overlays/<name>/`.
+`plugins/hep-ph-toolkit/skillsinstall.sh/overlays/<name>/`.
 
 In **native-only v1**, overlays are deferred. The manifest file is a stub
 with `deferred: v1.1`. Overlay work is blocked by the central-dispatcher
@@ -178,7 +185,7 @@ The system linker does not find `libgfortran` without an explicit `-L` flag.
 gcc ddcalc_driver.c -L"$DDCALC_PATH/lib" -lDDCalc \
     -L/opt/homebrew/lib/gcc/current -lgfortran -o ddcalc_driver
 ```
-The `scripts/build_driver.sh` helper injects this flag automatically on `arm64`
+The `build_driver.sh` helper injects this flag automatically on `arm64`
 macOS. **Fixed in tier-1** (T1.4, landed on main at `5355461`).
 
 ---

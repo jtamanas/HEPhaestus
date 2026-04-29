@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SHARED_COMMON="$SCRIPT_DIR/../../../../shared/install-helpers/_common.sh"
+SHARED_COMMON="$SCRIPT_DIR/../../../../../shared/install-helpers/_common.sh"
 
 PASS=0
 FAIL=0

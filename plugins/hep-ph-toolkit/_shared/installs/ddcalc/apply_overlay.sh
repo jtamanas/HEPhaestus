@@ -25,7 +25,7 @@ _tag="ddcalc-overlay"
 SRC_DIR="${1:?src_dir required}"
 OVERLAY_NAME="${2:?overlay_name required}"
 
-OVERLAYS_DIR="$SCRIPT_DIR/../overlays"
+OVERLAYS_DIR="$SCRIPT_DIR/overlays"
 OVERLAY_DIR="$OVERLAYS_DIR/$OVERLAY_NAME"
 MANIFEST="$OVERLAY_DIR/manifest.yaml"
 

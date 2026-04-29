@@ -15,7 +15,7 @@ _tag="ddcalc-probe-url"
 DRY_RUN=0
 [ "${1:-}" = "--dry-run" ] && DRY_RUN=1
 
-SKILL_ENV="$SCRIPT_DIR/../skill_env.yaml"
+SKILL_ENV="$SCRIPT_DIR/skill_env.yaml"
 
 # Parse mirror URLs from skill_env.yaml using Python
 URLS="$(python3 - "$SKILL_ENV" <<'PY'

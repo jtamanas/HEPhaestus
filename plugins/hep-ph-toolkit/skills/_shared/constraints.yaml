@@ -374,7 +374,7 @@ prereqs:
       cached: [0.08, 0.17]
     capabilities:
       description: "DDCalc 2.2.0 — direct detection constraint calculator (SI/SD nuclear recoil)"
-      install_skill: ddcalc-install
+      install_skill: _shared/installs/ddcalc
       role:
         collider: none
         dd: primary

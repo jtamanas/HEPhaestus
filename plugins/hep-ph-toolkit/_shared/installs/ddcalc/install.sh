@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+# install.sh — _shared/installs/ddcalc entry point.
 # Install DDCalc 2.2.0 from source.
-# Usage: install_ddcalc.sh [<install_dir>] [--with-overlay <name>]
+# Usage: install.sh [<install_dir>] [--with-overlay <name>]
 # Exit: 0 on success; non-zero with blocker JSON on stderr on failure.
 
 set -euo pipefail
@@ -94,7 +95,7 @@ tar -xzf "$TARBALL" -C "$SRC_DIR" --strip-components=1 2>&1 | \
 log "Extracted DDCalc source."
 
 # ── Apply version banner patch ─────────────────────────────────────────────────
-BANNER_PATCH="$SCRIPT_DIR/../patches/version_banner.patch"
+BANNER_PATCH="$SCRIPT_DIR/patches/version_banner.patch"
 if [ -f "$BANNER_PATCH" ]; then
   log "Applying version banner patch..."
   (cd "$SRC_DIR" && git apply --ignore-whitespace "$BANNER_PATCH" 2>&1) || \

@@ -9,7 +9,7 @@ from pathlib import Path
 
 TESTS_DIR = Path(__file__).parent
 SKILL_DIR = TESTS_DIR.parent
-SCRIPTS_DIR = SKILL_DIR / "scripts"
+SCRIPTS_DIR = SKILL_DIR
 PROBE_URL_SH = SCRIPTS_DIR / "_probe_url.sh"
 
 

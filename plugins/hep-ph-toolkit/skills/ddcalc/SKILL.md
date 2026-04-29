@@ -7,7 +7,22 @@ description: Compute direct-detection likelihoods and 90%-CL exclusion verdicts 
 
 Compute per-experiment log-likelihoods and WIMP exclusion verdicts using DDCalc 2.2.0.
 Leaf consumer: requires a `scattering/v1` JSON from `/micromegas` (tree-level) or the FormCalc + LoopTools chain (loop-level).
-Prerequisite: `/ddcalc-install` must have run successfully.
+Prerequisite: DDCalc installed (see `## Preflight: DDCalc` below).
+
+---
+
+## Preflight: DDCalc
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/ddcalc/detect.sh
+
+- **exit 0** → DDCalc is installed and registered in config; proceed.
+- **exit non-zero** → DDCalc is missing or misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/ddcalc/INSTALL.md` into
+  context and follow it. When the install completes, re-run `detect.sh`
+  before proceeding. If it still fails, halt with the blocker code from
+  the install reference.
 
 ---
 
@@ -123,7 +138,7 @@ name, logL, p_value, excluded_90cl). The agent renders this inline — no separa
 | `DDCALC_MASS_OUT_OF_RANGE` | recoverable | m_DM < 0.1 GeV (sub-GeV) | Use DarkELF; `context.suggested_tool = "DarkELF"` |
 | `DDCALC_DRIVER_FAILED` | fatal | Driver compile or runtime error | Check DDCalc install; `context.stderr_tail` |
 | `DDCALC_NREFT_NOT_SUPPORTED` | fatal | `nreft_coefficients` key present in input | NREFT deferred to v1.1; remove key or wait for v1.1 |
-| `DDCALC_OVERLAY_MISSING` | fatal | Overlay requested but files gone from disk | Re-run `/ddcalc-install install --with-overlay <name>` |
+| `DDCALC_OVERLAY_MISSING` | fatal | Overlay requested but files gone from disk | Re-run `_shared/installs/ddcalc/INSTALL.md install --with-overlay <name>` |
 
 Forbidden blockers (not in codebase; grep-gated):
 - `HEPPH_ALLOW_REFERENCE` — no analytic fallback exists
@@ -180,7 +195,7 @@ upstream tool output whose format could change invisibly between tool versions.
 
 ## Sharp edges
 
-Playtest-surfaced gotchas from the Dark SU(3) run (2026-04-25). See `/ddcalc-install`
+Playtest-surfaced gotchas from the Dark SU(3) run (2026-04-25). See `_shared/installs/ddcalc/INSTALL.md`
 sharp edges for build-time issues.
 
 ### SE-DD-1 — LZ_2022 must be explicitly registered (FU-wsi-01)
@@ -198,7 +213,7 @@ a populated `LZ/` data directory, but the v1 driver omitted the
 **DARWIN is currently UNREGISTERED** — `C_DDCalc_darwin_init` exists in
 `DDExperiments.hpp` but is absent from `ddcalc_driver.c`. Tier-2 follow-up: add
 `register_exp("DARWIN", C_DDCalc_darwin_init)` and the corresponding data symlink
-(see SE-DD-2 in `/ddcalc-install`).
+(see SE-DD-2 in `_shared/installs/ddcalc/INSTALL.md`).
 
 ### SE-DD-2 — DDCalc requires σ_SI / σ_SD inputs; raw SLHA not accepted (FU-wsi-03)
 
@@ -220,6 +235,6 @@ Do not attempt to pass a SLHA file or raw Wilson coefficients.
 
 - Schema: `plugins/shared/schemas/scattering.schema.json`
 - Blocker schema: `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json`
-- Install skill: `/ddcalc-install`
+- Install skill: `_shared/installs/ddcalc/INSTALL.md`
 - Data: `data/neutrino_fog_ohare_2021.csv` + `data/NOTICE`
-- Overlays: `plugins/hep-ph-toolkit/skills/ddcalc-install/overlays/`
+- Overlays: `plugins/hep-ph-toolkit/skills_shared/installs/ddcalc/INSTALL.md/overlays/`

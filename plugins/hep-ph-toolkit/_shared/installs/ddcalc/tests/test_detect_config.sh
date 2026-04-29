@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DETECT="$SCRIPT_DIR/../scripts/detect_ddcalc.sh"
+DETECT="$SCRIPT_DIR/../_probe.sh"
 
 PASS=0
 FAIL=0
@@ -36,7 +36,7 @@ _assert "status=missing when nothing configured" \
 FAKE_DIR="$TMP/ddcalc"
 mkdir -p "$FAKE_DIR/lib"
 touch "$FAKE_DIR/lib/libDDCalc.a"
-bash "$SCRIPT_DIR/../scripts/use_path.sh" "$FAKE_DIR" > /dev/null
+bash "$SCRIPT_DIR/../use_path.sh" "$FAKE_DIR" > /dev/null
 
 out2="$(bash "$DETECT")"
 _assert "status=configured after use-path" \
