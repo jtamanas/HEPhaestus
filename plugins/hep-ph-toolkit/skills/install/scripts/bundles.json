@@ -1,0 +1,26 @@
+{
+  "profumo-paper": {
+    "description": "Reproduce arXiv:2506.19062 end-to-end (relic + DD + ID + one-loop).",
+    "tools": ["sarah", "spheno", "maddm", "micromegas", "looptools", "formcalc"]
+  },
+  "dm-relic": {
+    "description": "DM relic density (Omega h^2): MadDM primary, micrOMEGAs validator.",
+    "tools": ["maddm", "micromegas"]
+  },
+  "dm-direct-detection": {
+    "description": "DM direct-detection cross-sections + DDCalc likelihood.",
+    "tools": ["micromegas", "ddcalc"]
+  },
+  "dm-indirect": {
+    "description": "DM indirect-detection (gamma-ray, nu, e+) - MadDM driver.",
+    "tools": ["maddm"]
+  },
+  "one-loop": {
+    "description": "One-loop scalar/tensor integrals (LoopTools + FormCalc + FeynArts).",
+    "tools": ["looptools", "formcalc", "feynarts"]
+  },
+  "bsm-model-building": {
+    "description": "BSM Lagrangian -> spectrum + decays. SARAH primary; FeynRules optional.",
+    "tools": ["sarah", "spheno", "feynrules"]
+  }
+}
