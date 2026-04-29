@@ -1,16 +1,20 @@
----
-name: micromegas-install
-description: Detect, configure, or install micrOMEGAs 6.0.5 (with bundled CalcHEP) for dark matter calculations — serves both as the primary relic/SI/SD driver for /micromegas and as the MadDM validator for /maddm cross-checks.
----
+# micrOMEGAs — Install Reference
 
-# /micromegas-install
+Reference doc for installing **micrOMEGAs 6.0.5** (with bundled CalcHEP)
+for dark matter calculations. Driven by `detect.sh` and `install.sh` in
+this directory; consumed by the `micromegas` runner skill's preflight
+and by `/install`. Serves both as the primary relic/SI/SD driver for
+`/micromegas` and as the MadDM validator for `/maddm` cross-checks.
 
-Detect an existing micrOMEGAs installation, configure a user-supplied path, or download and
-build micrOMEGAs 6.0.5 from the LAPTh distribution archive. Writes config keys consumed by
-`/micromegas` (the primary driver role) and `/maddm` when micrOMEGAs is used as a
-cross-check validator. Does not perform any physics computation.
+## Version pin
 
----
+`detect.sh` pins micrOMEGAs to **6.0.5**. Override with
+`HEPPH_MICROMEGAS_VERSION=x.y.z`. When this pin bumps, `install.sh`
+must remove or migrate the previous install tree
+(e.g. `~/micrOMEGAs/micromegas_6.0.5` →
+`~/micrOMEGAs/micromegas_<new>`); the new version is only written to
+`config.json` after the new install verifies, so a half-finished
+upgrade does not leave the config pointing at a stale tree.
 
 ## Disk footprint
 
@@ -46,19 +50,10 @@ annihilation calculations in Python.
 
 ---
 
-## When to invoke
-
-Invoke `/micromegas-install` before the first use of `/micromegas` on any machine, when
-`/micromegas` emits `MICROMEGAS_INPUT_MISSING` with `context.missing = "micromegas_path"`,
-or when a `/maddm` run needs a micrOMEGAs cross-check and no install is registered.
-Also invoke to upgrade to a new version or point at an existing installation.
-
----
-
 ## Decision flow
 
 ```
-/micromegas-install
+install.sh
        │
        ├─ detect
        │       └─ Probe config + well-known paths → JSON state
@@ -95,7 +90,7 @@ Also invoke to upgrade to a new version or point at an existing installation.
 ### `detect`
 
 ```
-/micromegas-install detect
+install.sh detect
 ```
 
 Probes for an existing micrOMEGAs installation. No side-effects.
@@ -120,8 +115,8 @@ Exit 0 in all three states.
 ### `use-path`
 
 ```
-/micromegas-install use-path <dir>
-/micromegas-install use-path <dir> --calchep-path <calchep_src_dir>
+install.sh use-path <dir>
+install.sh use-path <dir> --calchep-path <calchep_src_dir>
 ```
 
 Validates and registers an existing micrOMEGAs tree.
@@ -139,7 +134,7 @@ On success, writes config keys and prints `{"status":"configured",...}`.
 ### `install`
 
 ```
-/micromegas-install install [parent_dir] [--full-smoke]
+install.sh install [parent_dir] [--full-smoke]
 ```
 
 Downloads micrOMEGAs 6.0.5 from the LAPTh archive and builds it.
@@ -169,7 +164,7 @@ free) or when testing network-policy blockers in isolation, set `HEPPH_SKIP_DISK
 to bypass the disk check:
 ```
 HEPPH_SKIP_DISK_CHECK=1 HEPPH_NO_NETWORK=1 HEPPH_OFFLINE_CACHE_DIR=/tmp/pkg \
-  /micromegas-install install
+  install.sh install
 ```
 Note: the disk check runs before the network-policy check in `install_impl.sh`. If you
 want to verify the network-policy blocker (`MICROMEGAS_DOWNLOAD_BLOCKED_BY_POLICY`) on a
@@ -186,7 +181,7 @@ Set `HEPPH_SKIP_TOOLCHAIN_CHECK=1` to bypass (useful for network-policy tests).
 ### `validate`
 
 ```
-/micromegas-install validate
+install.sh validate
 ```
 
 Re-validates the currently configured install: reads `config.micromegas_path`, checks
@@ -249,7 +244,7 @@ On macOS 14+:
 4. SDK missing/stale → fatal `MICROMEGAS_MACOS_SDK_MISMATCH` with `context.sdkroot`.
 
 **Vendored upstream patches:** Stage 4.5 of `install_impl.sh` applies
-patches from `scripts/_patches.sh` between extraction and build. See
+patches from `_patches.sh` between extraction and build. See
 `references/micromegas-workarounds.md` for the rationale behind each
 patch. Currently one patch is applied (CalcHEP `make -j` archive race);
 without it, `make -j$NCPUS` silently loses `.o` files from `serv.a` and
@@ -297,7 +292,7 @@ The `validate` subcommand is read-only and does not touch these keys.
 
 Default version: `6.0.5`. Override via environment:
 ```
-HEPPH_MICROMEGAS_VERSION=6.0.5 /micromegas-install install
+HEPPH_MICROMEGAS_VERSION=6.0.5 install.sh install
 ```
 
 Zenodo mirror fallback pin: `6.1.15` (fixed; only exercised when LAPTh is
@@ -317,7 +312,7 @@ Re-pinning the default to 6.1.x is a v1.1 ticket gated on W3 emitting UFO 2.0 ou
 - **Depends on:** `gfortran`, `cc`/`gcc`, GNU `make`/`gmake` in PATH; Phase-0
   `_common.sh`, `check_macos_sdk.sh` helpers.
 - **Scripts:**
-  - `install_micromegas.sh` — dispatcher (detect / use-path / install / validate).
+  - `install.sh` — dispatcher (detect / use-path / install / validate).
   - `detect.sh`, `use_path.sh`, `install_impl.sh`, `validate.sh` — subcommand handlers.
   - `check_toolchain.sh` — cc/gfortran/gmake precondition with per-OS install hints.
   - `_blocker.sh`, `_smoke.sh`, `_netguard.sh`, `_macos_env.sh` — shared helpers.

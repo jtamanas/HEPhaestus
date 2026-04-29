@@ -19,10 +19,25 @@ are delegated to micrOMEGAs.
 
 ---
 
+## Preflight: micrOMEGAs
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/micromegas/detect.sh
+
+- **exit 0** → micrOMEGAs is installed and registered in config; proceed.
+- **exit non-zero** → micrOMEGAs is missing or misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/micromegas/INSTALL.md` into
+  context and follow it. When the install completes, re-run `detect.sh`
+  before proceeding. If it still fails, halt with the blocker code from
+  the install reference.
+
+---
+
 ## When to invoke
 
 Invoke `/micromegas` after:
-1. `/micromegas-install` has configured `config.micromegas_path`.
+1. micrOMEGAs is installed (see `## Preflight: micrOMEGAs` above) and `config.micromegas_path` is set.
 2. `/sarah-build` has produced a UFO model at `config.models[<name>].ufo_path`
    (unless using `--precompiled`).
 3. `/spheno-build` has produced an SLHA spectrum at `config.models[<name>].latest_slha`.
@@ -59,7 +74,7 @@ composes subcommands.
 
 | Config key | Source skill | Required for |
 |------------|-------------|-------------|
-| `config.micromegas_path` | `/micromegas-install` | All subcommands |
+| `config.micromegas_path` | `_shared/installs/micromegas/INSTALL.md` | All subcommands |
 | `config.models[<name>].ufo_path` | `/sarah-build` | All (unless `--precompiled`) |
 | `config.models[<name>].latest_slha` | `/spheno-build` | DM mass resolution |
 | `config.models[<name>].spec_yaml` | User-authored | DM candidate identification |

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# install_micromegas.sh — dispatcher for /micromegas-install skill.
+# install.sh — _shared/installs/micromegas entry point.
 #
 # Usage:
-#   install_micromegas.sh detect
-#   install_micromegas.sh use-path <dir> [--calchep-path <dir>]
-#   install_micromegas.sh install [parent_dir] [--full-smoke]
-#   install_micromegas.sh validate
+#   install.sh detect
+#   install.sh use-path <dir> [--calchep-path <dir>]
+#   install.sh install [parent_dir] [--full-smoke]
+#   install.sh validate
 #
 # The `validate` subcommand re-validates the currently configured install
 # (markers + light smoke) without writing config. Emits
@@ -23,7 +23,7 @@ if [ ! -f "$SHARED_COMMON" ]; then SHARED_COMMON="$SCRIPT_DIR/_common.sh"; fi
 _LOG_TAG="micromegas-install"
 
 if [ $# -lt 1 ]; then
-  err "Usage: install_micromegas.sh {detect|use-path|install|validate} [args...]"
+  err "Usage: install.sh {detect|use-path|install|validate} [args...]"
   exit $EXIT_GENERIC
 fi
 
@@ -31,7 +31,7 @@ subcmd="$1"; shift
 
 case "$subcmd" in
   detect)
-    exec bash "$SCRIPT_DIR/detect.sh" "$@"
+    exec bash "$SCRIPT_DIR/_probe.sh" "$@"
     ;;
   use-path)
     exec bash "$SCRIPT_DIR/use_path.sh" "$@"

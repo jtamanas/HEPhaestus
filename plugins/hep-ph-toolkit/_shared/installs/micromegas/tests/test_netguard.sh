@@ -4,7 +4,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-NETGUARD_SH="$SCRIPT_DIR/../scripts/_netguard.sh"
+NETGUARD_SH="$SCRIPT_DIR/../_netguard.sh"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 pass() { echo "PASS: $*"; }

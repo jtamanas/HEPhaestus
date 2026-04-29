@@ -1,4 +1,0 @@
-micromegas_version: "6.0.5"
-micromegas_url: "https://lapth.cnrs.fr/micromegas/downloadarea/micromegas_6.0.5.tgz"
-micromegas_sha256: "TODO"  # warn-not-abort per verify_checksum; compute real SHA256 before v1 release
-seed: 42

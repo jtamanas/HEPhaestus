@@ -10,8 +10,8 @@ import pytest
 _SCRIPT_DIR = Path(__file__).resolve().parent
 _BLOCKERS_DIR = _SCRIPT_DIR / "fixtures" / "blockers"
 _SCHEMA_PATH = (
-    _SCRIPT_DIR.parent.parent
-    / "_shared" / "blocker.schema.json"
+    _SCRIPT_DIR.parent.parent.parent.parent
+    / "skills" / "_shared" / "blocker.schema.json"
 )
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# detect.sh — probe micrOMEGAs installation state.
+# _probe.sh — probe micrOMEGAs installation state.
 #
 # Emits one-line JSON to stdout:
 #   {"status":"configured","path":"...","version":"..."}

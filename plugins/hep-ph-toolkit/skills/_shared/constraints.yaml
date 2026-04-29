@@ -266,7 +266,7 @@ prereqs:
       cached: [0.08, 0.17]
     capabilities:
       description: "micrOMEGAs 6.0.5 — relic density validator via CalcHEP .mdl files"
-      install_skill: micromegas-install
+      install_skill: _shared/installs/micromegas
       role:
         collider: none
         dd: validator

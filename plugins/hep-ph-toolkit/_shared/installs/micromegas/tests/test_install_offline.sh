@@ -15,7 +15,7 @@ fi
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_SH="$SCRIPT_DIR/../scripts/install_micromegas.sh"
+INSTALL_SH="$SCRIPT_DIR/../install.sh"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 pass() { echo "PASS: $*"; }
@@ -76,7 +76,7 @@ done
 
 # ── Stage 4: verify smoke test passes ────────────────────────────────────────
 installed_path="$(python3 -c "import json; print(json.load(open('$CONFIG_FILE'))['micromegas_path'])")"
-if bash "$SCRIPT_DIR/../scripts/_smoke.sh" "$installed_path"; then
+if bash "$SCRIPT_DIR/../_smoke.sh" "$installed_path"; then
   pass "smoke test passes on installed path"
 else
   fail "smoke test failed on installed path $installed_path"

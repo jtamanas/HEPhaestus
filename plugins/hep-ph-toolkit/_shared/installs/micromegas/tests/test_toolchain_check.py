@@ -24,7 +24,7 @@ assert sys.version_info >= (3, 10), "hephaestus requires Python >= 3.10"
 import pytest
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_SCRIPTS = _SCRIPT_DIR.parent / "scripts"
+_SCRIPTS = _SCRIPT_DIR.parent
 _CHECK_TOOLCHAIN = _SCRIPTS / "check_toolchain.sh"
 
 EXIT_NO_GFORTRAN = 10

@@ -16,8 +16,8 @@ assert sys.version_info >= (3, 10), "hephaestus requires Python >= 3.10"
 import pytest
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_SCRIPTS = _SCRIPT_DIR.parent / "scripts"
-_INSTALL_MICROMEGAS = _SCRIPTS / "install_micromegas.sh"
+_SCRIPTS = _SCRIPT_DIR.parent
+_INSTALL_MICROMEGAS = _SCRIPTS / "install.sh"
 
 EXIT_DOWNLOAD = 12
 

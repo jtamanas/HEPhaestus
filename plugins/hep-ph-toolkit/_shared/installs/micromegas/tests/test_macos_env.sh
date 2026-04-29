@@ -7,7 +7,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MACOS_ENV_SH="$SCRIPT_DIR/../scripts/_macos_env.sh"
+MACOS_ENV_SH="$SCRIPT_DIR/../_macos_env.sh"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 pass() { echo "PASS: $*"; }

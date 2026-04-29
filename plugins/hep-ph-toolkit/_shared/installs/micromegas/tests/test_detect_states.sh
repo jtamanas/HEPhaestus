@@ -5,7 +5,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DETECT_SH="$SCRIPT_DIR/../scripts/detect.sh"
+DETECT_SH="$SCRIPT_DIR/../_probe.sh"
 FAKE_TREE="$SCRIPT_DIR/fixtures/fake_micromegas_tree"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
