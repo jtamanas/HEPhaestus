@@ -202,7 +202,7 @@ prereqs:
       cached: [0.17, 0.33]
     capabilities:
       description: "MadDM 3.2.13 — DM relic density + direct detection via MG5 UFO"
-      install_skill: maddm-install
+      install_skill: _shared/installs/maddm
       role:
         collider: none
         dd: primary

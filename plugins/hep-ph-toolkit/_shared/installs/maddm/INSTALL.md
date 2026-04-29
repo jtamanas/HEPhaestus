@@ -1,14 +1,30 @@
----
-name: maddm-install
-description: Detect, validate, or auto-install MadDM (the MadGraph5_aMC@NLO dark-matter plugin). Orchestrates MG5's native `install maddm` command with a git-clone fallback, and verifies the resulting plugin tree.
----
+# MadDM — Install Reference
 
-## When to invoke
+Reference doc for installing **MadDM 3.2.13** (the MadGraph5_aMC@NLO
+dark-matter plugin). Driven by `detect.sh` and `install.sh` in this
+directory; consumed by the `maddm` runner skill's preflight and by
+`/install`. Orchestrates MG5's native `install maddm` command with a
+git-clone fallback, and verifies the resulting plugin tree.
 
-Use `/maddm-install` before running the `/maddm` driver skill (relic density,
-direct/indirect detection) to ensure the MadDM plugin is present under an
-already-installed MG5. The skill is idempotent: if MadDM is already configured
-it returns `{"status":"configured"}` immediately without touching disk.
+## Version pin
+
+`detect.sh` pins MadDM to **3.2.13**. Override with
+`HEPPH_MADDM_VERSION=x.y.z`. When this pin bumps, `install.sh` must
+remove or migrate the previous plugin tree under
+`<MG5_ROOT>/PLUGIN/maddm`; the new version is only written to
+`config.json` after the new install verifies, so a half-finished
+upgrade does not leave the config pointing at a stale plugin.
+
+## Self-healing UX contract
+
+`install.sh install` invokes `mg5_aMC -f <script>` with
+`install maddm`, which is a **multi-minute interactive build** that
+downloads ~5 MB and compiles MG5/MadDM Fortran shims (3-8 minutes
+typical, longer on cold caches). The runner skill (or `/install`)
+**must surface a clear "this will take ~3-8 minutes" notice to the
+user before triggering install.sh** — silent invocation is a UX
+bug. Re-runs against an already-configured install hit the fast path
+and return immediately.
 
 ## Disk footprint
 
@@ -24,9 +40,9 @@ in the config, and it adds MadDM on top of that.
 
 Typical invocation order:
 
-1. `/maddm-install detect` — check current state (no side-effects).
-2. `/maddm-install use-path <dir>` — register an existing MadDM plugin dir.
-3. `/maddm-install install` — run `mg5_aMC -f <script>` with `install maddm`,
+1. `install.sh detect` — check current state (no side-effects).
+2. `install.sh use-path <dir>` — register an existing MadDM plugin dir.
+3. `install.sh install` — run `mg5_aMC -f <script>` with `install maddm`,
    falling back to git clone of `maddmhep/maddm` on failure.
 
 ---
@@ -34,7 +50,7 @@ Typical invocation order:
 ## Decision flow
 
 ```
-/maddm-install detect
+install.sh detect
        │
        ├── config has maddm_path + valid __init__.py + version probe succeeds
        │       └── {"status":"configured","path":"...","version":"..."}   exit 0
@@ -45,7 +61,7 @@ Typical invocation order:
        └── nothing found
                └── {"status":"missing"}                                   exit 0
 
-/maddm-install use-path <dir>
+install.sh use-path <dir>
        │
        ├── <dir>/__init__.py exists AND <MG5_ROOT>/bin/maddm executable
        │       ├── probe_maddm.sh succeeds → writes maddm_path,
@@ -55,7 +71,7 @@ Typical invocation order:
        │
        └── <dir>/__init__.py missing → MADDM_PATH_INVALID blocker            exit 16
 
-/maddm-install install [dir]
+install.sh install [dir]
        │
        ├── madgraph_path not set → MADGRAPH_ABSENT blocker                exit 20
        ├── MG5 version < 2.6.2 → MADGRAPH_VERSION_TOO_OLD blocker         exit 20
@@ -106,14 +122,14 @@ All blockers are emitted on **stderr** as single-line JSON conforming to
 
 | Code | Mode | Trigger | `user_instruction` |
 |---|---|---|---|
-| `MADGRAPH_ABSENT` | `fatal` | `madgraph_path` not set in config | Run `/install` (hep-ph-demo) to install MG5 first, then retry `/maddm-install`. |
+| `MADGRAPH_ABSENT` | `fatal` | `madgraph_path` not set in config | Run `/install` (hep-ph-demo) to install MG5 first, then retry `install.sh`. |
 | `MADGRAPH_VERSION_TOO_OLD` | `fatal` | MG5 version probe returns `< 2.6.2` | Upgrade MG5 to 2.6.2 or later. MadDM 3.x pins a newer plugin API. |
 | `MADDM_DOWNLOAD_FAILED` | `fatal` | Both `install maddm` (via mg5_aMC) and git-clone fallback failed | Check network connectivity to launchpad.net and github.com; retry. |
 | `MADDM_PYTHON_MISMATCH` | `fatal` | MG5 runs Python 2 but MadDM requires Python 3.7+ (or vice versa) | Reinstall MG5 against a Python 3.7+ interpreter. |
 | `GFORTRAN_ABSENT` | `fatal` | `gfortran` not on `$PATH` | macOS: `brew install gcc`. Debian/Ubuntu: `sudo apt-get install -y gfortran`. |
 | `MADDM_SMOKE_TEST_FAILED` | `fatal` | `__init__.py` present but probe returned empty / launcher not executable, **or** the `python3 ast.parse` sweep found residual SyntaxErrors in the plugin tree | Inspect `<MG5_ROOT>/PLUGIN/maddm/` contents and `/tmp/maddm_install_mg5.log`; if the sweep flagged files, check whether upstream drift has introduced a pattern 2to3 doesn't cover. |
 | `MADDM_PATH_INVALID` | `fatal` | `use-path <dir>` has no `__init__.py` | Provide the directory that contains `__init__.py` (typically `<MG5_ROOT>/PLUGIN/maddm/`). |
-| `MADDM_PATCH_FAILED` | `fatal` | Post-install upstream patches (Python 2→3, MG5 3.5.6 API) failed. Most common cause: `2to3` missing on Python 3.13+ | See § Upstream patches below. Install `2to3` (`pip install 2to3` or use a 3.12 interpreter) and retry, **or** apply the three patches manually and re-run `/maddm-install validate`. |
+| `MADDM_PATCH_FAILED` | `fatal` | Post-install upstream patches (Python 2→3, MG5 3.5.6 API) failed. Most common cause: `2to3` missing on Python 3.13+ | See § Upstream patches below. Install `2to3` (`pip install 2to3` or use a 3.12 interpreter) and retry, **or** apply the three patches manually and re-run `install.sh validate`. |
 
 ---
 
@@ -151,7 +167,7 @@ patch to force re-run on upgrade.
 
 The patches also apply when `use-path` registers an existing (unpatched)
 install, and when `install` re-enters its idempotency fast-path on a
-pre-patch-era tree — so users who ran `/maddm-install` before these
+pre-patch-era tree — so users who ran `install.sh` before these
 patches shipped get upgraded automatically on the next invocation, no
 delete-and-reinstall required.
 
@@ -192,7 +208,7 @@ Pinned version: **3.2.13** (2023-07-16, from the canonical GitHub repo
 
 Override via environment:
 ```bash
-HEPPH_MADDM_VERSION=3.2.0 /maddm-install install
+HEPPH_MADDM_VERSION=3.2.0 install.sh install
 ```
 
 The pin currently affects only the git-clone fallback (which checks out the
@@ -225,4 +241,4 @@ actually computes observables.
 - Blocker schema: `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json`
 - Upstream skill (must run first): `plugins/hep-ph-toolkit/skills/install/` (sets `madgraph_path`)
 - Downstream skill (driver): `plugins/hep-ph-toolkit/skills/maddm/`
-- gfortran check pattern reused from: `plugins/hep-ph-toolkit/skills/spheno-install/scripts/check_gfortran.sh`
+- gfortran check pattern reused from: `plugins/hep-ph-toolkit/_shared/installs/spheno/check_gfortran.sh`

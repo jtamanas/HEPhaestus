@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install.sh — /maddm-install skill entry point.
+# install.sh — _shared/installs/maddm entry point.
 #
 # Subcommands:
 #   detect              Print JSON state of existing MadDM install. No side effects.
@@ -14,7 +14,7 @@ set -euo pipefail
 _LOG_TAG="maddm_install"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source shared helpers (4 levels up: skills/maddm-install/scripts → plugins).
+# Source shared helpers (4 levels up: _shared/installs/maddm → plugins).
 SHARED_COMMON="$SCRIPT_DIR/../../../../shared/install-helpers/_common.sh"
 if [ ! -f "$SHARED_COMMON" ]; then
   SHARED_COMMON="$SCRIPT_DIR/_common.sh"

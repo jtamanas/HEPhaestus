@@ -9,6 +9,23 @@ Interface for MadDM, a MadGraph5 plugin for dark matter phenomenology. Computes 
 
 MadDM runs within a MG5 session — it is not a standalone tool. It requires a UFO model with a designated dark matter candidate. For the underlying MG5 setup and card manipulation, see the **madgraph** skill. (Parton showering of MG5 events is left to an external Pythia8 driver; a dedicated `pythia-config` skill is on the roadmap.)
 
+## Preflight: MadDM
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/maddm/detect.sh
+
+- **exit 0** → MadDM is installed and registered in config; proceed.
+- **exit non-zero** → MadDM is missing or misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/maddm/INSTALL.md` into
+  context and follow it. When the install completes, re-run `detect.sh`
+  before proceeding. If it still fails, halt with the blocker code from
+  the install reference.
+
+Note: if MadDM is missing, `install.sh` invokes `MG5_aMC>install maddm`
+which is a multi-minute interactive build — surface a clear notice to
+the user before triggering it.
+
 ## Decision Tree
 
 **What are you trying to do?**
@@ -46,7 +63,7 @@ mg5_aMC --mode=maddm <script.mg5>
 Bare `mg5_aMC <script.mg5>` loads the base MG5 interpreter without the
 MadDM plugin; the `generate relic_density` line then fails with
 `InvalidCmd: The command "generate" has an error`. See
-`maddm-install/references/maddm-workarounds.md` §8 for the plugin-loader
+`_shared/installs/maddm/INSTALL.md` for the plugin-loader
 mechanics.
 
 ### Key Commands

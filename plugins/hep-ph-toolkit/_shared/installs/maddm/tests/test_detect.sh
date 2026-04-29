@@ -12,7 +12,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT="$HERE/../scripts/install.sh"
+SCRIPT="$HERE/../install.sh"
 FIXTURES="$HERE/fixtures"
 
 pass=0
