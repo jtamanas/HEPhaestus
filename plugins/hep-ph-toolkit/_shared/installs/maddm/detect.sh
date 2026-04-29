@@ -34,3 +34,13 @@ fi
 # trigger a multi-minute interactive install).
 [ -n "$recorded_path" ] || exit 1
 [ -f "$recorded_path/maddm_run.py" ] || [ -f "$recorded_path/maddm.py" ] || exit 1
+# Version-drift: MadDM has no canonical VERSION file at the plugin
+# root, but installs may live under maddm-3.2.13/. Best-effort path
+# match: rc=1 = drift, rc=0 = match, rc=2 = no version stamp parseable
+# (file-presence stands).
+set +e
+bash "$SHARED/_detect_common.sh" path-version-match "$recorded_path" "$PINNED_VERSION"
+rc=$?
+set -e
+[ $rc -eq 1 ] && exit 1
+exit 0

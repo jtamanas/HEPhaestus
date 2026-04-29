@@ -30,6 +30,13 @@ if [ -n "$recorded_path" ] && bash "$SHARED/_detect_common.sh" feynarts "$record
   fi
 fi
 
-# Slow path: file-presence check.
+# Slow path: file-presence + version-drift check.
 [ -n "$recorded_path" ] || exit 1
 [ -f "$recorded_path/FeynArts.m" ] || exit 1
+# Version-drift: FeynArts ships under FeynArts-3.11/ — match the path.
+set +e
+bash "$SHARED/_detect_common.sh" path-version-match "$recorded_path" "$PINNED_VERSION"
+rc=$?
+set -e
+[ $rc -eq 1 ] && exit 1
+exit 0

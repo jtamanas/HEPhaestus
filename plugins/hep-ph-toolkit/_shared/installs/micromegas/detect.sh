@@ -29,7 +29,14 @@ if [ -n "$recorded_path" ] && bash "$SHARED/_detect_common.sh" micromegas "$reco
   fi
 fi
 
-# Slow path: tool-specific binary check.
+# Slow path: tool-specific marker check + version-drift gate.
 [ -n "$recorded_path" ] || exit 1
 [ -d "$recorded_path/sources" ] || exit 1
 [ -d "$recorded_path/CalcHEP_src" ] || exit 1
+# micrOMEGAs installs live under micromegas_6.0.5/ — match the path.
+set +e
+bash "$SHARED/_detect_common.sh" path-version-match "$recorded_path" "$PINNED_VERSION"
+rc=$?
+set -e
+[ $rc -eq 1 ] && exit 1
+exit 0

@@ -29,6 +29,14 @@ if [ -n "$recorded_path" ] && bash "$SHARED/_detect_common.sh" spheno "$recorded
   fi
 fi
 
-# Slow path: SPheno binary present and executable.
+# Slow path: SPheno binary present + version-drift check.
 [ -n "$recorded_path" ] || exit 1
 [ -x "$recorded_path" ] || exit 1
+# SPheno installs typically live under SPheno-4.0.5/ with a versioned
+# dir name. rc=1 = drift, rc=0 = match, rc=2 = no version stamp parseable.
+set +e
+bash "$SHARED/_detect_common.sh" path-version-match "$recorded_path" "$PINNED_VERSION"
+rc=$?
+set -e
+[ $rc -eq 1 ] && exit 1
+exit 0

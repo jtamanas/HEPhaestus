@@ -29,6 +29,15 @@ if [ -n "$recorded_path" ] && bash "$SHARED/_detect_common.sh" ddcalc "$recorded
   fi
 fi
 
-# Slow path: file-presence check.
+# Slow path: file-presence + version-drift check.
 [ -n "$recorded_path" ] || exit 1
 [ -f "$recorded_path/lib/libDDCalc.a" ] || exit 1
+# Version-drift: if the path encodes a version (or has a sibling
+# VERSION file), require it to match the pin. rc=1 = drift, rc=0 =
+# match, rc=2 = no version stamp parseable (file-presence stands).
+set +e
+bash "$SHARED/_detect_common.sh" path-version-match "$recorded_path" "$PINNED_VERSION"
+rc=$?
+set -e
+[ $rc -eq 1 ] && exit 1
+exit 0
