@@ -17,9 +17,9 @@ import pytest
 # Repository root (4 levels up from this test file)
 TESTS_DIR = Path(__file__).parent
 SKILL_DIR = TESTS_DIR.parent
-SCRIPTS_DIR = SKILL_DIR / "scripts"
+SCRIPTS_DIR = SKILL_DIR
 FIXTURES_DIR = TESTS_DIR / "fixtures"
-REPO_ROOT = SKILL_DIR.parent.parent.parent.parent
+REPO_ROOT = SKILL_DIR.parent.parent.parent.parent.parent
 SHARED = REPO_ROOT / "plugins" / "shared" / "install-helpers"
 BLOCKER_SCHEMA = (
     REPO_ROOT
@@ -30,11 +30,11 @@ BLOCKER_SCHEMA = (
 )
 
 # ---------------------------------------------------------------------------
-# Helper: run the install_formcalc.sh with a given env and args
+# Helper: run the install.sh with a given env and args
 # ---------------------------------------------------------------------------
 
 def run_install(args, env_extra=None, config_dir=None):
-    """Run install_formcalc.sh; returns (returncode, stdout, stderr)."""
+    """Run install.sh; returns (returncode, stdout, stderr)."""
     env = os.environ.copy()
     env["_LOG_TAG"] = "test"
     if config_dir:
@@ -43,7 +43,7 @@ def run_install(args, env_extra=None, config_dir=None):
     if env_extra:
         env.update(env_extra)
     result = subprocess.run(
-        ["bash", str(SCRIPTS_DIR / "install_formcalc.sh")] + list(args),
+        ["bash", str(SCRIPTS_DIR / "install.sh")] + list(args),
         capture_output=True,
         text=True,
         env=env,

@@ -32,8 +32,20 @@ Before any other action, run:
   before proceeding. If it still fails, halt with the blocker code from
   the install reference.
 
-(FormCalc itself has its own preflight — see `## Preflight: FormCalc`
-below, added when FormCalc migrates to `_shared/installs/formcalc/`.)
+---
+
+## Preflight: FormCalc
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/formcalc/detect.sh
+
+- **exit 0** → FormCalc is installed and registered in config; proceed.
+- **exit non-zero** → FormCalc is missing or misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/formcalc/INSTALL.md` into
+  context and follow it. When the install completes, re-run `detect.sh`
+  before proceeding. If it still fails, halt with the blocker code from
+  the install reference.
 
 ---
 
@@ -170,6 +182,6 @@ caveat in v1.  Full CDR/tHV support is deferred to v1.1.
 - Phase-0 schemas: `plugins/shared/schemas/processspec.schema.json`
 - Atomic-write helper: `plugins/shared/install-helpers/atomic_write.sh`
 - Blocker schema: `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json`
-- Install prereq: `/formcalc-install`
+- Install prereq: `_shared/installs/formcalc/INSTALL.md`
 - Upstream: `/feynarts` (provides `FeynAmpList.m` + `FeynAmpList.meta.json`)
 - Downstream: LoopTools (evaluates `amp_reduced.m` PV integrals numerically)

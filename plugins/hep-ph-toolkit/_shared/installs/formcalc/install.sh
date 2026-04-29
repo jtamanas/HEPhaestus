@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# install_formcalc.sh — orchestrator for /formcalc-install.
+# install.sh — _shared/installs/formcalc entry point.
 # Subcommands: detect | use-path <dir> | install [dir]
 #
 # Sourcing pattern (5 levels deep from repo root):
-#   plugins/hep-ph-toolkit/skills/formcalc-install/scripts/install_formcalc.sh
+#   plugins/hep-ph-toolkit/_shared/installs/formcalc/install.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# From .../plugins/hep-ph-toolkit/skills/formcalc-install/scripts/
+# From .../plugins/hep-ph-toolkit/_shared/installs/formcalc/
 # go up 4 levels to reach .../plugins/
 PLUGINS_DIR="$(cd "$SCRIPT_DIR/../../../../.." && pwd)/plugins"
 SHARED_COMMON="$PLUGINS_DIR/shared/install-helpers/_common.sh"

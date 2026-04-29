@@ -1,14 +1,21 @@
----
-name: formcalc-install
-description: Detect, validate, or auto-install FormCalc 9.10 (bundled with LoopTools 9.10) and FORM 4.3.1. Handles existing installs, custom paths, Apple-Silicon branch, and offline-cache mode.
----
+# FormCalc — Install Reference
 
-## When to invoke
+Reference doc for installing **FormCalc 9.10** (bundled with LoopTools
+9.10) and **FORM 4.3.1**. Driven by `detect.sh` and `install.sh` in
+this directory; consumed by the `formcalc` runner skill's preflight
+and by `/install`. Handles existing installs, custom paths,
+Apple-Silicon branch, and offline-cache mode.
 
-Use `/formcalc-install` before running `/formcalc` to ensure FormCalc, LoopTools, and
-FORM are present and the Wolfram Engine is reachable.  The skill is idempotent: if all
-three components are already configured it returns `{"status":"configured"}` immediately
-without touching disk.
+## Version pin
+
+`detect.sh` pins FormCalc to **9.10**. Override with
+`HEPPH_FORMCALC_VERSION=x.y`. When this pin bumps, `install.sh` must
+remove or migrate the previous install tree
+(e.g. `~/FormCalc/FormCalc-9.10` → `~/FormCalc/FormCalc-<new>`); the
+new version is only written to `config.json` after the new install
+verifies, so a half-finished upgrade does not leave the config
+pointing at a stale binary. The slow probe shells out to
+`wolframscript -file probe_formcalc.wls`.
 
 ## Disk footprint
 
@@ -19,16 +26,16 @@ without touching disk.
 
 Typical invocation order:
 
-1. `/formcalc-install detect` — check current state (no side-effects).
-2. `/formcalc-install use-path <dir>` — register an existing FormCalc directory.
-3. `/formcalc-install install` — full auto-install (requires Wolfram Engine + network).
+1. `install.sh detect` — check current state (no side-effects).
+2. `install.sh use-path <dir>` — register an existing FormCalc directory.
+3. `install.sh install` — full auto-install (requires Wolfram Engine + network).
 
 ---
 
 ## Decision flow
 
 ```
-/formcalc-install detect
+install.sh detect
        │
        ├── config has formcalc_path + valid FormCalc.m + version probe succeeds
        │       └── {"status":"configured","path":"...","formcalc_version":"9.10",
@@ -40,7 +47,7 @@ Typical invocation order:
        └── nothing found
                └── {"status":"missing"}                             exit 0
 
-/formcalc-install use-path <dir>
+install.sh use-path <dir>
        │
        ├── <dir>/FormCalc.m exists AND wolframscript configured
        │       ├── version probe succeeds → writes config keys;
@@ -50,7 +57,7 @@ Typical invocation order:
        ├── <dir>/FormCalc.m missing → FORMCALC_PATH_INVALID          exit 16
        └── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT        exit 20
 
-/formcalc-install install [dir]
+install.sh install [dir]
        │
        ├── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT        exit 20
        ├── gfortran not found → FORMCALC_NO_GFORTRAN blocker         exit 10

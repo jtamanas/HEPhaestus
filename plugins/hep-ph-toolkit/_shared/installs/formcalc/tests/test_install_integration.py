@@ -13,8 +13,8 @@ import pytest
 
 TESTS_DIR = Path(__file__).parent
 SKILL_DIR = TESTS_DIR.parent
-SCRIPTS_DIR = SKILL_DIR / "scripts"
-REPO_ROOT = SKILL_DIR.parent.parent.parent.parent
+SCRIPTS_DIR = SKILL_DIR
+REPO_ROOT = SKILL_DIR.parent.parent.parent.parent.parent
 SHARED = REPO_ROOT / "plugins" / "shared" / "install-helpers"
 
 # Gating condition
@@ -54,7 +54,7 @@ class TestInstallIntegration:
         result = subprocess.run(
             [
                 "bash",
-                str(SCRIPTS_DIR / "install_formcalc.sh"),
+                str(SCRIPTS_DIR / "install.sh"),
                 "install",
             ],
             capture_output=True,

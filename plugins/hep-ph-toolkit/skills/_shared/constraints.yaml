@@ -587,7 +587,7 @@ prereqs:
       cached: [0.17, 0.33]
     capabilities:
       description: "FormCalc 9.10 — amplitude reduction (skill at plugins/hep-ph-toolkit/skills/formcalc/; loop-DD chain integration still pending the /looptools eval runtime)"
-      install_skill: formcalc-install
+      install_skill: _shared/installs/formcalc
       role:
         collider: none
         dd: none
