@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# install_feynarts.sh — download, extract, and register FeynArts 3.11.
+# install.sh — _shared/installs/feynarts entry point.
+# Download, extract, and register FeynArts 3.11.
 #
-# Usage: install_feynarts.sh [install_dir]
+# Usage: install.sh [install_dir]
 #
 # Installs to $UserBaseDirectory/Applications/FeynArts-{version}/ by default.
 # The UserBaseDirectory is resolved via wolframscript.

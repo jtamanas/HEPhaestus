@@ -3,12 +3,27 @@ name: feynarts
 description: Generate Feynman diagrams and amplitudes using FeynArts 3.11. Supports built-in models (SM, SMQCD, THDM, MSSM) and SARAH-generated models. Outputs FeynAmpList.m, diagrams.pdf, topologies.json, and metadata sidecar.
 ---
 
+## Preflight: FeynArts
+
+Before any other action, run:
+
+    bash plugins/hep-ph-toolkit/_shared/installs/feynarts/detect.sh
+
+- **exit 0** → FeynArts is installed and registered in config; proceed.
+- **exit non-zero** → FeynArts is missing or misconfigured. Load
+  `plugins/hep-ph-toolkit/_shared/installs/feynarts/INSTALL.md` into
+  context and follow it. When the install completes, re-run `detect.sh`
+  before proceeding. If it still fails, halt with the blocker code from
+  the install reference.
+
+---
+
 ## When to invoke
 
 Use `/feynarts generate` to generate Feynman diagrams and compute the amplitude
 list for a specified process and model.  Prerequisites:
 
-1. `/feynarts-install` must have run successfully (`feynarts_path` in config).
+1. FeynArts is installed (see `## Preflight: FeynArts` above) and `feynarts_path` is set in config.
 2. Wolfram Engine must be activated.
 3. For SARAH-generated models: the model must have been built with `/sarah-build`
    first.
@@ -151,7 +166,7 @@ or change the process.  All other `FEYNARTS_*` codes are fatal.
 **This skill does not implement a `reference_only` mode and will never fall back
 to analytic results.**  If the Wolfram kernel is absent or FeynArts is not
 installed, the skill emits `FEYNARTS_ABSENT` or `WOLFRAM_KERNEL_ABSENT` and
-halts.  The caller must ensure prerequisites are met via `/feynarts-install`
+halts.  The caller must ensure prerequisites are met via `_shared/installs/feynarts/INSTALL.md`
 before invoking `/feynarts generate`.
 
 Rationale: analytic fallbacks would silently produce inconsistent results (sign
@@ -202,5 +217,5 @@ benchmarks require it.
 - Process schema: `plugins/shared/schemas/processspec.schema.json`
 - Blocker schema: `plugins/hep-ph-toolkit/skills/_shared/blocker.schema.json`
 - Shared conventions: `plugins/hep-ph-toolkit/SHARED-feynman.md`
-- Install prereq: `/feynarts-install`
+- Install prereq: `_shared/installs/feynarts/INSTALL.md`
 - Downstream consumers: `/formcalc` (Phase-B stage 2)

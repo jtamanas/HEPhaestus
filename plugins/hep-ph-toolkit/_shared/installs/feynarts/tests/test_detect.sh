@@ -7,7 +7,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DETECT_SCRIPT="$SCRIPT_DIR/../scripts/detect_feynarts.sh"
+DETECT_SCRIPT="$SCRIPT_DIR/../_probe.sh"
 
 PASS=0
 FAIL=0

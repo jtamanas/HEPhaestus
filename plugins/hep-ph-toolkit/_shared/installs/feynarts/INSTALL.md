@@ -1,13 +1,20 @@
----
-name: feynarts-install
-description: Detect, validate, or auto-install FeynArts 3.11 (the Mathematica-based Feynman diagram generator). Handles existing installs, custom paths, and Wolfram Engine activation status.
----
+# FeynArts — Install Reference
 
-## When to invoke
+Reference doc for installing **FeynArts 3.11** (the Mathematica-based
+Feynman diagram generator). Driven by `detect.sh` and `install.sh` in
+this directory; consumed by the `feynarts` runner skill's preflight
+and by `/install`. Handles existing installs, custom paths, and
+Wolfram Engine activation status.
 
-Use `/feynarts-install` before running `/feynarts` to ensure FeynArts is present and
-the Wolfram Engine is reachable.  The skill is idempotent: if FeynArts is already
-configured it returns `{"status":"configured"}` immediately without touching disk.
+## Version pin
+
+`detect.sh` pins FeynArts to **3.11**. Override with
+`HEPPH_FEYNARTS_VERSION=x.y`. When this pin bumps, `install.sh` must
+remove or migrate the previous install tree
+(e.g. `~/Library/WolframEngine/Applications/FeynArts-3.11` →
+`...FeynArts-<new>`); the new version is only written to
+`config.json` after the new install verifies, so a half-finished
+upgrade does not leave the config pointing at a stale tree.
 
 ## Disk footprint
 
@@ -18,16 +25,16 @@ configured it returns `{"status":"configured"}` immediately without touching dis
 
 Typical invocation order:
 
-1. `/feynarts-install detect` — check current state (no side-effects).
-2. `/feynarts-install use-path <dir>` — register an existing FeynArts directory.
-3. `/feynarts-install install` — full auto-install (requires Wolfram Engine + network).
+1. `install.sh detect` — check current state (no side-effects).
+2. `install.sh use-path <dir>` — register an existing FeynArts directory.
+3. `install.sh install` — full auto-install (requires Wolfram Engine + network).
 
 ---
 
 ## Decision flow
 
 ```
-/feynarts-install detect
+install.sh detect
        │
        ├── config has feynarts_path + valid FeynArts installation + version probe succeeds
        │       └── {"status":"configured","path":"...","version":"3.11"}   exit 0
@@ -39,7 +46,7 @@ Typical invocation order:
        └── nothing found
                └── {"status":"missing"}                                    exit 0
 
-/feynarts-install use-path <dir>
+install.sh use-path <dir>
        │
        ├── <dir>/FeynArts.m exists AND wolframscript configured
        │       ├── version probe succeeds → writes feynarts_path, feynarts_version,
@@ -49,7 +56,7 @@ Typical invocation order:
        ├── <dir>/FeynArts.m missing → FEYNARTS_PATH_INVALID blocker        exit 27
        └── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT blocker     exit 20
 
-/feynarts-install install
+install.sh install
        │
        ├── wolfram_engine_path not set → WOLFRAM_KERNEL_ABSENT blocker     exit 20
        ├── disk check (need ≥1 GB free in $HOME)
@@ -103,7 +110,7 @@ Fields for `activation_required`:
 {
   "status": "activation_required",
   "message": "Wolfram Engine is installed but needs activation.",
-  "user_instruction": "Run `wolframscript --activate` in your terminal; it opens a browser for a free Wolfram ID signup. Then rerun /feynarts-install."
+  "user_instruction": "Run `wolframscript --activate` in your terminal; it opens a browser for a free Wolfram ID signup. Then rerun install.sh."
 }
 ```
 
@@ -155,12 +162,12 @@ sha256sum /tmp/FeynArts-3.11.tar.gz   # Linux
 # or: shasum -a 256 /tmp/FeynArts-3.11.tar.gz  # macOS
 ```
 Then update `sha256` in `skill_env.yaml` and `EXPECTED_SHA256` in
-`install_feynarts.sh`.
+`install.sh`.
 
 **Dev-only bypass (insecure):** set `HEPPH_FEYNARTS_SKIP_SHA256=1` to log a
 warning and proceed without checksum verification:
 ```bash
-HEPPH_FEYNARTS_SKIP_SHA256=1 /feynarts-install install
+HEPPH_FEYNARTS_SKIP_SHA256=1 install.sh install
 ```
 This bypass must **not** be used in production or CI.
 
@@ -203,7 +210,7 @@ Pinned version: **3.11** (set in `skill_env.yaml`).
 
 Override via environment:
 ```bash
-HEPPH_FEYNARTS_VERSION=3.10 /feynarts-install install
+HEPPH_FEYNARTS_VERSION=3.10 install.sh install
 ```
 
 ---

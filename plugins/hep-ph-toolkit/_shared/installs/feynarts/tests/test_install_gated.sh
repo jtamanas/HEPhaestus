@@ -16,7 +16,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_SCRIPT="$SCRIPT_DIR/../scripts/install_feynarts.sh"
+INSTALL_SCRIPT="$SCRIPT_DIR/../install.sh"
 
 # Gate check
 if [ "${HEPPH_RUN_WOLFRAM_TESTS:-0}" != "1" ] || [ "${HEPPH_RUN_NETWORK_TESTS:-0}" != "1" ]; then
@@ -49,7 +49,7 @@ else
 fi
 
 # Run smoke test directly
-SMOKE_OUT="$("$SCRIPT_DIR/../scripts/smoke_test_feynarts.sh" "$INSTALL_DIR" 2>/dev/null)"
+SMOKE_OUT="$("$SCRIPT_DIR/../smoke_test_feynarts.sh" "$INSTALL_DIR" 2>/dev/null)"
 SMOKE_STATUS="$(printf '%s' "$SMOKE_OUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status',''))" 2>/dev/null || echo "parse_error")"
 
 case "$SMOKE_STATUS" in

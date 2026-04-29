@@ -555,7 +555,7 @@ prereqs:
       cached: [0.17, 0.33]
     capabilities:
       description: "FeynArts 3.11 — Feynman diagram generator (skill at plugins/hep-ph-toolkit/skills/feynarts/; loop-DD chain integration still pending the /looptools eval runtime)"
-      install_skill: feynarts-install
+      install_skill: _shared/installs/feynarts
       role:
         collider: none
         dd: none
