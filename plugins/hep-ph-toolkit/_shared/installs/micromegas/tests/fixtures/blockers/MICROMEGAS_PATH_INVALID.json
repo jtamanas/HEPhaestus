@@ -1,1 +1,1 @@
-{"code": "MICROMEGAS_PATH_INVALID", "mode": "fatal", "message": "micrOMEGAs path '/nonexistent' lacks sources/ directory.", "user_instruction": "Run /micromegas-install install to obtain a valid installation."}
+{"code": "MICROMEGAS_PATH_INVALID", "mode": "fatal", "message": "micrOMEGAs path '/nonexistent' lacks sources/ directory.", "user_instruction": "Run bash _shared/installs/micromegas/install.sh install to obtain a valid installation."}

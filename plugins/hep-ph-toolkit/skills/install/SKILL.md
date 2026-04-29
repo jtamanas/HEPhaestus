@@ -48,7 +48,7 @@ delegates to `scripts/install_wolfram.sh`, MadDM's delegates to
 # Bundle (multi-tool, declaration-order):
 bash scripts/bundle_install.sh --bundle profumo-paper
 
-# Single tool (matches today's mental model of /sarah-install et al.):
+# Single tool (matches today's mental model of _shared/installs/sarah et al.):
 bash scripts/bundle_install.sh --tool sarah
 
 # Ad-hoc tool list:
@@ -159,7 +159,7 @@ transitively. Recommend ~12 GB free for a clean install.
 
 ## Migration note (2026-04-29)
 
-The eleven `*-install` skills (`/sarah-install`, `/spheno-install`,
+The eleven `*-install` skills (`_shared/installs/sarah`, `_shared/installs/spheno`,
 etc.) were collapsed into `_shared/installs/<tool>/` references with
 self-healing runners in [the install skill refactor][refactor]. Their
 prior invocation URLs are gone; references to `/<tool>-install` in

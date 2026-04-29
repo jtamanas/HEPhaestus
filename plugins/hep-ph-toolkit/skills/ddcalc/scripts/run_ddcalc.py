@@ -241,7 +241,7 @@ def cmd_run(args) -> int:
     if not ddcalc_path:
         _blocker(
             "DDCALC_DRIVER_FAILED",
-            "ddcalc_path not configured. Run /ddcalc-install first.",
+            "ddcalc_path not configured. Run _shared/installs/ddcalc first.",
         )
         return 1
 

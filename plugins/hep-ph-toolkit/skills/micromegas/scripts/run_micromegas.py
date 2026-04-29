@@ -98,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     if not micromegas_path:
         _emit_blocker(
             "MICROMEGAS_INPUT_MISSING", "fatal",
-            "micromegas_path not configured. Run /micromegas-install first.",
+            "micromegas_path not configured. Run _shared/installs/micromegas first.",
             {"missing": "micromegas_path"},
         )
         return _EXIT_FATAL

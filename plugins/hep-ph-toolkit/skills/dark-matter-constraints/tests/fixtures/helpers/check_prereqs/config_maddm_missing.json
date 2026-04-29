@@ -1,5 +1,5 @@
 {
-  "maddm_path": "/nonexistent/maddm-install",
+  "maddm_path": "/nonexistent_shared/installs/maddm",
   "micromegas_path": "__TMPDIR__/fake_micromegas",
   "drake_path": "__TMPDIR__/fake_drake",
   "models": {

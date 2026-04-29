@@ -112,7 +112,7 @@ else
     if ! curl -L --fail --progress-bar -o "$tarball_dest" "$MICROMEGAS_ZENODO_FALLBACK_URL" 2>"$download_err_file"; then
       emit_blocker MICROMEGAS_DOWNLOAD_FAILED fatal \
         "micrOMEGAs download failed after 2 retries from LAPTh ($MICROMEGAS_URL) and Zenodo fallback ($MICROMEGAS_ZENODO_FALLBACK_URL)." \
-        "Check your network connection, or visit https://lapth.cnrs.fr/micromegas/ to download manually and use '/micromegas-install use-path <dir>' instead." \
+        "Check your network connection, or visit https://lapth.cnrs.fr/micromegas/ to download manually and use 'bash _shared/installs/micromegas/install.sh use-path <dir>' instead." \
         "{\"url\":\"${MICROMEGAS_URL}\",\"fallback_url\":\"${MICROMEGAS_ZENODO_FALLBACK_URL}\"}"
       rm -f "$download_err_file"
       exit $EXIT_DOWNLOAD
@@ -183,7 +183,7 @@ if [ $make_rc -ne 0 ]; then
   make_tail="$(tail -40 "$MAKE_LOG_FILE" | tr '\n' '|' | sed 's/"/\\"/g')"
   # LAPACK signature detection: if the tail mentions lapack-family symbols,
   # emit the more specific LAPACK_ABSENT blocker with a per-OS install hint
-  # (migrated from monte-carlo-tools/micromegas-install v0).
+  # (migrated from monte-carlo-tools_shared/installs/micromegas v0).
   lapack_re='lapack|liblapack|-llapack|dgesv|dgemm|dgetrf|dsyev'
   if tail -40 "$MAKE_LOG_FILE" | grep -Eqi "$lapack_re"; then
     case "$(os_name)" in

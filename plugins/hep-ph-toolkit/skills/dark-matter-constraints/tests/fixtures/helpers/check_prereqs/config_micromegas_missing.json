@@ -1,6 +1,6 @@
 {
   "maddm_path": "__TMPDIR__/fake_maddm",
-  "micromegas_path": "/nonexistent/micromegas-install",
+  "micromegas_path": "/nonexistent_shared/installs/micromegas",
   "drake_path": "__TMPDIR__/fake_drake",
   "models": {
     "singletDM": {

@@ -35,7 +35,7 @@ fi
 if [ -z "$FEYNARTS_PATH" ] || [ ! -f "$FEYNARTS_PATH/FeynArts.m" ]; then
   emit_blocker "FEYNARTS_PATH_INVALID" "fatal" \
     "FeynArts.m not found at '$FEYNARTS_PATH'." \
-    "Provide a valid FeynArts directory via /feynarts-install use-path <dir>."
+    "Provide a valid FeynArts directory via bash _shared/installs/feynarts/install.sh use-path <dir>."
   exit 27
 fi
 

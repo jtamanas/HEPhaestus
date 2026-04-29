@@ -82,7 +82,7 @@ def _find_binary(build_dir: str, name: str) -> str:
             return c
     raise FileNotFoundError(
         f"{name} binary not found in {build_dir}. "
-        f"Checked: {candidates}. Re-run /higgstools-install install."
+        f"Checked: {candidates}. Re-run bash _shared/installs/higgstools/install.sh install."
     )
 
 

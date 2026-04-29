@@ -297,8 +297,8 @@ def test_check_prereqs_structural_outputs(tmp_path):
     # Build a combined missing config
     raw = (_FIXTURES / "config_all_present.json").read_text().replace("__TMPDIR__", str(tmp_path))
     d = json.loads(raw)
-    d["maddm_path"] = "/nonexistent/maddm-install"
-    d["micromegas_path"] = "/nonexistent/micromegas-install"
+    d["maddm_path"] = "/nonexistent_shared/installs/maddm"
+    d["micromegas_path"] = "/nonexistent_shared/installs/micromegas"
     # Create real directories for non-missing paths so they pass
     for key in ["drake_path"]:
         p = pathlib.Path(d[key])

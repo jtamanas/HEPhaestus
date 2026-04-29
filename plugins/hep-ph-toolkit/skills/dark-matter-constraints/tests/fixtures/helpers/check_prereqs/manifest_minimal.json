@@ -2,9 +2,9 @@
   "schema_version": "router_contract/v1",
   "router_skill": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/SKILL.md",
   "config_keys": [
-    {"key": "config.maddm_path", "type": "path_or_bool", "writer": "/maddm-install", "reader": "Step 1", "audit_status": "verified_in_writer_skill"},
-    {"key": "config.micromegas_path", "type": "path_or_bool", "writer": "/micromegas-install", "reader": "Step 1", "audit_status": "verified_in_writer_skill"},
-    {"key": "config.drake_path", "type": "path_or_bool", "writer": "/drake-install use-path", "reader": "Step 5", "audit_status": "verified_in_writer_skill"}
+    {"key": "config.maddm_path", "type": "path_or_bool", "writer": "_shared/installs/maddm", "reader": "Step 1", "audit_status": "verified_in_writer_skill"},
+    {"key": "config.micromegas_path", "type": "path_or_bool", "writer": "_shared/installs/micromegas", "reader": "Step 1", "audit_status": "verified_in_writer_skill"},
+    {"key": "config.drake_path", "type": "path_or_bool", "writer": "bash _shared/installs/drake/install.sh use-path", "reader": "Step 5", "audit_status": "verified_in_writer_skill"}
   ],
   "output_fields": [],
   "status_enums": []

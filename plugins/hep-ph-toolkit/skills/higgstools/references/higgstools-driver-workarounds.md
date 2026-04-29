@@ -9,7 +9,7 @@ Every entry lists: **symptom**, **cause**, **fix** (with tier-1 status),
 and the **FU-id**.
 
 Mirrors the style of
-`plugins/hep-ph-toolkit/skills/micromegas-install/references/micromegas-workarounds.md`.
+`plugins/hep-ph-toolkit/skills_shared/installs/micromegas/references/micromegas-workarounds.md`.
 
 ---
 

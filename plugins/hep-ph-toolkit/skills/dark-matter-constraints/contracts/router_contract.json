@@ -126,21 +126,21 @@
     {
       "key": "config.maddm_path",
       "type": "path_or_bool",
-      "writer": "/maddm-install",
+      "writer": "_shared/installs/maddm",
       "reader": "/dark-matter-constraints SKILL.md Step 1",
       "audit_status": "verified_in_writer_skill"
     },
     {
       "key": "config.micromegas_path",
       "type": "path_or_bool",
-      "writer": "/micromegas-install",
+      "writer": "_shared/installs/micromegas",
       "reader": "/dark-matter-constraints SKILL.md Step 1",
       "audit_status": "verified_in_writer_skill"
     },
     {
       "key": "config.drake_path",
       "type": "path_or_bool",
-      "writer": "/drake-install use-path",
+      "writer": "bash _shared/installs/drake/install.sh use-path",
       "reader": "/dark-matter-constraints SKILL.md Step 5",
       "audit_status": "verified_in_writer_skill"
     }
@@ -150,7 +150,7 @@
     {
       "enum_name": "drake_install_detect_status",
       "literals": ["activation_required", "configured", "found", "missing"],
-      "writer": "/drake-install detect",
+      "writer": "bash _shared/installs/drake/detect.sh",
       "reader": "/dark-matter-constraints SKILL.md Step 5 Branch 2",
       "audit_status": "pending_producer_topology_fix",
       "notes": "drake/SKILL.md lines 84-86: detect emits only configured|found|missing; activation_required is use-path-only. Router Step 5 Branch 2 reads activation_required from detect — topology mismatch. WS-4 W4-E must reconcile."

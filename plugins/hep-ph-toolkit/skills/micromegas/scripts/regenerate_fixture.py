@@ -47,7 +47,7 @@ def main():
     config = _load_config()
     micromegas_path = config.get("micromegas_path", "")
     if not micromegas_path:
-        print("ERROR: micromegas_path not configured. Run /micromegas-install first.", file=sys.stderr)
+        print("ERROR: micromegas_path not configured. Run _shared/installs/micromegas first.", file=sys.stderr)
         sys.exit(1)
 
     singletdm_dir = Path(micromegas_path) / "Singlet_DM"

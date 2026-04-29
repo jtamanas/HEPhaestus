@@ -285,7 +285,7 @@ cmd_install() {
   if [ -z "$ws" ]; then
     emit_blocker WOLFRAM_KERNEL_ABSENT fatal \
       "FeynRules needs Wolfram Engine configured first." \
-      "Run \`/install\` to install Wolfram Engine, or \`/feynrules-install use-path\` after installing it manually."
+      "Run \`/install\` to install Wolfram Engine, or \`bash _shared/installs/feynrules/install.sh use-path\` after installing it manually."
     exit $EXIT_NO_WOLFRAM
   fi
 

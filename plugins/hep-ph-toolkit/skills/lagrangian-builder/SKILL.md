@@ -490,10 +490,10 @@ corresponding install skill:
 
 | Intent | Required install skill |
 |---|---|
-| relic density | `/micromegas-install` |
-| direct-detection exclusion | `/micromegas-install` + `/ddcalc-install` |
-| Higgs constraints | `/higgstools-install` |
-| one-loop scattering | `/feynarts-install` + `/formcalc-install` (+ optionally `/ddcalc-install`) |
+| relic density | `_shared/installs/micromegas` |
+| direct-detection exclusion | `_shared/installs/micromegas` + `_shared/installs/ddcalc` |
+| Higgs constraints | `_shared/installs/higgstools` |
+| one-loop scattering | `_shared/installs/feynarts` + `_shared/installs/formcalc` (+ optionally `_shared/installs/ddcalc`) |
 
 ### Intent 1 — relic density
 

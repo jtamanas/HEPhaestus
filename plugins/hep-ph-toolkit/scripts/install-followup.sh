@@ -5,7 +5,7 @@
 # explicit user approval.
 set -u
 
-INSTALL_SKILLS_REGEX='^(install|feynrules-install|looptools-install|sarah-install|spheno-install|drake-install|maddm-install|micromegas-install|ddcalc-install|higgstools-install|feynarts-install|formcalc-install)$'
+INSTALL_SKILLS_REGEX='^install$'
 
 INPUT=$(cat)
 

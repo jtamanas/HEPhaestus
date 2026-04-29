@@ -15,7 +15,7 @@
 #
 # Emits MICROMEGAS_SMOKE_TEST_FAILED if the smoke test fails.
 #
-# Origin: migrated from monte-carlo-tools/micromegas-install v0 as part of
+# Origin: migrated from monte-carlo-tools_shared/installs/micromegas v0 as part of
 # the consolidation with the v1 constraints skill. Complements `detect`
 # (which emits {status:configured|found|missing}) by eagerly running the
 # smoke test — useful for CI or post-install verification.
@@ -40,14 +40,14 @@ path="$(config_get micromegas_path 2>/dev/null || true)"
 if [ -z "$path" ]; then
   emit_blocker MICROMEGAS_PATH_INVALID fatal \
     "No micromegas_path recorded in config." \
-    "Run '/micromegas-install install' or '/micromegas-install use-path <dir>' first."
+    "Run 'bash _shared/installs/micromegas/install.sh install' or 'bash _shared/installs/micromegas/install.sh use-path <dir>' first."
   exit $EXIT_BAD_PATH
 fi
 
 if [ ! -d "$path" ]; then
   emit_blocker MICROMEGAS_PATH_INVALID fatal \
     "Configured micromegas_path=$path does not exist on disk." \
-    "Re-run '/micromegas-install install' to reinstall, or '/micromegas-install use-path <dir>' to point to a working tree."
+    "Re-run 'bash _shared/installs/micromegas/install.sh install' to reinstall, or 'bash _shared/installs/micromegas/install.sh use-path <dir>' to point to a working tree."
   exit $EXIT_BAD_PATH
 fi
 
@@ -55,7 +55,7 @@ fi
 if [ ! -d "$path/sources" ] || [ ! -d "$path/CalcHEP_src" ]; then
   emit_blocker MICROMEGAS_PATH_INVALID fatal \
     "Configured micromegas_path=$path no longer contains required markers (sources/ and/or CalcHEP_src/)." \
-    "Re-run '/micromegas-install install' or '/micromegas-install use-path <dir>' to point to a valid tree."
+    "Re-run 'bash _shared/installs/micromegas/install.sh install' or 'bash _shared/installs/micromegas/install.sh use-path <dir>' to point to a valid tree."
   exit $EXIT_BAD_PATH
 fi
 

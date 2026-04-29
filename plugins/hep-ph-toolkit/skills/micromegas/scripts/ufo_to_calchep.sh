@@ -54,7 +54,7 @@ micromegas_path="$(config_get micromegas_path 2>/dev/null || true)"
 micromegas_version="$(config_get micromegas_version 2>/dev/null || echo "6.0.5")"
 
 if [ -z "$micromegas_path" ]; then
-  printf '{"code":"MICROMEGAS_INPUT_MISSING","mode":"fatal","message":"micromegas_path not configured. Run /micromegas-install first."}\n' >&2
+  printf '{"code":"MICROMEGAS_INPUT_MISSING","mode":"fatal","message":"micromegas_path not configured. Run _shared/installs/micromegas first."}\n' >&2
   exit $EXIT_UFO_FAILED
 fi
 

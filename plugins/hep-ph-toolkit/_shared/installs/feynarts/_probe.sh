@@ -19,7 +19,7 @@ _LOG_TAG="detect_feynarts"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # 4 levels deep from scripts/: ../../../.. = plugins/
-# plugins/hep-ph-toolkit/skills/feynarts-install/scripts/ → plugins/shared/
+# plugins/hep-ph-toolkit/skills_shared/installs/feynarts/scripts/ → plugins/shared/
 SHARED_COMMON="$SCRIPT_DIR/../../../../shared/install-helpers/_common.sh"
 if [ ! -f "$SHARED_COMMON" ]; then
   SHARED_COMMON="$SCRIPT_DIR/_common.sh"

@@ -642,7 +642,7 @@ index for `chi` and the DM PDG (9989932) aren't documented in
 single missing piece** in the DD chain.
 
 **Cause.**
-- `plugins/hep-ph-toolkit/skills/looptools-install/` exists (build/detect
+- `plugins/hep-ph-toolkit/skills_shared/installs/looptools/` exists (build/detect
   skill).
 - `plugins/hep-ph-toolkit/skills/looptools/` does NOT exist (runtime
   eval skill).

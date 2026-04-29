@@ -211,7 +211,7 @@ python "$REPO_ROOT/plugins/hep-ph-toolkit/skills/dark-matter-constraints/scripts
 ```
 
 - **Branch 1 — config.drake_path absent:** emit `DRAKE_MISSING` (recoverable) with
-  resonance warning (MadDM Ωh² may be inaccurate near 2·m_χ; install via `/drake-install`).
+  resonance warning (MadDM Ωh² may be inaccurate near 2·m_χ; install via `_shared/installs/drake`).
 - **Branch 2 — config.drake_path set:** dispatch on `status`: `"configured"` → invoke `/drake`
   and extract `omega_h2` (lowercase):
   `scripts/extract_field.py --json <drake_run>/relic.json --key omega_h2 --schema-version relic/v1`.
@@ -308,14 +308,14 @@ the tool was run for that observable. If a FLAG row is present, the word
 
 | Code | Mode | Trigger | User instruction |
 |------|------|---------|-----------------|
-| `MADDM_MISSING` | fatal | MadDM not found in MG5 or `config.maddm_path` absent (default pipeline only — not raised on the analytic-only branch) | Run `/maddm-install` |
+| `MADDM_MISSING` | fatal | MadDM not found in MG5 or `config.maddm_path` absent (default pipeline only — not raised on the analytic-only branch) | Run `_shared/installs/maddm` |
 | `ANALYTIC_BACKEND_PATH` | recoverable (informational) | Step 2 analytic-only branch fired: `multi_component: true` AND `backends.spectrum == "analytic"`. MadDM skipped; relic numbers consumed directly from `<spheno_run>/diagnostics.json` + `summary.json` (`mixing.MHHMIX`). Steps 3-5 also skipped. | None — informational. Verify analytic-module assumptions in caveats. |
 | `UFO_MISSING` | fatal | `config.models[<model>].ufo_path` absent | Run `/sarah-build` |
 | `SLHA_MISSING` | fatal | `/maddm` runtime fails with a spectrum-related error and `latest_slha` is absent | Run `/spheno-build` |
-| `MICROMEGAS_MISSING` | recoverable | micrOMEGAs not installed; cross-check triggered but skipped | Run `/micromegas-install`; cross-check results unavailable |
+| `MICROMEGAS_MISSING` | recoverable | micrOMEGAs not installed; cross-check triggered but skipped | Run `_shared/installs/micromegas`; cross-check results unavailable |
 | `CROSSCHECK_SKIPPED` | recoverable | `--skip-crosscheck` passed by user; Step 4 bypassed | Cross-check results unavailable; rerun without flag to enable |
-| `DRAKE_MISSING` | recoverable | `config.drake_path` absent (Branch 1), or `/drake-install detect` returns `"missing"` / `"found"` (Branch 2) | Run `/drake-install`; MadDM Ωh² may be inaccurate |
-| `DRAKE_UNAVAILABLE` | recoverable | `config.drake_path` set (Branch 2) but `/drake-install detect` invocation failed or returned unparseable output | Run `/drake-install`; resonance-regime accuracy warning applies |
+| `DRAKE_MISSING` | recoverable | `config.drake_path` absent (Branch 1), or `bash _shared/installs/drake/detect.sh` returns `"missing"` / `"found"` (Branch 2) | Run `_shared/installs/drake`; MadDM Ωh² may be inaccurate |
+| `DRAKE_UNAVAILABLE` | recoverable | `config.drake_path` set (Branch 2) but `bash _shared/installs/drake/detect.sh` invocation failed or returned unparseable output | Run `_shared/installs/drake`; resonance-regime accuracy warning applies |
 | `DRAKE_ACTIVATION_REQUIRED` | recoverable | Wolfram Engine not activated | Run `wolframscript --activate`; DRAKE skipped |
 | `DRAKE_SKIPPED` | recoverable | `--skip-drake` passed by user; narrow-resonance regime detected but DRAKE bypassed | Resonance-regime accuracy warning applies; rerun without flag to enable DRAKE |
 | `CROSSCHECK_DISAGREEMENT` | recoverable | MadDM vs micrOMEGAs > 10% on any observable | User must adjudicate before proceeding |
@@ -334,9 +334,9 @@ This skill writes no config keys — it is a router. It reads:
 | `config.models[<model>].ufo_path` | `/sarah-build` |
 | `config.models[<model>].latest_slha` | `/spheno-build` (required only when `/maddm` itself requires it) |
 | `config.models[<model>].spec_yaml` | User-authored |
-| `config.micromegas_path` | `/micromegas-install` |
-| `config.maddm_path` | `/maddm-install` |
-| `config.drake_path` | `/drake-install` |
+| `config.micromegas_path` | `_shared/installs/micromegas` |
+| `config.maddm_path` | `_shared/installs/maddm` |
+| `config.drake_path` | `_shared/installs/drake` |
 
 ---
 
@@ -347,9 +347,9 @@ This skill writes no config keys — it is a router. It reads:
 | `/maddm` | Primary DM observable driver | Always (fatal if absent) |
 | `/micromegas` | Cross-check for coannihilation / near-resonance spectra | Conditional (Step 4) |
 | `/drake` | Narrow-resonance relic density | Conditional (Step 5) |
-| `/maddm-install` | MadDM install / detect | Prerequisite check |
-| `/micromegas-install` | micrOMEGAs install / detect | Prerequisite check (Step 4) |
-| `/drake-install` | DRAKE availability check | Step 5 availability check (optional; `config.drake_path` checked first) |
+| `_shared/installs/maddm` | MadDM install / detect | Prerequisite check |
+| `_shared/installs/micromegas` | micrOMEGAs install / detect | Prerequisite check (Step 4) |
+| `_shared/installs/drake` | DRAKE availability check | Step 5 availability check (optional; `config.drake_path` checked first) |
 | `/sarah-build` | UFO model generation | Prerequisite (provides `ufo_path`) |
 | `/spheno-build` | SLHA spectrum generation | Conditional prerequisite (provides `latest_slha` when needed by `/maddm`) |
 

@@ -140,7 +140,7 @@ def run_scan_summary(scan_index_path: str) -> int:
             json.dumps({
                 "code": "DDCALC_DRIVER_FAILED",
                 "mode": "fatal",
-                "message": "ddcalc_path not configured. Run /ddcalc-install first.",
+                "message": "ddcalc_path not configured. Run _shared/installs/ddcalc first.",
                 "context": {},
             }),
             file=sys.stderr,

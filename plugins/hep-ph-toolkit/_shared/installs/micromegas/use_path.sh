@@ -47,7 +47,7 @@ done
 if [ ! -d "$micromegas_dir/sources" ]; then
   emit_blocker MICROMEGAS_PATH_INVALID fatal \
     "micrOMEGAs path '$micromegas_dir' lacks sources/ directory." \
-    "Run /micromegas-install install to obtain a valid installation."
+    "Run bash _shared/installs/micromegas/install.sh install to obtain a valid installation."
   exit $EXIT_BAD_PATH
 fi
 

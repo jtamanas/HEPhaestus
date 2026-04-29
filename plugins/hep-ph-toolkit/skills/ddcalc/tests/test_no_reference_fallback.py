@@ -1,6 +1,6 @@
 """
 Grep gate: verify that no reference/analytic fallback exists in the
-constraints/skills/ddcalc/ and constraints/skills/ddcalc-install/ subtrees.
+constraints/skills/ddcalc/ and constraints/skills_shared/installs/ddcalc/ subtrees.
 
 These terms are FORBIDDEN per plan §5 and brainstorm §5:
 - HEPPH_ALLOW_REFERENCE
@@ -64,7 +64,7 @@ def _scan_for_term(term: str, extensions: set[str] | None = None) -> list[str]:
         [
             "git", "grep", "-n", "--", term,
             "plugins/hep-ph-toolkit/skills/ddcalc/",
-            "plugins/hep-ph-toolkit/skills/ddcalc-install/",
+            "plugins/hep-ph-toolkit/skills_shared/installs/ddcalc/",
         ],
         cwd=CONSTRAINTS_DIR,
         capture_output=True,

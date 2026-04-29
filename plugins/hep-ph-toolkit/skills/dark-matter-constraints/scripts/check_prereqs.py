@@ -145,9 +145,9 @@ def check_prereqs(
 
     # Map well-known config key → blocker code + fixit skill
     _KEY_META = {
-        "config.maddm_path": ("MADDM_MISSING", "/maddm-install"),
-        "config.micromegas_path": ("MICROMEGAS_MISSING", "/micromegas-install"),
-        "config.drake_path": ("DRAKE_PATH_UNSET", "/drake-install"),
+        "config.maddm_path": ("MADDM_MISSING", "_shared/installs/maddm"),
+        "config.micromegas_path": ("MICROMEGAS_MISSING", "_shared/installs/micromegas"),
+        "config.drake_path": ("DRAKE_PATH_UNSET", "_shared/installs/drake"),
     }
 
     for entry in config_keys:

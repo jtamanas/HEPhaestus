@@ -105,7 +105,7 @@ if [ ! -f "$INSTALL_DIR/FeynArts.m" ]; then
   err "Extraction failed: FeynArts.m not found at $INSTALL_DIR."
   emit_blocker "FEYNARTS_SMOKE_TEST" "fatal" \
     "FeynArts extraction produced no FeynArts.m." \
-    "Check tarball integrity and retry /feynarts-install install."
+    "Check tarball integrity and retry bash _shared/installs/feynarts/install.sh install."
   exit 28
 fi
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Vendored upstream patches for micrOMEGAs.
 #
-# Mirrors the convention in plugins/hep-ph-toolkit/skills/maddm-install/
+# Mirrors the convention in plugins/hep-ph-toolkit/skills_shared/installs/maddm/
 # scripts/install.sh — each `patch_micromegas_*` function fixes one specific
 # upstream defect, idempotency is gated by a sentinel file, and the rationale
 # for every patch lives in references/micromegas-workarounds.md.

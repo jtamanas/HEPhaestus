@@ -13,7 +13,7 @@
 #
 # Examples:
 #   emit_blocker MICROMEGAS_DOWNLOAD_FAILED fatal "Download failed after 2 retries." \
-#       "Check your network connection and retry /micromegas-install install."
+#       "Check your network connection and retry bash _shared/installs/micromegas/install.sh install."
 #   emit_blocker MICROMEGAS_MACOS_SDK_MISMATCH fatal "xcrun SDK missing." \
 #       "Install Xcode Command Line Tools: xcode-select --install" \
 #       '{"sdkroot":""}'

@@ -1,6 +1,6 @@
 """test_ufo_conversion.py — integration test: UFO → CalcHEP project conversion.
 
-GATED: requires HEPPH_RUN_NETWORK_TESTS=1 and a prior /micromegas-install run.
+GATED: requires HEPPH_RUN_NETWORK_TESTS=1 and a prior _shared/installs/micromegas run.
 Tests SARAH-emitted singletDM UFO → CalcHEP project smoke.
 """
 import os

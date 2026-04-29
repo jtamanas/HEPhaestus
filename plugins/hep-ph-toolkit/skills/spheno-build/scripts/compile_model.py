@@ -713,7 +713,7 @@ def compile_model(model_name: str, force: bool = False) -> dict:
     if not spheno_src or not Path(spheno_src).exists():
         _emit_fatal(
             "SPHENO_PATH_INVALID",
-            "spheno_src_path not set or not found in config. Run /spheno-install first.",
+            "spheno_src_path not set or not found in config. Run _shared/installs/spheno first.",
         )
         sys.exit(1)
     spheno_src = Path(spheno_src)
@@ -785,7 +785,7 @@ def compile_model(model_name: str, force: bool = False) -> dict:
     # HEPPH_F90_COMPILER as a first-class override (tested), so we honor
     # the same env var here for compiler consistency between base install
     # and model compile — mismatched compilers produce unreadable .mod
-    # files. Default is gfortran, which /spheno-install enforces as a
+    # files. Default is gfortran, which _shared/installs/spheno enforces as a
     # precondition via check_gfortran.sh.
     f90_compiler = os.environ.get("HEPPH_F90_COMPILER", "gfortran")
     cmd = [

@@ -103,7 +103,7 @@ def _run_point(
                 "HIGGSTOOLS_SM_REF_MISSING",
                 "fatal",
                 "SM reference chi2 cache not found. Install HiggsSignals first.",
-                "Run /higgstools-install install to install HiggsSignals and cache the SM reference chi2.",
+                "Run bash _shared/installs/higgstools/install.sh install to install HiggsSignals and cache the SM reference chi2.",
             )
             sys.exit(1)
         chi2_sm_ref = sm_ref.get("chi2_sm_ref", 0.0)

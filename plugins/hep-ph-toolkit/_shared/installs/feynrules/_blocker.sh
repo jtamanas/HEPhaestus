@@ -9,7 +9,7 @@
 #
 # Examples:
 #   emit_blocker FEYNRULES_DOWNLOAD_FAILED fatal "Download failed after 2 retries." \
-#       "Check your network connection and retry /feynrules-install install."
+#       "Check your network connection and retry bash _shared/installs/feynrules/install.sh install."
 #   emit_blocker FEYNRULES_SMOKE_TEST_FAILED fatal "FeynRules smoke test returned no version."
 
 emit_blocker() {

@@ -25,7 +25,7 @@ class UnifiedBackendUnavailable(Exception):
         self.message = message
         self.user_instruction = (
             "The unified HiggsTools C++ backend is not installed or not importable. "
-            "Install it with /higgstools-install install --backend=unified, "
+            "Install it with bash _shared/installs/higgstools/install.sh install --backend=unified, "
             "or use the legacy backend (default)."
         )
 

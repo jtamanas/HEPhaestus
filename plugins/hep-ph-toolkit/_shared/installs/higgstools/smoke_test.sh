@@ -62,7 +62,7 @@ fi
 if [ ! -x "$HB_BIN" ]; then
   emit_blocker "HIGGSTOOLS_SMOKE_TEST_FAILED" "fatal" \
     "HiggsBounds binary not found at $HB_BUILD/bin/HiggsBounds" \
-    "Reinstall HiggsBounds with /higgstools-install install --force"
+    "Reinstall HiggsBounds with bash _shared/installs/higgstools/install.sh install --force"
   exit "$EXIT_SMOKE"
 fi
 
@@ -93,7 +93,7 @@ fi
 if [ ! -x "$HS_BIN" ]; then
   emit_blocker "HIGGSTOOLS_SMOKE_TEST_FAILED" "fatal" \
     "HiggsSignals binary not found at $HS_BUILD/bin/HiggsSignals" \
-    "Reinstall HiggsSignals with /higgstools-install install --force"
+    "Reinstall HiggsSignals with bash _shared/installs/higgstools/install.sh install --force"
   exit "$EXIT_SMOKE"
 fi
 

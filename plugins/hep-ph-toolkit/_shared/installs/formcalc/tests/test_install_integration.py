@@ -1,5 +1,5 @@
 """
-Integration tests for /formcalc-install — gated on HEPPH_RUN_NETWORK_TESTS=1.
+Integration tests for _shared/installs/formcalc — gated on HEPPH_RUN_NETWORK_TESTS=1.
 
 These tests perform actual downloads; skip if network access is unavailable.
 """

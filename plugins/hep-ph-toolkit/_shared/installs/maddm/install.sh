@@ -72,7 +72,7 @@ require_mg5() {
   if [ -z "$mg5_bin" ] || [ ! -x "$mg5_bin" ]; then
     emit_blocker "MADGRAPH_ABSENT" "fatal" \
       "madgraph_path is not set in config or points to a non-executable path." \
-      "Run /install (hep-ph-demo) first to install MadGraph5_aMC@NLO, then retry /maddm-install."
+      "Run /install (hep-ph-demo) first to install MadGraph5_aMC@NLO, then retry _shared/installs/maddm."
     exit 20
   fi
   local version
@@ -80,7 +80,7 @@ require_mg5() {
   if [ -n "$version" ] && ! version_ge "$version" "$MG5_MIN_VERSION"; then
     emit_blocker "MADGRAPH_VERSION_TOO_OLD" "fatal" \
       "MG5 version $version is older than the minimum $MG5_MIN_VERSION required by MadDM 3.x." \
-      "Upgrade MG5 to $MG5_MIN_VERSION or later (rerun /install) and retry /maddm-install."
+      "Upgrade MG5 to $MG5_MIN_VERSION or later (rerun /install) and retry _shared/installs/maddm."
     exit 20
   fi
   local root
@@ -126,7 +126,7 @@ check_python_compat() {
   if ! version_ge "$py_exe" "3.7"; then
     emit_blocker "MADDM_PYTHON_MISMATCH" "fatal" \
       "MG5 appears to be running under Python $py_exe, but MadDM 3.x requires Python 3.7 or later." \
-      "Reinstall MG5 against a Python 3.7+ interpreter (rerun /install) and retry /maddm-install."
+      "Reinstall MG5 against a Python 3.7+ interpreter (rerun /install) and retry _shared/installs/maddm."
     exit 20
   fi
   log "Python $py_exe OK for MadDM (>= 3.7)."
@@ -166,7 +166,7 @@ require_2to3() {
   fi
   emit_blocker "MADDM_PATCH_FAILED" "fatal" \
     "2to3 is required to convert MadDM 3.2.13 (Python 2) to Python 3, but neither '2to3' nor 'python3 -m lib2to3' is available." \
-    "Install 2to3: on Python 3.12 and earlier it ships with Python; on 3.13+ run 'pip install 2to3' or use a 3.12 interpreter. Then retry /maddm-install."
+    "Install 2to3: on Python 3.12 and earlier it ships with Python; on 3.13+ run 'pip install 2to3' or use a 3.12 interpreter. Then retry _shared/installs/maddm."
   return 1
 }
 
@@ -661,7 +661,7 @@ cmd_install() {
     if ! apply_maddm_upstream_patches "$existing"; then
       emit_blocker "MADDM_PATCH_FAILED" "fatal" \
         "Failed to upgrade existing MadDM install at $existing to the patched state." \
-        "Inspect $MG5_LOG_TMP or delete $existing and re-run /maddm-install install for a clean slate."
+        "Inspect $MG5_LOG_TMP or delete $existing and re-run bash _shared/installs/maddm/install.sh install for a clean slate."
       exit 13
     fi
     local mg5_bin mg5_root=""
@@ -718,7 +718,7 @@ cmd_install() {
   if ! apply_maddm_upstream_patches "$maddm_dir"; then
     emit_blocker "MADDM_PATCH_FAILED" "fatal" \
       "Failed to apply upstream-bug patches to MadDM plugin at $maddm_dir." \
-      "Inspect $MG5_LOG_TMP. The patches are documented in plugins/hep-ph-toolkit/skills/maddm-install/SKILL.md § Upstream patches; they can be applied manually and the install re-validated with '/maddm-install validate'."
+      "Inspect $MG5_LOG_TMP. The patches are documented in plugins/hep-ph-toolkit/skills_shared/installs/maddm/SKILL.md § Upstream patches; they can be applied manually and the install re-validated with 'bash _shared/installs/maddm/install.sh validate'."
     exit 13
   fi
 
@@ -739,7 +739,7 @@ cmd_validate() {
   if [ -z "$path" ]; then
     emit_blocker "MADDM_PATH_INVALID" "fatal" \
       "No maddm_path in config; nothing to validate." \
-      "Run /maddm-install detect or /maddm-install install first."
+      "Run bash _shared/installs/maddm/detect.sh or bash _shared/installs/maddm/install.sh install first."
     exit 16
   fi
   local mg5_bin mg5_root=""

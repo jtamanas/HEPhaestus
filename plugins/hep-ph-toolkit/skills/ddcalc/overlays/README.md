@@ -1,14 +1,14 @@
 # DDCalc Overlays
 
-Overlay bundles for new experiments are installed via `/ddcalc-install`:
+Overlay bundles for new experiments are installed via `_shared/installs/ddcalc`:
 
 ```
-/ddcalc-install install --with-overlay lz_xenonnt_pandax4t_2024
+bash _shared/installs/ddcalc/install.sh install --with-overlay lz_xenonnt_pandax4t_2024
 ```
 
 Each overlay bundle lives at:
 ```
-plugins/hep-ph-toolkit/skills/ddcalc-install/overlays/<name>/
+plugins/hep-ph-toolkit/skills_shared/installs/ddcalc/overlays/<name>/
 ```
 
 See that directory for:

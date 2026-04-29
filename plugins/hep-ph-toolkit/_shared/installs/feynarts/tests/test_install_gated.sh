@@ -5,7 +5,7 @@
 # CI skips this test. Run locally with:
 #
 #   HEPPH_RUN_WOLFRAM_TESTS=1 HEPPH_RUN_NETWORK_TESTS=1 \
-#     bash plugins/hep-ph-toolkit/skills/feynarts-install/tests/test_install_gated.sh
+#     bash plugins/hep-ph-toolkit/skills_shared/installs/feynarts/tests/test_install_gated.sh
 #
 # The test:
 #   1. Installs FeynArts 3.11 to a temp directory.

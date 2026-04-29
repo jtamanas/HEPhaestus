@@ -142,7 +142,7 @@ def check_feynarts_version(meta_path: Path):
             },
             user_instruction=(
                 f"Supported: {sorted(SUPPORTED_FEYNARTS_VERSIONS)}. "
-                "Regenerate with a supported FeynArts version via /feynarts-install."
+                "Regenerate with a supported FeynArts version via _shared/installs/feynarts."
             ),
         )
         sys.exit(1)
@@ -291,7 +291,7 @@ def main(argv=None):
             "FORMCALC_PATH_INVALID",
             "fatal",
             "formcalc_path not set or FormCalc.m missing.",
-            user_instruction="Run /formcalc-install first.",
+            user_instruction="Run _shared/installs/formcalc first.",
         )
         sys.exit(1)
 

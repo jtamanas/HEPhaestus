@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check_toolchain.sh — Toolchain precondition check for /micromegas-install.
+# check_toolchain.sh — Toolchain precondition check for _shared/installs/micromegas.
 #
 # Verifies, in order:
 #   1. C compiler:  gcc or clang on PATH  → CC_ABSENT if missing
@@ -11,7 +11,7 @@
 # observables (relic density, direct detection, indirect detection).
 #
 # Origin: this script was migrated from the v0 monte-carlo-tools version of
-# /micromegas-install when the two skills were consolidated. It is sourced by
+# _shared/installs/micromegas when the two skills were consolidated. It is sourced by
 # install_impl.sh at stage 0 (before disk-check) to catch toolchain gaps with
 # a friendly, per-OS install hint rather than letting `make` fail opaquely.
 #

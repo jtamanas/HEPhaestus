@@ -202,7 +202,7 @@ if [ -f "$CHECK_ACTIVATION" ]; then
   ACTIVATION_JSON="$(bash "$CHECK_ACTIVATION" "$WOLFRAM_BIN" 2>/dev/null || true)"
   STATUS="$(printf '%s' "$ACTIVATION_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('status','ok'))" 2>/dev/null || echo 'ok')"
   if [ "$STATUS" = "activation_required" ]; then
-    printf '{"status":"activation_required","message":"Wolfram Engine is installed but needs activation.","user_instruction":"Run `wolframscript --activate` in your terminal. Then rerun /formcalc-install."}\n'
+    printf '{"status":"activation_required","message":"Wolfram Engine is installed but needs activation.","user_instruction":"Run `wolframscript --activate` in your terminal. Then rerun _shared/installs/formcalc."}\n'
     exit 0
   fi
 fi

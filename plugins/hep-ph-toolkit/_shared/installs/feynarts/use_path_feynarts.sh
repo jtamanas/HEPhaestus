@@ -44,7 +44,7 @@ WS="$(detect_wolfram_path)"
 if [ -z "$WS" ]; then
   emit_blocker "WOLFRAM_KERNEL_ABSENT" "fatal" \
     "wolframscript binary not found or not configured." \
-    "Run /install to install Wolfram Engine, then rerun /feynarts-install use-path."
+    "Run /install to install Wolfram Engine, then rerun bash _shared/installs/feynarts/install.sh use-path."
   exit "$EXIT_NO_WOLFRAM"
 fi
 
