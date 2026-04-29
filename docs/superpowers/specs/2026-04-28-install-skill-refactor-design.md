@@ -23,7 +23,7 @@ Collapse the 11 install skills into shared install references plus self-healing 
 ## Non-goals
 
 - Not changing install script behavior for tools that already have a clean detect/install split. Most existing `install.sh` scripts move verbatim.
-- Not changing the config schema or the `~/.config/hephaestus/config.toml` paths.
+- Not changing the config schema or the `~/.config/hephaestus/config.json` paths.
 - Not touching `plugins/shared/install-helpers/` (cross-plugin atomic-write / config helpers).
 
 **Caveat on "relocation only."** Three tools need genuinely new `detect.sh` work, not a trivial extraction:
@@ -102,7 +102,7 @@ Before any other action, run:
 
 - The single source of truth for "is this tool ready."
 - Two-tier check, fast path first:
-  1. **Config fast path** — read `~/.config/hephaestus/config.toml`; if the tool is registered, the binary path exists, and the config's recorded version matches the current `INSTALL.md` version pin, exit 0 immediately. Cost: ~5 ms.
+  1. **Config fast path** — read `~/.config/hephaestus/config.json`; if the tool is registered, the binary path exists, and the config's recorded version matches the current `INSTALL.md` version pin, exit 0 immediately. Cost: ~5 ms.
   2. **Binary probe (slow path)** — only run when the fast path misses (config absent, version drift, or `HEPPH_FORCE_PROBE=1`). E.g. `sarah --version`, Wolfram kernel handshake. Cold Wolfram boot is 2–6 s; reserve this for first-invocation-per-session or post-install verification.
 - Exit 0 = ready; exit non-zero = not ready. The runner does not need to know which.
 - Reusable: `/install` (the bundle skill, §4) calls the same `detect.sh`.
@@ -191,7 +191,7 @@ Purpose unchanged: front door for "set me up before I start working." User picks
    | profumo-paper       | sarah, spheno, maddm, micromegas, looptools, formcalc  |
    | dm-relic            | maddm, micromegas                                      |
    | dm-direct-detection | micromegas, ddcalc                                     |
-   | dm-indirect         | maddm, gamlike                                         |
+   | dm-indirect         | maddm                                                  |
    | one-loop            | looptools, formcalc, feynarts                          |
    | bsm-model-building  | sarah, spheno, feynrules                               |
 
@@ -221,7 +221,7 @@ All three paths converge on the same `_shared/installs/sarah/{detect,install}.sh
 
 - Does not change `install.sh` behavior for tools that already have a clean detect/install split. New `detect.sh` work is required for SARAH, DRAKE, and MadDM (see Non-goals caveat).
 - Does not touch `plugins/shared/install-helpers/`.
-- Does not change config schema or `~/.config/hephaestus/config.toml` paths (a new `version` field on tool entries is additive and read-only-when-absent).
+- Does not change config schema or `~/.config/hephaestus/config.json` paths (a new `version` field on tool entries is additive and read-only-when-absent).
 - Does not change the runner skills' physics behavior — they get a preflight prepended; their actual job is unchanged.
 
 ## Open questions

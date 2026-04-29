@@ -856,7 +856,7 @@ SU(3)_dark, singlet under SU(2)_L and U(1)_Y.
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/check_state.py` | Probe SARAH/SPheno/Wolfram install state + model registration |
+| `scripts/check_state.py` | Probe model registration in `config.models[*]` (install-state probing was removed in the 2026-04-29 install refactor — runners self-heal via `_shared/installs/<tool>/detect.sh`). |
 | `scripts/register_model.py` | CLI to write `config.models[<name>]` atomically |
 
 Reference docs in `references/`:

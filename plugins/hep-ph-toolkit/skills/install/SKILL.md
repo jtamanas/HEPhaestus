@@ -159,11 +159,14 @@ transitively. Recommend ~12 GB free for a clean install.
 
 ## Migration note (2026-04-29)
 
-The eleven `*-install` skills (`_shared/installs/sarah`, `_shared/installs/spheno`,
-etc.) were collapsed into `_shared/installs/<tool>/` references with
-self-healing runners in [the install skill refactor][refactor]. Their
-prior invocation URLs are gone; references to `/<tool>-install` in
-historical docs should be read as "see
-`_shared/installs/<tool>/INSTALL.md`".
+The eleven legacy `*-install` skills (`/sarah-install`,
+`/spheno-install`, `/maddm-install`, `/micromegas-install`,
+`/formcalc-install`, `/feynarts-install`, `/feynrules-install`,
+`/looptools-install`, `/ddcalc-install`, `/higgstools-install`,
+`/drake-install`) were collapsed into `_shared/installs/<tool>/`
+references with self-healing runners in
+[the install skill refactor][refactor]. Their prior invocation URLs
+are gone; references to `/<tool>-install` in historical docs should
+be read as "see `_shared/installs/<tool>/INSTALL.md`".
 
 [refactor]: ../../../../docs/superpowers/specs/2026-04-28-install-skill-refactor-design.md
