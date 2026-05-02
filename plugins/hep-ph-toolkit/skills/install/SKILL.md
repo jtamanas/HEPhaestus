@@ -1,6 +1,6 @@
 ---
 name: install
-description: Bundle front door for hephaestus tool installs. Pick a use-case bundle (profumo-paper, dm-relic, dm-direct-detection, dm-indirect, one-loop, bsm-model-building) or a single tool by name, and the orchestrator drives the per-tool detect.sh + install.sh under `_shared/installs/<tool>/`. Invoke when the user says "install", "set up <tool>", "configure hephaestus", "what tools are available", or before starting a workflow that needs multiple tools.
+description: Bundle front door for hephaestus tool installs. Pick a use-case bundle (profumo-paper, dm-relic, dm-direct-detection, dm-indirect, one-loop, bsm-model-building, cosmology-linear) or a single tool by name, and the orchestrator drives the per-tool detect.sh + install.sh under `_shared/installs/<tool>/`. Invoke when the user says "install", "set up <tool>", "configure hephaestus", "what tools are available", or before starting a workflow that needs multiple tools.
 ---
 
 # /install
@@ -29,6 +29,7 @@ detect/install code path per tool, regardless of how it's invoked.
 | dm-indirect         | maddm                                                     |
 | one-loop            | looptools, formcalc, feynarts                             |
 | bsm-model-building  | sarah, spheno, feynrules                                  |
+| cosmology-linear    | class                                                     |
 
 The canonical bundle definitions live at
 `scripts/bundles.json` and are enumerable at runtime — `/install` does
@@ -105,10 +106,10 @@ detect-driven resume picks up where it left off.
 
 The available tools are exactly the directories under
 `plugins/hep-ph-toolkit/_shared/installs/`. There is no separate
-hardcoded enumeration here. As of 2026-04-29 the eleven tools are:
+hardcoded enumeration here. As of 2026-05-02 the twelve tools are:
 
 ```
-ddcalc      drake       feynarts    feynrules   formcalc
+class       ddcalc      drake       feynarts    feynrules   formcalc
 higgstools  looptools   maddm       micromegas  sarah       spheno
 ```
 
