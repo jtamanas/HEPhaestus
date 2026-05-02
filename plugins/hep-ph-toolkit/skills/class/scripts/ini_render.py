@@ -74,8 +74,6 @@ _PRESETS: dict[str, dict[str, str]] = {
 _OUTPUT_KEYS: dict[str, dict[str, str]] = {
     "background": {
         "output": "mPk",  # background always computed; mPk forces full run
-        "background": "yes",
-        "thermodynamics": "yes",
     },
     "cmb": {
         "output": "tCl,pCl,lCl",
