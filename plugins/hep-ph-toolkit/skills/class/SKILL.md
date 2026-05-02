@@ -1,6 +1,6 @@
 ---
 name: class
-description: Drive CLASS v3.3.4 to compute background cosmology, CMB power spectra, matter power spectrum, and transfer functions for ΛCDM + BSM extensions. Linear cosmology only; all Boltzmann computation is delegated to classy.
+description: Drive CLASS v3.3.4 (via classy) for linear cosmology — background H(z), CMB Cℓ, P(k), transfer functions — for ΛCDM and upstream BSM extensions.
 version: "1.0.0"
 subcommands:
   - background
@@ -114,16 +114,23 @@ Only upstream `lesgourg/class_public` v3.x extensions are supported.
 
 Per run: `$HEPPH_STATE_ROOT/cosmology_runs/<TS>/`
 
-| File              | Content                                                  |
-|-------------------|----------------------------------------------------------|
-| `cosmology.json`  | Run metadata; validated against `cosmology/v1` schema    |
-| `cls.dat`         | CMB Cℓ TSV (`# ell TT TE EE BB PP` header); cmb only    |
-| `pk.dat`          | P(k,z) TSV (`# k_h Pk_z0 ...` header); pk only          |
-| `background.dat`  | Background quantities TSV; background only               |
-| `tk.dat`          | Transfer functions TSV; transfer only                    |
-| `class.ini`       | Rendered CLASS ini file used for the run                 |
-| `stdout.log`      | Raw classy subprocess stdout                             |
-| `stderr.log`      | Raw classy subprocess stderr                             |
+| File              | Content                                                                     |
+|-------------------|-----------------------------------------------------------------------------|
+| `cosmology.json`  | Run metadata; validated against `cosmology/v1` schema                       |
+| `cls.dat`         | CMB Cℓ TSV (`# ell TT TE EE BB PP` header); cmb only                       |
+| `pk.dat`          | P(k,z) TSV (`# k_h/Mpc Pk_z0 ...`); k in h/Mpc, P in (Mpc/h)^3; pk only  |
+| `background.dat`  | Background quantities TSV; background only                                  |
+| `tk.dat`          | Transfer functions TSV (`# k_h/Mpc d_cdm d_b d_tot`); z=0 slice; transfer  |
+| `tk_z{z}.dat`     | Per-redshift transfer function slices (one per `--z-pk` value)              |
+| `class.ini`       | Rendered CLASS ini file used for the run                                    |
+| `stdout.log`      | Raw classy subprocess stdout                                                |
+| `stderr.log`      | Raw classy subprocess stderr                                                |
+
+P(k) units convention: k grid is sampled in h/Mpc as specified by `--k-min`/`--k-max`.
+The classy `pk_lin()` call takes k in 1/Mpc (converted internally as k × h), and the
+returned P [Mpc^3] is divided by h^3 so that P(k) is in (Mpc/h)^3, consistent with the
+`k_h/Mpc` header. Transfer functions use classy's `get_transfer(z)` and emit δ_cdm,
+δ_b, and δ_tot (total matter) at the k-grid returned by CLASS (already in h/Mpc).
 
 TSV files use `# col_a col_b ...` header lines and deterministic
 `f"{x:.10e}"` float formatting throughout.
@@ -144,15 +151,17 @@ If `class_path` is not configured, the skill emits `CLASS_NOT_CONFIGURED`
 
 ## Recoverable vs fatal contract
 
-| Code                     | Mode        | Notes                                              |
-|--------------------------|-------------|---------------------------------------------------|
-| `CLASS_NOT_CONFIGURED`   | fatal       | `class_path` missing from config                  |
-| `CLASS_CONFIG_INVALID`   | fatal       | Malformed or unresolvable config YAML              |
-| `CLASS_INI_RENDER_FAILED`| fatal       | Template rendering failed                          |
-| `CLASS_RUNTIME_FAILURE`  | recoverable | Non-zero exit from classy subprocess; check stderr |
-| `CLASS_OUTPUT_MISSING`   | fatal       | Expected output file not produced by CLASS         |
-| `CLASS_SCHEMA_INVALID`   | fatal       | cosmology.json failed schema validation            |
-| `CLASS_BSM_UNKNOWN_KIND` | fatal       | Unrecognised BSM extension kind                    |
+| Code                       | Mode        | Notes                                                              |
+|----------------------------|-------------|-------------------------------------------------------------------|
+| `CLASS_NOT_CONFIGURED`     | fatal       | `class_path` missing from config                                  |
+| `CLASS_CONFIG_INVALID`     | fatal       | Malformed or unresolvable config YAML                             |
+| `CLASS_INI_RENDER_FAILED`  | fatal       | Template rendering failed                                         |
+| `CLASSY_IMPORT_FAILED`     | recoverable | classy Python package not importable; re-run `/install class`     |
+| `CLASS_COMPUTE_FAILED`     | recoverable | CLASS computation raised an exception; check ini params/stderr    |
+| `CLASS_RUNTIME_FAILURE`    | recoverable | Non-zero exit from classy subprocess with no structured code      |
+| `CLASS_OUTPUT_MISSING`     | fatal       | Expected output file not produced by CLASS                        |
+| `CLASS_SCHEMA_INVALID`     | fatal       | cosmology.json failed schema validation                           |
+| `CLASS_BSM_UNKNOWN_KIND`   | fatal       | Unrecognised BSM extension kind                                   |
 
 ---
 
