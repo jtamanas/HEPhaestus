@@ -196,16 +196,16 @@ if [ "$SUBCOMMAND" = "install" ]; then
   log "Installing classy Python module via $PYTHON_BIN"
 
   PIP_RC=0
-  if ! "$PYTHON_BIN" -m pip install "$CLASS_SRC/python" 2>&1; then
+  if ! "$PYTHON_BIN" -m pip install "$CLASS_SRC" 2>&1; then
     PIP_RC=$?
   fi
 
   if [ $PIP_RC -ne 0 ]; then
     emit_blocker "CLASSY_PIP_INSTALL_FAILED" "recoverable" \
       "pip install classy failed (exit $PIP_RC) — may be a write-permission issue" \
-      "Retry with: $PYTHON_BIN -m pip install --user $CLASS_SRC/python"
+      "Retry with: $PYTHON_BIN -m pip install --user $CLASS_SRC"
     warn "Retrying with --user flag..."
-    if ! "$PYTHON_BIN" -m pip install --user "$CLASS_SRC/python" 2>&1; then
+    if ! "$PYTHON_BIN" -m pip install --user "$CLASS_SRC" 2>&1; then
       emit_blocker "CLASSY_PIP_INSTALL_FAILED" "fatal" \
         "pip install classy failed even with --user flag" \
         "Check pip installation and Python environment: $PYTHON_BIN"
