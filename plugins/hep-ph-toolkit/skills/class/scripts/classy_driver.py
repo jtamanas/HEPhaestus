@@ -19,6 +19,24 @@ class ClassRuntimeError(Exception):
     """Raised when the classy subprocess exits non-zero."""
 
 
+class ClassSubprocessError(ClassRuntimeError):
+    """Raised when the classy subprocess emits a structured error code.
+
+    Attributes
+    ----------
+    code : str
+        The specific error code emitted by the subprocess
+        (e.g. ``CLASSY_IMPORT_FAILED``, ``CLASS_COMPUTE_FAILED``).
+    detail : str
+        Human-readable detail from the subprocess.
+    """
+
+    def __init__(self, code: str, detail: str = "") -> None:
+        self.code = code
+        self.detail = detail
+        super().__init__(f"{code}: {detail}")
+
+
 # ---------------------------------------------------------------------------
 # Public runner
 # ---------------------------------------------------------------------------
@@ -85,14 +103,29 @@ def run(
     stderr_log.write_text(proc.stderr)
 
     if proc.returncode != 0:
-        # Include last 500 chars of stderr in the exception for diagnosis
+        # M1-fix: before raising a generic ClassRuntimeError, try to parse the
+        # subprocess stdout as JSON — the embedded script emits a structured
+        # {"error": "<CODE>", "detail": "..."} on CLASSY_IMPORT_FAILED and
+        # CLASS_COMPUTE_FAILED so the caller can surface the specific code.
+        stdout_stripped = proc.stdout.strip()
+        if stdout_stripped:
+            try:
+                error_payload = json.loads(stdout_stripped)
+                if "error" in error_payload:
+                    raise ClassSubprocessError(
+                        error_payload["error"],
+                        error_payload.get("detail", ""),
+                    )
+            except json.JSONDecodeError:
+                pass  # Fall through to generic error below
+
         stderr_tail = proc.stderr[-500:] if proc.stderr else "(empty)"
         raise ClassRuntimeError(
             f"classy exited with code {proc.returncode}. "
             f"stderr tail: {stderr_tail!r}"
         )
 
-    # Parse JSON output from the embedded script's final line
+    # Parse JSON output from the successful embedded script run
     try:
         result = json.loads(proc.stdout.strip())
     except json.JSONDecodeError as exc:
@@ -170,34 +203,51 @@ def _build_classy_script(
             result["lmax"] = {lmax!r}
 
         elif {subcommand!r} == "pk":
+            # B2-fix: grid is in h/Mpc; convert to 1/Mpc before pk_lin(),
+            # then divide P by h^3 so output is in (Mpc/h)^3 = (h/Mpc)^-3.
+            # Header k_h/Mpc is therefore honest.
             z_list = {z_pk_repr}
             k_min = {k_min!r}
             k_max = {k_max!r}
-            # Sample P(k) on a log grid; classy returns Mpc^3 (not h/Mpc units)
-            # We keep h/Mpc units matching templates
-            import math
+            h = c.h()
             n_k = 200
-            k_values = [k_min * (k_max / k_min) ** (i / (n_k - 1)) for i in range(n_k)]
+            # k grid in h/Mpc (as advertised in header)
+            k_h_values = [k_min * (k_max / k_min) ** (i / (n_k - 1)) for i in range(n_k)]
             pk_by_z = {{}}
             for z in z_list:
-                pk_by_z[str(z)] = [f"{{c.pk_lin(k, z):.10e}}" for k in k_values]
-            result["k_h"] = [f"{{k:.10e}}" for k in k_values]
+                # pk_lin() takes k in 1/Mpc; returns P in Mpc^3
+                # Convert output to (Mpc/h)^3 by dividing by h^3
+                pk_by_z[str(z)] = [
+                    f"{{c.pk_lin(k * h, z) / h**3:.10e}}" for k in k_h_values
+                ]
+            result["k_h"] = [f"{{k:.10e}}" for k in k_h_values]
             result["pk_by_z"] = pk_by_z
             result["z_list"] = [str(z) for z in z_list]
 
         elif {subcommand!r} == "transfer":
+            # B1-fix: use c.get_transfer(z) which returns the real transfer
+            # functions T(k,z) per species (d_cdm, d_b, d_g, d_ur, d_tot, ...).
+            # The k-grid from get_transfer is already in h/Mpc.
             z_list = {z_pk_repr}
-            k_min = {k_min!r}
-            k_max = {k_max!r}
-            import math
-            n_k = 200
-            k_values = [k_min * (k_max / k_min) ** (i / (n_k - 1)) for i in range(n_k)]
+            # Components to extract (always present in CLASS output)
+            _TK_COMPONENTS = ("d_cdm", "d_b", "d_tot")
             tk_by_z = {{}}
+            k_h_ref = None
             for z in z_list:
-                tk_by_z[str(z)] = [f"{{c.pk_lin(k, z):.10e}}" for k in k_values]
-            result["k_h"] = [f"{{k:.10e}}" for k in k_values]
+                tk_dict = c.get_transfer(z)
+                # k (h/Mpc) is the k-grid key in classy's get_transfer output
+                k_arr = tk_dict["k (h/Mpc)"].tolist()
+                if k_h_ref is None:
+                    k_h_ref = k_arr
+                components = {{}}
+                for comp in _TK_COMPONENTS:
+                    if comp in tk_dict:
+                        components[comp] = [f"{{v:.10e}}" for v in tk_dict[comp].tolist()]
+                tk_by_z[str(z)] = components
+            result["k_h"] = [f"{{k:.10e}}" for k in k_h_ref]
             result["tk_by_z"] = tk_by_z
             result["z_list"] = [str(z) for z in z_list]
+            result["tk_components"] = _TK_COMPONENTS
 
         c.struct_cleanup()
         c.empty()

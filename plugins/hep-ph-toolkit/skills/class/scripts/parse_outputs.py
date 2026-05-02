@@ -143,25 +143,53 @@ def _write_pk(result: dict, run_dir: Path) -> dict[str, Path]:
 
 
 def _write_transfer(result: dict, run_dir: Path) -> dict[str, Path]:
-    """Write tk.dat with transfer functions T(k, z)."""
+    """Write tk.dat with transfer functions T(k, z) from classy get_transfer().
+
+    B1-fix: the result now contains per-species arrays from c.get_transfer(z).
+    tk_by_z shape: {z_str: {component: [str_values, ...]}}
+    Emitted components: d_cdm, d_b, d_tot (δ_cdm, δ_b, δ_tot from CLASS).
+    One file per z-slice: tk_z{z}.dat; tk.dat is the z=0 slice (or first z).
+    The primary output path key "transfer" points at tk.dat.
+    """
     k_h = result.get("k_h")
     tk_by_z = result.get("tk_by_z")
     z_list = result.get("z_list", ["0"])
+    tk_components = result.get("tk_components", ("d_cdm", "d_b", "d_tot"))
 
     if not k_h or not tk_by_z:
         raise ParseOutputError("classy result missing 'k_h' or 'tk_by_z' keys")
 
-    # Header: k_h/Mpc Tk_z0.0 Tk_z1.0 ...
-    tk_cols = [f"Tk_z{z}" for z in z_list]
-    header_cols = ["k_h/Mpc"] + tk_cols
+    output_paths: dict[str, Path] = {}
+    primary_path: Path | None = None
 
-    out_path = run_dir / "tk.dat"
-    lines = [f"# {' '.join(header_cols)}"]
-    for i, k in enumerate(k_h):
-        row_parts = [k]
-        for z in z_list:
-            row_parts.append(tk_by_z[z][i])
-        lines.append(" ".join(row_parts))
+    for z in z_list:
+        z_data = tk_by_z.get(str(z), {})
+        # Determine which components are actually present for this z
+        present_comps = [c for c in tk_components if c in z_data]
+        if not present_comps:
+            raise ParseOutputError(
+                f"tk_by_z[{z!r}] missing all expected components {tk_components!r}"
+            )
 
-    out_path.write_text("\n".join(lines) + "\n")
-    return {"transfer": out_path}
+        # Header: k_h/Mpc d_cdm d_b d_tot (or subset of present components)
+        header_cols = ["k_h/Mpc"] + list(present_comps)
+        fname = f"tk_z{z}.dat"
+        out_path = run_dir / fname
+
+        lines = [f"# {' '.join(header_cols)}"]
+        for i, k in enumerate(k_h):
+            row_parts = [k] + [z_data[c][i] for c in present_comps]
+            lines.append(" ".join(row_parts))
+
+        out_path.write_text("\n".join(lines) + "\n")
+        output_paths[f"transfer_z{z}"] = out_path
+        if primary_path is None:
+            primary_path = out_path
+
+    # Symlink / copy first-z file to tk.dat for backward compat
+    tk_dat = run_dir / "tk.dat"
+    if primary_path is not None:
+        tk_dat.write_text(primary_path.read_text())
+
+    output_paths["transfer"] = tk_dat
+    return output_paths

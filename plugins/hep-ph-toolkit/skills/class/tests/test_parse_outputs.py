@@ -208,15 +208,31 @@ class TestPkOutput:
 
 
 class TestTransferOutput:
-    """Test transfer subcommand output writing."""
+    """Test transfer subcommand output writing (B1-fix: get_transfer() format)."""
+
+    def _make_transfer_result(self, z_list=None):
+        """Build a synthetic classy result dict matching the get_transfer() shape."""
+        if z_list is None:
+            z_list = ["0"]
+        k_h = ["1.0000000000e-04", "2.0000000000e-04"]
+        tk_by_z = {
+            z: {
+                "d_cdm": ["9.9900000000e-01", "9.9800000000e-01"],
+                "d_b":   ["9.8000000000e-01", "9.7500000000e-01"],
+                "d_tot": ["9.9500000000e-01", "9.9000000000e-01"],
+            }
+            for z in z_list
+        }
+        return {
+            "subcommand": "transfer",
+            "k_h": k_h,
+            "tk_by_z": tk_by_z,
+            "z_list": z_list,
+            "tk_components": ("d_cdm", "d_b", "d_tot"),
+        }
 
     def test_writes_tk_dat(self, parse_outputs, tmp_run_dir):
-        result = {
-            "subcommand": "transfer",
-            "k_h": ["1.0000000000e-04"],
-            "tk_by_z": {"0": ["1.0000000000e+00"]},
-            "z_list": ["0"],
-        }
+        result = self._make_transfer_result()
         output_files = parse_outputs.write_outputs(
             classy_result=result,
             run_dir=tmp_run_dir,
@@ -225,13 +241,20 @@ class TestTransferOutput:
         assert "transfer" in output_files
         assert output_files["transfer"].name == "tk.dat"
 
-    def test_transfer_header_format(self, parse_outputs, tmp_run_dir):
-        result = {
-            "subcommand": "transfer",
-            "k_h": ["1.0000000000e-04"],
-            "tk_by_z": {"0": ["1.0000000000e+00"]},
-            "z_list": ["0"],
-        }
+    def test_tk_dat_is_z0_slice(self, parse_outputs, tmp_run_dir):
+        """tk.dat must equal the z=0 slice file content."""
+        result = self._make_transfer_result(z_list=["0", "1"])
+        output_files = parse_outputs.write_outputs(
+            classy_result=result,
+            run_dir=tmp_run_dir,
+            subcommand="transfer",
+        )
+        tk_dat = output_files["transfer"]
+        z0_dat = output_files["transfer_z0"]
+        assert tk_dat.read_text() == z0_dat.read_text()
+
+    def test_transfer_header_has_species_columns(self, parse_outputs, tmp_run_dir):
+        result = self._make_transfer_result()
         output_files = parse_outputs.write_outputs(
             classy_result=result,
             run_dir=tmp_run_dir,
@@ -239,7 +262,48 @@ class TestTransferOutput:
         )
         header = output_files["transfer"].read_text().splitlines()[0]
         assert header.startswith("# k_h/Mpc")
-        assert "Tk_z0" in header
+        assert "d_cdm" in header
+        assert "d_b" in header
+        assert "d_tot" in header
+
+    def test_transfer_header_format(self, parse_outputs, tmp_run_dir):
+        result = self._make_transfer_result()
+        output_files = parse_outputs.write_outputs(
+            classy_result=result,
+            run_dir=tmp_run_dir,
+            subcommand="transfer",
+        )
+        header = output_files["transfer"].read_text().splitlines()[0]
+        assert header.startswith("# k_h/Mpc")
+        # Must NOT have old Tk_z* header style
+        assert "Tk_z" not in header
+
+    def test_transfer_multi_z_produces_per_z_files(self, parse_outputs, tmp_run_dir):
+        result = self._make_transfer_result(z_list=["0", "1"])
+        output_files = parse_outputs.write_outputs(
+            classy_result=result,
+            run_dir=tmp_run_dir,
+            subcommand="transfer",
+        )
+        assert "transfer_z0" in output_files
+        assert "transfer_z1" in output_files
+        assert output_files["transfer_z0"].name == "tk_z0.dat"
+        assert output_files["transfer_z1"].name == "tk_z1.dat"
+
+    def test_transfer_missing_components_raises(self, parse_outputs, tmp_run_dir):
+        result = {
+            "subcommand": "transfer",
+            "k_h": ["1.0000000000e-04"],
+            "tk_by_z": {"0": {}},  # empty components
+            "z_list": ["0"],
+            "tk_components": ("d_cdm", "d_b", "d_tot"),
+        }
+        with pytest.raises(parse_outputs.ParseOutputError):
+            parse_outputs.write_outputs(
+                classy_result=result,
+                run_dir=tmp_run_dir,
+                subcommand="transfer",
+            )
 
 
 class TestUnknownSubcommand:
