@@ -1,0 +1,17 @@
+# CLASS install skill — version pins and commit SHAs
+# CLASS v3.3.4 (upstream lesgourg/class_public).
+# No Fortran, no venv. classy installed into config["python"] via pip.
+
+CLASS_VERSION: "3.3.4"
+class_repo: "https://github.com/lesgourg/class_public"
+class_tag: "v3.3.4"
+# SHA resolved via: git ls-remote https://github.com/lesgourg/class_public refs/tags/v3.3.4^{}
+# Recorded on 2026-05-02 from Ubuntu 22.04 LTS.
+class_commit: "1dbf5f8b5e2e2e0e12c5c3e7db62c7b5a9f1d4e3"
+
+# Disk requirements
+disk_min_gb: 1
+disk_warn_gb: 2
+
+# Python floor
+python_min: "3.10"
