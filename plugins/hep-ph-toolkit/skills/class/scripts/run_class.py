@@ -41,6 +41,12 @@ from pathlib import Path
 _SCRIPT_DIR = Path(__file__).resolve().parent
 _SKILL_DIR = _SCRIPT_DIR.parent
 _REPO_ROOT = _SKILL_DIR.parent.parent.parent.parent  # hep-ph-agents/
+# m4-fix: sanity-check the repo root so schema lookup failures surface early
+# rather than silently producing a wrong path if the file is ever relocated.
+assert (_REPO_ROOT / "plugins" / "shared").is_dir(), (
+    f"_REPO_ROOT sanity check failed: {_REPO_ROOT!r} does not contain "
+    "plugins/shared/. Has run_class.py been moved?"
+)
 
 _EXIT_FATAL = 2
 _EXIT_RECOVERABLE = 3
@@ -223,6 +229,16 @@ def main(argv: list[str] | None = None) -> int:
             k_min=args.k_min,
             k_max=args.k_max,
         )
+    except classy_driver_mod.ClassSubprocessError as exc:
+        # M1-fix: surface specific subprocess error codes (CLASSY_IMPORT_FAILED,
+        # CLASS_COMPUTE_FAILED) as distinguishable recoverable blockers so the
+        # user knows whether to re-run install or inspect their CLASS ini params.
+        _emit_blocker(
+            exc.code, "recoverable",
+            f"classy subprocess reported: {exc.detail}",
+            {"run_dir": str(run_dir)},
+        )
+        return _EXIT_RECOVERABLE
     except classy_driver_mod.ClassRuntimeError as exc:
         _emit_blocker(
             "CLASS_RUNTIME_FAILURE", "recoverable",
