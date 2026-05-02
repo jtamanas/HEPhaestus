@@ -23,6 +23,7 @@ INSTALLS_ROOT = Path(__file__).resolve().parent.parent
 # Tools with a single canonical version key are the easy case; higgstools
 # has TWO independent pins (legacy HB and unified HT) so we map both.
 KEY_TO_ENV = {
+    "class": [("CLASS_VERSION", "HEPPH_CLASS_VERSION")],
     "ddcalc": [("HEPPH_DDCALC_VERSION", "HEPPH_DDCALC_VERSION")],
     "drake": [("drake_version", "HEPPH_DRAKE_VERSION")],
     "higgstools": [
