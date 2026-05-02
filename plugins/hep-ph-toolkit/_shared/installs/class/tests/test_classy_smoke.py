@@ -25,8 +25,8 @@ class TestSmokeToleranceMath:
         reference = 13.797
         tolerance = 0.005
 
-        # Values that should pass
-        for val in [13.797, 13.700, 13.863, 13.760, 13.834]:
+        # Values that should pass (all within 0.5% of 13.797)
+        for val in [13.797, 13.863, 13.760, 13.834]:
             rel_err = abs(val - reference) / reference
             assert rel_err <= tolerance, f"{val} should be within {tolerance*100}%"
 
@@ -35,8 +35,9 @@ class TestSmokeToleranceMath:
         reference = 13.797
         tolerance = 0.005
 
-        # Values that should fail (more than 0.5% away)
-        for val in [13.5, 14.1, 10.0, 15.0]:
+        # Values that should fail (more than 0.5% away from 13.797)
+        # Note: 13.700 is 0.703% away — belongs here, not in the passing list.
+        for val in [13.5, 14.1, 10.0, 15.0, 13.700]:
             rel_err = abs(val - reference) / reference
             assert rel_err > tolerance, f"{val} should be outside {tolerance*100}%"
 
