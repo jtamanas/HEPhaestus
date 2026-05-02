@@ -1,0 +1,13 @@
+# Planck 2018 ΛCDM best-fit cosmological parameters
+# Source: Planck 2018 results VI (arXiv:1807.06209), Table 2
+#         Parameters: TT,TE,EE+lowE+lensing
+#
+# These values are used as the default preset for /class planck18.
+# Override individual keys by passing --config <custom.yaml>.
+
+H0: 67.32
+omega_b: 0.02238
+omega_cdm: 0.1201
+A_s: 2.100e-09
+n_s: 0.9660
+tau_reio: 0.0543
