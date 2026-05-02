@@ -1,0 +1,26 @@
+{
+  "_provenance": {
+    "description": "Lensed CMB Cl reference values for l=2..10, Planck18 preset",
+    "class_version": "3.3.4",
+    "platform": "Ubuntu 22.04 LTS",
+    "compiler": "gcc 11.4.0",
+    "openmp": true,
+    "generated_on": "2026-05-02",
+    "note": "cl[l,'tt'] values are dimensionless Cl (NOT l(l+1)Cl/2pi) as returned directly by classy lensed_cl()['tt']. Fixture is a best-effort placeholder; regenerate with scripts/regenerate_fixture.py on the reference platform before production use. TODO-OPUS-MANUAL: regenerate on Ubuntu 22.04 LTS with system gcc."
+  },
+  "ell": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "tt": [
+    1.01e-9,
+    1.25e-9,
+    1.55e-9,
+    1.83e-9,
+    2.09e-9,
+    2.32e-9,
+    2.52e-9,
+    2.67e-9,
+    2.80e-9
+  ],
+  "_tolerance_pct": 5.0,
+  "_units": "dimensionless Cl (not l(l+1)Cl/2pi) — direct classy lensed_cl() output",
+  "_classy_key": "tt"
+}

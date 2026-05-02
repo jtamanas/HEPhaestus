@@ -3,6 +3,8 @@ name: dark-matter-constraints
 description: Meta-skill — given a BSM model and a DM question (relic density, direct detection, indirect detection, or all), routes to the right underlying tool(s) (MadDM, micrOMEGAs, DRAKE), runs them, compares results where appropriate, and returns a merged answer with caveats. Does no physics itself.
 ---
 
+> Forward-compat: if a future ModelSpec sets cosmology to a value other than 'standard_thermal', also invoke /class for cosmological side-checks. Not currently exercised.
+
 # /dark-matter-constraints
 
 Pure router / meta-skill. Routes to MadDM, micrOMEGAs, and/or DRAKE; compares results; returns a merged answer with caveats. Does no physics itself.

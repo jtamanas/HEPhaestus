@@ -1,0 +1,13 @@
+# Planck 2018 + ACT DR4 joint best-fit cosmological parameters
+# Source: Aiola+ 2020 (ACT DR4; arXiv:2007.07288), Table 4
+#         Combined Planck+ACT TT+TE+EE (full-sky)
+#
+# These values are used as the default preset for /class planck18_act.
+# Override individual keys by passing --config <custom.yaml>.
+
+H0: 67.9
+omega_b: 0.02242
+omega_cdm: 0.1193
+A_s: 2.088e-09
+n_s: 0.9721
+tau_reio: 0.0619
