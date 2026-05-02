@@ -31,10 +31,14 @@ PY
   class_version="$(printf '%s\n' "$raw" | sed -n '2p')"
 fi
 
-# Fast path: if version matches pinned and binary is present, exit 0.
+# Fast path: if version matches pinned and binary is present, emit JSON and exit.
+# Skips the full slow probe (no extra Python spawns) unless HEPPH_FORCE_PROBE is set.
 if [ -n "$class_path" ] && [ "$class_version" = "$PINNED_CLASS_VERSION" ] && [ -x "$class_path/class" ]; then
-  [ -z "${HEPPH_FORCE_PROBE:-}" ] && exec bash "$SCRIPT_DIR/_probe.sh"
+  if [ -z "${HEPPH_FORCE_PROBE:-}" ]; then
+    python3 -c "import json; print(json.dumps({'status':'configured','class_path':'$class_path','class_version':'$class_version'}))"
+    exit 0
+  fi
 fi
 
-# Slow path: delegate to _probe.sh
+# Slow path: delegate to _probe.sh for full JSON emission
 exec bash "$SCRIPT_DIR/_probe.sh"
