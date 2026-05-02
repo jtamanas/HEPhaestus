@@ -5,9 +5,9 @@
 CLASS_VERSION: "3.3.4"
 class_repo: "https://github.com/lesgourg/class_public"
 class_tag: "v3.3.4"
-# SHA resolved via: git ls-remote https://github.com/lesgourg/class_public refs/tags/v3.3.4^{}
-# Recorded on 2026-05-02 from Ubuntu 22.04 LTS.
-class_commit: "1dbf5f8b5e2e2e0e12c5c3e7db62c7b5a9f1d4e3"
+# SHA resolved via: git ls-remote https://github.com/lesgourg/class_public refs/tags/v3.3.4
+# Verified 2026-05-02 (SHA matches refs/tags/v3.3.4; tag is lightweight, not annotated).
+class_commit: "e85808324f51fc694d12e3ed7439552a3c3f9540"
 
 # Disk requirements
 disk_min_gb: 1
