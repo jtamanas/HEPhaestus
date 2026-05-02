@@ -38,6 +38,9 @@ class IniRenderError(Exception):
 # ---------------------------------------------------------------------------
 # Preset definitions (Planck 2018 TT,TE,EE+lowE+lensing Table 2)
 # ---------------------------------------------------------------------------
+# NOTE: these dicts are the runtime source of truth and are kept in sync with
+# templates/planck18.yaml and templates/planck18_act.yaml (which are doc-grade
+# YAML files for human readability and citation). If you edit one, edit both.
 
 _PLANCK18 = {
     "H0": "67.32",
