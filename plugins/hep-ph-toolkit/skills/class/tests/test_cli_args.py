@@ -211,6 +211,22 @@ class TestBlockerCodeCoverage:
             + "\n".join(f"  - {c}" for c in sorted(missing))
         )
 
+    def test_script_blocker_codes_exist_in_skill_md(self):
+        """Every CLASS_*/CLASSY_* code emitted by scripts must be in SKILL.md."""
+        md_codes = self._get_skill_md_blocker_codes()
+        script_codes = self._get_script_blocker_codes()
+
+        undocumented = []
+        for code in script_codes:
+            if code.startswith(("CLASS_", "CLASSY_")):
+                if code not in md_codes:
+                    undocumented.append(code)
+
+        assert not undocumented, (
+            f"Blocker codes emitted by scripts not documented in SKILL.md:\n"
+            + "\n".join(f"  - {c}" for c in sorted(undocumented))
+        )
+
 
 class TestHelpOutput:
     """Test that --help exits 0 (acceptance gate §4.4 #3)."""
