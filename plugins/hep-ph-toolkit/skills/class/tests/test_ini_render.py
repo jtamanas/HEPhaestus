@@ -170,7 +170,9 @@ class TestSubcommandOutputKeys:
             k_max=1.0,
             templates_dir=TEMPLATES_DIR,
         )
-        assert "background = yes" in text
+        assert "output = mPk" in text
+        assert "background = yes" not in text
+        assert "thermodynamics = yes" not in text
 
 
 class TestBsmExtension:
