@@ -37,10 +37,10 @@ The marketplace index is at `.claude-plugin/marketplace.json`.
 | Feynman / amplitudes | `draw-feynman`, `feynarts`, `formcalc` |
 | BSM model building | `lagrangian-builder`, `sarah-build`, `spheno-build` |
 | Constraints | `dark-matter-constraints`, `ddcalc`, `gamlike`, `higgstools`, `micromegas` |
+| Cosmology | `class` |
 | Monte Carlo | `drake`, `maddm`, `madgraph` |
 | Publishing | `feynman-tikz` |
 | Plotting | `exclusion-contour`, `hep-plot`, `theory-data-comparison` |
 | Workflow | `analytic-exception-detector`, `model-router` |
-| Cosmology | `class` |
 
 Coming-soon categories (no skills yet; tracked in the README's "Coming soon" section): collider analysis (`cross-section`, `signal-background`), RGE running (`rge-runner`), tree-level amplitude calculation (`amplitude-calc`), parton-shower configuration (`pythia-config`), ROOT analysis (`root-analysis`), statistical inference (`statistical-tools`), LaTeX paper drafting (`hep-paper-draft`), arXiv/literature search (`arxiv-search`, `literature-review`).

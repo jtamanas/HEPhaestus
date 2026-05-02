@@ -18,6 +18,10 @@ Absorbing them into HEPhaestus without a clear physics motivation would dilute
 the toolkit's focus, balloon maintenance surface, and confuse users who come
 for particle-phenomenology workflows.
 
+Among the linear Boltzmann solvers, CLASS is chosen over CAMB for its native
+Python interface (`classy`) and first-class BSM-extension support (energy
+injection, DCDM, IDM) absent in upstream CAMB.
+
 At the same time, cosmology is genuinely relevant to HEP phenomenology: Planck
 constraints on the effective number of relativistic species (N_eff) bound light
 relics, CMB lensing modifications probe interacting dark-matter scenarios (IDM),
@@ -49,7 +53,9 @@ of the following conditions is met:
 
 Tools that provide only general-purpose cosmological analysis without a clear
 BSM-constraint use case are explicitly out of scope and should be declined at
-PR review.
+PR review. This ADR closes the scope-drift / camel's-nose risk: each future
+cosmology tool must clear the paper-fidelity or maintainer-ADR gate above,
+preventing incremental expansion into a general-purpose CMB analysis platform.
 
 ---
 
