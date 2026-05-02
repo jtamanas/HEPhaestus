@@ -49,7 +49,7 @@ the paper's blind-spot figure.
 - **`/singlet-doublet`** — Per-model workflow for Singlet-Doublet fermion DM (§II). Drives `sarah-build` → `spheno-build` → `madgraph` → `maddm`.
 
 ### Installs (reference, not invokable)
-The eleven external tools below all install via the same self-healing
+The twelve external tools below all install via the same self-healing
 contract. Each runner skill carries a `## Preflight` block that runs
 `plugins/hep-ph-toolkit/_shared/installs/<tool>/detect.sh`; on
 non-zero exit the runner loads `INSTALL.md` from the same directory
@@ -57,7 +57,7 @@ and walks the user through the install. Bundle invocations
 (`/install profumo-paper`, `/install dm-relic`, etc.) drive the
 exact same scripts.
 
-`_shared/installs/<tool>/` for: `ddcalc`, `drake`, `feynarts`,
+`_shared/installs/<tool>/` for: `class`, `ddcalc`, `drake`, `feynarts`,
 `feynrules`, `formcalc`, `higgstools`, `looptools`, `maddm`,
 `micromegas`, `sarah`, `spheno`. Wolfram Engine and MG5_aMC are pulled
 in transitively (no separate `_shared/installs/` entry).
@@ -85,6 +85,9 @@ in transitively (no separate `_shared/installs/` entry).
 ### Monte Carlo
 - **`/madgraph`** — MadGraph5_aMC@NLO process generation, card writing, event generation, LHE parsing, parameter scans.
 
+### Cosmology
+- **`/class`** — Linear-cosmology Boltzmann solver (CLASS v3.3.4) for ΛCDM backgrounds, CMB power spectra (Cℓ), matter P(k), and transfer functions; supports BSM extensions (DCDM, IDM, exotic energy injection, ncdm). Produces schema-pinned `cosmology/v1` JSON.
+
 ### Plotting
 - **`/hep-plot`** — Distributions, stacked histograms, ratio panels, multi-panel figures with matplotlib + mplhep.
 - **`/exclusion-contour`** — 2D BSM exclusion / discovery contours with observed, expected, and Brazil bands.
@@ -96,6 +99,21 @@ in transitively (no separate `_shared/installs/` entry).
 
 For the up-to-date inventory by category see [`CLAUDE.md`](CLAUDE.md). Skill
 sources live in `plugins/hep-ph-toolkit/skills/<skill>/SKILL.md`.
+
+## Scope of HEPhaestus
+
+HEPhaestus is a **particle-physics-first** marketplace. Cosmology is in scope
+only when it directly constrains BSM particle content — for example, Planck
+bounds on N_eff from light relics, CMB lensing modifications from interacting
+dark matter, or late-ISW effects from decaying cold dark matter (DCDM). CLASS
+is the first cosmology tool, onboarded specifically for these BSM constraints.
+
+Future cosmology skills (MontePython, class_sz, CAMB, ExoCLASS variants, etc.)
+require either (a) a paper-fidelity reproduction that demonstrably needs the
+tool, or (b) a maintainer ADR. This gate exists to keep the toolkit focused on
+phenomenology, not general-purpose cosmological analysis. See
+[`docs/adr/0001-cosmology-scope-gate.md`](docs/adr/0001-cosmology-scope-gate.md)
+for the full decision record.
 
 ## Coming soon
 

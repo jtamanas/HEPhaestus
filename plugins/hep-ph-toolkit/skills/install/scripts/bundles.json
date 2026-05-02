@@ -22,5 +22,9 @@
   "bsm-model-building": {
     "description": "BSM Lagrangian -> spectrum + decays. SARAH primary; FeynRules optional.",
     "tools": ["sarah", "spheno", "feynrules"]
+  },
+  "cosmology-linear": {
+    "description": "Linear-cosmology Boltzmann driver (CMB Cls, P(k), background) for LCDM + BSM extensions via CLASS.",
+    "tools": ["class"]
   }
 }

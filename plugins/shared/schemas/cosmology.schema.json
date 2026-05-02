@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hephaestus/schemas/cosmology/v1",
+  "title": "CLASS cosmology run output (cosmology/v1)",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "cosmology_preset", "outputs", "class_version", "source_run"],
+  "properties": {
+    "schema_version": {
+      "const": "cosmology/v1",
+      "description": "Schema identifier. Always 'cosmology/v1'."
+    },
+    "cosmology_preset": {
+      "enum": ["planck18", "planck18_act", "custom"],
+      "description": "Base cosmological parameter set used for the run."
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "enum": ["background", "cmb", "pk", "transfer"]
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Which output channels were computed."
+    },
+    "class_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version string of the CLASS binary used (e.g. '3.3.4')."
+    },
+    "source_run": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque run identifier (timestamp, UUID, etc.) for traceability."
+    },
+    "bsm_extension": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["kind", "params"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "dcdm",
+                "idm_baryon",
+                "idm_dr",
+                "idm_photon",
+                "exotic_injection",
+                "ncdm_extra"
+              ],
+              "description": "BSM extension type passed to CLASS."
+            },
+            "params": {
+              "type": "object",
+              "description": "Extension-specific parameter dict (passed through to CLASS ini)."
+            }
+          }
+        }
+      ],
+      "description": "Optional BSM extension. Null for pure ΛCDM runs."
+    },
+    "results": {
+      "type": "object",
+      "description": "Per-output result metadata (file paths, peak values, etc.). Shape is output-channel-dependent.",
+      "additionalProperties": true
+    }
+  }
+}
