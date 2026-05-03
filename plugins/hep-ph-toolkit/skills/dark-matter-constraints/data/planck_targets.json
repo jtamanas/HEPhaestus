@@ -1,0 +1,11 @@
+{
+  "H0":         {"central": 67.32, "sigma": 0.54},
+  "Omega_m_h2": {"central": 0.1430, "sigma": 0.0011},
+  "N_eff":      {"central": 3.046, "sigma": null},
+  "tau_reio":   {"central": 0.0543, "sigma": 0.0073},
+  "sigma_8":    {"central": 0.811, "sigma": 0.006},
+  "_meta": {
+    "source_arxiv": "1807.06209",
+    "sentinel": "Update when CMB-S4 / Planck-PR4 reanalysis lands."
+  }
+}

@@ -105,6 +105,25 @@ def _scattering_schema_path() -> pathlib.Path:
     return _REPO_ROOT / "plugins" / "shared" / "schemas" / "scattering.schema.json"
 
 
+_SCHEMA_NAME_MAP: dict[str, str] = {
+    "scattering/v1": "scattering.schema.json",
+    "cosmology/v1": "cosmology.schema.json",
+}
+
+
+def _schema_path_for(entry: dict) -> pathlib.Path:
+    """Return the absolute schema file path for an output_fields entry.
+
+    Dispatches by entry["source_locator"]["schema"] using _SCHEMA_NAME_MAP.
+    Falls back to scattering.schema.json for legacy entries that have no
+    source_locator.schema key (backward-compat).
+    """
+    locator = entry.get("source_locator", {})
+    schema_key = locator.get("schema", "scattering/v1")
+    filename = _SCHEMA_NAME_MAP.get(schema_key, "scattering.schema.json")
+    return _REPO_ROOT / "plugins" / "shared" / "schemas" / filename
+
+
 def _xfail_reason(status: str, field_name: str = "") -> str:
     if status == "pending_schema":
         if "sigma_v" in field_name or field_name == "sigma_v_zero":
@@ -188,42 +207,68 @@ def _resolve_type(prop: dict) -> set[str]:
     return types
 
 
+def _walk_pointer(schema: dict, ptr: str) -> tuple[dict | None, str | None]:
+    """Walk a JSON pointer of the form /properties/<a>/properties/<b>/...
+
+    Returns (resolved_property_schema, None) on success, or (None, error_message) on failure.
+    Supports arbitrary nesting depth.
+    """
+    if not ptr.startswith("/properties/"):
+        return None, f"Unexpected json_pointer form (must start with /properties/): {ptr}"
+
+    # Strip leading slash; split into segments
+    segments = ptr.lstrip("/").split("/")
+    # segments are alternating: "properties", <name>, "properties", <name>, ...
+    node = schema
+    i = 0
+    while i < len(segments):
+        if segments[i] != "properties":
+            return None, f"Unexpected pointer segment '{segments[i]}' at index {i} in pointer '{ptr}'"
+        i += 1
+        if i >= len(segments):
+            return None, f"Pointer '{ptr}' ends after 'properties' with no field name"
+        field = segments[i]
+        props = node.get("properties", {})
+        if field not in props:
+            return None, f"Field '{field}' not found in properties at pointer segment {i} of '{ptr}'"
+        node = props[field]
+        i += 1
+
+    return node, None
+
+
 def _check_summary_json(
     entry: dict,
     fixtures_root: pathlib.Path,
     router_skill_text: str,
 ) -> tuple[str | None, str | None]:
     """
-    For produced_by=='summary_json': json_pointer must resolve in scattering schema.
+    For produced_by=='summary_json': json_pointer must resolve in the schema
+    identified by entry["source_locator"]["schema"]. Supports nested pointers
+    of the form /properties/<a>/properties/<b>/... (arbitrary depth).
     Returns (drift_code, detail) or (None, None) on pass.
     """
-    # Load scattering schema
-    schema_path = _scattering_schema_path()
+    # Load schema via dispatch (cosmology/v1 or scattering/v1)
+    schema_path = _schema_path_for(entry)
     if not schema_path.exists():
-        return "DRIFT_PRODUCER_DOC_GAP", f"Scattering schema not found: {schema_path}"
+        return "DRIFT_PRODUCER_DOC_GAP", f"Schema not found: {schema_path}"
     try:
         schema = _load_json(schema_path)
     except (OSError, json.JSONDecodeError) as exc:
-        return "DRIFT_PRODUCER_DOC_GAP", f"Cannot load scattering schema: {exc}"
+        return "DRIFT_PRODUCER_DOC_GAP", f"Cannot load schema: {exc}"
 
     locator = entry["source_locator"]
     ptr = locator.get("json_pointer", "")
-    if not ptr.startswith("/properties/"):
-        return "DRIFT_PRODUCER_DOC_GAP", f"Unexpected json_pointer form: {ptr}"
 
-    prop_name = ptr[len("/properties/"):]
-    props = schema.get("properties", {})
-    if prop_name not in props:
-        return (
-            "DRIFT_PRODUCER_DOC_GAP",
-            f"Field '{prop_name}' not found in scattering.schema.json properties",
-        )
+    resolved, err = _walk_pointer(schema, ptr)
+    if err is not None:
+        return "DRIFT_PRODUCER_DOC_GAP", err
 
-    prop_types = _resolve_type(props[prop_name])
+    prop_types = _resolve_type(resolved)
     if "number" not in prop_types:
         return (
             "DRIFT_PRODUCER_DOC_GAP",
-            f"Field '{prop_name}' has types {prop_types!r}, expected 'number' to be present",
+            f"Pointer '{ptr}' resolved to types {prop_types!r}, expected 'number' to be present",
         )
 
     # Also verify fixture exists and field_name is in router SKILL.md

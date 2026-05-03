@@ -65,6 +65,21 @@
       "type": "object",
       "description": "Per-output result metadata (file paths, peak values, etc.). Shape is output-channel-dependent.",
       "additionalProperties": true
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Scalar summary of cosmological observables. Keys present depend on which subcommands ran. Producer always writes the object; values may be null when not computable for the executed subcommand mix.",
+      "properties": {
+        "H0":         {"oneOf": [{"type": "null"}, {"type": "number"}]},
+        "omega_b":    {"oneOf": [{"type": "null"}, {"type": "number"}]},
+        "omega_cdm":  {"oneOf": [{"type": "null"}, {"type": "number"}]},
+        "Omega_m_h2": {"oneOf": [{"type": "null"}, {"type": "number"}]},
+        "N_eff":      {"oneOf": [{"type": "null"}, {"type": "number"}]},
+        "tau_reio":   {"oneOf": [{"type": "null"}, {"type": "number"}]},
+        "sigma_8":    {"oneOf": [{"type": "null"}, {"type": "number"}]},
+        "z_eq":       {"oneOf": [{"type": "null"}, {"type": "number"}]}
+      }
     }
   }
 }
