@@ -1,0 +1,22 @@
+{
+  "schema_version": "cosmology/v1",
+  "run_id": "fixture_planck18_background_pk",
+  "subcommand": "pk",
+  "cosmology_preset": "planck18",
+  "outputs": ["background", "pk"],
+  "class_version": "3.3.4",
+  "classy_version": "3.3.4",
+  "source_run": "fixture_planck18_background_pk",
+  "bsm_extension": null,
+  "results": {},
+  "summary": {
+    "H0": 67.32,
+    "omega_b": 0.02238,
+    "omega_cdm": 0.1201,
+    "Omega_m_h2": 0.1430,
+    "N_eff": 3.046,
+    "tau_reio": null,
+    "sigma_8": 0.811,
+    "z_eq": 3402.0
+  }
+}

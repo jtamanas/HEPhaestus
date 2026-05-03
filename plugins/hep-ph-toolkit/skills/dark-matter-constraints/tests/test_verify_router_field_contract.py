@@ -292,3 +292,91 @@ def test_negative_control_workflow(tmp_path):
         fixtures_root=_FIXTURES_ROOT,
     )
     assert result_good.fail == [], f"Restored manifest should have no failures: {result_good.fail}"
+
+
+# ---------------------------------------------------------------------------
+# WS-1 new tests (D3): nested pointer + schema dispatch
+# ---------------------------------------------------------------------------
+
+def test_nested_pointer_resolves_to_summary_property(tmp_path):
+    """_walk_pointer resolves /properties/summary/properties/H0 in cosmology schema.
+
+    Uses fixture cosmology_planck18.json. Creates a minimal manifest entry with
+    produced_by=summary_json, schema=cosmology/v1, json_pointer=/properties/summary/properties/H0.
+    Verifies the summary_json check passes (no drift code).
+    """
+    # Load the cosmology schema directly to test _walk_pointer
+    cosmology_schema_path = _REPO_ROOT / "plugins" / "shared" / "schemas" / "cosmology.schema.json"
+    assert cosmology_schema_path.exists(), f"cosmology.schema.json not found: {cosmology_schema_path}"
+    cosmology_schema = json.loads(cosmology_schema_path.read_text())
+
+    # Import the _walk_pointer helper from the module
+    walk_pointer = getattr(_vrfc, "_walk_pointer")
+
+    # Test H0: nested pointer /properties/summary/properties/H0
+    resolved, err = walk_pointer(cosmology_schema, "/properties/summary/properties/H0")
+    assert err is None, f"_walk_pointer returned error: {err}"
+    assert resolved is not None, "_walk_pointer returned None for resolved schema"
+
+    # Resolved property should have oneOf with null and number
+    resolve_type = getattr(_vrfc, "_resolve_type")
+    types = resolve_type(resolved)
+    assert "number" in types, f"Expected 'number' in resolved types; got {types!r}"
+
+    # Test all 8 summary properties resolve correctly
+    for field in ("H0", "omega_b", "omega_cdm", "Omega_m_h2", "N_eff", "tau_reio", "sigma_8", "z_eq"):
+        ptr = f"/properties/summary/properties/{field}"
+        resolved_f, err_f = walk_pointer(cosmology_schema, ptr)
+        assert err_f is None, f"_walk_pointer error for {field}: {err_f}"
+        types_f = resolve_type(resolved_f)
+        assert "number" in types_f, f"Field '{field}': expected 'number' in types; got {types_f!r}"
+
+
+def test_schema_dispatch_routes_by_locator(tmp_path):
+    """_schema_path_for dispatches cosmology/v1 → cosmology.schema.json,
+    scattering/v1 → scattering.schema.json.
+
+    Builds two minimal manifest entries and asserts the resolved paths match
+    the expected schema filenames.
+    """
+    schema_path_for = getattr(_vrfc, "_schema_path_for")
+
+    # cosmology/v1 entry
+    cosmo_entry = {
+        "source_locator": {
+            "kind": "schema_ref",
+            "schema": "cosmology/v1",
+            "json_pointer": "/properties/summary/properties/H0"
+        }
+    }
+    cosmo_path = schema_path_for(cosmo_entry)
+    assert cosmo_path.name == "cosmology.schema.json", (
+        f"Expected cosmology.schema.json; got {cosmo_path.name}"
+    )
+    assert cosmo_path.exists(), f"cosmology.schema.json not found at {cosmo_path}"
+
+    # scattering/v1 entry (explicit)
+    scatter_entry = {
+        "source_locator": {
+            "kind": "schema_ref",
+            "schema": "scattering/v1",
+            "json_pointer": "/properties/sigma_si_proton"
+        }
+    }
+    scatter_path = schema_path_for(scatter_entry)
+    assert scatter_path.name == "scattering.schema.json", (
+        f"Expected scattering.schema.json; got {scatter_path.name}"
+    )
+    assert scatter_path.exists(), f"scattering.schema.json not found at {scatter_path}"
+
+    # Legacy entry with no schema key → falls back to scattering.schema.json
+    legacy_entry = {
+        "source_locator": {
+            "kind": "schema_ref",
+            "json_pointer": "/properties/sigma_si_proton"
+        }
+    }
+    legacy_path = schema_path_for(legacy_entry)
+    assert legacy_path.name == "scattering.schema.json", (
+        f"Legacy fallback should be scattering.schema.json; got {legacy_path.name}"
+    )

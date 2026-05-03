@@ -24,7 +24,7 @@
     "source_run": {"type": "string", "minLength": 1},
     "cosmology": {
       "const": "standard_thermal",
-      "description": "v1 assumes standard thermal cosmology. Non-standard cosmologies require relic/v2."
+      "description": "Producer-internal flag — computed under standard-thermal Boltzmann. NOT a record of the runner-spec cosmology declaration."
     },
     "model_class": {
       "type": "string",

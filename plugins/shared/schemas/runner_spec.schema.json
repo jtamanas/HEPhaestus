@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hephaestus/schemas/runner_spec/v1",
+  "title": "Dark-matter-constraints runner spec (runner_spec/v1)",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "dm_candidate": {
+      "type": "object",
+      "description": "Dark-matter candidate description (PDG id, name, mass, etc.).",
+      "additionalProperties": true
+    },
+    "halo": {
+      "type": "string",
+      "description": "Halo model identifier (e.g. 'shm', 'shm_plus')."
+    },
+    "nucleon_form_factors": {
+      "type": "object",
+      "description": "Nucleon form factor overrides.",
+      "additionalProperties": true
+    },
+    "precompiled_project": {
+      "type": "string",
+      "description": "Path to a precompiled micrOMEGAs / MadDM project directory."
+    },
+    "cosmology": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["standard_thermal"],
+          "description": "Legacy scalar form — equivalent to {kind: standard_thermal}."
+        },
+        {
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "description": "Structured cosmology block. Use kind=non_standard to trigger /class side-check.",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["standard_thermal", "non_standard"],
+              "description": "Cosmology kind. Exactly two values in v1."
+            },
+            "class_preset": {
+              "type": "string",
+              "enum": ["planck18", "planck18_act", "custom"],
+              "description": "Base cosmological parameter set for CLASS."
+            },
+            "class_template": {
+              "type": "string",
+              "enum": ["dcdm_minimal"],
+              "description": "Optional bundled CLASS template name. When set, router resolves class_config/bsm_extension from /class/templates/<name>.yaml and applies overrides on top."
+            },
+            "class_config": {
+              "oneOf": [
+                {"type": "null"},
+                {"type": "string"}
+              ],
+              "description": "Path to CLASS ini config file. Required iff class_preset==custom AND class_template is unset."
+            },
+            "bsm_extension": {
+              "oneOf": [
+                {"type": "null"},
+                {"type": "string"}
+              ],
+              "description": "Optional path to YAML for /class --bsm."
+            },
+            "overrides": {
+              "type": "object",
+              "description": "Scalar overrides applied on top of class_template. Rejected if class_template is unset.",
+              "additionalProperties": true
+            },
+            "invoke": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["background", "cmb", "pk", "transfer"]
+              },
+              "minItems": 1,
+              "uniqueItems": true,
+              "description": "Subset of CLASS subcommands to run. Default [background]."
+            },
+            "notes": {
+              "oneOf": [
+                {"type": "null"},
+                {"type": "string"}
+              ],
+              "description": "Free-form notes; not consumed by code."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "cosmology": {
+            "type": "object",
+            "properties": {"kind": {"const": "non_standard"}},
+            "required": ["kind"]
+          }
+        },
+        "required": ["cosmology"]
+      },
+      "then": {
+        "properties": {
+          "cosmology": {
+            "required": ["class_preset"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cosmology": {
+            "type": "object",
+            "properties": {
+              "class_preset": {"const": "custom"}
+            },
+            "required": ["class_preset"],
+            "not": {"required": ["class_template"]}
+          }
+        },
+        "required": ["cosmology"]
+      },
+      "then": {
+        "properties": {
+          "cosmology": {
+            "required": ["class_config"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cosmology": {
+            "type": "object",
+            "required": ["overrides"]
+          }
+        },
+        "required": ["cosmology"]
+      },
+      "then": {
+        "properties": {
+          "cosmology": {
+            "required": ["class_template"]
+          }
+        }
+      }
+    }
+  ]
+}
