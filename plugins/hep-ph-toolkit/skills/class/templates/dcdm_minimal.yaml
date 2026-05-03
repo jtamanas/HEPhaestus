@@ -1,0 +1,16 @@
+# Required overrides: Gamma_dcdm (1/Mpc), M_dcdm (GeV)
+# DCDM (Decaying Cold Dark Matter) minimal CLASS custom-config template.
+# Planck 2018 best-fit baseline; user must supply Gamma_dcdm and M_dcdm
+# via the cosmology.overrides block in the runner spec.
+
+H0: 67.32
+omega_b: 0.02238
+omega_cdm: 0.1201
+A_s: 2.100e-9
+n_s: 0.9649
+tau_reio: 0.0543
+output: "tCl,pCl,lCl"
+
+# DCDM parameters — required overrides
+Gamma_dcdm: {{Gamma_dcdm}}
+M_dcdm: {{M_dcdm}}

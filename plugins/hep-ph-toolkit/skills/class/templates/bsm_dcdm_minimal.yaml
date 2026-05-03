@@ -1,0 +1,4 @@
+kind: dcdm
+params:
+  Gamma_dcdm: {{Gamma_dcdm}}
+  M_dcdm: {{M_dcdm}}
