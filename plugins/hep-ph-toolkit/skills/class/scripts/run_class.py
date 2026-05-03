@@ -262,6 +262,23 @@ def main(argv: list[str] | None = None) -> int:
         )
         return _EXIT_FATAL
 
+    # ── Compute summary block ─────────────────────────────────────────────────
+    # Build input_config from args for fallback omega_b / omega_cdm resolution.
+    input_config: dict = {}
+    if args.config is not None:
+        try:
+            import yaml  # type: ignore[import]
+            with open(args.config) as _f:
+                input_config = yaml.safe_load(_f) or {}
+        except Exception:
+            pass  # non-fatal; compute_summary falls back gracefully
+
+    cosmology_summary = parse_outputs_mod.compute_summary(
+        result,
+        input_config,
+        subcommand,
+    )
+
     # ── Build and write cosmology.json ────────────────────────────────────────
     source_run = run_dir.name
     cosmology_doc = {
@@ -276,13 +293,32 @@ def main(argv: list[str] | None = None) -> int:
                 "output_file": str(output_files.get(subcommand, "")),
             }
         },
+        "summary": cosmology_summary,
     }
 
-    # ── Validate cosmology.json ───────────────────────────────────────────────
+    # ── Validate cosmology.json with Draft7Validator ──────────────────────────
     schema_path = _schema_path()
     try:
-        schema_validate_mod.validate(cosmology_doc, schema_path)
-    except schema_validate_mod.SchemaValidationError as exc:
+        import jsonschema  # type: ignore[import]
+        with open(schema_path) as _sf:
+            _schema = json.load(_sf)
+        _validator = jsonschema.Draft7Validator(_schema)
+        _errors = list(_validator.iter_errors(cosmology_doc))
+        if _errors:
+            _msgs = "; ".join(e.message for e in _errors[:3])
+            raise ValueError(f"Schema validation failed: {_msgs}")
+    except ImportError:
+        # jsonschema not installed — fall back to existing schema_validate module
+        try:
+            schema_validate_mod.validate(cosmology_doc, schema_path)
+        except schema_validate_mod.SchemaValidationError as exc:
+            _emit_blocker(
+                "CLASS_SCHEMA_INVALID", "fatal",
+                f"cosmology.json failed schema validation: {exc}",
+                {"run_dir": str(run_dir)},
+            )
+            return _EXIT_FATAL
+    except Exception as exc:
         _emit_blocker(
             "CLASS_SCHEMA_INVALID", "fatal",
             f"cosmology.json failed schema validation: {exc}",

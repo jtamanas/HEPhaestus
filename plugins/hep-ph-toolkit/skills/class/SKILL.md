@@ -44,6 +44,8 @@ Invoke `/class` when:
 2. A cosmological preset or custom config is available.
 3. A downstream skill needs CMB Cℓ, P(k), background evolution, or transfer
    functions — for example, constraining BSM DM via CMB N_eff or ISW signals.
+4. **Auto-invoked by `/dark-matter-constraints`** for cosmology side-checks
+   when a runner spec opts in via `cosmology.kind != 'standard_thermal'`.
 
 ---
 
@@ -176,8 +178,14 @@ The following are explicitly **not** supported by this skill:
 - **GW_CLASS / classnet / class_matter branches** — non-standard forks.
 - **CMB foregrounds, beams, noise** — raw Cℓ only, no likelihood.
 - **Non-linear corrections** — HaloFit/HMcode not invoked.
-- **`/dark-matter-constraints` auto-routing** — `/class` is called explicitly
-  by the user or by orchestrating skills.
+- **`/dark-matter-constraints` auto-routing.** `/class` is auto-invoked by
+  `/dark-matter-constraints` when a runner spec declares
+  `cosmology.kind != 'standard_thermal'`. The router invocation contract is
+  documented in `dark-matter-constraints/SKILL.md` Step 6. **Cost disclosure:**
+  `background` ≈ <1 s; `cmb` 5-30 s at default `lmax`; `pk` 2-10 s; `transfer`
+  <5 s; multi-subcommand runs add roughly linearly. Router default
+  `invoke: [background]` keeps overhead negligible. Other auto-routing
+  (CMB-likelihood frameworks, MCMC orchestrators) remains out of scope.
 
 ---
 

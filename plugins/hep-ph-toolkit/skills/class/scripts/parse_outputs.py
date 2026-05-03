@@ -15,6 +15,94 @@ class ParseOutputError(Exception):
 
 
 # ---------------------------------------------------------------------------
+# Summary computation
+# ---------------------------------------------------------------------------
+
+def compute_summary(classy_result: object, input_config: dict, subcommand: str) -> dict:
+    # tested against classy 3.3.4
+    """Compute a scalar summary dict from a classy result object.
+
+    Always returns exactly 8 keys:
+      H0, omega_b, omega_cdm, Omega_m_h2, N_eff, tau_reio, sigma_8, z_eq
+
+    Values are null when not computable for the given subcommand:
+      - background: H0, omega_b, omega_cdm, Omega_m_h2, N_eff, z_eq populated;
+                    tau_reio and sigma_8 are null.
+      - cmb:        + tau_reio populated (sigma_8 still null).
+      - pk:         + sigma_8 populated (tau_reio still null unless also cmb).
+      - transfer:   same as background.
+
+    Parameters
+    ----------
+    classy_result:
+        The classy Cosmology object returned by the driver (must support
+        .Hubble(0), .h(), .omega_b(), .Omega0_cdm(), .Neff(), .z_eq(),
+        .tau_reio(), .sigma8()).
+    input_config:
+        The rendered CLASS ini parameter dict (used for omega_b / omega_cdm
+        fallback when the classy object lacks methods).
+    subcommand:
+        One of background|cmb|pk|transfer.
+    """
+    # Helper: safely call a method on the result object; return None on failure.
+    def _safe(method_name: str, *args):
+        try:
+            method = getattr(classy_result, method_name)
+            return method(*args)
+        except Exception:
+            return None
+
+    # ── Background parameters (available for all subcommands) ────────────────
+    # classy .Hubble(0) returns H0 in km/s/Mpc
+    H0_val = _safe("Hubble", 0)
+
+    # Prefer classy methods; fall back to input_config for ω_b / ω_cdm
+    h = _safe("h")
+    omega_b_val = _safe("omega_b")
+    if omega_b_val is None:
+        raw = input_config.get("omega_b")
+        omega_b_val = float(raw) if raw is not None else None
+
+    omega_cdm_val = _safe("Omega0_cdm")
+    if omega_cdm_val is not None and h is not None:
+        # classy returns Ω_cdm (dimensionless); convert to ω_cdm = Ω_cdm * h²
+        omega_cdm_val = omega_cdm_val * h * h
+    else:
+        raw = input_config.get("omega_cdm")
+        omega_cdm_val = float(raw) if raw is not None else None
+
+    # Ω_m h² = (ω_b + ω_cdm)
+    if omega_b_val is not None and omega_cdm_val is not None:
+        Omega_m_h2_val: float | None = omega_b_val + omega_cdm_val
+    else:
+        Omega_m_h2_val = None
+
+    N_eff_val = _safe("Neff")
+    z_eq_val = _safe("z_eq")
+
+    # ── Subcommand-conditional parameters ────────────────────────────────────
+    tau_reio_val: float | None = None
+    sigma_8_val: float | None = None
+
+    if subcommand == "cmb":
+        tau_reio_val = _safe("tau_reio")
+
+    if subcommand == "pk":
+        sigma_8_val = _safe("sigma8")
+
+    return {
+        "H0":         H0_val,
+        "omega_b":    omega_b_val,
+        "omega_cdm":  omega_cdm_val,
+        "Omega_m_h2": Omega_m_h2_val,
+        "N_eff":      N_eff_val,
+        "tau_reio":   tau_reio_val,
+        "sigma_8":    sigma_8_val,
+        "z_eq":       z_eq_val,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
 
