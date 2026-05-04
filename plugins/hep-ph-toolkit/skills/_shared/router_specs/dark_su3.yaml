@@ -1,0 +1,58 @@
+# Dark SU(3) — canonical v2-axis ModelSpec for /model-router and
+# /analytic-exception-detector.  Companion to the SARAH-format spec at
+# plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/dark_su3.yaml,
+# which uses a different schema (label/type vs kind/group, ssb vs
+# symmetry_breaking) and is consumed by the lagrangian-builder pipeline.
+_schema_version: 2
+name: dark-su3
+display: "Dark SU(3) confining sector"
+version: "1.0"
+authoring_status: complete
+
+gauge_groups:
+  - {symbol: B,  group: U1,  kind: hypercharge, coupling: g1, gauge_boson: B0,  gaugino: null, symmetry_breaking: {pattern: SM-EWSB}}
+  - {symbol: WB, group: SU2, kind: left,        coupling: g2, gauge_boson: W,   gaugino: null, symmetry_breaking: {pattern: SM-EWSB}}
+  - {symbol: G,  group: SU3, kind: color,       coupling: g3, gauge_boson: g,   gaugino: null, symmetry_breaking: {pattern: unbroken}}
+  - {symbol: GD, group: SU3, kind: dark,        coupling: g_tilde, gauge_boson: VD, gaugino: null, symmetry_breaking: {pattern: Higgsed-partial}}
+
+fermions: []
+
+dm_phenomenology:
+  candidates:
+    - name: V
+      field_type: "vector"
+      mediator_regime: "off-resonance"
+      uv_provenance: "analytic-only"
+      mass_parameter: m_V
+      cp: even
+      mediator_field: null
+      stabilisation_mechanism: gauge-residual
+      blind_spot_reference: null
+      multi_component_partner: Psi
+      coupled: false
+    - name: Psi
+      field_type: "Dirac fermion"
+      mediator_regime: "off-resonance"
+      uv_provenance: "analytic-only"
+      mass_parameter: m_Psi
+      cp: odd
+      mediator_field: null
+      stabilisation_mechanism: gauge-residual
+      blind_spot_reference: null
+      multi_component_partner: V
+      coupled: false
+  stabilizing_symmetry: dark_confinement
+  coannihilation: true
+  multi_component: true
+
+lagrangian:
+  spec_intent:
+    requested_emissions: [analytic_only]
+  interactions: []
+
+outputs:
+  - analytic_only
+
+backends:
+  spectrum: analytic
+  analytic_module: "analytic_models.dark_su3"

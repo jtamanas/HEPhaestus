@@ -264,8 +264,10 @@ def _dm_not_in_uv_fields(spec: dict, registry_view=None) -> tuple[bool, dict]:
     uv_field_names = fermion_names | scalar_names | gauge_boson_names
 
     # Collect DM candidates: from spec.display.dm_candidates if present,
-    # or try constraints.yaml models.<name>.dm_candidates
-    dm_candidates = spec.get("display", {}).get("dm_candidates", [])
+    # or try constraints.yaml models.<name>.dm_candidates.  display may be a
+    # bare string in v2-axis specs (the title), not a dict.
+    display = spec.get("display", {})
+    dm_candidates = display.get("dm_candidates", []) if isinstance(display, dict) else []
 
     if not dm_candidates:
         # Try constraints.yaml

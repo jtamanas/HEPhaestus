@@ -1,0 +1,55 @@
+# Singlet-doublet fermion DM — canonical v2-axis ModelSpec for
+# /analytic-exception-detector regression cases.  SM-only gauge content
+# means the analytic-exception detector should reach verdict CLEAR
+# (no analytic-only signals fire).  Lives under _archive/ to mirror the
+# old asset layout the analytic-exception-detector tests expect.
+_schema_version: 2
+name: singlet-doublet
+display: "Singlet-doublet fermion DM"
+version: "1.0"
+authoring_status: active
+
+gauge_groups:
+  - {symbol: B,  group: U1,  kind: hypercharge, coupling: g1, gauge_boson: B0, gaugino: null, symmetry_breaking: {pattern: SM-EWSB}}
+  - {symbol: WB, group: SU2, kind: left,        coupling: g2, gauge_boson: W,  gaugino: null, symmetry_breaking: {pattern: SM-EWSB}}
+  - {symbol: G,  group: SU3, kind: color,       coupling: g3, gauge_boson: g,  gaugino: null, symmetry_breaking: {pattern: unbroken}}
+
+fermions:
+  - name: chi_s
+    reps: {WB: 1, G: 1}
+    hypercharge: 0
+    spin: "1/2"
+    majorana: true
+  - name: chi_d
+    reps: {WB: 2, G: 1}
+    hypercharge: -0.5
+    spin: "1/2"
+    majorana: false
+
+dm_phenomenology:
+  candidates:
+    - name: chi_1
+      field_type: "Dirac fermion"
+      mediator_regime: "off-resonance"
+      uv_provenance: "tree-level portal"
+      mass_parameter: m_chi
+      cp: null
+      mediator_field: null
+      stabilisation_mechanism: Z2
+      blind_spot_reference: null
+      multi_component_partner: null
+      coupled: null
+  stabilizing_symmetry: Z2
+  coannihilation: false
+
+lagrangian:
+  spec_intent:
+    requested_emissions: [ufo, spheno]
+  interactions:
+    - type: Yukawa
+      fields: [H, chi_s, chi_d]
+      coupling: y_D
+
+outputs:
+  - ufo
+  - spheno

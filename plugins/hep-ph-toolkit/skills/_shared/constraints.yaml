@@ -779,7 +779,7 @@ models:
           deferred until the /looptools eval runtime ships.
 
   2hdm-a:
-    spec_path: plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/2hdm_a.yaml
+    spec_path: plugins/hep-ph-toolkit/skills/_shared/router_specs/two_hdm_a.yaml
     display:
       title: "2HDM + a"
       hook:  "Pseudoscalar mediator, CP-forbidden tree SI, loop-only DD."
@@ -825,7 +825,7 @@ models:
       dd: {cold: [3.0, 6.0]}    # loop-only DD is primary signal; slower
 
   dark-su3:
-    spec_path: plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/dark_su3.yaml
+    spec_path: plugins/hep-ph-toolkit/skills/_shared/router_specs/dark_su3.yaml
     display:
       title: "Dark SU(3)"
       hook:  "SU(3)_D Higgsed to SU(2)_D; two DM candidates with exact parameter-independent blind spot on Psi."

@@ -38,7 +38,7 @@ _STUB_PATH = (
 )
 _STUB_EXISTS = _STUB_PATH.exists()
 
-_SHARED_ASSETS = _REPO_ROOT / "plugins" / "hep-ph-toolkit" / "skills" / "_shared" / "assets"
+_SHARED_ASSETS = _REPO_ROOT / "plugins" / "hep-ph-toolkit" / "skills" / "_shared" / "router_specs"
 _DARK_SU3_SPEC = _SHARED_ASSETS / "dark_su3.yaml"
 _TWO_HDMA_SPEC = _SHARED_ASSETS / "two_hdm_a.yaml"
 _SINGLET_DOUBLET_SPEC = _SHARED_ASSETS / "_archive" / "singlet_doublet.yaml"

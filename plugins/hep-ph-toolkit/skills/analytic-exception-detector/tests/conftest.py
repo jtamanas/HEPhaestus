@@ -16,7 +16,7 @@ _REGISTRY_PATH: pathlib.Path = (
     _REPO_ROOT / "plugins" / "hep-ph-toolkit" / "skills" / "_shared" / "analytic_exceptions.yaml"
 )
 _SHARED_ASSETS: pathlib.Path = (
-    _REPO_ROOT / "plugins" / "hep-ph-toolkit" / "skills" / "_shared" / "assets"
+    _REPO_ROOT / "plugins" / "hep-ph-toolkit" / "skills" / "_shared" / "router_specs"
 )
 _DARK_SU3_SPEC: pathlib.Path = _SHARED_ASSETS / "dark_su3.yaml"
 _TWO_HDMA_SPEC: pathlib.Path = _SHARED_ASSETS / "two_hdm_a.yaml"

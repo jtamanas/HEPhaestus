@@ -11,10 +11,9 @@ import sys
 import os
 import pytest
 
-# Ensure the scripts directory is importable.
-SCRIPTS_DIR = os.path.join(
-    os.path.dirname(__file__), "..", "scripts"
-)
+# _make_log_parse.py lives one level up from tests/ — the install layout was
+# flattened in commit 0bf22f2 (no more scripts/ subdir under installs/spheno/).
+SCRIPTS_DIR = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.abspath(SCRIPTS_DIR))
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")

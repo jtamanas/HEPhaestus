@@ -244,7 +244,7 @@ def test_check_prereqs_dsu3_analytic_demotion(tmp_path):
     """
     spec_yaml = (
         _REPO_ROOT
-        / "plugins" / "hep-ph-toolkit" / "skills" / "_shared" / "assets" / "dark_su3.yaml"
+        / "plugins" / "hep-ph-toolkit" / "skills" / "_shared" / "router_specs" / "dark_su3.yaml"
     )
     assert spec_yaml.is_file(), f"dsu3 spec yaml missing at {spec_yaml}"
 

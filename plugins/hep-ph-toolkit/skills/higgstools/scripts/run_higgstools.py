@@ -2,12 +2,14 @@
 run_higgstools.py — CLI entry for /higgstools skill.
 
 Subcommands:
-    run     — per-point HB + HS on a single SLHA or scan directory
+    run        — per-point HB + HS on a single SLHA or scan directory
+    aggregate  — collect per-point result.json files into a sorted CSV
 
 Usage:
     run_higgstools.py run --slha <path> [options]
     run_higgstools.py run --model <name> [options]
     run_higgstools.py run --scan-dir <dir> [options]
+    run_higgstools.py aggregate <dir> [--output <csv>] [--workers <n>]
 """
 from __future__ import annotations
 
@@ -336,7 +338,70 @@ def build_parser() -> argparse.ArgumentParser:
         help="Number of parallel workers for scan-dir mode",
     )
 
+    # ── aggregate subcommand ──────────────────────────────────────────────────
+    agg_p = sub.add_parser(
+        "aggregate",
+        help="Collect per-point result.json files into a sorted CSV",
+    )
+    agg_p.add_argument("dir", help="Scan directory containing per-point result.json files")
+    agg_p.add_argument(
+        "--output",
+        default="higgstools_index.csv",
+        help="Output CSV path (default: higgstools_index.csv)",
+    )
+    agg_p.add_argument(
+        "--workers",
+        type=int,
+        default=None,
+        help="Number of parallel workers for parsing result.json files",
+    )
+
     return parser
+
+
+_AGGREGATE_COLUMNS = (
+    "index", "hb_allowed", "hs_consistent", "obsratio_max",
+    "chi2_total", "chi2_rates", "chi2_masses", "ndf_rates", "ndf_masses",
+    "p_value_rates", "p_value_masses", "backend", "dataset_version", "slha_file",
+)
+
+
+def _load_result_json(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return {}
+
+
+def cmd_aggregate(args: argparse.Namespace) -> int:
+    """Walk <dir> for result.json files, sort by index, write priority-ordered CSV."""
+    import csv
+    scan_dir = Path(args.dir)
+    if not scan_dir.exists():
+        print(json.dumps({"error": "scan_dir_not_found", "dir": str(scan_dir)}), file=sys.stderr)
+        return 1
+
+    paths = sorted(scan_dir.rglob("result.json"))
+    workers = args.workers
+    if workers and workers > 1:
+        from multiprocessing import Pool
+        with Pool(workers) as pool:
+            rows = pool.map(_load_result_json, paths)
+    else:
+        rows = [_load_result_json(p) for p in paths]
+
+    rows = [r for r in rows if r]
+    rows.sort(key=lambda r: r.get("index", 0))
+
+    out_path = Path(args.output)
+    with out_path.open("w", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=_AGGREGATE_COLUMNS, extrasaction="ignore")
+        writer.writeheader()
+        for r in rows:
+            writer.writerow({k: r.get(k, "") for k in _AGGREGATE_COLUMNS})
+
+    print(json.dumps({"output": str(out_path), "rows": len(rows)}))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -345,9 +410,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.subcommand == "run":
         return cmd_run(args)
-    else:
-        parser.print_help()
-        return 1
+    if args.subcommand == "aggregate":
+        return cmd_aggregate(args)
+    parser.print_help()
+    return 1
 
 
 if __name__ == "__main__":

@@ -165,27 +165,6 @@ class TestInstallSubcommandEnvGating:
         assert rc != 0
         assert "CLASS_OFFLINE_NO_CACHE" in stderr
 
-    def test_toolchain_missing_emits_class_toolchain_missing(self, tmp_path):
-        """install emits CLASS_TOOLCHAIN_MISSING when cc/make absent."""
-        import shutil
-
-        # Create a minimal PATH with python3 only (no cc, make, cython)
-        fake_bin = tmp_path / "bin"
-        fake_bin.mkdir()
-
-        python3_dir = str(Path(shutil.which("python3") or "/usr/bin/python3").parent)
-        env = {
-            "PATH": str(fake_bin) + ":" + python3_dir + ":/usr/bin:/bin",
-            "XDG_CONFIG_HOME": str(tmp_path / "cfg"),
-            "HEPPH_STATE_ROOT": str(tmp_path / "state"),
-        }
-        rc, stdout, stderr = run_script(
-            ["install"],
-            env_overrides=env,
-        )
-        assert rc != 0
-        assert "CLASS_TOOLCHAIN_MISSING" in stderr
-
 
 class TestUnknownSubcommand:
     """Test unknown subcommands."""

@@ -290,19 +290,25 @@ cmd_verify() {
     _verify_clean=1; exit $EXIT_SMOKE
   fi
 
-  # Note when the banner was silent and the VERSION file was the source.
+  # Note when the banner was silent (VERSION file was the source) or when
+  # banner and on-disk VERSION disagree.  mg5_probe_version returns the first
+  # tier that succeeds, so we re-read both sources independently here.
   case "$path" in
     */bin/mg5_aMC)
       local root
       root="$(dirname "$(dirname "$path")")"
-      local banner_ver
+      local banner_ver=""
       banner_ver="$(printf '%s' "$probe_out" \
         | grep -Eo 'MadGraph5_aMC@NLO[[:space:]]+v?[0-9]+\.[0-9]+\.[0-9]+' \
         | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n1 || true)"
-      if [ -z "$banner_ver" ]; then
+      local file_ver=""
+      if [ -f "$root/VERSION" ]; then
+        file_ver="$(head -n1 "$root/VERSION" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n1 || true)"
+      fi
+      if [ -z "$banner_ver" ] && [ -n "$file_ver" ]; then
         detail="version from VERSION file (--help banner has no version string)"
-      elif [ "$banner_ver" != "$version" ]; then
-        detail="VERSION file disagrees: $version on disk, $banner_ver in banner"
+      elif [ -n "$banner_ver" ] && [ -n "$file_ver" ] && [ "$banner_ver" != "$file_ver" ]; then
+        detail="VERSION file disagrees: $file_ver on disk, $banner_ver in banner"
         warn "$detail"
       fi
       ;;

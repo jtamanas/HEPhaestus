@@ -181,9 +181,11 @@ After `launch -f` completes, MadDM 3.2+ writes results to
   `SigmaN_SI_p = [<sigma>, <exp_limit>]` and `SigmaN_SI_n = [<sigma>, <exp_limit>]`
   (cm²). The bracket-pair is `[σ_DM_at_this_mass, σ_experiment_90CL_limit]`;
   the comment after `#` names the experiment used for the limit (e.g. `# Xenon1ton`).
+  The router-canonical field name for the proton SigmaN_SI value is `sigma_si_proton`.
 - **Spin-dependent cross-sections (per-nucleon)**: lines matching
   `SigmaN_SD_p = [<sigma>, <exp_limit>]` and `SigmaN_SD_n = [<sigma>, <exp_limit>]`
-  (cm²). Same bracket convention as SI.
+  (cm²). Same bracket convention as SI. The router-canonical field name for the
+  proton SigmaN_SD value is `sigma_sd_proton`.
 - **Total annihilation cross-section**: line matching
   `sigmav_xf = <value>` (cm³/s) inside the Relic Density section. (Earlier
   MadDM 3.2 outputs labeled this `sigmav_total`; treat the two as aliases.)
