@@ -83,6 +83,13 @@ composes subcommands.
 
 ## DM candidate resolution (`spec.yaml > CLI > auto-detect`)
 
+Spec loading routes through `plugins/shared/runner_spec_loader.py`
+(legacy scalar still accepted; new specs SHOULD use the object
+form). The router validates the normalized spec against
+`plugins/shared/schemas/runner_spec.schema.json`.
+Migration note: Existing scalar-form spec.yaml files continue
+to work; no manual update required.
+
 The DM candidate is resolved in strict priority order:
 
 1. **`spec.yaml`** `dm_candidate.pdg` — wins unconditionally. Recommended.
