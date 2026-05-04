@@ -119,6 +119,74 @@
       "audit_status": "verified_against_synthetic",
       "model_class_certification": "wolfram_unstructured",
       "router_table_row": "Step 5 Omega-h2 DRAKE"
+    },
+    {
+      "observable": "H0",
+      "downstream": "class",
+      "field_name": "H0",
+      "produced_by": "summary_json",
+      "source_artifact": "cosmology.json (cosmology/v1)",
+      "source_locator": {
+        "kind": "schema_ref",
+        "schema": "cosmology/v1",
+        "json_pointer": "/properties/summary/properties/H0"
+      },
+      "defined_in": "plugins/shared/schemas/cosmology.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/class/cosmology_planck18.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "preset_planck18",
+      "router_table_row": "Step 6 H0 CLASS"
+    },
+    {
+      "observable": "N_eff",
+      "downstream": "class",
+      "field_name": "N_eff",
+      "produced_by": "summary_json",
+      "source_artifact": "cosmology.json (cosmology/v1)",
+      "source_locator": {
+        "kind": "schema_ref",
+        "schema": "cosmology/v1",
+        "json_pointer": "/properties/summary/properties/N_eff"
+      },
+      "defined_in": "plugins/shared/schemas/cosmology.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/class/cosmology_planck18.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "preset_planck18",
+      "router_table_row": "Step 6 N_eff CLASS"
+    },
+    {
+      "observable": "Omega_m_h2",
+      "downstream": "class",
+      "field_name": "Omega_m_h2",
+      "produced_by": "summary_json",
+      "source_artifact": "cosmology.json (cosmology/v1)",
+      "source_locator": {
+        "kind": "schema_ref",
+        "schema": "cosmology/v1",
+        "json_pointer": "/properties/summary/properties/Omega_m_h2"
+      },
+      "defined_in": "plugins/shared/schemas/cosmology.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/class/cosmology_planck18.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "preset_planck18",
+      "router_table_row": "Step 6 Omega_m_h2 CLASS"
+    },
+    {
+      "observable": "sigma_8",
+      "downstream": "class",
+      "field_name": "sigma_8",
+      "produced_by": "summary_json",
+      "source_artifact": "cosmology.json (cosmology/v1)",
+      "source_locator": {
+        "kind": "schema_ref",
+        "schema": "cosmology/v1",
+        "json_pointer": "/properties/summary/properties/sigma_8"
+      },
+      "defined_in": "plugins/shared/schemas/cosmology.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/fixtures/class/cosmology_planck18.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "preset_planck18",
+      "router_table_row": "Step 6 sigma_8 CLASS"
     }
   ],
 
@@ -143,6 +211,14 @@
       "writer": "bash _shared/installs/drake/install.sh use-path",
       "reader": "/dark-matter-constraints SKILL.md Step 5",
       "audit_status": "verified_in_writer_skill"
+    },
+    {
+      "key": "config.class_path",
+      "type": "path_or_bool",
+      "writer": "_shared/installs/class",
+      "reader": "/dark-matter-constraints SKILL.md Step 6",
+      "audit_status": "verified_in_writer_skill",
+      "condition": {"spec_field": "cosmology.kind", "not_in": ["standard_thermal"]}
     }
   ],
 

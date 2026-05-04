@@ -3,8 +3,6 @@ name: dark-matter-constraints
 description: Meta-skill — given a BSM model and a DM question (relic density, direct detection, indirect detection, or all), routes to the right underlying tool(s) (MadDM, micrOMEGAs, DRAKE), runs them, compares results where appropriate, and returns a merged answer with caveats. Does no physics itself.
 ---
 
-> Forward-compat: if a future ModelSpec sets cosmology to a value other than 'standard_thermal', also invoke /class for cosmological side-checks. Not currently exercised.
-
 # /dark-matter-constraints
 
 Pure router / meta-skill. Routes to MadDM, micrOMEGAs, and/or DRAKE; compares results; returns a merged answer with caveats. Does no physics itself.
@@ -221,6 +219,144 @@ python "$REPO_ROOT/plugins/hep-ph-toolkit/skills/dark-matter-constraints/scripts
   `"activation_required"` → `DRAKE_ACTIVATION_REQUIRED` (`wolframscript --activate`).
   `"unparseable"` → `DRAKE_UNAVAILABLE`. Do not abort on any recoverable outcome.
 
+### Step 6 — Cosmology side-check (CLASS)
+
+**Step ordering (D6):** The trust banner is emitted at the end of Step 1
+(before Step 2). The actual `/class` dispatch runs as Step 6, after Steps 2-5;
+results appear at the end of the merged report.
+
+#### §4.1 Trigger
+
+At Step 1 end, after validating the spec against `runner_spec/v1`:
+
+```python
+# scripts/should_invoke_class.py
+def should_invoke_class(spec: dict) -> bool:
+    cosmology = spec.get("cosmology")
+    if cosmology is None:
+        return False
+    if isinstance(cosmology, str):  # legacy scalar form
+        return cosmology != "standard_thermal"
+    if isinstance(cosmology, dict):
+        return cosmology.get("kind", "standard_thermal") != "standard_thermal"
+    return False  # malformed — caught by RUNNER_SPEC_INVALID
+```
+
+If `should_invoke_class(spec)` returns `False` → skip Step 6 entirely, no banner.
+
+#### §4.2 Trust banner (printed at Step 1 end, before Step 2)
+
+```
+NOTICE: spec.cosmology.kind = '<value>' (non-standard cosmology declared).
+
+Steps 2-5 (MadDM / micrOMEGAs / DRAKE) compute Ωh² and related observables
+under the *standard thermal Boltzmann* assumption. Their results below should
+not be compared directly to Planck targets without an independent cosmology
+run. Step 6 will invoke /class with the user-declared CLASS configuration and
+report cosmological observables alongside.
+
+v1 trusts the user's cosmology declaration. The router does NOT verify that
+the BSM model's actual decay widths / N_eff contributions match the declared
+cosmology. (v2 will add inference.)
+```
+
+#### §4.3 Pre-dispatch install + spec-completeness gate
+
+Before invoking `/class`:
+
+```
+if config.class_path is unset OR not a valid path:
+    emit CLASS_MISSING (recoverable)
+    skip Step 6 entirely; record fixit "Run _shared/installs/class"
+    continue with merged report (no cosmology side-check section)
+
+if cosmology is dict but required-iff fields missing (per §2 matrix):
+    emit COSMOLOGY_SPEC_INCOMPLETE (recoverable) with the missing field name
+    skip Step 6 dispatch; merged report shows "Cosmology side-check: blocked"
+```
+
+Both gates are prose-side. `check_prereqs.py` is not modified in v1.
+
+#### §4.4 Subcommand dispatch
+
+For each subcommand in `spec.cosmology.invoke` (default `[background]`):
+
+```bash
+# If class_template is set:
+TEMPLATE_DIR=$REPO_ROOT/plugins/hep-ph-toolkit/skills/class/templates
+CONFIG_PATH=$(python scripts/materialize_template.py \
+    --template "$TEMPLATE_DIR/${class_template}.yaml" \
+    --overrides "$overrides_json" \
+    --out "$tmp_dir/class_config.yaml")
+
+# Otherwise:
+CONFIG_PATH="$class_config"
+
+/class <subcommand> <class_preset> \
+    [--config "$CONFIG_PATH"] \
+    [--bsm "$bsm_extension"] \
+    --output-dir <unique per-subcommand dir>
+```
+
+`scripts/materialize_template.py` reads the template as raw text, substitutes
+`{{key}}` placeholders with values from the overrides dict, and writes to a
+tempdir. See `materialize_template.py` for error semantics.
+
+Failure handling per invocation:
+- `/class` exits non-zero → parse the structured blocker JSON emitted to stderr
+  and propagate the upstream code as the blocker detail (e.g.
+  `CLASS_INVOCATION_FAILED: upstream=CLASS_BSM_UNKNOWN_KIND`). Continue with
+  remaining subcommands.
+- `/class` exits 0 → validate `cosmology.json` in the run dir against
+  `cosmology/v1`; harvest `summary`.
+
+#### §4.5 Field harvesting
+
+```bash
+python .../scripts/extract_field.py \
+    --json <run_dir>/cosmology.json \
+    --key summary \
+    --schema-version cosmology/v1
+```
+
+Returns the `summary` object as `value`. Agent walks the dict in prose
+(matches Step 4b.1 precedent). Missing or null `summary.<key>` renders `—`
+with a per-row note "(not computed by subcommand `<x>`)"; no blocker code.
+
+#### §4.6 Report integration
+
+New section appended to merged report after the existing DM table:
+
+```markdown
+### Cosmology side-check (CLASS)
+
+Declaration: spec.cosmology.kind = '<value>'
+CLASS preset: <class_preset>
+Subcommands run: <invoke>
+
+| Observable        | CLASS value | Planck 2018 target | |Δ| / σ | Status |
+|-------------------|-------------|---------------------|---------|--------|
+| H₀ [km/s/Mpc]     | ...         | 67.32 ± 0.54        | ...     | OK / FLAG / — |
+| Ω_m h²            | ...         | 0.1430 ± 0.0011     | ...     | OK / FLAG / — |
+| N_eff             | ...         | 3.046               | ...     | OK / FLAG / — |
+| τ_reio            | ...         | 0.0543 ± 0.0073     | ...     | OK / FLAG / — |
+| σ_8               | ...         | 0.811 ± 0.006       | ...     | OK / FLAG / — |
+
+Targets loaded from `data/planck_targets.json` (citation: arXiv:1807.06209).
+
+> Trust banner: see Step 1 notice (above). v1 does not cross-check the
+> declaration against the BSM spectrum; verify the YAML reflects the model's
+> actual cosmology.
+```
+
+`Status` rules:
+- `—` if `summary.<key>` is null (subcommand did not compute it).
+- `FLAG` if `|CLASS − Planck_central| / Planck_sigma > 3`. Where σ is unset
+  (e.g. `N_eff` SM prediction), use 1% relative tolerance.
+- `OK` otherwise.
+
+`FLAG` is informational; never blocks the run.
+
 ---
 
 ## Tool failure modes (required reading)
@@ -308,6 +444,8 @@ the tool was run for that observable. If a FLAG row is present, the word
 
 ## Blocker / notice codes
 
+### Primary DM pipeline codes (Steps 1-5)
+
 | Code | Mode | Trigger | User instruction |
 |------|------|---------|-----------------|
 | `MADDM_MISSING` | fatal | MadDM not found in MG5 or `config.maddm_path` absent (default pipeline only — not raised on the analytic-only branch) | Run `_shared/installs/maddm` |
@@ -322,6 +460,21 @@ the tool was run for that observable. If a FLAG row is present, the word
 | `DRAKE_SKIPPED` | recoverable | `--skip-drake` passed by user; narrow-resonance regime detected but DRAKE bypassed | Resonance-regime accuracy warning applies; rerun without flag to enable DRAKE |
 | `CROSSCHECK_DISAGREEMENT` | recoverable | MadDM vs micrOMEGAs > 10% on any observable | User must adjudicate before proceeding |
 | `DRAKE_MADDM_DISAGREEMENT` | recoverable | DRAKE vs MadDM Ωh² > 10% | User must adjudicate |
+
+### Step 6 cosmology side-check codes (D7 / §5)
+
+| Code | Mode | Trigger | Producer | User instruction |
+|------|------|---------|----------|-----------------|
+| `RUNNER_SPEC_INVALID` | recoverable | `--spec` YAML fails `runner_spec/v1` schema validation | router prose, Step 1 end | Fix the YAML per the schema-validator error message. |
+| `CLASS_MISSING` | recoverable | Step 6 entered AND `config.class_path` unset / invalid | router prose, Step 6 entry | Run `_shared/installs/class`; cosmology side-check unavailable. |
+| `COSMOLOGY_SPEC_INCOMPLETE` | recoverable | `kind == non_standard` AND a required-iff field missing | router prose, Step 6 entry | Add the named missing field per the runner-spec schema. |
+| `CLASS_INVOCATION_FAILED` | recoverable | `/class` exited non-zero (or exited 0 but `cosmology.json` absent) | router prose, Step 6 dispatch | Inspect `<run_dir>/stderr.log`; `upstream=<code>` in the detail field identifies the `/class` blocker. |
+
+**Banner (NOT a blocker code; printed in report):**
+"Non-standard cosmology declared — Steps 2-5 use standard-thermal Boltzmann…" (per D6 + §4.2).
+
+**Deferred to v2:** `COSMOLOGY_INFERENCE`, `COSMOLOGY_INCONSISTENT`, `SLHA_PARSER_MISSING`.
+No fatal codes — the cosmology side-check never blocks a primary run.
 
 ---
 
@@ -339,6 +492,7 @@ This skill writes no config keys — it is a router. It reads:
 | `config.micromegas_path` | `_shared/installs/micromegas` |
 | `config.maddm_path` | `_shared/installs/maddm` |
 | `config.drake_path` | `_shared/installs/drake` |
+| `config.class_path` | `_shared/installs/class` (Step 6; only read when `cosmology.kind != 'standard_thermal'`) |
 
 ---
 
@@ -349,9 +503,11 @@ This skill writes no config keys — it is a router. It reads:
 | `/maddm` | Primary DM observable driver | Always (fatal if absent) |
 | `/micromegas` | Cross-check for coannihilation / near-resonance spectra | Conditional (Step 4) |
 | `/drake` | Narrow-resonance relic density | Conditional (Step 5) |
+| `/class` | Cosmology side-check (H0, Omega_m_h2, N_eff, sigma_8, …) | Conditional (Step 6; only when `cosmology.kind != 'standard_thermal'`) |
 | `_shared/installs/maddm` | MadDM install / detect | Prerequisite check |
 | `_shared/installs/micromegas` | micrOMEGAs install / detect | Prerequisite check (Step 4) |
 | `_shared/installs/drake` | DRAKE availability check | Step 5 availability check (optional; `config.drake_path` checked first) |
+| `_shared/installs/class` | CLASS install / detect | Step 6 availability check (optional; `config.class_path` checked first) |
 | `/sarah-build` | UFO model generation | Prerequisite (provides `ufo_path`) |
 | `/spheno-build` | SLHA spectrum generation | Conditional prerequisite (provides `latest_slha` when needed by `/maddm`) |
 
@@ -374,6 +530,22 @@ This skill writes no config keys — it is a router. It reads:
   helper. Model-class skip rules (multi-component DM, asymmetric DM, Majorana null
   σ_SD), threshold judgment, and rel-diff rendering are LLM-owned per the routing
   lens. Only `extract_field` is a deterministic primitive called from within Step 4b.
+
+**v1 cosmology inference gap (scenario c — D5):**
+v1 does not infer cosmology from the BSM spectrum. If the runner spec declares
+`cosmology: standard_thermal` but the model is actually non-standard (long-lived
+BSM states, ΔN_eff, freeze-in), the router trusts the declaration and skips the
+cosmology side-check. v2 will add an SLHA-based inference pass that raises
+`COSMOLOGY_INCONSISTENT`.
+
+**Producer-internal cosmology flag (D1):**
+The `cosmology` field inside `relic.json` (the `relic/v1` schema, produced by
+MadDM / micrOMEGAs / DRAKE) is a *producer-internal* flag meaning "this relic
+density was computed under the standard-thermal Boltzmann assumption." It is not
+a record of the runner-spec `cosmology` declaration. The two layers carry
+different shapes because they describe different things: the producer field is an
+audit stamp about the solver assumption; the runner-spec `cosmology` block is a
+user instruction to the router. Do not confuse them.
 
 ---
 

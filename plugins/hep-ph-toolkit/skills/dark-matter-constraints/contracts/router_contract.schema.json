@@ -23,7 +23,7 @@
         ],
         "properties": {
           "observable": {"type": "string", "minLength": 1},
-          "downstream": {"enum": ["drake", "maddm", "micromegas"]},
+          "downstream": {"enum": ["class", "drake", "maddm", "micromegas"]},
           "field_name": {"type": "string", "minLength": 1},
           "produced_by": {
             "enum": ["agent_parsed", "install_detect_json", "stdout_regex", "summary_json"]
@@ -85,6 +85,7 @@
           },
           "model_class_certification": {
             "enum": [
+              "preset_planck18",
               "scatter_subcommand_only",
               "stdout_regex_brittle",
               "unproven",
@@ -118,6 +119,11 @@
               "verified_against_synthetic",
               "verified_in_writer_skill"
             ]
+          },
+          "condition": {
+            "type": "object",
+            "description": "Documentation-only condition for when this key is relevant. Not consumed by code in v1.",
+            "additionalProperties": true
           }
         }
       }
