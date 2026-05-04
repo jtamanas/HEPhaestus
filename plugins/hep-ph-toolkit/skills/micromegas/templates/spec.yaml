@@ -23,8 +23,12 @@ halo: shm               # Only "shm" supported in v1.
 nucleon_form_factors: default_2018
 
 # ── Cosmology (optional, default: standard_thermal) ──────────────────────────
-# Only "standard_thermal" supported in v1.
-cosmology: standard_thermal
+# cosmology: accepts BOTH the legacy scalar
+#   (`cosmology: standard_thermal`) and the structured object
+#   form below (preferred). Loaded by
+#   plugins/shared/runner_spec_loader.py which normalizes either.
+cosmology:
+  kind: standard_thermal
 
 # ── Pre-compiled project (optional) ──────────────────────────────────────────
 # Skip UFO conversion by using a micrOMEGAs-shipped project.
