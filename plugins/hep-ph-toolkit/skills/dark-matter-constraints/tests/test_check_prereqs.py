@@ -275,6 +275,14 @@ def test_check_prereqs_dsu3_analytic_demotion(tmp_path):
     )
 
 
+def test_check_prereqs_does_not_emit_class_missing_code():
+    """CLASS_MISSING is prose-side only per design D7/§5."""
+    from pathlib import Path
+    src_path = (Path(__file__).resolve().parents[1]
+                / "scripts/check_prereqs.py")
+    assert "CLASS_MISSING" not in src_path.read_text()
+
+
 def test_check_prereqs_structural_outputs(tmp_path):
     """Happy path: checked[] has key/exists/path per entry; multi-blocker test.
 

@@ -1,0 +1,3 @@
+dm_candidate: {pdg: 5000005, name: chi}
+halo: shm
+cosmology: standard_thermal     # legacy scalar form — should_invoke_class() returns False

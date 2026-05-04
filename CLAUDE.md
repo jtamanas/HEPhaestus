@@ -12,7 +12,7 @@ This marketplace exposes a single plugin, `hep-ph-toolkit`, located at `plugins/
 - `.claude-plugin/plugin.json` — plugin manifest
 - `skills/<skill-name>/SKILL.md` — individual skill definitions (37 skills)
 - `skills/_shared/` — cross-skill helpers (matrix lookup, blocker schema, taxonomy, etc.)
-- `_shared/` — plugin-level helpers (`validate_one.py` and its tests)
+- `_shared/` — plugin-level install helpers (`installs/<tool>/`) and shared tests (`tests/`)
 - `hooks/hooks.json` + `scripts/install-followup.sh` — post-install Stop hook
 - `SHARED-feynman.md`, `SHARED-model-building.md` — cross-skill convention docs
 
