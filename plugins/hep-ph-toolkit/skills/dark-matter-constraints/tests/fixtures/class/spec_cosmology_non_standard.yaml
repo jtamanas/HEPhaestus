@@ -1,0 +1,8 @@
+dm_candidate: {pdg: 9000001, name: chi, mass_gev: 100.0}
+halo: shm
+cosmology:
+  kind: non_standard
+  class_preset: custom
+  class_config: ./fake_class_config.ini
+  bsm_extension: ./fake_bsm.yaml
+  invoke: [background]

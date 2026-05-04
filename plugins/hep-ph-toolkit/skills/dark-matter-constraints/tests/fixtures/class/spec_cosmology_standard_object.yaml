@@ -1,0 +1,3 @@
+dm_candidate: {pdg: 5000005, name: chi}
+halo: shm
+cosmology: {kind: standard_thermal}     # object form — should_invoke_class() returns False

@@ -1,0 +1,6 @@
+dm_candidate: {pdg: 5000005, name: chi}
+halo: shm
+cosmology:
+  kind: non_standard
+  class_preset: custom
+  # missing class_config AND class_template — triggers COSMOLOGY_SPEC_INCOMPLETE

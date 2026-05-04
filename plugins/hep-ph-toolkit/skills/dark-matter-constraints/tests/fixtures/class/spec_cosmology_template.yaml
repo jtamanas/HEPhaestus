@@ -1,0 +1,8 @@
+dm_candidate: {pdg: 9000001, name: chi, mass_gev: 100.0}
+halo: shm
+cosmology:
+  kind: non_standard
+  class_preset: custom
+  class_template: dcdm_minimal
+  overrides: {Gamma_dcdm: 1.0e-29, M_dcdm: 100.0}
+  invoke: [background]

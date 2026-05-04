@@ -1,0 +1,3 @@
+dm_candidate: {pdg: 5000005, name: chi}
+halo: shm
+cosmology: {Kind: non_standard}    # capital K — triggers RUNNER_SPEC_INVALID
