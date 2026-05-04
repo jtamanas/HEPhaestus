@@ -31,7 +31,8 @@ plot_axes:
   x: {symbol: "m_chi",      range: [100, 1500], units: "GeV", scale: linear}
   y: {symbol: "sin_2theta", range: [-1, 1],                   scale: linear}
 multi_component: false
-time_overrides: {}
+time_overrides:
+  dd: {cold: [1.0, 2.0]}
 ```
 
 ---
@@ -51,7 +52,7 @@ python3 plugins/hep-ph-toolkit/skills/_shared/time_budget.py \
 | Direct detection | **READY (tree-only)** — loop floor near the blind-spot locus pending `/looptools eval` runtime | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` (`generate direct_detection`) → `/ddcalc [EXISTS]` | 1–2 | 0.4–0.8 |
 | Indirect detection | **COMING SOON** — pull computation pending (v1); `/gamlike` v0 produces parsed input | `/sarah-build [EXISTS]` → `/spheno-build [EXISTS]` → `/madgraph [EXISTS]` → `/maddm [EXISTS]` → `/gamlike [v0 — parser only; pull-computation v1+]` | 1–3 | 0.4–0.8 |
 
-All-constraints cold total (overlap-adjusted): **3.2–8.0 hr**
+All-constraints cold total (overlap-adjusted): **2.0–5.5 hr**
 
 Timing note: these ranges assume the default SPheno spectrum backend (SARAH UFO ~5–8 min cold + SPheno compile ~5 min cold + single SPheno run ~1–10 s). A cached rebuild skips SARAH (UFO stamped) and the SPheno compile (binary stamped); only the single MadDM run fires. The demo is scoped to one benchmark point — scans are out of scope and belong to callers that drive `/maddm` directly.
 

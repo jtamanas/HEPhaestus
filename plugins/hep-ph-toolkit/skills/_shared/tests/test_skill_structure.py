@@ -341,11 +341,29 @@ class Test2HdmA:
         ids = [o["id"] for o in ready["options"]]
         assert ids == ["go", "back", "cancel"]
 
-    def test_step4_prose_directive_count_and_order(self, content):
-        directives = _extract_step4_relic_prose_directives(content)
-        assert len(directives) == 4, f"Expected 4 directives, got {len(directives)}"
-        names = _extract_skill_names_from_directives(directives)
-        assert names == ["sarah-build", "spheno-build", "madgraph", "maddm"]
+    def test_step4_relic_branch_mentions_chain_in_order(self, content):
+        """2hdm-a Step 4 uses the hand-crafted SARAH fixture (no /sarah-build,
+        no /spheno-build for relic), so the narrative under the
+        '#### Step 4 — Relic density branch' subsection is SARAH → MadGraph
+        → MadDM.  Assert these tool references appear in that order, scoped
+        to the relic-density subsection only."""
+        relic_match = re.search(
+            r'####\s+Step 4\s+[—-]\s+Relic density branch'
+            r'(.*?)(?=\n####\s+Step 4|\n##\s+Error paths|\Z)',
+            content, re.DOTALL,
+        )
+        assert relic_match is not None, "Step 4 relic-density subsection not found"
+        body = relic_match.group(1)
+        markers = ["SARAH", "MadGraph", "MadDM"]
+        positions = []
+        for m in markers:
+            idx = body.find(m)
+            assert idx != -1, f"Step 4 relic branch missing tool marker {m!r}"
+            positions.append(idx)
+        assert positions == sorted(positions), (
+            f"Step 4 relic branch tool markers out of order: "
+            f"{list(zip(markers, positions))}"
+        )
 
     def test_cold_total_within_tolerance(self, content):
         lo, hi = _extract_cold_total_line(content)

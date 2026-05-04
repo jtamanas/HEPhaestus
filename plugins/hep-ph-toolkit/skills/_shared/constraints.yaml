@@ -846,6 +846,14 @@ models:
       relic: {cold: [1.5, 3.0]}
       dd:    {cold: [3.0, 5.0]}
       id:    {cold: [1.5, 4.0]}
+    # dd remains BLOCKED: the default chain runs through madgraph, which
+    # cannot represent dark SU(3)_D color (MG5_DARK_COLOR_TENSOR_WALL).  The
+    # loop-DD chain integration via /looptools eval has also not shipped.
+    # Mirrors the 2hdm-a dd pattern: the per-prereq skills exist, but the
+    # assembled chain is not runnable for this model.
+    spec_authoring_blockers:
+      dd:
+        - "spec-authoring-incomplete"
     # Dark SU(3)_D is a non-SM color sector; MadGraph/MadDM cannot generate
     # the relic-density coannihilation set because they cannot represent the
     # dark color group. The relic chain therefore runs entirely through the

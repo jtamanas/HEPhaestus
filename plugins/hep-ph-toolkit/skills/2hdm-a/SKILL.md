@@ -60,7 +60,7 @@ python3 plugins/hep-ph-toolkit/skills/_shared/time_budget.py \
 
 > **Note on SPheno**: MadDM's internal Boltzmann solver is fed directly from the patched param_card; SPheno spectrum is not required on this path. `/spheno-build` was removed from the relic-density prereq chain.
 
-All-constraints cold total (overlap-adjusted): **3.3–8.0 hr**
+All-constraints cold total (overlap-adjusted): **3.0–7.5 hr**
 
 Relic density and indirect detection are READY via the fixture path. ID is
 parser-only: `/gamlike` v0 emits gamlike/v1 JSON with ⟨σv⟩, channel fractions,

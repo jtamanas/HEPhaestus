@@ -50,33 +50,35 @@ class TestSingletDoubletRelic:
 
 
 # ---------------------------------------------------------------------------
-# Singlet-Doublet: direct detection (planned loop subchain)
+# Singlet-Doublet: direct detection (tree-DD via MadDM chain_override)
 # ---------------------------------------------------------------------------
+# constraints.yaml gives singlet-doublet dd a chain_override to the tree-DD
+# path [sarah-build, spheno-build, madgraph, maddm, ddcalc] — the canonical
+# θ=0 benchmark sits off the blind-spot locus, so tree contributions dominate.
+# All five prereqs are status:exists, so dd is now READY for this model.
+# The loop-DD chain (FeynArts → FormCalc → /looptools eval → /ddcalc) is the
+# natural extension near the blind-spot locus and stays deferred — but it is
+# not gating the default singlet-doublet dd run.
 
 class TestSingletDoubletDD:
     def setup_method(self):
         self.report = resolve("singlet-doublet", ["dd"])
 
-    def test_status_blocked(self):
-        assert self.report.rows[0].status == "BLOCKED"
-
-    def test_missing_contains_required_prereqs(self):
-        # WS2 S7-mega (commit 67ebdac) flipped ddcalc.status planned→exists per intel
-        # digest §constraints.yaml schema "drift" note.  ddcalc is now EXISTS, so it
-        # no longer appears in missing.  Only feynarts + formcalc remain planned.
-        missing = self.report.rows[0].missing
-        for expected in ["feynarts", "formcalc"]:
-            assert expected in missing, (
-                f"Expected '{expected}' in missing for singlet-doublet dd, got {missing}"
-            )
-        assert "ddcalc" not in missing, (
-            f"ddcalc was flipped to status:exists in S7-mega; should not be in missing, got {missing}"
+    def test_status_ready_via_tree_dd_override(self):
+        assert self.report.rows[0].status == "READY", (
+            f"Expected READY (tree-DD chain_override), got "
+            f"{self.report.rows[0].status}; missing={self.report.rows[0].missing}"
         )
 
-    def test_chain_contains_both_exists_and_planned(self):
+    def test_chain_uses_tree_dd_override(self):
+        names = [n for n, _ in self.report.rows[0].chain_annotated]
+        assert names == ["sarah-build", "spheno-build", "madgraph", "maddm", "ddcalc"], (
+            f"Expected tree-DD chain_override; got {names}"
+        )
+
+    def test_chain_all_exists(self):
         tags = {tag for _, tag in self.report.rows[0].chain_annotated}
-        assert "EXISTS" in tags
-        assert "PLANNED" in tags
+        assert tags == {"EXISTS"}, f"Expected all EXISTS, got tags={tags}"
 
 
 # ---------------------------------------------------------------------------
@@ -130,11 +132,14 @@ class TestDarkSU3DDIdStillBlocked:
     def test_dd_blocked(self):
         dd_row = next(r for r in self.report.rows if r.constraint == "dd")
         assert dd_row.status == "BLOCKED", (
-            f"dark-su3 dd must remain BLOCKED on planned tools, got {dd_row.status}"
+            f"dark-su3 dd must remain BLOCKED, got {dd_row.status}"
         )
-        # At least one of the planned DD-loop tools must surface
-        assert any(t in dd_row.missing for t in ("feynarts", "formcalc", "ddcalc")), (
-            f"dark-su3 dd missing list should include planned loop tools, got {dd_row.missing}"
+        # The default chain runs through madgraph (MG5_DARK_COLOR_TENSOR_WALL)
+        # and the loop-DD integration via /looptools eval has not shipped, so
+        # the model carries a spec_authoring_blocker for dd.  Mirrors 2hdm-a.
+        assert "spec-authoring-incomplete" in dd_row.missing, (
+            f"dark-su3 dd missing list should carry the spec_authoring_blocker, "
+            f"got {dd_row.missing}"
         )
 
     def test_id_ready_after_gamlike_v0(self):
@@ -191,18 +196,19 @@ class TestOverlapDedup:
             f"naive sum {naive_hi}"
         )
 
-    def test_ready_total_only_counts_relic_prereqs(self):
-        """Only relic is READY for singlet-doublet; ready total should match relic-only total."""
+    def test_ready_total_equals_combined_when_all_ready(self):
+        """singlet-doublet relic+dd are both READY (dd via tree-DD chain_override).
+        The ready total must therefore equal the all-constraints total."""
         ready_lo = self.combined.overlap_totals.cold_ready[0]
         ready_hi = self.combined.overlap_totals.cold_ready[1]
-        relic_lo = self.relic_only.overlap_totals.cold_all[0]
-        relic_hi = self.relic_only.overlap_totals.cold_all[1]
-        # They must be equal since relic is the only ready constraint
-        assert abs(ready_lo - relic_lo) < 1e-6, (
-            f"ready cold lo {ready_lo} should equal relic-only cold lo {relic_lo}"
+        all_lo = self.combined.overlap_totals.cold_all[0]
+        all_hi = self.combined.overlap_totals.cold_all[1]
+        assert abs(ready_lo - all_lo) < 1e-6, (
+            f"ready cold lo {ready_lo} should equal all cold lo {all_lo} "
+            "since both relic and dd are READY"
         )
-        assert abs(ready_hi - relic_hi) < 1e-6, (
-            f"ready cold hi {ready_hi} should equal relic-only cold hi {relic_hi}"
+        assert abs(ready_hi - all_hi) < 1e-6, (
+            f"ready cold hi {ready_hi} should equal all cold hi {all_hi}"
         )
 
 
@@ -231,8 +237,10 @@ class TestChainOrder:
         assert names == ["sarah-build", "spheno-build", "madgraph", "maddm"]
 
     def test_dd_chain_starts_with_shared_prereqs(self):
+        # singlet-doublet dd uses the tree-DD chain_override; feynarts/formcalc
+        # are not in the chain (the loop-DD subchain is deferred).
         report = resolve("singlet-doublet", ["dd"])
         names = [n for n, _ in report.rows[0].chain_annotated]
         assert names[:3] == ["sarah-build", "spheno-build", "madgraph"]
-        assert "feynarts" in names
-        assert "ddcalc" in names
+        assert names[-1] == "ddcalc"
+        assert "maddm" in names
