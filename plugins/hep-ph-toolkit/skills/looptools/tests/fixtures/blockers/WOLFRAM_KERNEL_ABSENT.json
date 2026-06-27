@@ -1,0 +1,6 @@
+{
+  "code": "WOLFRAM_KERNEL_ABSENT",
+  "mode": "fatal",
+  "message": "wolframscript not found; mechanism A needs a Wolfram kernel.",
+  "user_instruction": "Activate Wolfram Engine (wolframscript --activate)."
+}

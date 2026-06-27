@@ -187,6 +187,58 @@
       "audit_status": "schema_pinned",
       "model_class_certification": "preset_planck18",
       "router_table_row": "Step 6 sigma_8 CLASS"
+    },
+    {
+      "observable": "sigma_SI_proton",
+      "downstream": "looptools",
+      "field_name": "sigma_si_proton_cm2",
+      "produced_by": "summary_json",
+      "source_artifact": "scattering.json (scattering/v1)",
+      "source_locator": {"kind": "schema_ref", "schema": "scattering/v1", "json_pointer": "/properties/sigma_si_proton_cm2"},
+      "defined_in": "plugins/shared/schemas/scattering.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/looptools/tests/fixtures/scattering_golden.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "unproven",
+      "router_table_row": "Step 2 sigma-SI(p) looptools (loop-only DD)"
+    },
+    {
+      "observable": "sigma_SI_neutron",
+      "downstream": "looptools",
+      "field_name": "sigma_si_neutron_cm2",
+      "produced_by": "summary_json",
+      "source_artifact": "scattering.json (scattering/v1)",
+      "source_locator": {"kind": "schema_ref", "schema": "scattering/v1", "json_pointer": "/properties/sigma_si_neutron_cm2"},
+      "defined_in": "plugins/shared/schemas/scattering.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/looptools/tests/fixtures/scattering_golden.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "unproven",
+      "router_table_row": "Step 2 sigma-SI(n) looptools (loop-only DD)"
+    },
+    {
+      "observable": "sigma_SD_proton",
+      "downstream": "looptools",
+      "field_name": "sigma_sd_proton_cm2",
+      "produced_by": "summary_json",
+      "source_artifact": "scattering.json (scattering/v1)",
+      "source_locator": {"kind": "schema_ref", "schema": "scattering/v1", "json_pointer": "/properties/sigma_sd_proton_cm2"},
+      "defined_in": "plugins/shared/schemas/scattering.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/looptools/tests/fixtures/scattering_golden.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "unproven",
+      "router_table_row": "Step 2 sigma-SD(p) looptools (loop-only DD; null in v1)"
+    },
+    {
+      "observable": "sigma_SD_neutron",
+      "downstream": "looptools",
+      "field_name": "sigma_sd_neutron_cm2",
+      "produced_by": "summary_json",
+      "source_artifact": "scattering.json (scattering/v1)",
+      "source_locator": {"kind": "schema_ref", "schema": "scattering/v1", "json_pointer": "/properties/sigma_sd_neutron_cm2"},
+      "defined_in": "plugins/shared/schemas/scattering.schema.json",
+      "fixture": "plugins/hep-ph-toolkit/skills/looptools/tests/fixtures/scattering_golden.json",
+      "audit_status": "schema_pinned",
+      "model_class_certification": "unproven",
+      "router_table_row": "Step 2 sigma-SD(n) looptools (loop-only DD; null in v1)"
     }
   ],
 
@@ -219,6 +271,14 @@
       "reader": "/dark-matter-constraints SKILL.md Step 6",
       "audit_status": "verified_in_writer_skill",
       "condition": {"spec_field": "cosmology.kind", "not_in": ["standard_thermal"]}
+    },
+    {
+      "key": "config.looptools_path",
+      "type": "path_or_bool",
+      "writer": "_shared/installs/looptools",
+      "reader": "/dark-matter-constraints SKILL.md Step 2 (loop-only DD sub-branch)",
+      "audit_status": "verified_in_writer_skill",
+      "condition": {"spec_field": "candidates[?].mediator_regime", "in": ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]}
     }
   ],
 

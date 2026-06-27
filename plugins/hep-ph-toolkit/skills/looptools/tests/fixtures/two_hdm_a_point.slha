@@ -1,0 +1,19 @@
+# SLHA model point for TwoHdmAfix (2HDM+a) — hand-crafted fixture.
+# Off-resonance benchmark mirroring 2hdm-a/SKILL.md §4: Mchi=100, Ma=400,
+# gchi=1.0, tan beta=10.  PDG ids match the SARAH fixture
+# (chi=9989932 Dirac DM; Ah lightest = 36 = the pseudoscalar mediator a).
+# Provisional numbers; the Tier-3 smoke replaces the amplitude-derived values.
+BLOCK MASS
+   9989932    1.00000000e+02   # chi  (Dirac DM)
+        36    4.00000000e+02   # a    (CP-odd mediator, lightest Ah)
+        37    5.00000000e+02   # Hm   (charged Higgs, box loop)
+        24    8.03790000e+01   # W
+         6    1.73000000e+02   # top
+         5    4.18000000e+00   # bottom
+BLOCK FRALPHA
+         1    1.00000000e+00   # alpha (CP-even mixing)
+BLOCK HMIX
+         1    4.00000000e+02   # mu-like portal scale
+         2    1.00000000e+01   # tan beta
+BLOCK DMPORTAL
+         1    1.00000000e+00   # gchi  (DM-mediator pseudoscalar coupling)

@@ -23,7 +23,7 @@
         ],
         "properties": {
           "observable": {"type": "string", "minLength": 1},
-          "downstream": {"enum": ["class", "drake", "maddm", "micromegas"]},
+          "downstream": {"enum": ["class", "drake", "looptools", "maddm", "micromegas"]},
           "field_name": {"type": "string", "minLength": 1},
           "produced_by": {
             "enum": ["agent_parsed", "install_detect_json", "stdout_regex", "summary_json"]

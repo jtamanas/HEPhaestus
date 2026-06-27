@@ -10,7 +10,7 @@ Claude Code plugin marketplace for high-energy physics phenomenology.
 
 This marketplace exposes a single plugin, `hep-ph-toolkit`, located at `plugins/hep-ph-toolkit/`:
 - `.claude-plugin/plugin.json` — plugin manifest
-- `skills/<skill-name>/SKILL.md` — individual skill definitions (37 skills)
+- `skills/<skill-name>/SKILL.md` — individual skill definitions (28 skills, matching the Skill Categories table below; the prior "37" prose was a long-standing miscount of the actual `SKILL.md` files)
 - `skills/_shared/` — cross-skill helpers (matrix lookup, blocker schema, taxonomy, etc.)
 - `_shared/` — plugin-level install helpers (`installs/<tool>/`) and shared tests (`tests/`)
 - `hooks/hooks.json` + `scripts/install-followup.sh` — post-install Stop hook
@@ -34,7 +34,7 @@ The marketplace index is at `.claude-plugin/marketplace.json`.
 |----------|--------|
 | Installs (reference) | `_shared/installs/<tool>/` for {class, ddcalc, drake, feynarts, feynrules, formcalc, higgstools, looptools, maddm, micromegas, sarah, spheno} — driven by runner-skill preflights and `/install` |
 | Onboarding & demo | `2hdm-a`, `dark-su3`, `demo`, `install`, `singlet-doublet`, `_test_model_x` |
-| Feynman / amplitudes | `draw-feynman`, `feynarts`, `formcalc` |
+| Feynman / amplitudes | `draw-feynman`, `feynarts`, `formcalc`, `looptools` |
 | BSM model building | `lagrangian-builder`, `sarah-build`, `spheno-build` |
 | Constraints | `dark-matter-constraints`, `ddcalc`, `gamlike`, `higgstools`, `micromegas` |
 | Cosmology | `class` |

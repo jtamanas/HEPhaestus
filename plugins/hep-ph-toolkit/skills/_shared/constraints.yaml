@@ -554,7 +554,7 @@ prereqs:
       cold:   [0.5, 1.0]
       cached: [0.17, 0.33]
     capabilities:
-      description: "FeynArts 3.11 — Feynman diagram generator (skill at plugins/hep-ph-toolkit/skills/feynarts/; loop-DD chain integration still pending the /looptools eval runtime)"
+      description: "FeynArts 3.11 — Feynman diagram generator (skill at plugins/hep-ph-toolkit/skills/feynarts/; loop-DD chain now runs via the /looptools eval runtime)"
       install_skill: _shared/installs/feynarts
       role:
         collider: none
@@ -567,13 +567,14 @@ prereqs:
       depends_on_prereqs: []
       inputs_required: [feynarts_model_file]
       support:
-        # Loop-only DD: feynarts gates the loop chain
+        # Loop-only DD: feynarts runs the loop chain (unblocked by /looptools eval)
         - axis: candidates[?].mediator_regime
           match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
-          verdict: blocked
-          blocker: LOOP_DD_TOOLING_PLANNED
-          blocker_class: missing-skill
-          evidence: "intel/digest.md §§371-381 (_shared/installs/feynarts; LOOP_DD_TOOLING_PLANNED)"
+          verdict: supported_with_caveat
+          caveat: >-
+            σ PROVISIONAL pending FormCalc/LoopTools smoke; the /looptools eval one-loop
+            numerical core is a loud-failing placeholder (ws-looptools-eval).
+          evidence: "loop-DD chain feynarts → formcalc → looptools eval → ddcalc is runnable (ws-looptools-eval)"
         # All other models: not applicable (feynarts is only for loop chains)
         - axis: A1
           match: "*"
@@ -586,7 +587,7 @@ prereqs:
       cold:   [0.5, 1.0]
       cached: [0.17, 0.33]
     capabilities:
-      description: "FormCalc 9.10 — amplitude reduction (skill at plugins/hep-ph-toolkit/skills/formcalc/; loop-DD chain integration still pending the /looptools eval runtime)"
+      description: "FormCalc 9.10 — amplitude reduction (skill at plugins/hep-ph-toolkit/skills/formcalc/; loop-DD chain now runs via the /looptools eval runtime)"
       install_skill: _shared/installs/formcalc
       role:
         collider: none
@@ -599,13 +600,14 @@ prereqs:
       depends_on_prereqs: [feynarts, looptools]
       inputs_required: [feynarts_amplitude_output]
       support:
-        # Loop-only DD: formcalc gates the loop chain
+        # Loop-only DD: formcalc runs the loop chain (unblocked by /looptools eval)
         - axis: candidates[?].mediator_regime
           match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
-          verdict: blocked
-          blocker: LOOP_DD_TOOLING_PLANNED
-          blocker_class: missing-skill
-          evidence: "intel/digest.md §§371-381 (_shared/installs/formcalc; LOOP_DD_TOOLING_PLANNED)"
+          verdict: supported_with_caveat
+          caveat: >-
+            σ PROVISIONAL pending FormCalc/LoopTools smoke; the /looptools eval one-loop
+            numerical core is a loud-failing placeholder (ws-looptools-eval).
+          evidence: "loop-DD chain feynarts → formcalc → looptools eval → ddcalc is runnable (ws-looptools-eval)"
         # All other models: not applicable
         - axis: A1
           match: "*"
@@ -618,7 +620,7 @@ prereqs:
       cold:   [0.5, 1.5]
       cached: [0.17, 0.33]
     capabilities:
-      description: "LoopTools 2.16 — Passarino-Veltman loop integrals; downstream of FormCalc"
+      description: "LoopTools 2.16 — Passarino-Veltman loop integrals; /looptools eval runtime emits scattering/v1 for /ddcalc (skill at plugins/hep-ph-toolkit/skills/looptools/)"
       install_skill: _shared/installs/looptools
       role:
         collider: none
@@ -631,13 +633,14 @@ prereqs:
       depends_on_prereqs: [formcalc]
       inputs_required: [formcalc_output]
       support:
-        # Loop-only DD: looptools gates this chain
+        # Loop-only DD: looptools eval evaluates the loop amplitude → scattering/v1
         - axis: candidates[?].mediator_regime
           match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
-          verdict: blocked
-          blocker: LOOP_DD_TOOLING_PLANNED
-          blocker_class: missing-skill
-          evidence: "intel/digest.md §§371-381 (_shared/installs/looptools; LOOP_DD_TOOLING_PLANNED)"
+          verdict: supported_with_caveat
+          caveat: >-
+            σ PROVISIONAL pending FormCalc/LoopTools smoke; the /looptools eval one-loop
+            numerical core is a loud-failing placeholder (ws-looptools-eval).
+          evidence: "/looptools eval emits scattering/v1 (σ_SI/σ_SD) for /ddcalc (ws-looptools-eval)"
         # All other: not applicable (looptools is only for loop integral evaluation)
         - axis: A1
           match: "*"
@@ -793,13 +796,12 @@ models:
     # unblocked via the hand-crafted SARAH model fixture at:
     #   plugins/hep-ph-toolkit/skills/2hdm-a/fixtures/sarah_model/
     # The fixture bypasses the /sarah-build renderer (which still cannot emit
-    # a correct Dirac-singlet PortalDM model). DD and ID remain blocked on
-    # planned skills and on the renderer backport.
-    # See demo_output/2hdm-a/fix_loop/POST_MORTEM.md §"Remaining debt" for
-    # the renderer backport plan (loop B, concurrent worktree).
-    spec_authoring_blockers:
-      dd:
-        - "spec-authoring-incomplete"
+    # a correct Dirac-singlet PortalDM model). DD is now UNBLOCKED on the same
+    # fixture via the /looptools eval runtime (loop-only chain). ID remains
+    # parser-only. The /sarah-build renderer backport is SEPARATE, non-blocking
+    # debt — see demo_output/2hdm-a/fix_loop/POST_MORTEM.md §"Remaining debt".
+    # spec_authoring_blockers.dd removed (ws-looptools-eval): the loop-only DD
+    # subchain runs on the hand-crafted fixture, mirroring how relic was unblocked.
     spec_authoring_reason: >-
       Relic density: UNBLOCKED via hand-crafted SARAH model fixture
       (plugins/hep-ph-toolkit/skills/2hdm-a/fixtures/sarah_model/).
@@ -809,11 +811,14 @@ models:
       Pull computation (likelihood deltas, exclusion verdicts) is deferred
       to a future dm-pull skill; ID outputs are tagged
       dm_indirect_detection_status="parser-only".
-      DD remains blocked: two_hdm_a.yaml renderer cannot yet emit a
-      physics-correct UFO for the loop-only DD subchain, and the /looptools
-      eval runtime that bridges FormCalc to /ddcalc has not shipped.
-      Renderer backport is tracked in demo_output/2hdm-a/fix_loop/POST_MORTEM.md
-      §Remaining debt item 1.
+      Direct detection: UNBLOCKED via /looptools eval on the same fixture
+      (loop-only, CP-forbidden tree SI). The loop chain
+      /feynarts → /formcalc → /looptools eval → /ddcalc evaluates the
+      charged-Higgs/W box into a scattering/v1 JSON. Results are stamped
+      model_source="hand_crafted_sarah_model" and σ values are PROVISIONAL
+      until the Tier-3 FormCalc/LoopTools smoke runs on a tooled box. The
+      live /sarah-build renderer UFO backport remains separate debt
+      (demo_output/2hdm-a/fix_loop/POST_MORTEM.md §Remaining debt item 1).
     chain_overrides:
       id:
         chain: [madgraph, maddm, gamlike]
@@ -821,6 +826,16 @@ models:
           Fixture-based UFO (no /sarah-build, no /spheno-build); MadDM
           `generate indirect_detection` → /gamlike v0 parser. Pull
           computation deferred to dm-pull (v1+).
+      dd:
+        chain: [madgraph, feynarts, formcalc, looptools, ddcalc]
+        reason: >-
+          Fixture-based loop-only DD (no /sarah-build, no /spheno-build).
+          Tree-level SI is CP-forbidden (mediator a is CP-odd, σ_SI_tree ≈ 0),
+          so the leading signal is the one-loop charged-Higgs/W box. The chain
+          /feynarts → /formcalc → /looptools eval evaluates the loop amplitude
+          into scattering/v1 (σ_SI, σ_SD), consumed by /ddcalc. Runs on the
+          hand-crafted SARAH fixture; σ values are PROVISIONAL pending the
+          Tier-3 smoke.
     time_overrides:
       dd: {cold: [3.0, 6.0]}    # loop-only DD is primary signal; slower
 

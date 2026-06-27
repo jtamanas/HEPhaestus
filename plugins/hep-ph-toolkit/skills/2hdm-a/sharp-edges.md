@@ -14,7 +14,29 @@ levels: **VERIFIED** = evidence captured in worktree;
 
 ## Model fixture and SARAH-emission edges
 
-### SE-2HDMA-MODEL-1 — `Vertex::ChargeViolating` warnings on TwoHdmAfix during `MakeFeynArts[]` (VERIFIED)
+### SE-2HDMA-MODEL-1 — `Vertex::ChargeViolating` warnings on TwoHdmAfix during `MakeFeynArts[]` (DOWNGRADED — BENIGN)
+
+**Status: DOWNGRADED to benign SARAH self-check artifact — live-kernel PASS
+2026-06-27.** Two read-only audits cleared this for the `/looptools eval` DD
+build: a static `.mod` audit (`/tmp/hephaestus-chargeviolating-audit.md`, verdict
+GO) and a live SARAH kernel run (`/tmp/hephaestus-physics-gate-results.md`,
+verdict PASS). The three flagged W–H∓–φ⁰ vertices are **present, non-zero, and
+charge-conserving** in the emitted `.mod` (lines 209/254/256), `Hm` is assigned
+electric charge −1 (proven by the e-proportional H⁺H⁻γ coupling at `.mod:258`),
+and the DM→mediator vertex `{Ah, bar[Fchi], Fchi}` ∝ gchi·ZA[·,3] is present
+(`.mod:223`). No DD-feeding vertex was dropped. The two prior hypotheses below
+(`ZA` near line 102 / `ZP` sign) are **disproven**: `ZA`/`ZP` are SARAH-computed
+(no hand-coded `Dependence`/`Value`), so there is nothing hand-coded to be
+"wrong". The warnings correlate with the upstream `Part::pkspec1`/`Part::partw`
+`$Failed` leak (memory `reference_sarah_failed_emission`). **Do NOT edit `ZA`
+(line 102) or flip a `ZP` sign — that would introduce a bug.** Method traps for
+future auditors: `getElectricCharge` returns `None` for rotated multi-PDG SCALAR
+eigenstates (Hm/Ah/hh) — infer the charge from the QED vertex; and the DM is a
+DIRAC fermion, so query `{Ah, bar[Fchi], Fchi}`, not `{Fchi, Fchi, Ah}`.
+The end-to-end closure (a finite, gauge-stable A⁰H⁺W⁻ amplitude) is the Tier-3
+`/looptools` smoke (`HEPPH_RUN_WOLFRAM_TESTS=1`), committed-but-skipped.
+
+The original (now-superseded) investigation is retained below for provenance.
 
 **Surfaced:** WS-dd r1 (2026-04-26); evidence captured in WS-dd r2.
 **Worktree:** `agent-afc1d0ee1a5c3278b`, commit `aa38e45`,

@@ -91,10 +91,14 @@ def test_manifest_has_three_required_sections():
 
 
 def test_manifest_section_counts_pinned():
-    """len(output_fields)==13, len(config_keys)==4, len(status_enums)==1."""
+    """len(output_fields)==17, len(config_keys)==5, len(status_enums)==1.
+
+    output_fields: 13 baseline + 4 looptools loop-only-DD rows (ws-looptools-eval).
+    config_keys:   4 baseline + config.looptools_path (ws-looptools-eval).
+    """
     manifest = json.loads(_manifest_path().read_text())
-    assert len(manifest["output_fields"]) == 13, f"Expected 13 output_fields, got {len(manifest['output_fields'])}"
-    assert len(manifest["config_keys"]) == 4, f"Expected 4 config_keys, got {len(manifest['config_keys'])}"
+    assert len(manifest["output_fields"]) == 17, f"Expected 17 output_fields, got {len(manifest['output_fields'])}"
+    assert len(manifest["config_keys"]) == 5, f"Expected 5 config_keys, got {len(manifest['config_keys'])}"
     assert len(manifest["status_enums"]) == 1, f"Expected 1 status_enum, got {len(manifest['status_enums'])}"
 
 
@@ -295,9 +299,9 @@ def test_drake_install_detect_documents_subset():
 # ---------------------------------------------------------------------------
 
 def test_config_keys_complete():
-    """Exactly {config.maddm_path, config.micromegas_path, config.drake_path, config.class_path} — set equality."""
+    """Exactly {config.maddm_path, config.micromegas_path, config.drake_path, config.class_path, config.looptools_path} — set equality."""
     manifest = json.loads(_manifest_path().read_text())
-    expected = {"config.maddm_path", "config.micromegas_path", "config.drake_path", "config.class_path"}
+    expected = {"config.maddm_path", "config.micromegas_path", "config.drake_path", "config.class_path", "config.looptools_path"}
     actual = {entry["key"] for entry in manifest["config_keys"]}
     assert actual == expected, f"config_keys mismatch: expected {expected}, got {actual}"
 

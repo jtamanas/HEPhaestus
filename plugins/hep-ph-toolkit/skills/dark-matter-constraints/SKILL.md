@@ -95,6 +95,33 @@ If `multi_component: true` but `backends.spectrum != "analytic"`: continue to
 the default MadDM pipeline below (multi-component DM with a UFO-compatible
 spectrum can still go through MadDM per-component).
 
+**Branch — loop-only DD (CP-forbidden / anomaly-induced mediator).**
+When `direct` is requested AND the model spec's
+`candidates[?].mediator_regime ∈ {loop-only-CP-forbidden, loop-only-anomaly-induced}`,
+tree-level DD is ≈0 and physically meaningless (e.g. 2HDM+a: the mediator `a` is
+CP-odd, so `σ_SI_tree ≈ 0`). For **direct detection only**, route DD through the
+loop chain instead of `/maddm generate direct_detection`:
+
+```
+/feynarts generate → /formcalc reduce → /looptools eval → /ddcalc run --sigma-json
+```
+
+`/looptools eval` numerically evaluates the FormCalc-reduced one-loop amplitude
+(charged-Higgs/W box + mediator triangle) and emits a `scattering/v1` JSON with
+`source: "looptools"` and the four cross-section fields `sigma_si_proton_cm2`,
+`sigma_si_neutron_cm2`, `sigma_sd_proton_cm2`, `sigma_sd_neutron_cm2`
+(σ_SD is `null` in v1). Feed that JSON straight into the existing `/ddcalc`
+consumer (Step 4 / the σ rows). The pre-dispatch availability check reads
+`config.looptools_path` (and the LoopTools MathLink flag); if absent, emit the
+upstream `/looptools` blocker and skip DD (relic/indirect still run).
+
+Emit an informational notice `LOOP_DD_PATH` (recoverable, mirrors
+`ANALYTIC_BACKEND_PATH`) documenting that DD ran through the loop chain rather
+than tree-level MadDM. Keep `/maddm` for relic and indirect. The σ values are
+PROVISIONAL until the Tier-3 FormCalc/LoopTools smoke runs on a tooled box;
+tag the DD row `[loop, provisional]` and stamp
+`model_source: "hand_crafted_sarah_model"` when the run is on a fixture.
+
 **Default pipeline.**
 Invoke `/maddm` for the requested observables. Rationale: MadDM's MG5/UFO path
 handles exotic Lorentz and color structures, loop-induced annihilation channels,
@@ -450,6 +477,7 @@ the tool was run for that observable. If a FLAG row is present, the word
 |------|------|---------|-----------------|
 | `MADDM_MISSING` | fatal | MadDM not found in MG5 or `config.maddm_path` absent (default pipeline only — not raised on the analytic-only branch) | Run `_shared/installs/maddm` |
 | `ANALYTIC_BACKEND_PATH` | recoverable (informational) | Step 2 analytic-only branch fired: `multi_component: true` AND `backends.spectrum == "analytic"`. MadDM skipped; relic numbers consumed directly from `<spheno_run>/diagnostics.json` + `summary.json` (`mixing.MHHMIX`). Steps 3-5 also skipped. | None — informational. Verify analytic-module assumptions in caveats. |
+| `LOOP_DD_PATH` | recoverable (informational) | Step 2 loop-only DD sub-branch fired: `direct` requested AND `candidates[?].mediator_regime ∈ {loop-only-CP-forbidden, loop-only-anomaly-induced}`. DD routed through `/feynarts → /formcalc → /looptools eval → /ddcalc` instead of tree-level MadDM (tree SI ≈ 0). | None — informational. σ values are PROVISIONAL pending the FormCalc/LoopTools smoke; relic/indirect still run via MadDM. |
 | `UFO_MISSING` | fatal | `config.models[<model>].ufo_path` absent | Run `/sarah-build` |
 | `SLHA_MISSING` | fatal | `/maddm` runtime fails with a spectrum-related error and `latest_slha` is absent | Run `/spheno-build` |
 | `MICROMEGAS_MISSING` | recoverable | micrOMEGAs not installed; cross-check triggered but skipped | Run `_shared/installs/micromegas`; cross-check results unavailable |
@@ -493,6 +521,7 @@ This skill writes no config keys — it is a router. It reads:
 | `config.maddm_path` | `_shared/installs/maddm` |
 | `config.drake_path` | `_shared/installs/drake` |
 | `config.class_path` | `_shared/installs/class` (Step 6; only read when `cosmology.kind != 'standard_thermal'`) |
+| `config.looptools_path` | `_shared/installs/looptools` (Step 2 loop-only DD sub-branch; only read when `candidates[?].mediator_regime ∈ {loop-only-CP-forbidden, loop-only-anomaly-induced}`) |
 
 ---
 
