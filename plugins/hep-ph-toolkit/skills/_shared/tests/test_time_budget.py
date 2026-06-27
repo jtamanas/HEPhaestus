@@ -17,7 +17,7 @@ Done-criteria assertions (§WS1, R2 fixer update):
 """
 
 import pytest
-from time_budget import resolve
+from time_budget import resolve, _print_report, _load, ConstraintRow, TimeReport
 
 
 # ---------------------------------------------------------------------------
@@ -244,3 +244,56 @@ class TestChainOrder:
         assert names[:3] == ["sarah-build", "spheno-build", "madgraph"]
         assert names[-1] == "ddcalc"
         assert "maddm" in names
+
+
+# ---------------------------------------------------------------------------
+# Renderer: slash-prefix discipline for the BLOCKED "pending:" line.
+# Regression for SE-INFRA-5 (devlog punch-list #7 / B7): skill markers keep
+# their leading slash, non-skill pseudo-markers must not get one.
+# ---------------------------------------------------------------------------
+
+class TestRendererPendingSlashes:
+    def _pending_line(self, missing, capsys):
+        """Render a synthetic BLOCKED row and return its `pending:` line.
+
+        chain_annotated is left empty so the only place the markers can be
+        printed with/without a slash is the `pending:` list itself — this
+        isolates the renderer behaviour under test from the chain-annotation
+        line (which always slash-prefixes prereqs).
+        """
+        row = ConstraintRow(
+            constraint="dd",
+            status="BLOCKED",
+            missing=list(missing),
+            chain_annotated=[],
+            cold=[0.0, 0.0],
+            cached=[0.0, 0.0],
+        )
+        report = TimeReport(model="dark-su3", selected=["dd"], rows=[row])
+        _print_report(report)
+        out = capsys.readouterr().out
+        return next(ln for ln in out.splitlines() if "pending:" in ln)
+
+    def test_skill_marker_keeps_slash(self, capsys):
+        # `madgraph` is a real prereq skill -> keeps its leading slash.
+        line = self._pending_line(["madgraph"], capsys)
+        assert "/madgraph" in line
+
+    def test_non_skill_marker_has_no_leading_slash(self, capsys):
+        # `spec-authoring-incomplete` is a pseudo-marker -> rendered bare.
+        line = self._pending_line(["spec-authoring-incomplete"], capsys)
+        assert "spec-authoring-incomplete" in line
+        assert "/spec-authoring-incomplete" not in line
+
+    def test_mixed_markers_render_correctly(self, capsys):
+        line = self._pending_line(["spec-authoring-incomplete", "madgraph"], capsys)
+        assert "/madgraph" in line
+        assert "/spec-authoring-incomplete" not in line
+
+    def test_non_skill_marker_is_truly_not_a_skill(self):
+        # Guard the membership test the renderer relies on: the pseudo-marker
+        # is genuinely absent from the prereq (skill) registry, while a real
+        # skill prereq is present.
+        prereqs = _load()["prereqs"]
+        assert "spec-authoring-incomplete" not in prereqs
+        assert "madgraph" in prereqs

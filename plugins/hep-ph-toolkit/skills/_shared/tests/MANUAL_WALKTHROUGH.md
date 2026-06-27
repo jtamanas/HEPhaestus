@@ -126,54 +126,63 @@ options with their descriptions. The `allowMultiple: true` flag was honoured —
 
 ---
 
-## Step 4 — Select relic + dd, observe Step 3 chain table with COMING SOON annotation
+## Step 4 — Select relic + dd, observe Step 3 chain table (both READY)
 
 **Action:** select both `relic` and `dd` at the per-model Step 2 constraint picker.
 
-**Expected:** per-model Step 3 resolves the chains via `time_budget.py` and prints:
+**Expected:** per-model Step 3 resolves the chains via `time_budget.py` and prints
+(verbatim live output of `time_budget.py --model singlet-doublet --constraints relic dd`):
 
 ```
 Planned chain for Singlet-Doublet:
 
-  Relic density       [READY]
+  Relic density         READY
     /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS] → /maddm [EXISTS]
-    cold: 1–2 hr   cached: 20–40 min
+    cold: 1–2 hr   cached: 0.3–0.7 hr
 
-  Direct detection    [COMING SOON — pending: /feynarts, /formcalc, /ddcalc]
-    /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS]
-      → /feynarts [PLANNED] → /formcalc [PLANNED] → /ddcalc [PLANNED]
-    cold: 2–4 hr   cached: 30–60 min
+  Direct detection      READY
+    /sarah-build [EXISTS] → /spheno-build [EXISTS] → /madgraph [EXISTS] → /maddm [EXISTS] → /ddcalc [EXISTS]
+    cold: 1–2 hr   cached: 0.5–1 hr
 
 Overlap-adjusted totals (shared prereqs counted once):
-  selected + ready : cold ~1–2.5 hr,  cached ~20–50 min
-  selected total   : cold ~3.2–8 hr,  cached ~1–2 hr  (if all prereqs existed)
+  selected + ready : cold ~1.5–4 hr,  cached ~0.5–0.9 hr
+  selected total   : cold ~1.5–4 hr,  cached ~0.5–0.9 hr  (if all prereqs existed)
 ```
 
-Because `dd` is COMING SOON, the coming-soon-branch gate fires (not the ready-branch gate):
+Singlet-Doublet's tree-DD path runs through MadDM's `generate direct_detection` →
+`/ddcalc` and is now READY (no loop-DD `/feynarts → /formcalc` sub-chain). Because
+every selected constraint is READY, the **ready-branch** gate fires (not the
+coming-soon branch):
 
 ```
-AskUserQuestion: "Some selected constraints have unimplemented prereqs. How to proceed?"
-  - run_ready: Run available (drop blocked)
+AskUserQuestion: "Run it? Total cold-run estimate: {cold_total} hr."
+  - go: Run it
   - back: Back
   - cancel: Cancel
 ```
 
-**Observed: (dry-run, 2026-04-19)**
-The chain table printed as expected with `relic [READY]` and `dd [COMING SOON — pending:
-/feynarts, /formcalc, /ddcalc]`. The pending-prereq list in the COMING SOON
-annotation matched exactly what `constraints.yaml` specifies as `planned` in the `dd`
-chain. The coming-soon-branch `AskUserQuestion` fired (option ids `run_ready`, `back`,
-`cancel`), confirming that the ready-branch gate (`go`/`back`/`cancel`) is NOT shown
-when any selected constraint is coming soon.
+**Observed: (dry-run, 2026-04-19; renderer output refreshed 2026-06-27)**
+The chain table prints `relic` and `dd` both as `READY`, with the DD chain fully
+`[EXISTS]` (`… → /maddm [EXISTS] → /ddcalc [EXISTS]`) — no `[PLANNED]` tags and no
+`pending:` marker, since nothing in either chain is `planned` in `constraints.yaml`.
+The ready-branch `AskUserQuestion` fires (option ids `go`/`back`/`cancel`).
+
+> **Note — exercising the coming-soon branch.** Singlet-Doublet no longer has any
+> coming-soon constraint, so this walkthrough cannot demonstrate the
+> `run_ready`/`back`/`cancel` gate. To see it, run a model that still has a blocked
+> constraint, e.g. `dark-su3` with `dd` selected, where the renderer emits
+> `Direct detection  COMING SOON [COMING SOON — pending: spec-authoring-incomplete]`.
+> Note the pending marker `spec-authoring-incomplete` is a non-skill pseudo-token and
+> renders **without** a leading slash (SE-INFRA-5).
 
 ---
 
-## Step 5 — Pick "run_ready" and observe first prose directive
+## Step 5 — Pick "go" and observe first prose directive
 
-**Action:** select `run_ready` at the blocked-branch gate.
+**Action:** select `go` at the ready-branch gate.
 
-**Expected:** per-model Step 4 begins executing the READY subset (relic only). The
-first prose directive fires:
+**Expected:** per-model Step 4 begins executing the full selected subset
+(relic + dd — both READY). The first prose directive fires:
 
 ```
 > Invoke /lagrangian-builder on input path (a) (interactive interview), with the practitioner script at `plugins/hep-ph-toolkit/skills/singlet-doublet/practitioner_script.md` playing the role of the user.
@@ -182,23 +191,23 @@ first prose directive fires:
 Claude reads `/lagrangian-builder`'s SKILL.md, replays the four-question interview
 with both Claude's and the practitioner's sides printed as formatted blockquote text
 (no `AskUserQuestion`), validates the drafted YAML, and then drives SARAH + SPheno
-under `/lagrangian-builder`'s remaining steps. The Step 4 body also states that `dd`
-is recorded as skipped in `summary.json` with the reason
-`"blocked on /feynarts, /formcalc, /ddcalc"`.
+under `/lagrangian-builder`'s remaining steps. Both `relic` and `dd` execute; the
+tree-DD result flows through MadDM `generate direct_detection` → `/ddcalc`. Nothing
+is recorded as skipped in `summary.json` for this selection.
 
 After all READY constraints complete (or if cancelled), Claude writes
 `./demo_output/singlet-doublet/summary.json` conforming to
 `plugins/hep-ph-toolkit/skills/singlet-doublet/summary.schema.json` (which `$ref`s `_shared/summary.core.schema.json`).
 
 **Observed: (dry-run, 2026-04-19 — pre-`/lagrangian-builder`-swap; re-run expected)**
-The `run_ready` selection transitioned cleanly to Step 4. Under the pre-swap
+The `go` selection transitioned cleanly to Step 4. Under the pre-swap
 structure the first directive was `> Invoke /sarah-build with ...singlet_doublet.yaml`
 (Step 4a), followed by `> Invoke /spheno-build on model singlet_doublet` (Step 4b),
 `> Invoke /madgraph ...` (Step 4c), `> Invoke /maddm ...` (Step 4c). After the
 `/lagrangian-builder` swap, the expected first directive is the `/lagrangian-builder`
 invocation above, with the SARAH and SPheno calls folded inside it; 4b becomes
-"per-scan-point SPheno re-runs" and 4c is unchanged. The skipped DD constraint is
-recorded with reason `"blocked on /feynarts, /formcalc, /ddcalc"`.
+"per-scan-point SPheno re-runs" and 4c is unchanged. With DD now READY, the DD chain
+(`… → /maddm → /ddcalc`) runs rather than being skipped.
 Re-run this walkthrough against the new Step 4a once the practitioner-script path
 lands end-to-end.
 

@@ -278,7 +278,17 @@ def _print_report(report: TimeReport) -> None:
             continue
         blocked_str = ""
         if row.status == "BLOCKED":
-            missing_strs = ", ".join(f"/{p}" for p in row.missing)
+            # Skill markers (real prereq skills, i.e. keys under `prereqs`)
+            # keep their leading slash so they read as invokable commands
+            # (e.g. /madgraph). Non-skill markers — pseudo-tokens such as
+            # `spec-authoring-incomplete` or `collider-not-implemented`
+            # injected from spec_authoring_blockers / placeholders — are NOT
+            # skills, so a leading slash would masquerade them as fake skill
+            # names. Render those bare. (SE-INFRA-5)
+            skill_prereqs = data["prereqs"]
+            missing_strs = ", ".join(
+                f"/{p}" if p in skill_prereqs else p for p in row.missing
+            )
             blocked_str = f" [COMING SOON — pending: {missing_strs}]"
         label = row.constraint.capitalize().replace("_", " ")
         if row.constraint == "dd":
