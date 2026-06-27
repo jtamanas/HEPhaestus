@@ -246,6 +246,12 @@ class TestSingletDoublet:
         assert "demo_output/singlet-doublet/summary.json" in content, \
             "SKILL.md body must contain 'demo_output/singlet-doublet/summary.json'"
 
+    def test_summary_schema_version(self, content):
+        # The summary.json emission template must carry the canonical
+        # schema_version (const "1" in _shared/summary.core.schema.json).
+        # Regression guard for devlog punch-list #3 / SE-INFRA-1.
+        assert '"schema_version": "1"' in content
+
     # Additional structural checks
     def test_sections_present_and_ordered(self, content):
         """All 7 required sections must exist in order."""
@@ -375,6 +381,10 @@ class Test2HdmA:
     def test_summary_json_path(self, content):
         assert "demo_output/2hdm-a/summary.json" in content
 
+    def test_summary_schema_version(self, content):
+        # Regression guard for devlog punch-list #3 / SE-INFRA-1.
+        assert '"schema_version": "1"' in content
+
     def test_physics_adaptation_words(self, content):
         """WS3 physics adaptation: required words must appear."""
         for word in ["Dirac", "CP-odd", "loop-only"]:
@@ -441,6 +451,10 @@ class TestDarkSU3:
 
     def test_summary_json_path(self, content):
         assert "demo_output/dark-su3/summary.json" in content
+
+    def test_summary_schema_version(self, content):
+        # Regression guard for devlog punch-list #3 / SE-INFRA-1.
+        assert '"schema_version": "1"' in content
 
     def test_physics_adaptation_words(self, content):
         """WS4 physics adaptation: required words must appear."""
