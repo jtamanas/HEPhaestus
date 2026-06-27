@@ -125,6 +125,83 @@ record_install() {
   log "Recorded looptools_path=$prefix version=$version gfortran=$gf_path"
 }
 
+# ---------------------------------------------------------------------------
+# Locate Wolfram's MathLink template compiler `mcc` so the optional
+# Mathematica/Wolfram frontend (`bin/LoopTools`) can be built.
+#
+# Wolfram Engine ships NO kernel binary (`math`/`MathKernel`/`WolframKernel`)
+# on PATH and NO `mcc` on PATH — only `wolframscript`. So we cannot rely on
+# `command -v mcc`; we must dig `mcc` out of the app bundle / install tree.
+#
+# Returns (on stdout) an `mcc` path that is SAFE TO INVOKE — i.e. contains no
+# spaces in any directory component. `mcc` is an old /bin/sh script that uses
+# its own dir ($0) unquoted to find `mprep`, headers and `libMLi*.a`; a path
+# like ".../Wolfram Engine.app/..." breaks it ("/Applications/Wolfram: No such
+# file or directory"). When the real path has spaces we expose its
+# CompilerAdditions dir through a space-free symlink and return the mcc inside.
+#
+# Echoes nothing and returns 1 if no usable mcc is found.
+locate_mcc() {
+  # Respect an explicit override.
+  if [ -n "${MCC:-}" ] && [ -x "${MCC:-}" ]; then printf '%s\n' "$MCC"; return 0; fi
+  if command -v mcc >/dev/null 2>&1; then command -v mcc; return 0; fi
+
+  # Platform dir inside SystemFiles/Links/MathLink/DeveloperKit/<platform>/.
+  local uname_s uname_m platform
+  uname_s="$(uname -s)"; uname_m="$(uname -m)"
+  case "$uname_s" in
+    Darwin) case "$uname_m" in
+              arm64)  platform="MacOSX-ARM64" ;;
+              x86_64) platform="MacOSX-x86-64" ;;
+              *)      platform="MacOSX-ARM64" ;;
+            esac ;;
+    Linux)  case "$uname_m" in
+              aarch64|arm64) platform="Linux-ARM64" ;;
+              *)             platform="Linux-x86-64" ;;
+            esac ;;
+    *) platform="" ;;
+  esac
+
+  local found=""
+  # Fast path on macOS: Spotlight.
+  if command -v mdfind >/dev/null 2>&1; then
+    found="$(mdfind -name mcc 2>/dev/null \
+              | grep -E "CompilerAdditions/mcc$" \
+              | grep -E "(MathLink|WSTP)/DeveloperKit/${platform}/" \
+              | head -n1)"
+  fi
+  # Fallback: scan well-known app/install roots.
+  if [ -z "$found" ]; then
+    local roots=(
+      "/Applications/Wolfram Engine.app"
+      "/Applications/Mathematica.app"
+      "/Applications/Wolfram.app"
+      "/Applications/Wolfram Desktop.app"
+      "$HOME/Wolfram" "/opt/Wolfram" "/usr/local/Wolfram"
+      "/usr/local/Mathematica" "/opt/mathematica"
+    )
+    local r
+    for r in "${roots[@]}"; do
+      [ -d "$r" ] || continue
+      found="$(find "$r" -type f -path "*${platform}/CompilerAdditions/mcc" 2>/dev/null | head -n1)"
+      [ -n "$found" ] && break
+    done
+  fi
+  [ -n "$found" ] || return 1
+
+  # Make the path space-free if necessary (see header).
+  case "$found" in
+    *" "*)
+      local ca link
+      ca="$(dirname "$found")"                 # .../CompilerAdditions
+      link="${TMPDIR:-/tmp}/hephaestus-wolfram-mldk-${platform}"
+      ln -sfn "$ca" "$link" 2>/dev/null || return 1
+      found="$link/mcc"
+      ;;
+  esac
+  [ -x "$found" ] && printf '%s\n' "$found"
+}
+
 # Emit a {"status":"configured", ...} line from a prefix in config.
 emit_configured_json() {
   local prefix="$1"
@@ -290,22 +367,31 @@ cmd_install() {
   # --prefix is set to $src_dir).
   local prefix="$src_dir"
 
-  # Detect Mathematica presence (configure will auto-detect; we mirror the
-  # check so we can record looptools_mathlink_available after the build).
-  local want_mathlink="auto"
+  # Detect the Wolfram MathLink template compiler `mcc` so we can build the
+  # optional Mathematica frontend (`bin/LoopTools`). Note: Wolfram Engine puts
+  # NO kernel binary on PATH, so the historical `command -v math` check below
+  # always failed under Wolfram Engine and silently disabled MathLink. We now
+  # search the app bundle directly (see locate_mcc). Override with MCC=/path,
+  # or force library-only with HEPPH_LOOPTOOLS_NO_MATHLINK=1.
+  local want_mathlink="no"
   local mathlink_available="false"
-  if ! command -v math >/dev/null 2>&1 && ! command -v MathKernel >/dev/null 2>&1 \
-     && ! command -v WolframKernel >/dev/null 2>&1; then
-    log "No Mathematica kernel on PATH; will build library only (make lib)."
-    want_mathlink="no"
+  local mcc_path=""
+  if [ "${HEPPH_LOOPTOOLS_NO_MATHLINK:-0}" != "1" ]; then
+    if mcc_path="$(locate_mcc)" && [ -n "$mcc_path" ]; then
+      want_mathlink="yes"
+      log "Found Wolfram mcc at $mcc_path; will build MathLink frontend (bin/LoopTools)."
+    else
+      log "No Wolfram mcc found (no Mathematica/Wolfram Engine dev kit); building library only (make lib)."
+    fi
   fi
 
-  # Configure.
+  # Configure. Pass MCC so configure's MathLink probe (which calls \${MCC:-mcc})
+  # succeeds and sets ML=1 in the generated makefile.
   log "Configuring LoopTools in $src_dir (FC=$gf_path) ..."
   : > "$BUILD_LOG"
   if ! (
     cd "$src_dir"
-    FC="$gf_path" ./configure --prefix="$prefix"
+    FC="$gf_path" ${mcc_path:+MCC="$mcc_path"} ./configure --prefix="$prefix"
   ) >>"$BUILD_LOG" 2>&1; then
     local tail_txt
     tail_txt="$(tail -n 30 "$BUILD_LOG" 2>/dev/null || echo "")"
@@ -315,17 +401,42 @@ cmd_install() {
     exit "$EXIT_LT_CONFIGURE"
   fi
 
-  # Build. If Mathematica absent, use 'make lib' (core library only).
+  # Build. With mcc present use 'make all' (library + lt + LoopTools frontend);
+  # otherwise 'make lib' (core static library only). We pass MCC on the make
+  # command line too (overrides the makefile value) for robustness.
+  #
+  # Graceful degradation: the MathLink frontend is OPTIONAL. If 'make all'
+  # fails (e.g. a broken/incompatible mcc toolchain on some other machine), we
+  # must NOT sink the core libooptools.a deliverable — retry 'make lib' and, if
+  # the core library builds, downgrade to library-only (mathlink_available stays
+  # "false") and continue. Only a failed CORE 'make lib' is a fatal blocker.
   local make_target="all"
   [ "$want_mathlink" = "no" ] && make_target="lib"
   log "Compiling LoopTools (make $make_target) ..."
-  if ! ( cd "$src_dir" && FC="$gf_path" make "$make_target" ) >>"$BUILD_LOG" 2>&1; then
-    local tail_txt
-    tail_txt="$(tail -n 40 "$BUILD_LOG" 2>/dev/null || echo "")"
-    emit_blocker "LOOPTOOLS_BUILD_FAILED" "fatal" \
-      "LoopTools 'make $make_target' failed. Build log tail: $tail_txt" \
-      "See full log at $BUILD_LOG. Common causes: gfortran version skew, missing libstdc++."
-    exit "$EXIT_LT_BUILD"
+  if ! ( cd "$src_dir" && FC="$gf_path" make "$make_target" ${mcc_path:+MCC="$mcc_path"} ) >>"$BUILD_LOG" 2>&1; then
+    if [ "$make_target" = "all" ]; then
+      local frontend_tail
+      frontend_tail="$(tail -n 15 "$BUILD_LOG" 2>/dev/null || echo "")"
+      log "WARNING: 'make all' (MathLink frontend) failed; retrying core 'make lib' only. Frontend log tail: $frontend_tail"
+      want_mathlink="no"
+      make_target="lib"
+      if ! ( cd "$src_dir" && FC="$gf_path" make lib ) >>"$BUILD_LOG" 2>&1; then
+        local tail_txt
+        tail_txt="$(tail -n 40 "$BUILD_LOG" 2>/dev/null || echo "")"
+        emit_blocker "LOOPTOOLS_BUILD_FAILED" "fatal" \
+          "LoopTools 'make lib' (core library) failed. Build log tail: $tail_txt" \
+          "See full log at $BUILD_LOG. Common causes: gfortran version skew, missing libstdc++."
+        exit "$EXIT_LT_BUILD"
+      fi
+      log "Core libooptools.a built; continuing without the MathLink frontend (mathlink_available=false)."
+    else
+      local tail_txt
+      tail_txt="$(tail -n 40 "$BUILD_LOG" 2>/dev/null || echo "")"
+      emit_blocker "LOOPTOOLS_BUILD_FAILED" "fatal" \
+        "LoopTools 'make $make_target' failed. Build log tail: $tail_txt" \
+        "See full log at $BUILD_LOG. Common causes: gfortran version skew, missing libstdc++."
+      exit "$EXIT_LT_BUILD"
+    fi
   fi
 
   # make install (places lib/, bin/, include/ under --prefix).
@@ -355,7 +466,35 @@ cmd_install() {
     bash "$SCRIPT_DIR/probe_looptools.sh" "$prefix" >/dev/null
   fi
 
-  [ -x "$prefix/bin/LoopTools" ] && mathlink_available="true"
+  # Record MathLink availability as "true" ONLY if the frontend binary both
+  # exists and genuinely evaluates an integral. Use ToExpression so B0/A0 bind
+  # to the LoopTools` context (bare symbols would shadow as Global` at parse
+  # time). A finite number = pass. If wolframscript is unavailable we fall back
+  # to a presence check (the binary built, but could not be verified here).
+  if [ -x "$prefix/bin/LoopTools" ]; then
+    if command -v wolframscript >/dev/null 2>&1; then
+      local ml_out
+      ml_out="$(wolframscript -code \
+        'link = Install["'"$prefix"'/bin/LoopTools"]; r = ToExpression["B0[0, 100^2, 100^2]"]; Print["RESULT:", NumberQ[r], ":", r]; Uninstall[link]' \
+        2>/dev/null || true)"
+      if printf '%s' "$ml_out" | grep -q "RESULT:True:"; then
+        mathlink_available="true"
+        config_merge looptools_mathlink_path "$prefix/bin/LoopTools" \
+          looptools_mathlink_verified "true"
+        log "MathLink frontend verified: B0(0,100^2,100^2) returned a finite number."
+      else
+        log "WARNING: bin/LoopTools built but B0 verification did not return a number; recording mathlink_available=false."
+      fi
+    else
+      # Binary present but could not run the B0 check here (no wolframscript on
+      # PATH). Record availability on presence, but flag it as unverified so a
+      # downstream caller knows the runtime check was skipped, not passed.
+      mathlink_available="true"
+      config_merge looptools_mathlink_path "$prefix/bin/LoopTools" \
+        looptools_mathlink_verified "unverified"
+      log "bin/LoopTools present; wolframscript not on PATH, skipped runtime verification (looptools_mathlink_verified=unverified)."
+    fi
+  fi
 
   record_install "$prefix" "$src_dir" "$LOOPTOOLS_VERSION" "$gf_version" "$gf_path" "$mathlink_available"
   log "LoopTools v${LOOPTOOLS_VERSION} installed at $prefix (gfortran=$gf_path)."
