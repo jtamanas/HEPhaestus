@@ -1,0 +1,32 @@
+# looptools skill environment configuration
+
+# LoopTools versions supported at eval time (bump in lockstep with the install
+# reference _shared/installs/looptools/INSTALL.md pin).
+supported_looptools_versions:
+  - "2.16"
+
+# amp_reduced.meta schema version consumed from /formcalc.
+supported_amp_reduced_meta_versions:
+  - "amp_reduced.meta/v1"
+
+# Required PV-head encoding in the FormCalc sidecar.
+required_pv_heads: formcalc-native
+
+# Nucleon form-factor presets (matches scattering.schema.json enum).
+supported_form_factor_presets:
+  - default_2018
+  - A1
+
+# Default nucleon form-factor preset (matches /micromegas default).
+default_form_factor_preset: default_2018
+
+# Evaluation mechanism (build plan §2): A = Wolfram/LoopTools MathLink (v1).
+# B (FormCalc Fortran codegen, no Wolfram at eval time) is deferred to v1.1.
+eval_mechanism: A
+
+# σ_SD policy in v1: emitted null unless the driver supplies SD couplings
+# (the 2HDM+a charged-Higgs/W box is predominantly SI).
+sigma_sd_v1: null-by-default
+
+# Cache canonicalizer version — increment when the cache-key hash function changes.
+canonicalizer_version: 1

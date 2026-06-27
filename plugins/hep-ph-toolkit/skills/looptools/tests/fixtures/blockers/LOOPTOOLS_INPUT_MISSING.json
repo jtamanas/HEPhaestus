@@ -1,0 +1,7 @@
+{
+  "code": "LOOPTOOLS_INPUT_MISSING",
+  "mode": "fatal",
+  "message": "Required input(s) absent: amp_reduced.m / amp_reduced.meta.json / model point.",
+  "context": {"missing": ["/tmp/amp_reduced.m"]},
+  "user_instruction": "Run /formcalc reduce to produce amp_reduced.m + sidecar, and supply a model point via --point."
+}

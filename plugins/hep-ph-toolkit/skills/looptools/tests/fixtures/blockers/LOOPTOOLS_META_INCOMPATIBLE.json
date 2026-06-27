@@ -1,0 +1,6 @@
+{
+  "code": "LOOPTOOLS_META_INCOMPATIBLE",
+  "mode": "fatal",
+  "message": "amp_reduced.meta.json pv_heads is 'renamed', expected 'formcalc-native'.",
+  "context": {"found": "renamed", "expected": "formcalc-native"}
+}

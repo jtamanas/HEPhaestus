@@ -1,0 +1,7 @@
+{
+  "code": "LOOPTOOLS_MATHLINK_UNAVAILABLE",
+  "mode": "fatal",
+  "message": "looptools_mathlink_available != 'true'; mechanism A requires the LoopTools MathLink binary.",
+  "context": {"looptools_mathlink_available": "false"},
+  "user_instruction": "Rebuild LoopTools with Mathematica present so the MathLink executable is produced."
+}

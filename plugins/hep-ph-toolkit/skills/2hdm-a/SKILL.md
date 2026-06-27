@@ -55,24 +55,26 @@ python3 plugins/hep-ph-toolkit/skills/_shared/time_budget.py \
 | Constraint | Status | Chain | Cold (hr) | Cached (hr) |
 |---|---|---|---|---|
 | Relic density | **READY** (hand-crafted SARAH model) | fixture copy → `/madgraph [EXISTS]` → `/maddm [EXISTS]` | 1–2 | 0.3–0.7 |
-| Direct detection | **COMING SOON** — loop-only (CP-forbidden tree SI); requires `/looptools eval` runtime to bridge `/formcalc` → `/ddcalc` | fixture copy → `/madgraph [EXISTS]` → `/feynarts [EXISTS]` → `/formcalc [EXISTS]` → `/ddcalc [EXISTS]` | 3–6 | 0.5–1.0 |
+| Direct detection | **READY-with-caveat** — loop-only (CP-forbidden tree SI) via `/looptools eval`; σ PROVISIONAL until the FormCalc/LoopTools smoke runs | fixture copy → `/madgraph [EXISTS]` → `/feynarts [EXISTS]` → `/formcalc [EXISTS]` → `/looptools [EXISTS]` → `/ddcalc [EXISTS]` | 3–6 | 0.5–1.0 |
 | Indirect detection | **READY-with-caveat** — parser-only; pull computation pending (v1+) | fixture copy → `/madgraph [EXISTS]` → `/maddm [EXISTS]` (`generate indirect_detection`) → `/gamlike [v0 parser]` | 1–3 | 0.3–0.7 |
 
 > **Note on SPheno**: MadDM's internal Boltzmann solver is fed directly from the patched param_card; SPheno spectrum is not required on this path. `/spheno-build` was removed from the relic-density prereq chain.
 
-All-constraints cold total (overlap-adjusted): **3.0–7.5 hr**
+All-constraints cold total (overlap-adjusted): **3.5–9.0 hr**
 
 Relic density and indirect detection are READY via the fixture path. ID is
 parser-only: `/gamlike` v0 emits gamlike/v1 JSON with ⟨σv⟩, channel fractions,
 and Fermi-LAT likelihood rows, but pull computation (likelihood deltas,
 exclusion verdicts) is deferred to a future dm-pull skill.
 
-Direct detection is COMING SOON. For 2HDM+a the tree-level SI cross-section
-is CP-forbidden (the mediator `a` is CP-odd), so the physical signal is
-loop-only. Closing this needs a `/looptools eval` runtime to numerically
-evaluate the FormCalc-reduced amplitude into a `scattering/v1` JSON for
-`/ddcalc`, plus a renderer backport so `/sarah-build` can emit a
-physics-correct UFO for the loop-DD subchain.
+Direct detection is READY-with-caveat. For 2HDM+a the tree-level SI
+cross-section is CP-forbidden (the mediator `a` is CP-odd), so the physical
+signal is loop-only. The `/looptools eval` runtime now numerically evaluates the
+FormCalc-reduced one-loop amplitude (charged-Higgs/W box + mediator triangle)
+into a `scattering/v1` JSON for `/ddcalc`, on the same hand-crafted SARAH
+fixture used for relic. The σ values are PROVISIONAL until the Tier-3
+FormCalc/LoopTools smoke runs on a tooled box, and the live `/sarah-build`
+renderer UFO backport remains separate, non-blocking debt.
 
 ---
 
@@ -120,7 +122,7 @@ Ask the user which constraints to compute:
   "question": "Which constraints do you want computed for this model?",
   "options": [
     {"id": "relic",    "label": "Relic density",            "description": "Ω h² via MadDM (a-resonance region) — READY"},
-    {"id": "dd",       "label": "Direct detection",         "description": "Loop-only σ_SI via MadGraph + FeynArts/FormCalc + DDCalc — COMING SOON"},
+    {"id": "dd",       "label": "Direct detection",         "description": "Loop-only σ_SI via MadGraph + FeynArts/FormCalc + /looptools eval + DDCalc — READY-with-caveat (σ provisional pending smoke)"},
     {"id": "id",       "label": "Indirect detection (parser-only)", "description": "MadDM `generate indirect_detection` → /gamlike v0 → gamlike/v1 JSON with ⟨σv⟩, channels, and Fermi-LAT likelihood rows. Pull computation (exclusion verdicts) deferred to dm-pull v1+."},
     {"id": "collider", "label": "Collider (coming soon)",   "description": "Placeholder — execution is a no-op"}
   ],
@@ -148,11 +150,12 @@ Planned chain for 2HDM + a:
     MadDM's internal Boltzmann solver is fed directly from the patched param_card;
     SPheno spectrum is not required on this path.
 
-  Direct detection    [COMING SOON — pending: spec-authoring backport, /looptools eval runtime]
+  Direct detection    [READY-with-caveat — loop-only via /looptools eval; σ provisional pending smoke]
     fixture copy → /madgraph [EXISTS]
-      → /feynarts [EXISTS] → /formcalc [EXISTS] → /ddcalc [EXISTS]
+      → /feynarts [EXISTS] → /formcalc [EXISTS] → /looptools [EXISTS] → /ddcalc [EXISTS]
     cold: 3–6 hr   cached: 30–60 min
     Note: tree-level SI is CP-forbidden (σ_SI_tree ≈ 0); loop-only DD is the primary signal.
+    /looptools eval evaluates the charged-Higgs/W box → scattering/v1 for /ddcalc.
 
   Indirect detection  [READY-with-caveat — parser-only; pull computation pending (v1+)]
     fixture copy → /madgraph [EXISTS] → /maddm [EXISTS] (generate indirect_detection)
@@ -582,11 +585,37 @@ Path("./demo_output/2hdm-a/id.json").write_text(json.dumps(id_doc, indent=2))
 > **Caveat banner.** Every consumer of `id.json` MUST surface
 > `dm_indirect_detection_status: "parser-only"`. Do not present `indirect.global.Total_xsec` as an exclusion-verdict input; the Fermi-LAT and IceCube pull computations are not implemented. Conditional-emission gates G13/G16 etc. (see `/gamlike` SKILL §"Conditional emission gates") may suppress fields with `FIELD_GATED` warnings — propagate them rather than coercing to zero.
 
-##### 4f. Direct detection branch (COMING SOON)
+##### 4f. Direct detection branch (READY-with-caveat — loop-only)
 
-Direct detection is COMING SOON, pending the loop-DD chain. Record it as skipped in `summary.json`:
+For 2HDM+a the tree-level SI cross-section is CP-forbidden (the mediator `a` is
+CP-odd, so `σ_SI_tree ≈ 0`), so loop is the only physical channel — there is no
+tree-DD shortcut analogous to singlet-doublet's MadDM `generate direct_detection`
+path. The loop-DD chain runs on the same hand-crafted SARAH fixture:
 
-- **Direct detection** — blocked on the `/looptools eval` runtime (the bridge from `/formcalc`'s `amp_reduced.m` to a `scattering/v1` JSON for `/ddcalc`) plus a SARAH-renderer backport so the loop-only UFO is physics-correct. For 2HDM+a the tree-level SI cross-section is CP-forbidden (the mediator `a` is CP-odd, so `σ_SI_tree ≈ 0`), so loop is the only physical channel — there is no tree-DD shortcut analogous to singlet-doublet's MadDM `generate direct_detection` path.
+```
+/madgraph → /feynarts generate → /formcalc reduce → /looptools eval → /ddcalc run --sigma-json
+```
+
+`/feynarts` generates the one-loop amplitude (charged-Higgs/W box A⁰H⁺W⁻ +
+mediator triangle), `/formcalc reduce` reduces it to FormCalc-native PV heads
+(`amp_reduced.m` + `amp_reduced.meta.json`), and `/looptools eval` numerically
+evaluates the PV integrals and emits a `scattering/v1` JSON
+(`sigma_si_proton_cm2`, `sigma_si_neutron_cm2`; σ_SD `null` in v1):
+
+```bash
+python plugins/hep-ph-toolkit/skills/looptools/scripts/run_looptools.py eval \
+    --amp-reduced <formcalc_out>/amp_reduced.m \
+    --point ./demo_output/2hdm-a/maddm_run/Cards/param_card.dat \
+    --output-dir ./demo_output/2hdm-a/looptools_out \
+    --form-factors default_2018
+```
+
+Feed `looptools_out/scattering.json` into `/ddcalc run --sigma-json` for the
+exclusion verdict. The σ values are **PROVISIONAL** until the Tier-3
+FormCalc/LoopTools smoke (`HEPPH_RUN_WOLFRAM_TESTS=1`) runs on a tooled box;
+stamp `model_source: "hand_crafted_sarah_model"` and tag the DD row
+`[loop, provisional]`. The live `/sarah-build` renderer UFO backport for the
+loop chain remains separate, non-blocking debt.
 
 ---
 
@@ -613,10 +642,10 @@ Then write the file. Example for the default READY subset (relic + parser-only I
   "dm_indirect_detection_status": "parser-only",
   "pull_computation_pending":     true,
   "skipped_constraints": [
-    {"id": "dd", "reason": "blocked on /looptools eval runtime + SARAH renderer backport (loop-only DD; tree SI is CP-forbidden)"}
+    {"id": "dd", "reason": "not selected this run; loop-only DD is READY-with-caveat via /looptools eval (charged-Higgs/W box → scattering/v1 → /ddcalc), σ provisional pending the FormCalc/LoopTools smoke"}
   ],
   "artifacts_dir": "./demo_output/2hdm-a/",
-  "headline": "Relic + parser-only ID at off-resonance benchmark (Mchi=100, Ma=400, gchi=1, tan β=10): Ω h² ≈ 10.494; ID artifacts via /gamlike v0 (no exclusion verdict yet). DD skipped."
+  "headline": "Relic + parser-only ID at off-resonance benchmark (Mchi=100, Ma=400, gchi=1, tan β=10): Ω h² ≈ 10.494; ID artifacts via /gamlike v0 (no exclusion verdict yet). DD available via /looptools eval (loop-only, provisional)."
 }
 ```
 

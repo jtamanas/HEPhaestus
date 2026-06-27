@@ -1,0 +1,24 @@
+{
+  "schema": "looptools_eval_output/v1",
+  "point_id": "twohdmafix-offres-Mchi100-Ma400",
+  "m_dm_gev": 100.0,
+  "amplitude": {
+    "finite": true,
+    "uv_pole_residue": 0.0,
+    "ir_pole_residue": 0.0,
+    "gauge_parameter_dependence": 0.0
+  },
+  "effective_couplings": {
+    "f_p_si_gev_minus2": 2.7e-09,
+    "f_n_si_gev_minus2": 2.6e-09,
+    "f_p_sd_gev_minus2": null,
+    "f_n_sd_gev_minus2": null
+  },
+  "nucleon_form_factors": {"preset": "default_2018"},
+  "loop_topologies": ["chargedHiggs_W_box", "mediator_triangle"],
+  "looptools_version": "2.16",
+  "n_pv_calls": 12,
+  "n_diagrams": 6,
+  "pv_heads_used": ["B0i", "C0i", "D0i"],
+  "_provenance": "PROVISIONAL hand-frozen stand-in for a real Wolfram/LoopTools run; numbers are placeholder-but-consistent and MUST be replaced by the Tier-3 smoke (HEPPH_RUN_WOLFRAM_TESTS=1) before any physics use."
+}

@@ -1,0 +1,40 @@
+# /looptools eval spec.yaml — annotated template
+# Copy to your model directory and fill in the required fields.
+#
+# Loaded by plugins/shared/runner_spec_loader.py (the WS-4 shim), which
+# normalises the legacy scalar `cosmology: standard_thermal` form into the
+# structured object form once.  Field names match
+# plugins/shared/schemas/scattering.schema.json where applicable.
+# Required fields are marked (REQUIRED).
+
+# ── DM candidate (REQUIRED) ───────────────────────────────────────────────────
+dm_candidate:
+  pdg: 9989932          # (REQUIRED) PDG id of the DM particle (chi in TwoHdmAfix)
+  name: chi             # (REQUIRED) Human-readable name (matches the UFO/SLHA)
+  mass_gev: 100.0       # (REQUIRED) DM mass in GeV (also read from the SLHA MASS block)
+
+# ── Nucleon form factors (optional, default: default_2018) ────────────────────
+# Choices: "default_2018" (lattice σ-terms, matches /micromegas) or "A1"
+# (Arcadi-Profumo).  The quark→nucleon contraction happens on the FormCalc side
+# inside run_eval.wls (build plan §8 dec. #4); this selects which σ-term preset.
+nucleon_form_factors: default_2018
+
+# ── Cosmology (optional, default: standard_thermal) ──────────────────────────
+# Accepts BOTH the legacy scalar (`cosmology: standard_thermal`) and the object
+# form below.  Not used by the DD amplitude itself; carried for runner-spec
+# parity with /micromegas and the /dark-matter-constraints Step 6 side-check.
+cosmology:
+  kind: standard_thermal
+
+# ── Loop topologies (informational) ──────────────────────────────────────────
+# v1 covers the 2HDM+a charged-Higgs/W box + mediator triangle (CP-odd mediator,
+# CP-forbidden tree SI).  σ_SD is emitted null unless the driver supplies it.
+
+# ── Notes ─────────────────────────────────────────────────────────────────────
+# - /looptools eval consumes /formcalc's amp_reduced.m + amp_reduced.meta.json
+#   (pv_heads must be "formcalc-native") and a model point (SLHA / param_card).
+# - The model point is supplied to the CLI via --point (an SLHA file); this
+#   spec records the runner-level metadata + provenance.
+# - Output is the scattering/v1 JSON consumed by /ddcalc run --sigma-json.
+# - fixture-bypass: for 2HDM+a the run is on the hand-crafted SARAH fixture
+#   (model_source: hand_crafted_sarah_model), mirroring how relic was unblocked.

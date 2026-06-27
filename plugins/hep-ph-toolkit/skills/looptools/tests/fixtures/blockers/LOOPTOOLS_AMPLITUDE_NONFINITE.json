@@ -1,0 +1,6 @@
+{
+  "code": "LOOPTOOLS_AMPLITUDE_NONFINITE",
+  "mode": "recoverable",
+  "message": "Evaluated amplitude is non-finite / UV-non-cancelled (residual 1/epsilon pole).",
+  "context": {"point_id": "twohdmafix-offres-Mchi100-Ma400"}
+}

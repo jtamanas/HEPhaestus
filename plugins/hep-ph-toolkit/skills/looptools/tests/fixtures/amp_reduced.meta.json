@@ -1,0 +1,21 @@
+{
+  "schema_version": "amp_reduced.meta/v1",
+  "formcalc_version": "9.10",
+  "form_version": "4.3.1",
+  "looptools_version": "2.16",
+  "gamma5_scheme": "naive",
+  "pv_heads": "formcalc-native",
+  "abbreviations_manifest": "",
+  "input_hashes": {
+    "feynamplist_m": "0000000000000000000000000000000000000000000000000000000000000000",
+    "processspec_json": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "kinematic_limit": "general",
+  "ir_flags": {
+    "ir_divergent": false,
+    "uv_regularized": true
+  },
+  "caveats": [],
+  "produced_at": "2026-06-27T00:00:00Z",
+  "wolfram_version_major_minor": "14.3"
+}

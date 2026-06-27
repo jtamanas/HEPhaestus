@@ -1,0 +1,6 @@
+{
+  "code": "LOOPTOOLS_SCHEMA_INVALID",
+  "mode": "fatal",
+  "message": "Emitted scattering/v1 failed schema validation.",
+  "context": {"errors": ["sigma_si_proton_cm2: -1.0 is less than the minimum of 0"]}
+}

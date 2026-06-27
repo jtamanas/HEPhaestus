@@ -1,0 +1,16 @@
+{
+  "schema_version": "scattering/v1",
+  "m_dm_gev": 100.0,
+  "sigma_si_proton_cm2": 3.1228882913186946e-45,
+  "sigma_si_neutron_cm2": 2.9037615023516756e-45,
+  "sigma_sd_proton_cm2": null,
+  "sigma_sd_neutron_cm2": null,
+  "source": "looptools",
+  "source_run": "fixture-golden",
+  "nucleon_form_factors": {"preset": "default_2018"},
+  "model_source": "hand_crafted_sarah_model",
+  "model_fixture": "plugins/hep-ph-toolkit/skills/2hdm-a/fixtures/sarah_model/",
+  "loop_topologies": ["chargedHiggs_W_box", "mediator_triangle"],
+  "sigma_provisional": true,
+  "_provenance": "PROVISIONAL — derived from the frozen eval_output.json placeholder couplings via match_nucleon. NOT a physics prediction; replaced by the Tier-3 FormCalc/LoopTools smoke."
+}
