@@ -118,6 +118,26 @@ else
 fi
 
 # ------------------------------------------------------------------
+# Test 6: found on macOS Wolfram ENGINE path
+# ($HOME/Library/WolframEngine/Applications/) — the real install location of
+# the headless engine, distinct from the desktop's ~/Library/Wolfram. This is
+# the path the scanner previously missed (false-"missing").
+# ------------------------------------------------------------------
+FAKE_HOME6="$(mktemp -d)"
+FEYNARTS_DIR6="$FAKE_HOME6/Library/WolframEngine/Applications/FeynArts-3.11"
+mkdir -p "$FEYNARTS_DIR6"
+touch "$FEYNARTS_DIR6/FeynArts.m"
+trap 'rm -rf "$FAKE_HOME6"' EXIT
+
+OUT6="$(HOME="$FAKE_HOME6" XDG_CONFIG_HOME="$FAKE_HOME6/.config" "${DETECT_SCRIPT}" detect 2>/dev/null)"
+STATUS6="$(printf '%s' "$OUT6" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['status'])" 2>/dev/null || echo "PARSE_ERROR")"
+if [ "$STATUS6" = "found" ]; then
+  _pass "found: macOS WolframEngine path → status==found"
+else
+  _fail "found: macOS WolframEngine path → status==found" "found" "$STATUS6 ($OUT6)"
+fi
+
+# ------------------------------------------------------------------
 # Summary
 # ------------------------------------------------------------------
 echo ""

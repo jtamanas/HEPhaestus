@@ -32,25 +32,33 @@ fi
 _feynarts_candidate_dirs() {
   local candidates=()
 
-  # macOS standard locations
-  local macos_apps="$HOME/Library/Wolfram/Applications"
-  if [ -d "$macos_apps" ]; then
+  # $UserBaseDirectory/Applications roots, across products and OSes. The
+  # directory name differs by product/version:
+  #   - macOS Wolfram Engine:      ~/Library/WolframEngine/Applications  (real
+  #                                install location on this machine)
+  #   - macOS Mathematica/Wolfram: ~/Library/Wolfram/Applications
+  #   - macOS Mathematica (legacy):~/Library/Mathematica/Applications
+  #   - Linux Wolfram Engine:      ~/.WolframEngine/Applications
+  #   - Linux Mathematica:         ~/.Mathematica/Applications
+  # Scanning the wrong sibling (e.g. Wolfram vs WolframEngine) is the classic
+  # false-"missing": detect.sh resolves $UserBaseDirectory live, but this
+  # standalone scanner must enumerate all known roots explicitly.
+  local app_roots=(
+    "$HOME/Library/WolframEngine/Applications"
+    "$HOME/Library/Wolfram/Applications"
+    "$HOME/Library/Mathematica/Applications"
+    "$HOME/.WolframEngine/Applications"
+    "$HOME/.Mathematica/Applications"
+  )
+  local apps
+  for apps in "${app_roots[@]}"; do
+    [ -d "$apps" ] || continue
     while IFS= read -r -d '' f; do
       local d
       d="$(dirname "$f")"
       candidates+=("$d")
-    done < <(find "$macos_apps" -maxdepth 2 -name "FeynArts.m" -print0 2>/dev/null || true)
-  fi
-
-  # Linux WolframEngine location
-  local linux_apps="$HOME/.WolframEngine/Applications"
-  if [ -d "$linux_apps" ]; then
-    while IFS= read -r -d '' f; do
-      local d
-      d="$(dirname "$f")"
-      candidates+=("$d")
-    done < <(find "$linux_apps" -maxdepth 2 -name "FeynArts.m" -print0 2>/dev/null || true)
-  fi
+    done < <(find "$apps" -maxdepth 2 -name "FeynArts.m" -print0 2>/dev/null || true)
+  done
 
   # Additional common paths
   local extra_paths=(
