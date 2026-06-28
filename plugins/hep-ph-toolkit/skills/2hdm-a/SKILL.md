@@ -55,7 +55,7 @@ python3 plugins/hep-ph-toolkit/skills/_shared/time_budget.py \
 | Constraint | Status | Chain | Cold (hr) | Cached (hr) |
 |---|---|---|---|---|
 | Relic density | **READY** (hand-crafted SARAH model) | fixture copy → `/madgraph [EXISTS]` → `/maddm [EXISTS]` | 1–2 | 0.3–0.7 |
-| Direct detection | **READY-with-caveat** — loop-only (CP-forbidden tree SI) via `/looptools eval`; σ_SI real + EW-anchor-validated (~40%) at the benchmark, single point; box not folded into f_N; Tier-3 smoke gated off by default, green on a tooled box | fixture copy → `/madgraph [EXISTS]` → `/feynarts [EXISTS]` → `/formcalc [EXISTS]` → `/looptools [EXISTS]` → `/ddcalc [EXISTS]` | 3–6 | 0.5–1.0 |
+| Direct detection | **READY-with-caveat** — loop-only (CP-forbidden tree SI) via `/looptools eval`; σ_SI real + EW-anchor-validated (~40%) at the benchmark, single point; box not folded into f_N (≤1.7× upward), SI only; Tier-3 smoke gated off by default, green on a tooled box | fixture copy → `/madgraph [EXISTS]` → `/feynarts [EXISTS]` → `/formcalc [EXISTS]` → `/looptools [EXISTS]` → `/ddcalc [EXISTS]` | 3–6 | 0.5–1.0 |
 | Indirect detection | **READY-with-caveat** — parser-only; pull computation pending (v1+) | fixture copy → `/madgraph [EXISTS]` → `/maddm [EXISTS]` (`generate indirect_detection`) → `/gamlike [v0 parser]` | 1–3 | 0.3–0.7 |
 
 > **Note on SPheno**: MadDM's internal Boltzmann solver is fed directly from the patched param_card; SPheno spectrum is not required on this path. `/spheno-build` was removed from the relic-density prereq chain.
@@ -127,7 +127,7 @@ Ask the user which constraints to compute:
   "question": "Which constraints do you want computed for this model?",
   "options": [
     {"id": "relic",    "label": "Relic density",            "description": "Ω h² via MadDM (a-resonance region) — READY"},
-    {"id": "dd",       "label": "Direct detection",         "description": "Loop-only σ_SI via MadGraph + FeynArts/FormCalc + /looptools eval + DDCalc — READY-with-caveat (σ_SI real + EW-anchor-validated at the benchmark, single point; Tier-3 smoke deferred/gated off by default)"},
+    {"id": "dd",       "label": "Direct detection",         "description": "Loop-only σ_SI via MadGraph + FeynArts/FormCalc + /looptools eval + DDCalc — READY-with-caveat (σ_SI real + EW-anchor-validated at the benchmark, single point; box not folded into f_N (≤1.7× upward), SI only; Tier-3 smoke deferred/gated off by default)"},
     {"id": "id",       "label": "Indirect detection (parser-only)", "description": "MadDM `generate indirect_detection` → /gamlike v0 → gamlike/v1 JSON with ⟨σv⟩, channels, and Fermi-LAT likelihood rows. Pull computation (exclusion verdicts) deferred to dm-pull v1+."},
     {"id": "collider", "label": "Collider (coming soon)",   "description": "Placeholder — execution is a no-op"}
   ],
@@ -155,7 +155,7 @@ Planned chain for 2HDM + a:
     MadDM's internal Boltzmann solver is fed directly from the patched param_card;
     SPheno spectrum is not required on this path.
 
-  Direct detection    [READY-with-caveat — loop-only via /looptools eval; σ_SI real + EW-anchor-validated, single point; Tier-3 smoke gated off by default]
+  Direct detection    [READY-with-caveat — loop-only via /looptools eval; σ_SI real + EW-anchor-validated, single point; box not folded into f_N (≤1.7× upward), SI only; Tier-3 smoke gated off by default]
     fixture copy → /madgraph [EXISTS]
       → /feynarts [EXISTS] → /formcalc [EXISTS] → /looptools [EXISTS] → /ddcalc [EXISTS]
     cold: 3–6 hr   cached: 30–60 min
@@ -655,7 +655,7 @@ Then write the file. Example for the default READY subset (relic + parser-only I
     {"id": "dd", "reason": "not selected this run; loop-only DD is READY-with-caveat via /looptools eval (charged-Higgs/W box → scattering/v1 → /ddcalc), σ_SI real + EW-anchor-validated at the benchmark (single point), Tier-3 smoke gated off by default"}
   ],
   "artifacts_dir": "./demo_output/2hdm-a/",
-  "headline": "Relic + parser-only ID at off-resonance benchmark (Mchi=100, Ma=400, gchi=1, tan β=10): Ω h² ≈ 10.494; ID artifacts via /gamlike v0 (no exclusion verdict yet). DD available via /looptools eval (loop-only; real EW-anchor-validated σ_SI at the benchmark, single point)."
+  "headline": "Relic + parser-only ID at off-resonance benchmark (Mchi=100, Ma=400, gchi=1, tan β=10): Ω h² ≈ 10.494; ID artifacts via /gamlike v0 (no exclusion verdict yet). DD available via /looptools eval (loop-only; real EW-anchor-validated σ_SI at the benchmark, single point; box not folded into f_N (≤1.7× upward), SI only)."
 }
 ```
 

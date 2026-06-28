@@ -13,8 +13,10 @@ Wolfram (feynarts precedent).
 
 This is the ONLY real correctness check for the loop-DD path.  Every Tier-1/2
 test runs against frozen fixtures we authored; a wrong physics assumption in
-match_nucleon.py or run_eval.wls only surfaces HERE.  Treat the fixture σ values
-as provisional until this smoke replaces them on a tooled box.
+match_nucleon.py or run_eval.wls only surfaces HERE.  The real numerical core
+has landed (commit edc001a) and produced the fixture σ values on a tooled box;
+this smoke is the gated end-to-end hardening step — green on a tooled box,
+skipped by default here.
 """
 from __future__ import annotations
 

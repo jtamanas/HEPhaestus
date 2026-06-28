@@ -44,7 +44,7 @@ the paper's blind-spot figure.
 ### Onboarding & demo
 - **`/demo`** — Constraint-first front door to the blind-spot demo ([arXiv:2506.19062](https://arxiv.org/abs/2506.19062)). Picks a model and delegates to the per-model skill.
 - **`/install`** — Directory and orchestrator for every toolkit installer. Groups tools into use-case bundles ("compute DM relic", "one-loop integrals", ...).
-- **`/2hdm-a`** — Per-model workflow for 2HDM + pseudoscalar mediator ([arXiv:2506.19062](https://arxiv.org/abs/2506.19062) §III). Hand-crafted SARAH model → MadGraph → MadDM. Loop-only direct detection (tree SI is CP-forbidden) runs the FeynArts/FormCalc/LoopTools → DDCalc chain to a real, EW-anchor-validated σ_SI = 1.18×10⁻⁴⁸ cm² at the benchmark (single point; ~40% vs an independent EW box+triangle anchor; not an experimental exclusion).
+- **`/2hdm-a`** — Per-model workflow for 2HDM + pseudoscalar mediator ([arXiv:2506.19062](https://arxiv.org/abs/2506.19062) §III). Hand-crafted SARAH model → MadGraph → MadDM. Loop-only direct detection (tree SI is CP-forbidden) runs the FeynArts/FormCalc/LoopTools → DDCalc chain to a real, EW-anchor-validated σ_SI = 1.18×10⁻⁴⁸ cm² at the benchmark (single point; ~40% vs an independent EW box+triangle anchor; box not folded into f_N (≤1.7× upward), SI only; not an experimental exclusion).
 - **`/dark-su3`** — Per-model workflow for Dark SU(3) dark-Higgs benchmark (§IV). Vector V (tree-level SI) and pseudoscalar Ψ (exact blind spot); analytic-backend relic.
 - **`/singlet-doublet`** — Per-model workflow for Singlet-Doublet fermion DM (§II). Drives `sarah-build` → `spheno-build` → `madgraph` → `maddm`.
 
