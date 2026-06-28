@@ -389,14 +389,19 @@ prereqs:
         - condition: "DARWIN experiment requested"
           message: "DARWIN not registered in DDCalc v1 native set; overlay required (tier-2 FU-wsi-01)."
       support:
-        # Loop-induced DD: caveat (upstream chain blocked by LOOP_DD_TOOLING_PLANNED)
+        # Loop-induced DD: caveat — upstream chain runs (FeynArts/FormCalc/LoopTools eval)
         - axis: candidates[?].mediator_regime
           match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
           verdict: supported_with_caveat
           caveat: >-
-            Loop-induced DD requires FormCalc+LoopTools to compute the scattering/v1
-            JSON input; LOOP_DD_TOOLING_PLANNED blocks the upstream chain.
-          evidence: "intel/digest.md §14 (DDCalc scattering/v1 JSON input; loop-only DD)"
+            Loop-induced DD requires FeynArts/FormCalc/LoopTools to compute the
+            scattering/v1 JSON input; that chain runs and emits a real σ_SI
+            (σ_SI(p)=1.18e-48, σ_SI(n)=1.21e-48 cm² at the 2HDM+a benchmark,
+            ~40% vs the independent EW box+triangle anchor, single point; the
+            pseudoscalar-quark box is not yet folded into f_N, ≤1.7× upward if
+            folded later). The Tier-3 end-to-end smoke is gated off by default
+            (HEPPH_RUN_WOLFRAM_TESTS=1) but runs green on a tooled box.
+          evidence: "real anchor-validated 2HDM+a σ_SI via run_eval.wls numerical core (commit edc001a / merge 7722e10)"
         # Exact blind spot: not constraining
         - axis: candidates[?].mediator_regime
           match: tree-level-blind-spot
@@ -572,9 +577,12 @@ prereqs:
           match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
           verdict: supported_with_caveat
           caveat: >-
-            σ PROVISIONAL pending FormCalc/LoopTools smoke; the /looptools eval one-loop
-            numerical core is a loud-failing placeholder (ws-looptools-eval).
-          evidence: "loop-DD chain feynarts → formcalc → looptools eval → ddcalc is runnable (ws-looptools-eval)"
+            σ_SI is computed and EW-anchor-validated at the 2HDM+a benchmark
+            (1.18e-48/1.21e-48 cm², ~40% vs the independent EW box+triangle
+            anchor, single point; box not yet folded into f_N, ≤1.7× upward if
+            folded later). The Tier-3 end-to-end smoke is gated off by default
+            (HEPPH_RUN_WOLFRAM_TESTS=1) but runs green on a tooled box.
+          evidence: "loop-DD chain feynarts → formcalc → looptools eval → ddcalc runs to a real σ_SI (commit edc001a / merge 7722e10)"
         # All other models: not applicable (feynarts is only for loop chains)
         - axis: A1
           match: "*"
@@ -605,9 +613,12 @@ prereqs:
           match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
           verdict: supported_with_caveat
           caveat: >-
-            σ PROVISIONAL pending FormCalc/LoopTools smoke; the /looptools eval one-loop
-            numerical core is a loud-failing placeholder (ws-looptools-eval).
-          evidence: "loop-DD chain feynarts → formcalc → looptools eval → ddcalc is runnable (ws-looptools-eval)"
+            σ_SI is computed and EW-anchor-validated at the 2HDM+a benchmark
+            (1.18e-48/1.21e-48 cm², ~40% vs the independent EW box+triangle
+            anchor, single point; box not yet folded into f_N, ≤1.7× upward if
+            folded later). The Tier-3 end-to-end smoke is gated off by default
+            (HEPPH_RUN_WOLFRAM_TESTS=1) but runs green on a tooled box.
+          evidence: "loop-DD chain feynarts → formcalc → looptools eval → ddcalc runs to a real σ_SI (commit edc001a / merge 7722e10)"
         # All other models: not applicable
         - axis: A1
           match: "*"
@@ -638,9 +649,12 @@ prereqs:
           match: ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
           verdict: supported_with_caveat
           caveat: >-
-            σ PROVISIONAL pending FormCalc/LoopTools smoke; the /looptools eval one-loop
-            numerical core is a loud-failing placeholder (ws-looptools-eval).
-          evidence: "/looptools eval emits scattering/v1 (σ_SI/σ_SD) for /ddcalc (ws-looptools-eval)"
+            σ_SI is computed and EW-anchor-validated at the 2HDM+a benchmark
+            (1.18e-48/1.21e-48 cm², ~40% vs the independent EW box+triangle
+            anchor, single point; box not yet folded into f_N, ≤1.7× upward if
+            folded later). The Tier-3 end-to-end smoke is gated off by default
+            (HEPPH_RUN_WOLFRAM_TESTS=1) but runs green on a tooled box.
+          evidence: "/looptools eval emits a real scattering/v1 σ_SI for /ddcalc via run_eval.wls (commit edc001a / merge 7722e10)"
         # All other: not applicable (looptools is only for loop integral evaluation)
         - axis: A1
           match: "*"
@@ -815,8 +829,13 @@ models:
       (loop-only, CP-forbidden tree SI). The loop chain
       /feynarts → /formcalc → /looptools eval → /ddcalc evaluates the
       charged-Higgs/W box into a scattering/v1 JSON. Results are stamped
-      model_source="hand_crafted_sarah_model" and σ values are PROVISIONAL
-      until the Tier-3 FormCalc/LoopTools smoke runs on a tooled box. The
+      model_source="hand_crafted_sarah_model"; σ_SI is a real,
+      EW-anchor-validated number at the benchmark (σ_SI(p)=1.18e-48,
+      σ_SI(n)=1.21e-48 cm², ~40% vs the independent EW box+triangle anchor,
+      single point; the pseudoscalar-quark box is not yet folded into f_N,
+      ≤1.7× upward if folded later). The Tier-3 FormCalc/LoopTools smoke is
+      gated off by default (HEPPH_RUN_WOLFRAM_TESTS=1) but runs green on a
+      tooled box (commit edc001a / merge 7722e10). The
       live /sarah-build renderer UFO backport remains separate debt
       (demo_output/2hdm-a/fix_loop/POST_MORTEM.md §Remaining debt item 1).
     chain_overrides:
@@ -833,9 +852,10 @@ models:
           Tree-level SI is CP-forbidden (mediator a is CP-odd, σ_SI_tree ≈ 0),
           so the leading signal is the one-loop charged-Higgs/W box. The chain
           /feynarts → /formcalc → /looptools eval evaluates the loop amplitude
-          into scattering/v1 (σ_SI, σ_SD), consumed by /ddcalc. Runs on the
-          hand-crafted SARAH fixture; σ values are PROVISIONAL pending the
-          Tier-3 smoke.
+          into scattering/v1 (σ_SI; σ_SD null in v1), consumed by /ddcalc. Runs
+          on the hand-crafted SARAH fixture to a real, EW-anchor-validated σ_SI
+          (single benchmark point; box not yet folded into f_N). The Tier-3
+          smoke is gated off by default but runs green on a tooled box.
     time_overrides:
       dd: {cold: [3.0, 6.0]}    # loop-only DD is primary signal; slower
 

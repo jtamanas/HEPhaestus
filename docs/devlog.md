@@ -9,6 +9,76 @@ origin stories, design decisions, or a sharp edge we hit and patched.
 
 ---
 
+## 2026-06-28 — 2HDM+a direct detection produces a real, anchor-validated σ_SI
+
+**Headline.** The end-to-end 2HDM+a loop-only direct-detection chain now
+produces a **real, anchor-validated** spin-independent cross-section at the
+pinned off-resonance benchmark: **σ_SI(p) = 1.18×10⁻⁴⁸ cm²,
+σ_SI(n) = 1.21×10⁻⁴⁸ cm²**. `finite = true` is now *earned* — the result is
+UV-Δ-independent (`uv_pole_residue = 0`) and renormalization-scale-independent,
+not stamped by fiat. This closes the binding blocker from the 2026-04-26
+playtest (DD BLOCKED on the missing `/looptools eval` runtime). Merge `7722e10`
+/ commit `edc001a`.
+
+**What "validated" means here — and what it does NOT.** Validated means the
+loop result was cross-checked against an **independent analytic electroweak
+box+triangle calculation**: the rigorously-computed triangle coupling
+`C_hχχ = −7.57×10⁻⁴` matches the analytic EW anchor `−5.41×10⁻⁴` to ~40%
+(ratio ~1.40, inside its ×3–5 acceptance band; anchors landed `ad5ef36`). It
+does **NOT** mean validated against experimental data, and it makes **no claim
+that the benchmark is excluded or allowed** by any experiment — DDCalc consumes
+the σ, but no exclusion verdict is asserted here. It is **one benchmark point**
+(the pinned custodial/alignment point), not a scan.
+
+**The chain.** `/feynarts` → `/formcalc` → `/looptools eval` (real
+`run_eval.wls` numerical core, LoopTools-2.16 MathLink binary) → nucleon
+matching → `/ddcalc`. The amplitude is the t-channel mediator triangle (real
+`C0i` Passarino-Veltman heads) matched to all quarks via the Higgs-portal
+σ-term + 2/27 gluon, plus the heavy-H CP-even contribution. Tree-level SI is
+CP-forbidden (the mediator `a` is CP-odd), so the loop is the leading signal.
+
+**Wolfram Engine 13.3 / 14.3 coexistence is a hard requirement.** `/feynarts`
+(FeynArts 3.11) must run on **Wolfram Engine 13.3** — WE 14.3 SIGSEGVs on
+`MakeFeynArts[]` (see `/feynarts` install-detection hardening, `3ac1f54`).
+`/formcalc` and the `/looptools eval` MathLink driver run on **WE 14.3 +
+FormCalc 9.10 + LoopTools 2.16**. Both engines must be installed side by side;
+the chain spans the two. The FeynArts-on-13.3 wiring + real elastic amplitude
+(t-channel, triangle present) landed `1cf2f8a`; the `run_eval.wls` numerical
+core that fills the last gap is `edc001a`. Building the LoopTools MathLink
+binary (rather than relying on the Fortran link) was a prerequisite, supported
+in the `/install` skill.
+
+**Sharp edges resolved.** `SE-2HDMA-FLOW-12` (no `/looptools eval` runtime —
+"biggest single missing piece" in the DD chain) is RESOLVED: the runtime skill
+ships, `run_eval.wls` is real, σ_SI is computed and EW-anchor-validated.
+`SE-2HDMA-FLOW-1` (DD Step-3 BLOCKED gate / no DD execution body) is RESOLVED:
+the Step-4f execution body is wired now that `/looptools eval` has landed.
+
+**Honest caveats (kept, not buried).**
+- The pseudoscalar-quark **box is NOT folded into f_N**. It routes through the
+  suppressed gluon/twist-2 channel and is ZH-independent; the quark-level
+  `α_up_box` is large but nucleon-suppressed. Folding it later is explicit
+  future work and would raise σ by **≤1.7×**.
+- The benchmark SLHA is **hand-filled**; regenerating it from SPheno is future
+  hardening (the live `/sarah-build` renderer UFO backport is separate,
+  non-blocking debt).
+- **SD path still unimplemented** — σ_SD is emitted `null` in v1; this is SI
+  only.
+- The **Tier-3 end-to-end smoke is gated off by default**
+  (`@pytest.mark.smoke` + `HEPPH_RUN_WOLFRAM_TESTS=1`, committed-but-skipped).
+  It is **not unrun**: it runs **green on a tooled box** (~33 s). The σ above is
+  a genuine computation, not a provisional placeholder.
+
+**Why this is not over-claiming.** The σ is rigorously computed and
+anchor-validated at one point; the smoke is a hardening gate, not the thing that
+made the number real. Every defunct "σ PROVISIONAL / not a physics prediction /
+loud-failing placeholder" caveat in the skills and `constraints.yaml` was
+refreshed in this same change to match; the only place the old "provisional"
+language legitimately survives is the `sigma_provisional: true` flag in the
+fixture provenance, which honestly flags single-point + box-matching-deferred.
+
+---
+
 ## 2026-04-26 — 2HDM+a playtest round
 
 **TL;DR.** Four parallel `/demo → 2hdm-a → {relic,dd,id,collider}`
