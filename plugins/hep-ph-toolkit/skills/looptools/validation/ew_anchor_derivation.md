@@ -35,9 +35,13 @@ precisely this hierarchy (the triangle dominates σ_SI in the 2HDM+a).
 > estimate (≤30%), not computed** — and the box is precisely the piece a real
 > LoopTools run evaluates rigorously, so a live number **~1.3–1.7× ABOVE** this
 > triangle anchor is **expected** (constructive box), not a discrepancy (§6). (ii)
-> "Like-for-like" is verified at the **topology-label** level only; the actual
-> amplitude content (`amp_reduced.m`) must be confirmed to contain the triangle
-> (§7) — the current fixture does **not** (it is box-only).
+> "Like-for-like" holds via **triangle-dominance**, not a clean diagram-by-diagram box
+> match: the regenerated **elastic** fixture `amp_reduced.m` now **DOES contain the
+> χχ→h/H→q̄q triangle** as a t-channel `Den[T,Masshh²]` × `C0i[…χ,a,a…]` vertex
+> correction (§7, Step-0 SATISFIED). The anchor's `chargedHiggs_W_box` (A⁰H±W∓) is
+> **not** a clean χ-side box in this model — χ is a singlet coupling only to neutral
+> a/A⁰, so the genuine box is the pseudoscalar×quark (hk-type) D0i with W/H± entering
+> as **quark-side** vertex corrections (§7).
 
 ---
 
@@ -241,34 +245,39 @@ destructive box interference or that the triangle is not actually in the amplitu
 
 | diagram | this anchor | LoopTools topology *label* | in fixture `amp_reduced.m`? | hk_anchor |
 |---|---|---|---|---|
-| mediator triangle (h/H via aa-loop) | **rigorous** | `mediator_triangle` ✓ | **NO** (not in fixture) | — |
-| charged-Higgs/W box (A⁰H±W∓) | estimate (≤30%) | `chargedHiggs_W_box` ✓ | **YES** (D0i/C0i/B0i) | — |
-| pseudoscalar × quark box → gluon | **excluded** (correctly) | absent | no | the hk number |
+| mediator triangle (h/H via aa-loop) | **rigorous** | `mediator_triangle` ✓ | **YES** — t-channel `Den[T,Masshh²]` × `C0i[…χ,a,a…]` | — |
+| charged-Higgs/W box (A⁰H±W∓) | estimate (≤30%) | `chargedHiggs_W_box` ✓ | **not a clean χ-side box** (see below) | — |
+| pseudoscalar × quark (hk-type) box | present in fixture | (genuine χ-side box) | **YES** — D0i internal {χ,a,a,q} | the hk diagram set |
 | 2-loop DM–gluon box | excluded | absent | no | partly (2/27 match) |
 
-**Like-for-like is verified at the TOPOLOGY-LABEL level ONLY — read this carefully.**
-The two `loop_topologies` strings in `run_eval.wls` (line 127) match the two pieces this
-anchor addresses, and **neither** is the pseudoscalar-quark/gluon box `hk_anchor` owns.
-But that label is **hard-coded JSON metadata**, and two facts downgrade "LoopTools
-computes the dominant triangle" from *fact* to *physics inference pending verification*:
+**Like-for-like now holds via TRIANGLE-DOMINANCE — Step-0 SATISFIED (updated).**
+The fixture `amp_reduced.m` was **regenerated in the ELASTIC channel** (χ q → χ q,
+process `{F[101],F[3,{1}]} -> {F[101],F[3,{1}]}`) on FeynArts 3.11 / WE 13.3 + FormCalc
+9.10, replacing the old box-only toy. Two facts that previously downgraded "LoopTools
+computes the dominant triangle" to a pending inference are now resolved:
 
-1. **`run_eval.wls` is a STUB.** Its numerical core is a placeholder that hard-sets
-   `fp = fn = 0` (lines ~101–105) so an untooled run fails loudly. It computes **no
-   cross-section today**; there is nothing to compare against yet.
-2. **The real diagram content lives in `amp_reduced.m`** (the FeynArts/FormCalc output
-   the driver `Get[]`s). The committed **fixture** `amp_reduced.m` contains **only the
-   A⁰H⁺W⁻ box** — `D0i[dd0,MW2,MHp2,Ma2,0,S,T]`, `C0i[cc0,MW2,MHp2,Ma2]`,
-   `B0i[bb0,S,MW2,MHp2]` — with **no h/H propagator and no χχ→φ→qq triangle visible**.
-   It is a placeholder, but as it stands the amplitude is **box-only**.
+1. **`run_eval.wls` numerical core is still a STUB** (hard-sets `fp = fn = 0`) — it
+   computes no cross-section yet, so there is nothing to compare against *numerically*
+   until that core is filled. (This is the next task and is independent of Step 0.)
+2. **The real diagram content now lives in the regenerated fixture.** The committed
+   `amp_reduced.m` **DOES contain the χχ→h/H→q̄q triangle**, verified in the elastic
+   reduced amplitude as a single term carrying BOTH the t-channel scalar mediator and
+   the χ-side vertex-correction loop:
+   `Den[T, Masshh[I2G5]²] · gchi² · MassFchi · C0i[cc0, MassFchi², T, MassFchi², MassFchi², MassAh[I3G5]², MassAh[I3G6]²] · ZA[I3G5,3]·ZA[I3G6,3]·ZH[I2G5,2] · Mat[SUN1]`.
+   The mediator is **natively t-channel** (`Den[T,Masshh²]`; **every** Den head in the
+   amplitude is `T`), so the DD limit is **literally t→0** — no annihilation-S→0 hack.
+   The genuine χ-side box present is the **pseudoscalar×quark (hk-type)** box,
+   `D0i` with internal `{χ,a,a,q}` (e.g. `D0i[dd0, MassFchi², T, MassFu[1]², …, MassFchi², MassAh², MassAh², MassFu²]`).
 
-So: **"LoopTools includes the dominant h-triangle" is a physics inference, NOT an
-established fact.** It holds only if the *real* (non-fixture) FeynArts amplitude
-generated on a tooled box actually contains the χχ→h/H→q̄q triangle diagrams. Whoever
-fills the numerical core **must confirm this in `amp_reduced.m`** before comparing to
-this anchor. If the real amplitude is box-only (like the fixture), LoopTools will
-compute the **sub-dominant** piece and will **not** match the triangle-dominated
-6×10⁻⁴⁹ cm² — that would be a **coverage gap in the amplitude generation**, not an error
-in this anchor.
+**Box-coverage caveat (physics-review note).** The anchor's `chargedHiggs_W_box`
+(A⁰H±W∓) is **NOT** a clean χ-side box in this model: χ is a **singlet** and couples
+only to the neutral `a/A⁰`, so it cannot attach directly to W/H±. The genuine box is
+the pseudoscalar×quark (hk-type) box above, with W/H± entering as **quark-side** vertex
+corrections. So the like-for-like holds via **triangle-dominance** (the triangle is
+~94% of σ_SI per §1/§6), **not** a clean diagram-by-diagram box match. A live LoopTools
+number landing on the triangle anchor therefore validates the dominant physics; the
+"box" piece is covered as quark-side dressing + the hk-type box, not as a separate
+A⁰H±W∓ topology.
 
 Other caveats: (a) LoopTools' box is rigorous (FormCalc/LoopTools PV), ours is a ≤30%
 estimate; (b) tree-level scalar (h/H) exchange is **CP-allowed but momentum-suppressed**
@@ -311,9 +320,11 @@ Central **σ_SI(p) ≈ σ_SI(n) ≈ 6×10⁻⁴⁹ cm², reliable to a factor ~3
 5. **Charged-Higgs/W box is an ESTIMATE (≤30%), not computed** (§6) — and it is exactly
    the piece LoopTools does rigorously, so a live number ~1.3–1.7× **above** the triangle
    is **expected**, not a discrepancy.
-6. **Like-for-like is topology-LABEL only** (§7): `run_eval.wls` is a stub (fp=fn=0) and
-   the fixture `amp_reduced.m` is **box-only** — "LoopTools includes the triangle" is an
-   inference pending verification of the real amplitude.
+6. **Like-for-like via triangle-dominance** (§7, updated): the regenerated **elastic**
+   fixture `amp_reduced.m` **now contains the triangle** (t-channel `Den[T,Masshh²]` ×
+   `C0i[…χ,a,a…]`), so Step-0 is **SATISFIED**. `run_eval.wls`'s numerical core is still a
+   stub (fp=fn=0) pending the next task. The A⁰H±W∓ box is not a clean χ-side box (χ is a
+   singlet); the genuine box is the pseudoscalar×quark (hk-type) D0i {χ,a,a,q}.
 7. **Dirac/Majorana factor ≤2** (§3) — overall normalisation, σ ∝ f².
 8. **No second independent check.** The AFH-rescaling is a crude ballpark only (§5); the
    from-scratch derivation is the sole basis for the number.
@@ -325,11 +336,16 @@ Central **σ_SI(p) ≈ σ_SI(n) ≈ 6×10⁻⁴⁹ cm², reliable to a factor ~3
 Once the numerical core of `run_eval.wls` is implemented and a real FeynArts/FormCalc
 `amp_reduced.m` is in hand, use this anchor as follows:
 
-**Step 0 (prerequisite).** Confirm the real `amp_reduced.m` actually contains the
-χχ→h/H→q̄q **triangle** diagrams (grep for h/H scalar propagators and the φ–q̄q vertices),
-not just the A⁰H⁺W⁻ box. The committed *fixture* is box-only (§7). If the triangle is
-absent, fix the amplitude generation **before** comparing — otherwise you are comparing
-a box-only LoopTools number to a triangle-dominated anchor (apples to oranges).
+**Step 0 (prerequisite) — SATISFIED.** The committed fixture `amp_reduced.m` was
+regenerated in the **elastic** χ q → χ q channel and **does contain** the χχ→h/H→q̄q
+triangle: grep confirms `Den[T, Masshh[_]^2]` (t-channel scalar mediator) multiplying
+`C0i[cc0, MassFchi^2, T, MassFchi^2, MassFchi^2, MassAh[_]^2, MassAh[_]^2]` (the χ-a-a
+vertex-correction loop) in a single term, with `gchi^2 · MassFchi · ZA[,3]^2 · ZH[,2]`.
+Because the mediator is **natively t-channel**, the DD limit is **literally t→0** — set
+T→0 in `run_eval.wls` directly; **no** annihilation-S→0 substitution and **no** Mandelstam
+crossing/remapping are needed (the box invariants S,U inside the D0i args are box-internal,
+not propagator channels — every `Den` head is `T`). The earlier "box-only fixture" warning
+no longer applies (§7).
 
 **Then read the live σ_SI against these windows (proton):**
 

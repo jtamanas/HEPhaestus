@@ -25,6 +25,7 @@ def render_driver(
     feynarts_version: str,
     model_hash: str,
     diagram_cap: int = 2000,
+    model_dir: str = "",
     template_path: str | None = None,
 ) -> str:
     """Render the main FeynArts driver script.
@@ -42,6 +43,8 @@ def render_driver(
         feynarts_version: Version string (e.g. "3.11").
         model_hash: SHA256 of .mod file.
         diagram_cap: Maximum diagram count before aborting.
+        model_dir: Directory containing the model .mod (prepended to FeynArts
+            $ModelPath). Empty for built-in models (resolved from Models/).
         template_path: Override template file path.
 
     Returns:
@@ -61,6 +64,7 @@ def render_driver(
         feynarts_version=feynarts_version,
         model_hash=model_hash,
         diagram_cap=diagram_cap,
+        model_dir=model_dir,
     )
 
 

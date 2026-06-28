@@ -67,6 +67,64 @@ def _read_config(key: str) -> str:
     return ""
 
 
+def _feynarts_invocation(ws_path: str) -> list[str]:
+    """argv prefix (everything before the script path) for a FeynArts run.
+
+    FeynArts 3.11 (2022) SIGSEGVs the loader on Wolfram Engine 14.3 while
+    processing Lorentz.gen, but runs cleanly on an older engine (e.g. WE 13.3).
+    If the config key ``feynarts_wolfram_kernel`` points at such a kernel, run
+    FeynArts on *that* kernel ONLY, leaving the global ``wolfram_engine_path``
+    (used by FormCalc/LoopTools, which need 14.x) untouched.
+
+    Note: ``wolframscript -local <kernel> -script`` does NOT honor <kernel> —
+    the ``-script`` flag always selects the most recent engine. We therefore
+    exec the kernel binary directly with ``-script``, which does respect it.
+    """
+    fa_kernel = _read_config("feynarts_wolfram_kernel")
+    if fa_kernel and Path(fa_kernel).exists():
+        return [fa_kernel, "-script"]
+    return [ws_path, "-script"]
+
+
+def _top_level_brace_groups(s: str) -> list[str]:
+    """Return the brace-balanced ``{...}`` substrings at depth 0 in ``s``."""
+    groups, depth, start = [], 0, None
+    for i, c in enumerate(s):
+        if c == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0 and start is not None:
+                groups.append(s[start : i + 1])
+                start = None
+    return groups
+
+
+def _normalize_process_tuple(tuple_str: str) -> str:
+    """Normalise a process tuple to FeynArts ``{in} -> {out}`` InsertFields form.
+
+    ``resolve_process`` (and the SKILL's documented syntaxes) yield the process
+    in several shapes that InsertFields will NOT accept directly:
+      * ``[{in}, {out}]``        (raw JSON-bracket form — brackets must be stripped)
+      * ``{{in}, {out}}``        (brace/alias form — needs the ``->`` separator)
+    InsertFields requires ``{in} -> {out}``. This converts all of the above to it
+    while leaving an already-correct ``{in} -> {out}`` string untouched.
+    """
+    s = tuple_str.strip()
+    if s.startswith("[") and s.endswith("]"):
+        s = s[1:-1].strip()
+    if "->" in s:
+        return s
+    groups = _top_level_brace_groups(s)
+    if len(groups) == 1:  # wrapped: {{in},{out}} -> unwrap one level
+        groups = _top_level_brace_groups(groups[0][1:-1])
+    if len(groups) == 2:
+        return f"{groups[0]} -> {groups[1]}"
+    return s  # leave anything unexpected for FeynArts to report
+
+
 def run(
     process: str,
     model: Optional[str] = None,
@@ -156,7 +214,7 @@ def run(
 
     n_in = proc_info["n_in"]
     n_out = proc_info["n_out"]
-    process_tuple = proc_info["feynarts_tuple"]
+    process_tuple = _normalize_process_tuple(proc_info["feynarts_tuple"])
     processspec = proc_info["processspec"]
 
     # --- 4. Optional post-hoc SARAH MakeFeynArts[] ---
@@ -210,6 +268,8 @@ def run(
     excludes_m = ", ".join(excludes or [])
     model_hash = _sha256_file(mod_path) if mod_path and Path(mod_path).exists() else ""
 
+    model_dir = str(Path(mod_path).parent) if mod_path and Path(mod_path).exists() else ""
+
     script_content = render_driver(
         run_dir=str(out_dir),
         loop_order=loop_order,
@@ -221,6 +281,7 @@ def run(
         feynarts_version=fa_version,
         model_hash=model_hash,
         diagram_cap=_diagram_cap,
+        model_dir=model_dir,
     )
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".m", delete=False) as tmp:
@@ -231,7 +292,7 @@ def run(
         t_start = time.monotonic()
         try:
             proc = subprocess.run(
-                [ws_path, "-script", script_path],
+                [*_feynarts_invocation(ws_path), script_path],
                 capture_output=True,
                 text=True,
                 timeout=_timeout,
@@ -348,7 +409,7 @@ def _run_make_feynarts(
     try:
         try:
             proc = subprocess.run(
-                [ws_path, "-script", script_path],
+                [*_feynarts_invocation(ws_path), script_path],
                 capture_output=True,
                 text=True,
                 timeout=timeout_s,

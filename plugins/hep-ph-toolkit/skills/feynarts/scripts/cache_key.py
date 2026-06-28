@@ -19,10 +19,14 @@ from typing import Optional
 
 
 def _sha256_file(path: str) -> str:
-    """Compute sha256 of a file, or sha256 of empty string if file not found."""
+    """Compute sha256 of a file, or sha256 of empty string if file not found.
+
+    An empty path (e.g. a SARAH model with no model-specific .gen) or a
+    directory hashes to the empty-string digest rather than raising.
+    """
     p = Path(path)
     h = hashlib.sha256()
-    if p.exists():
+    if path and p.is_file():
         with open(p, "rb") as f:
             for chunk in iter(lambda: f.read(65536), b""):
                 h.update(chunk)
