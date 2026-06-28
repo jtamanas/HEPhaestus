@@ -5,17 +5,23 @@
   "looptools_version": "2.16",
   "gamma5_scheme": "naive",
   "pv_heads": "formcalc-native",
-  "abbreviations_manifest": "",
+  "abbreviations_manifest": "amp_reduced.m is a self-contained Get[]-able list of rules with keys: 'amp' (FormCalc Amp[...] = sum of Mat[F##]*coupling*Den*B0i/C0i/D0i over SumOver indices), 'abbr' (Abbr[]: F## -> WeylChain[Spinor...] Dirac bilinears, SUN1 -> SUNT colour), 'subexpr' (Subexpr[]: Sub## -> model-coupling combinations bottoming out in lam1..lam8, yu2, ZUL/ZUR, ZP, ZA, ZH, vd, vu, lamP, gchi, masses), 'mom' (external momenta k[1..4]) and 'ext_masses'. Resolve via amp /. abbr /. subexpr to reach pure B0i/C0i/D0i+Den+couplings+masses.",
   "input_hashes": {
-    "feynamplist_m": "0000000000000000000000000000000000000000000000000000000000000000",
-    "processspec_json": "1111111111111111111111111111111111111111111111111111111111111111"
+    "feynamplist_m": "8205ec0e3f6d1f8cc983c823510de3df4dcdd7dddf4be452e12c9eb9f90f4792",
+    "processspec_json": "dccc5efa36d12c44cf64fa1ca1d12737c29324a80df3c3d22b64c6ff31f7f4a1"
   },
-  "kinematic_limit": "general",
+  "kinematic_limit": "elastic chi q -> chi q, DD limit t->0 LITERAL (scalar mediator t-channel)",
   "ir_flags": {
     "ir_divergent": false,
     "uv_regularized": true
   },
-  "caveats": [],
-  "produced_at": "2026-06-27T00:00:00Z",
+  "caveats": [
+    "FeynArts 3.11 diagram generation ran on Wolfram Engine 13.3 (feynarts_wolfram_kernel); FormCalc 9.10 reduction ran on WE 14.3.",
+    "Process is the ELASTIC scattering channel chi q -> chi q (process {F[101],F[3,{1}]} -> {F[101],F[3,{1}]}). The scalar mediator h/H appears natively in the t-channel as Den[T,Masshh^2], so the direct-detection limit is literally t->0 - no annihilation-S -> 0 substitution. Every propagator denominator is t-channel (all Den heads = {T}).",
+    "Contains the mediator triangle as a t-channel h/H exchange (Den[T,Masshh^2]) with the chi-a-a one-loop vertex correction on the chi side: C0i[cc0, MassFchi^2, T, MassFchi^2, MassFchi^2, MassAh^2, MassAh^2] x gchi^2 x MassFchi x ZA[,3]^2 x ZH[,2]. Also carries the pseudoscalar-quark (hk-type) boxes: D0i with internal {chi,a,a,q} (MassFchi^2, MassAh^2, MassAh^2, MassFu^2). The charged-Higgs/W (A0 H+ W-) box does NOT arise as a clean chi-side box because chi is a singlet coupling only to neutral a/A0; W/H+ enter as quark-side vertex corrections - see anchor doc and handoff.",
+    "UV-pole cancellation across the diagram set and gauge independence must be verified numerically in run_eval before trusting the number (FormCalc keeps poles symbolic).",
+    "amp/abbr/subexpr must be kept together; the FormCalc abbreviations are session state and are persisted here in amp_reduced.m itself."
+  ],
+  "produced_at": "2026-06-28T17:25:00Z",
   "wolfram_version_major_minor": "14.3"
 }

@@ -1,0 +1,37 @@
+{
+  "schema_version": "processspec/v1",
+  "process": "elastic chi q -> chi q (direct-detection scattering)",
+  "particles": {
+    "in": [
+      {
+        "label": "chi",
+        "pdg": 9989932,
+        "mass_symbol": "MassFchi"
+      },
+      {
+        "label": "u",
+        "pdg": 2,
+        "mass_symbol": "MassFu"
+      }
+    ],
+    "out": [
+      {
+        "label": "chi",
+        "pdg": 9989932,
+        "mass_symbol": "MassFchi"
+      },
+      {
+        "label": "u",
+        "pdg": 2,
+        "mass_symbol": "MassFu"
+      }
+    ]
+  },
+  "loop_order": 1,
+  "kinematic_limit": "t->0 (elastic; scalar mediator natively t-channel)",
+  "excludes": [
+    "SelfEnergies",
+    "Tadpoles",
+    "WFCorrections"
+  ]
+}
