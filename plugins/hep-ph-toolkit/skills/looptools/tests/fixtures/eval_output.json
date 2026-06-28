@@ -9,16 +9,26 @@
     "gauge_parameter_dependence": 0.0
   },
   "effective_couplings": {
-    "f_p_si_gev_minus2": 2.7e-09,
-    "f_n_si_gev_minus2": 2.6e-09,
+    "f_p_si_gev_minus2": -5.2450498456709965e-11,
+    "f_n_si_gev_minus2": -5.308495959628762e-11,
     "f_p_sd_gev_minus2": null,
     "f_n_sd_gev_minus2": null
   },
   "nucleon_form_factors": {"preset": "default_2018"},
-  "loop_topologies": ["chargedHiggs_W_box", "mediator_triangle"],
+  "loop_topologies": ["mediator_triangle", "pseudoscalar_quark_box"],
   "looptools_version": "2.16",
-  "n_pv_calls": 12,
-  "n_diagrams": 6,
+  "n_pv_calls": 73,
+  "n_diagrams": 13,
   "pv_heads_used": ["B0i", "C0i", "D0i"],
-  "_provenance": "PROVISIONAL hand-frozen stand-in for a real Wolfram/LoopTools run; numbers are placeholder-but-consistent and MUST be replaced by the Tier-3 smoke (HEPPH_RUN_WOLFRAM_TESTS=1) before any physics use."
+  "_diagnostics": {
+    "method": "static-DD SI scalar projection (T=-1e-4 regulated t->0); real LoopTools C0i/D0i PV",
+    "C_hchi_over_mh2": -4.845284091848142e-08,
+    "C_Hchi_over_mH2": -1.169952469075147e-12,
+    "alpha_up_triangle": -4.254357381115986e-13,
+    "alpha_up_full_incl_box": -2.6049443552273066e-12,
+    "alpha_up_box_penguin": -2.179508617115708e-12,
+    "scale_residue_rel": 0.0,
+    "note": "f_N is the rigorous t-channel mediator-triangle (real C0i PV), matched to all quarks via the Higgs-portal sigma-term + 2/27 gluon. The box/penguin (alpha_up_box) is quark-level large but nucleon-level suppressed (gluon/twist-2 hk-floor); NOT folded into f_N. See handoff."
+  },
+  "_provenance": "REAL — produced by scripts/run_eval.wls on the CORRECTED SM-like ZHMIX benchmark (amp_reduced.m) via Wolfram Engine 14.3 + FormCalc 9.10 + LoopTools 2.16 MathLink (Tier-3 smoke, 2026-06-28). The 125 GeV h is SM-like under SARAH's up<->col2/down<->col1 convention (xi_V=xi_u=xi_d=1.0). f_p/f_n are the rigorously-computed t-channel mediator-triangle (real C0i PV) matched to all quarks via the Higgs-portal sigma-term + 2/27 gluon; UV-pole- and scale-independent (uv_pole_residue=0). C_hchi=-7.57e-4 matches the analytic EW triangle-anchor (-5.41e-4) to ~40% (ratio ~1.40, inside its x3-5 band); the excess of sigma over the analytic triangle-anchor is the rigorously-computed triangle ITSELF plus the heavy-H CP-even contribution — NO box folded. The pseudoscalar-quark box is NOT folded into f_N: it routes through the suppressed gluon/twist-2 channel and is ZH-independent (the quark-level alpha_up_box is large but nucleon-suppressed). Folding the box later is explicit provisional future work (<=1.7x upward if folded). This frozen copy stubs the Wolfram subprocess in Tier-1/2 tests."
 }

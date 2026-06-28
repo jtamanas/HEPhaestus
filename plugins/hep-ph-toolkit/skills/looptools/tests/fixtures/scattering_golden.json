@@ -1,8 +1,8 @@
 {
   "schema_version": "scattering/v1",
   "m_dm_gev": 100.0,
-  "sigma_si_proton_cm2": 3.1228882913186946e-45,
-  "sigma_si_neutron_cm2": 2.9037615023516756e-45,
+  "sigma_si_proton_cm2": 1.1784961299502537e-48,
+  "sigma_si_neutron_cm2": 1.2104789163857764e-48,
   "sigma_sd_proton_cm2": null,
   "sigma_sd_neutron_cm2": null,
   "source": "looptools",
@@ -10,7 +10,7 @@
   "nucleon_form_factors": {"preset": "default_2018"},
   "model_source": "hand_crafted_sarah_model",
   "model_fixture": "plugins/hep-ph-toolkit/skills/2hdm-a/fixtures/sarah_model/",
-  "loop_topologies": ["chargedHiggs_W_box", "mediator_triangle"],
+  "loop_topologies": ["mediator_triangle", "pseudoscalar_quark_box"],
   "sigma_provisional": true,
-  "_provenance": "PROVISIONAL — derived from the frozen eval_output.json placeholder couplings via match_nucleon. NOT a physics prediction; replaced by the Tier-3 FormCalc/LoopTools smoke."
+  "_provenance": "REAL — match_nucleon(sigma) of the real run_eval.wls couplings in eval_output.json on the CORRECTED SM-like ZHMIX benchmark (Wolfram 14.3 + FormCalc 9.10 + LoopTools 2.16, 2026-06-28). sigma_SI(p)=1.18e-48, sigma_SI(n)=1.21e-48 cm^2. The 125 GeV h is SM-like (xi_V=xi_u=xi_d=1.0). The excess of sigma over the analytic EW triangle-anchor (central 6.4e-49) is the rigorously-computed triangle ITSELF (C_hchi=-7.57e-4 matches the anchor's analytic -5.41e-4 to ~40%, ratio ~1.40, inside its x3-5 band) plus the heavy-H CP-even contribution — NO box folded. The pseudoscalar-quark box is NOT folded into f_N: it routes through the suppressed gluon/twist-2 channel and is ZH-independent; folding it later is explicit provisional future work (<=1.7x upward if folded). 'sigma_provisional' kept true: a single benchmark point, box->nucleon matching deferred. See looptools-run-eval-fill-handoff.md."
 }
