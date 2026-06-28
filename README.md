@@ -30,7 +30,7 @@ analytic-Python escape hatches where they make sense.
 /demo
 ```
 
-The marketplace exposes a single plugin, **`hep-ph-toolkit`**, containing 37
+The marketplace exposes a single plugin, **`hep-ph-toolkit`**, containing 28
 skills. `/demo` walks you through the cold-start path (install MadGraph,
 optionally install SARAH/SPheno, reproduce a benchmarked figure from
 [arXiv:2506.19062](https://arxiv.org/abs/2506.19062)).
@@ -44,7 +44,7 @@ the paper's blind-spot figure.
 ### Onboarding & demo
 - **`/demo`** — Constraint-first front door to the blind-spot demo ([arXiv:2506.19062](https://arxiv.org/abs/2506.19062)). Picks a model and delegates to the per-model skill.
 - **`/install`** — Directory and orchestrator for every toolkit installer. Groups tools into use-case bundles ("compute DM relic", "one-loop integrals", ...).
-- **`/2hdm-a`** — Per-model workflow for 2HDM + pseudoscalar mediator ([arXiv:2506.19062](https://arxiv.org/abs/2506.19062) §III). Hand-crafted SARAH model → MadGraph → MadDM.
+- **`/2hdm-a`** — Per-model workflow for 2HDM + pseudoscalar mediator ([arXiv:2506.19062](https://arxiv.org/abs/2506.19062) §III). Hand-crafted SARAH model → MadGraph → MadDM. Loop-only direct detection (tree SI is CP-forbidden) runs the FeynArts/FormCalc/LoopTools → DDCalc chain to a real, EW-anchor-validated σ_SI = 1.18×10⁻⁴⁸ cm² at the benchmark (single point; ~40% vs an independent EW box+triangle anchor; box not folded into f_N (≤1.7× upward), SI only; not an experimental exclusion).
 - **`/dark-su3`** — Per-model workflow for Dark SU(3) dark-Higgs benchmark (§IV). Vector V (tree-level SI) and pseudoscalar Ψ (exact blind spot); analytic-backend relic.
 - **`/singlet-doublet`** — Per-model workflow for Singlet-Doublet fermion DM (§II). Drives `sarah-build` → `spheno-build` → `madgraph` → `maddm`.
 
@@ -66,6 +66,7 @@ in transitively (no separate `_shared/installs/` entry).
 - **`/draw-feynman`** — Generate diagrams in TikZ-Feynman, FeynMF, or ASCII.
 - **`/feynarts`** — FeynArts 3.11 for diagram and amplitude generation; outputs `FeynAmpList.m`, diagrams PDF, topology JSON.
 - **`/formcalc`** — FormCalc 9.10 (bundled with LoopTools 9.10 and FORM 4.3.1) to reduce FeynArts amplitudes; produces `amp_reduced.m` + `amp_reduced.meta.json`.
+- **`/looptools`** — LoopTools 2.16 Passarino-Veltman integral evaluation via Wolfram/MathLink. `eval` evaluates the FormCalc-reduced one-loop amplitude and emits `scattering/v1` (σ_SI / σ_SD) for `/ddcalc`, unblocking 2HDM+a loop-only direct detection.
 - **`/feynman-tikz`** — Render diagrams in TikZ-Feynman with the project's `hephaestus-tikz.sty` style package.
 
 ### BSM model building

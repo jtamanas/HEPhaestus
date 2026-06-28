@@ -51,6 +51,17 @@ and is exercised only by the Tier-3 smoke.
   (env seam `HEPPH_LOOPTOOLS_TEST_EVAL_OUTPUT`).  No external tools.
 - Tier-3 `tests/test_smoke.py` is double-gated (`@pytest.mark.smoke` +
   `HEPPH_RUN_WOLFRAM_TESTS=1` skipif, lazy driver import): committed-but-skipped.
-  It is the ONLY real correctness check — it runs the real A⁰H⁺W⁻ box and
-  asserts a finite, UV-finite, gauge-stable σ_SI.  **All fixture σ numbers are
-  PROVISIONAL until this smoke replaces them on a tooled box.**
+  It is the end-to-end hardening gate — it runs the real loop amplitude and
+  asserts a finite, UV-finite, gauge-stable σ_SI.  It is **gated off by default
+  but runs green on a tooled box** (~33 s); it is not unrun.
+- **The real numerical core landed (commit `edc001a` / merge `7722e10`).**
+  `run_eval.wls` computes σ_SI on a tooled box (Wolfram Engine 14.3 +
+  FormCalc 9.10 + LoopTools 2.16; FeynArts upstream on WE 13.3), giving
+  σ_SI(p)=1.18e-48, σ_SI(n)=1.21e-48 cm² at the 2HDM+a benchmark, with the
+  triangle coupling C_hχχ=−7.57e-4 matching the independent analytic EW
+  box+triangle anchor (−5.41e-4) to ~40% (inside its ×3–5 band).  These are
+  real, EW-anchor-validated numbers at a **single benchmark point** — not a
+  scan, not an experimental exclusion claim; the pseudoscalar-quark **box is
+  not folded into f_N** (≤1.7× upward if folded later) and σ_SD is null in v1.
+  The `sigma_provisional: true` flag in `scattering_golden.json` honestly marks
+  those (single point + box-matching deferred), not that the transport is fake.

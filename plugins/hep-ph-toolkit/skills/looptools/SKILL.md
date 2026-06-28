@@ -223,7 +223,7 @@ The amplitude → σ matching owned in Python is the textbook coherent formula
 | `scripts/run_looptools.py` | CLI entry (`eval`): preflight, gates, cache, dispatch, emit |
 | `scripts/cache_key.py` | SHA256 cache key (amp bytes + point + versions) |
 | `scripts/prepare_point.py` | SLHA/param_card → numeric substitution dict + DM mass |
-| `scripts/run_eval.wls` | Wolfram + LoopTools MathLink driver (DEFERRED real path) |
+| `scripts/run_eval.wls` | Wolfram + LoopTools-2.16 MathLink driver — real numerical PV core (evaluates the loop amplitude → effective couplings) |
 | `scripts/parse_eval_output.py` | Driver output → Python dict + finiteness gate |
 | `scripts/match_nucleon.py` | Effective DM–nucleon couplings → σ_SI/σ_SD (owned transport) |
 | `scripts/emit_scattering.py` | Assemble + validate `scattering/v1` |
@@ -240,9 +240,18 @@ The amplitude → σ matching owned in Python is the textbook coherent formula
   `HEPPH_RUN_WOLFRAM_TESTS=1` skipif, lazy driver import): committed-but-skipped.
   It runs the **real** A⁰H⁺W⁻ box and asserts a finite, UV-finite, gauge-stable
   σ_SI — the audit's "step 2" end-to-end closure.
-- **All fixture σ numbers are PROVISIONAL** until the smoke replaces them on a
-  tooled box. The committed `scattering_golden.json` pins the σ = (4/π) μ² f²
-  transport, not a physics prediction.
+- **The σ numbers are real and EW-anchor-validated at a single benchmark
+  point**, not provisional: `run_eval.wls` computes them on a tooled box
+  (Wolfram Engine 14.3 + FormCalc 9.10 + LoopTools 2.16, with FeynArts upstream
+  on WE 13.3), giving σ_SI(p)=1.18e-48, σ_SI(n)=1.21e-48 cm² with the triangle
+  coupling C_hχχ=−7.57e-4 matching the independent analytic EW box+triangle
+  anchor (−5.41e-4) to ~40% (inside its ×3–5 band). Caveats: it is **one
+  benchmark point** (not a scan); the pseudoscalar-quark **box is not folded
+  into f_N** (≤1.7× upward if folded later); σ_SD is null in v1. The committed
+  `scattering_golden.json` carries `sigma_provisional: true` to flag exactly
+  these (single point + box-matching deferred) — not that the transport is fake.
+  The Tier-3 smoke is the end-to-end hardening gate: gated off by default
+  (`HEPPH_RUN_WOLFRAM_TESTS=1`) but green on a tooled box.
 
 ---
 

@@ -359,6 +359,14 @@ Record validator runs in `timing.log` (e.g. WS-id r2's
 
 ### SE-2HDMA-FLOW-1 — DD path Step-3 BLOCKED gate has no "go anyway" (VERIFIED)
 
+**Status: RESOLVED — 2026-06-28.** `/looptools eval` landed (merge `7722e10` /
+commit `edc001a`), so DD is no longer a blocked-only selection: the Step-4f DD
+execution body is wired and the loop chain
+(`/feynarts → /formcalc → /looptools eval → /ddcalc`) runs end-to-end to a real
+σ_SI. The original "no go-anyway / empty-READY fallthrough" failure mode no
+longer applies, since DD is now a runnable READY-with-caveat constraint. The
+original investigation is retained below for provenance.
+
 **Surfaced:** WS-dd r1 (Blocker 1); also relevant to ID-only via
 WS-id (B5). **Worktree:** `agent-afc1d0ee1a5c3278b`, commit `aa38e45`.
 
@@ -655,6 +663,18 @@ index for `chi` and the DM PDG (9989932) aren't documented in
 ---
 
 ### SE-2HDMA-FLOW-12 — No `/looptools eval` runtime skill (VERIFIED)
+
+**Status: RESOLVED — 2026-06-28.** The `/looptools` runtime skill shipped and
+`run_eval.wls` is now a real Wolfram + LoopTools-2.16 MathLink numerical core
+(merge `7722e10` / commit `edc001a`); the "biggest single missing piece" below
+is filled. It consumes `amp_reduced.m` and emits `scattering/v1`, producing
+**σ_SI(p) = 1.18×10⁻⁴⁸ cm², σ_SI(n) = 1.21×10⁻⁴⁸ cm²** at the pinned
+benchmark, EW-anchor-validated to ~40% (`C_hχχ = −7.57×10⁻⁴` vs analytic
+`−5.41×10⁻⁴`, inside its ×3–5 band). Single benchmark point; the
+pseudoscalar-quark box is not yet folded into f_N (≤1.7× upward if folded
+later); SD still null; the Tier-3 smoke is gated off by default
+(`HEPPH_RUN_WOLFRAM_TESTS=1`) but runs green on a tooled box. The original
+specification below is retained for provenance.
 
 **Surfaced:** WS-dd r1 (Blocker 5). **Worktree:**
 `agent-afc1d0ee1a5c3278b`, commit `aa38e45`.
