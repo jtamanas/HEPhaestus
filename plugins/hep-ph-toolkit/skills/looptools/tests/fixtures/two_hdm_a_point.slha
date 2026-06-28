@@ -1,19 +1,94 @@
-# SLHA model point for TwoHdmAfix (2HDM+a) — hand-crafted fixture.
-# Off-resonance benchmark mirroring 2hdm-a/SKILL.md §4: Mchi=100, Ma=400,
-# gchi=1.0, tan beta=10.  PDG ids match the SARAH fixture
-# (chi=9989932 Dirac DM; Ah lightest = 36 = the pseudoscalar mediator a).
-# Provisional numbers; the Tier-3 smoke replaces the amplitude-derived values.
+# SLHA model point for TwoHdmAfix (2HDM+a) — SARAH-scheme fixture.
+#
+# Off-resonance benchmark: m_chi=100, m_a=400, gchi=1.0, tan(beta)=10.
+# REGENERATED in the SARAH LesHouches scheme that the TwoHdmAfix model reads
+# (THDMPOT/DMSECTOR/HMIX 102,103/PHASES/ZHMIX/ZAMIX/ZPMIX), replacing the old
+# hand-written FRALPHA/DMPORTAL/HMIX-1,2 blocks that the model silently dropped.
+# Block/index assignments mirror fixtures/sarah_model/parameters.m and the PDG
+# slots mirror fixtures/sarah_model/particles.m exactly (Map P).
+#
+# --- PDG-slot identities (SARAH particles.m ground truth) -------------------
+#   CP-even hh = {25, 35}:
+#       25       = h  (SM-like, ZHMIX row 1)
+#       35       = H  (heavy CP-even, ZHMIX row 2)
+#   CP-odd  Ah = {36, 9931569, 9949515}  (3-vector, ZAMIX rows 1..3):
+#       36       = G0  NEUTRAL GOLDSTONE (Ah[1]; ~M_Z in Feynman/R_xi gauge)
+#       9931569  = a   MEDIATOR  (mostly-singlet CP-odd, Ah[2]) — the DM mediator
+#       9949515  = A0  HEAVY CP-odd (mostly-doublet, Ah[3])
+#   Charged Hm = {37, 9920911}  (ZPMIX rows 1..2):
+#       37       = G+- CHARGED GOLDSTONE (Hm[1]; ~M_W)
+#       9920911  = H+- PHYSICAL charged Higgs (Hm[2]) — the box-loop state
+#   DM:
+#       9989932  = chi (Dirac DM, Fchi)
+#
+# NOTE the prior fixture wrongly put the physical mediator on 36 and the
+# physical H+- on 37 (the GOLDSTONE slots).  This file corrects that.
+#
+# Provisional placeholder for the loop-only DD subchain; the Tier-3 smoke
+# (HEPPH_RUN_WOLFRAM_TESTS=1) replaces amplitude-derived downstream numbers.
+
 BLOCK MASS
-   9989932    1.00000000e+02   # chi  (Dirac DM)
-        36    4.00000000e+02   # a    (CP-odd mediator, lightest Ah)
-        37    5.00000000e+02   # Hm   (charged Higgs, box loop)
-        24    8.03790000e+01   # W
-         6    1.73000000e+02   # top
-         5    4.18000000e+00   # bottom
-BLOCK FRALPHA
-         1    1.00000000e+00   # alpha (CP-even mixing)
-BLOCK HMIX
-         1    4.00000000e+02   # mu-like portal scale
-         2    1.00000000e+01   # tan beta
-BLOCK DMPORTAL
-         1    1.00000000e+00   # gchi  (DM-mediator pseudoscalar coupling)
+         25    1.25000000e+02   # h    (SM-like CP-even Higgs;  ZHMIX[1])
+         35    5.00000000e+02   # H    (heavy CP-even Higgs;    ZHMIX[2])
+         36    9.11876000e+01   # G0   (neutral Goldstone; Ah[1], ~M_Z)
+    9931569    4.00000000e+02   # a    (CP-odd MEDIATOR; Ah[2], mostly singlet)
+    9949515    5.00000000e+02   # A0   (heavy CP-odd; Ah[3], mostly doublet)
+         37    8.03790000e+01   # G+-  (charged Goldstone; Hm[1], ~M_W)
+    9920911    5.00000000e+02   # H+-  (physical charged Higgs; Hm[2], box loop)
+    9989932    1.00000000e+02   # chi  (Dirac DM, Fchi)
+         23    9.11876000e+01   # Z
+         24    8.03790000e+01   # W
+          6    1.73000000e+02   # top
+          5    4.18000000e+00   # bottom
+
+BLOCK THDMPOT   # 2HDM+a scalar potential (LesHouches THDMPOT; see parameters.m)
+          1    1.87526700e+05   # mu1sq  m_11^2 (tadpole-derived, std 2HDM convention; informational — spectrum set via MASS)
+          2   -5.91340000e+03   # mu2sq  m_22^2 (tadpole-derived; informational, convention-dependent)
+          3    2.60000000e-01   # lam1   (lambda_1)
+          4    2.60000000e-01   # lam2   (lambda_2)
+          5    2.00000000e+00   # lam3   (lambda_3)
+          6    0.00000000e+00   # lam4   (lambda_4)
+          7    0.00000000e+00   # lam5r  (lambda_5, real part)
+          8    1.71025000e+05   # maSq   singlet a bare m_a^2 (cross-check; mixing decomposition)
+          9    0.00000000e+00   # lam6   (lambda_6)
+         10    1.00000000e+00   # lam7   (lambda_P1 portal)
+         11    1.00000000e+00   # lam8   (lambda_P2 portal)
+         12    2.47525000e+04   # m12sq  m_12^2 = M^2 sin(beta)cos(beta), M=500
+         13    2.24000000e+02   # lamP   (a0-A0 portal; cross-check — authoritative mixing is ZAMIX)  # lamP: informational/non-load-bearing; parameters.m declares it dimensionless but 224 reads as a dimensionful GeV trilinear — resolve units in the deferred SPheno spectrum cross-check
+
+BLOCK DMSECTOR  # Dirac DM sector (LesHouches DMSECTOR)
+          1    1.00000000e+02   # mchi  (DM mass)
+          2    1.00000000e+00   # gchi  (DM-mediator pseudoscalar coupling)
+
+BLOCK HMIX      # VEVs (LesHouches HMIX 102/103); v=246, tan(beta)=10
+        102    2.44780000e+01   # vd = v cos(beta)
+        103    2.44780000e+02   # vu = v sin(beta)
+
+BLOCK PHASES    # chi_R rephasing phase (real part); MUST be 1.0 or all chi couplings vanish
+          1    1.00000000e+00   # PhasechiR (rpchiR)
+
+BLOCK IMPHASES
+          1    0.00000000e+00   # ipchiR (imaginary part, kept zero)
+
+BLOCK ZHMIX     # CP-even 2x2 mixing at alpha=-0.0997 (alignment: cos(beta-alpha)~0)
+      1   1    9.95034071e-01   # ZH(1,1)
+      1   2    9.95349109e-02   # ZH(1,2)
+      2   1   -9.95349109e-02   # ZH(2,1)
+      2   2    9.95034071e-01   # ZH(2,2)
+
+BLOCK ZAMIX     # CP-odd 3x3 mixing at beta,theta (rows: G0, mediator a, heavy A0)
+      1   1    9.95037190e-01   # ZA(1,1) G0 row  (sin beta)
+      1   2   -9.95037190e-02   # ZA(1,2) G0 row  (-cos beta)
+      1   3    0.00000000e+00   # ZA(1,3) G0 row
+      2   1    3.48263017e-02   # ZA(2,1) mediator (cos beta sin theta)
+      2   2    3.48263017e-01   # ZA(2,2) mediator (sin beta sin theta)
+      2   3    9.36749700e-01   # ZA(2,3) mediator (cos theta) — sets chi-chi-a strength
+      3   1    9.32100789e-02   # ZA(3,1) heavy A0 (cos beta cos theta)
+      3   2    9.32100789e-01   # ZA(3,2) heavy A0 (sin beta cos theta)
+      3   3   -3.50000000e-01   # ZA(3,3) heavy A0 (-sin theta)
+
+BLOCK ZPMIX     # charged 2x2 mixing at beta (rows: G+-, physical H+-)
+      1   1    9.95037190e-02   # ZP(1,1) G+- row (cos beta)
+      1   2   -9.95037190e-01   # ZP(1,2) G+- row (-sin beta)
+      2   1    9.95037190e-01   # ZP(2,1) H+- row (sin beta)
+      2   2    9.95037190e-02   # ZP(2,2) H+- row (cos beta)

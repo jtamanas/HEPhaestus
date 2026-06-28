@@ -25,15 +25,21 @@ def test_reads_dm_mass():
 
 def test_mediator_mass_in_masses():
     pt = pp.prepare_point(SLHA)
-    assert pt["masses"]["36"] == pytest.approx(400.0)
-    assert pt["masses"]["37"] == pytest.approx(500.0)
+    # Map P: physical mediator a is PDG 9931569 (Ah[2]); physical H+- is 9920911
+    # (Hm[2]).  PDG 36/37 are the neutral/charged GOLDSTONE slots (~M_Z/~M_W).
+    assert pt["masses"][str(pp.MEDIATOR_PDG_2HDMA)] == pytest.approx(400.0)
+    assert pt["masses"][str(pp.HPM_PDG_2HDMA)] == pytest.approx(500.0)
+    assert pt["masses"]["36"] == pytest.approx(91.1876)   # G0 Goldstone
+    assert pt["masses"]["37"] == pytest.approx(80.379)    # G+- Goldstone
 
 
 def test_params_flattened_and_exclude_mass():
     pt = pp.prepare_point(SLHA)
-    # DMPORTAL gchi present; MASS entries NOT in params.
-    assert pt["params"]["DMPORTAL:1"] == pytest.approx(1.0)
-    assert pt["params"]["HMIX:2"] == pytest.approx(10.0)
+    # SARAH scheme: gchi is DMSECTOR:2; vd is HMIX:102; MASS entries NOT in params.
+    assert pt["params"]["DMSECTOR:2"] == pytest.approx(1.0)   # gchi
+    assert pt["params"]["DMSECTOR:1"] == pytest.approx(100.0)  # mchi
+    assert pt["params"]["HMIX:102"] == pytest.approx(24.478)   # vd
+    assert pt["params"]["ZAMIX:2,3"] == pytest.approx(0.936749700)  # mediator-a row
     assert not any(k.startswith("MASS:") for k in pt["params"])
 
 

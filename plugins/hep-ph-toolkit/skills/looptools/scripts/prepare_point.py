@@ -62,10 +62,16 @@ def parse_slha(text: str) -> dict:
     return blocks
 
 
-# 2HDM+a (TwoHdmAfix) PDG ids — match the hand-crafted SARAH fixture
-# (plugins/hep-ph-toolkit/skills/2hdm-a/SKILL.md §4b).
-DM_PDG_2HDMA = 9989932   # chi (Dirac DM)
-MEDIATOR_PDG_2HDMA = 36  # a (CP-odd pseudoscalar mediator, lightest Ah)
+# 2HDM+a (TwoHdmAfix) PDG ids — match the SARAH model (Map P), see
+# plugins/hep-ph-toolkit/skills/2hdm-a/fixtures/sarah_model/particles.m:
+#   Ah = {36, 9931569, 9949515}  → 36 is the NEUTRAL GOLDSTONE G0 (Ah[1]),
+#       9931569 is the physical mediator a (Ah[2]), 9949515 the heavy A0 (Ah[3]).
+#   Hm = {37, 9920911}           → 37 is the CHARGED GOLDSTONE G+- (Hm[1]),
+#       9920911 the physical charged Higgs H+- (Hm[2]).
+# The mediator/charged-Higgs slots are NOT 36/37 — those are Goldstone modes.
+DM_PDG_2HDMA = 9989932        # chi (Dirac DM, Fchi)
+MEDIATOR_PDG_2HDMA = 9931569  # a (physical CP-odd mediator; Ah[2])
+HPM_PDG_2HDMA = 9920911       # H+- (physical charged Higgs; Hm[2])
 
 
 def prepare_point(
