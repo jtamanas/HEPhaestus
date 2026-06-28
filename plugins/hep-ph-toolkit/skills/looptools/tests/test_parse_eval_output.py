@@ -26,7 +26,7 @@ def _load():
 def test_fixture_parses():
     doc = peo.parse(FIXTURE)
     assert doc["m_dm_gev"] == 100.0
-    assert doc["effective_couplings"]["f_p_si_gev_minus2"] == pytest.approx(2.7e-9)
+    assert doc["effective_couplings"]["f_p_si_gev_minus2"] == pytest.approx(-5.2450498456709965e-11)
 
 
 def test_accepts_dict_and_path_and_string():

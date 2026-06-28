@@ -34,8 +34,15 @@ def parse(eval_output: dict | str | Path) -> dict:
     if isinstance(eval_output, dict):
         doc = eval_output
     else:
-        p = Path(eval_output)
-        if p.exists():
+        # A path-like string is read from disk; a JSON document passed as a string
+        # is parsed directly.  Path(...).exists() can raise OSError (ENAMETOOLONG)
+        # when handed a long JSON string, so guard it and fall through to json.loads.
+        try:
+            p = Path(eval_output)
+            is_file = p.exists()
+        except OSError:
+            is_file = False
+        if is_file:
             doc = json.loads(p.read_text())
         else:
             doc = json.loads(str(eval_output))

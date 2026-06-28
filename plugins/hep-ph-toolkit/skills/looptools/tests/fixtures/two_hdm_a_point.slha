@@ -70,11 +70,16 @@ BLOCK PHASES    # chi_R rephasing phase (real part); MUST be 1.0 or all chi coup
 BLOCK IMPHASES
           1    0.00000000e+00   # ipchiR (imaginary part, kept zero)
 
-BLOCK ZHMIX     # CP-even 2x2 mixing at alpha=-0.0997 (alignment: cos(beta-alpha)~0)
-      1   1    9.95034071e-01   # ZH(1,1)
-      1   2    9.95349109e-02   # ZH(1,2)
-      2   1   -9.95349109e-02   # ZH(2,1)
-      2   2    9.95034071e-01   # ZH(2,2)
+BLOCK ZHMIX     # CP-even 2x2 mixing (alignment: cos(beta-alpha)~0). SARAH convention:
+# col 1 = phi_d (down doublet), col 2 = phi_u (up doublet); up<->col2, down<->col1.
+# HAND-CORRECTED SYNTHETIC BENCHMARK: columns were previously swapped, which made the
+# 125 GeV h down/tanbeta-aligned (xi_V~0.2) instead of SM-like. The values below give
+# the 125 GeV h (row 1) xi_V=xi_u=xi_d=1.0 (SM-like) and the 500 GeV H as the orthogonal
+# state. SPheno regeneration of this spectrum is deferred future hardening (not wired).
+      1   1    9.95349109e-02   # ZH(1,1)  (= ZH[h, phi_d]; down coupling, ~vd/v)
+      1   2    9.95034071e-01   # ZH(1,2)  (= ZH[h, phi_u]; up coupling, ~vu/v)
+      2   1    9.95034071e-01   # ZH(2,1)  (= ZH[H, phi_d])
+      2   2   -9.95349109e-02   # ZH(2,2)  (= ZH[H, phi_u])
 
 BLOCK ZAMIX     # CP-odd 3x3 mixing at beta,theta (rows: G0, mediator a, heavy A0)
       1   1    9.95037190e-01   # ZA(1,1) G0 row  (sin beta)
