@@ -115,6 +115,36 @@ def complete_sarah_param_card(
     inserts: list[str] = []
     report: dict[str, str] = {}
 
+    # Repair a PRESENT real phase block whose entry is exactly 0. That value
+    # is SARAH's Set_All_Parameters_0 sentinel, not physics: a phase has unit
+    # modulus, so 0 silently deletes every conjg(Phase*)-carrying coupling
+    # (relic 0.166-instead-of-0.0717 symptom). Present blocks are otherwise
+    # trusted verbatim; this is the one exception, justified because no
+    # legitimate spectrum can put a zero here.
+    repaired = False
+    if "phases" in present:
+        out_lines = []
+        in_phases = False
+        for line in text.splitlines(keepends=True):
+            stripped = line.strip().lower()
+            if stripped.startswith("block "):
+                in_phases = stripped.split()[1] == "phases"
+            elif in_phases:
+                m = re.match(r"^(\s*\d+\s+)([0-9.eE+\-]+)(.*)$", line.rstrip("\n"))
+                if m:
+                    try:
+                        is_zero = float(m.group(2)) == 0.0
+                    except ValueError:
+                        is_zero = False
+                    if is_zero:
+                        line = (f"{m.group(1)}1.00000000E+00"
+                                f"   # coerced 0->1: zero phase unphysical\n")
+                        repaired = True
+            out_lines.append(line)
+        if repaired:
+            text = "".join(out_lines)
+            report["phases"] = "coerced present zero phase -> 1"
+
     for block, codes in expected.items():
         if block in present:
             continue  # SPheno wrote it — trust it verbatim.
@@ -149,7 +179,7 @@ def complete_sarah_param_card(
         # else: an ordinary external block (e.g. BSMPARAMS) whose absence
         # genuinely means "use the UFO default". We do not fabricate physics.
 
-    if inserts and in_place:
+    if inserts:
         # Insert before the first DECAY block if present, else append.
         decay = re.search(r"(?im)^\s*decay\b", text)
         block_text = "\n" + "\n".join(inserts) + "\n"
@@ -158,6 +188,7 @@ def complete_sarah_param_card(
             text = text[:pos] + block_text.lstrip("\n") + "\n" + text[pos:]
         else:
             text = text.rstrip("\n") + "\n" + block_text
+    if (inserts or repaired) and in_place:
         card_path.write_text(text)
 
     return report

@@ -88,7 +88,7 @@ config = json.loads((Path(os.environ.get(
 model_cfg = config["models"]["singlet_doublet"]
 ufo_path  = model_cfg["ufo"]            # the state_dir/SingletDoublet symlink
 slha_path = model_cfg["latest_slha"]    # SPheno.spc from Step 4b
-mg5_bin   = config["madgraph"]["mg5_bin"] if "madgraph" in config else "mg5_aMC"
+mg5_bin   = config.get("madgraph_path", "mg5_aMC")  # top-level key, a path to bin/mg5_aMC
 
 # `plugins/hep-ph-toolkit` has a hyphen, so the maddm scripts are NOT
 # importable as a dotted package path (`from scripts.maddm_run import …`
@@ -143,6 +143,17 @@ if "block bsmparams" not in card.read_text().lower():
         f"{card} has no Block BSMPARAMS — yh1/yh2 will default to 0 and σ_SI "
         f"will be unphysical. Overlay BSMPARAMS from the benchmark spec."
     )
+
+# PHASES present-but-ZERO is the same silent-zero bug in a third disguise:
+# a phase has unit modulus, so `Block PHASES  1  0.0` is SARAH's
+# Set_All_Parameters_0 sentinel leaking into the SLHA. Every h-χ₁-χ₁-type
+# coupling carries conjg(PhaseFS), so PhaseFS=0 kills the Higgs-portal sector
+# on the RELIC branch too — the symptom is Ωh² ≈ 0.166 (χ₁χ₁→hh closed)
+# instead of the correct ≈ 0.0717 (χ₁χ₁→hh open at ~3.8%), which looks like a
+# perfectly valid result. complete_sarah_param_card() coerces a present zero
+# real phase to 1 and reports {"phases": "coerced present zero phase -> 1"};
+# if you bypass the completion helper, check the card for a zero PHASES entry
+# yourself before launch.
 
 # Phase 2: launch -f using the overlaid, completed card.
 subprocess.run(

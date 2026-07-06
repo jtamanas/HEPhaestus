@@ -96,6 +96,7 @@ def render(result: dict, spec: dict | None = None,
     # to 0 because the UFO reads yh1/yh2 from BSMPARAMS, not MINPAR — zeroing
     # the Higgs-portal coupling. Params without a declared block fall back to a
     # MINPAR echo (previous behaviour).
+    routed_blocks: set[str] = set()
     if params:
         lha_map = _param_lha_map(spec)
         routed: dict[str, list[tuple[int, float, str]]] = {}
@@ -110,8 +111,17 @@ def render(result: dict, spec: dict | None = None,
         for block, entries in routed.items():
             lines = [f"Block {block}"]
             for code, v, name in sorted(entries):
+                # A field-redefinition phase of exactly 0 is unphysical (a
+                # phase has unit modulus); it is SARAH's Set_All_Parameters_0
+                # sentinel leaking through the analytic model's param store.
+                # Emitting it verbatim zeroes every conjg(PhaseFS)-carrying
+                # coupling downstream (relic 0.166-instead-of-0.0717 symptom).
+                if block == "PHASES" and v == 0.0:
+                    v = 1.0
+                    name = f"{name} (coerced 0->1: zero phase unphysical)"
                 lines.append(f"   {code}   {v:E}   # {name}")
             sections.append("\n".join(lines) + "\n")
+        routed_blocks = set(routed)
         if minpar_fallback:
             lines = ["Block MINPAR"]
             for idx, (v, name) in enumerate(minpar_fallback, start=1):
@@ -136,7 +146,7 @@ def render(result: dict, spec: dict | None = None,
 
     # Mixing blocks
     mixing = result.get("mixing") or {}
-    present = {name.upper() for name in mixing}
+    present = {name.upper() for name in mixing} | routed_blocks
     for name, entries in mixing.items():
         lines = [f"Block {name}"]
         for (i, j), v in sorted(entries.items()):
