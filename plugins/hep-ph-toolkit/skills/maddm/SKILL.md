@@ -154,6 +154,30 @@ unless the caller clears the directory first. Before Phase 1, do
 `shutil.rmtree(out_dir, ignore_errors=True)` (or equivalent). Applies to
 every `generate_maddm_script` caller, not just the split-for-overlay path.
 
+### SARAH/SPheno SLHA silently zeroes the DD Higgs channel
+
+When the UFO comes from SARAH and the SLHA from SPheno, the SPheno spectrum
+frequently **omits** the SM quark rotation matrices (`UDLMIX`/`UDRMIX`/
+`UULMIX`/`UURMIX`) and the field-redefinition phase (`PHASES`/`IMPHASES`) —
+it only prints a mixing block when it is non-trivial. The UFO declares these
+as *external* parameters defaulting to `0.`, so after the SLHA overlay
+MadGraph reads `0` for every missing entry. For a rotation matrix that is the
+**zero** matrix, not the identity: it collapses the rotated Higgs-quark Yukawa
+`ZDL†·Yd·ZDR` to zero and deletes the entire Higgs t-channel from
+`generate direct_detection`. The symptom is a spin-independent cross-section
+frozen at the ~1e-58 cm² spin-independent *vector floor* (pure Z exchange),
+independent of the model's Higgs-portal coupling — while σ_SD looks normal.
+
+Fix: after overlaying the SLHA onto `Cards/param_card.dat` and **before**
+`launch -f`, call
+`maddm/scripts/slha_complete.py::complete_sarah_param_card(card, ufo_path)`.
+It reads the UFO's external blocks and fills absent rotation matrices with the
+identity (imaginary partner zero) and absent phases with unity, leaving blocks
+SPheno did write untouched. Gate on the value, not the log: a `mdl_… not found`
+warning is neither necessary nor sufficient — patching one coupling can clear
+the warning while σ_SI stays on the floor. See
+`singlet-doublet/SKILL.md` step 4e for the reference wiring and the σ_SI gate.
+
 ## File Map
 
 | Path | Description |
