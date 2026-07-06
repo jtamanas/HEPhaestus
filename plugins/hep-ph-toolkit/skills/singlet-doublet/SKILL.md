@@ -571,11 +571,18 @@ _spec = _ilu.spec_from_file_location(
 _slha_complete = _ilu.module_from_spec(_spec)
 _spec.loader.exec_module(_slha_complete)
 completed_blocks = _slha_complete.complete_sarah_param_card(dd_card, ufo_path)
-# (The BSM Yukawas yh1/yh2 carry physics and must be present as Block
-#  BSMPARAMS in slha_path itself — SPheno echoes them only into MINPAR, so
-#  /spheno-build must emit BSMPARAMS[3]=yh1, BSMPARAMS[4]=yh2, OR overlay
-#  them here from the benchmark spec before launch. The completion helper
-#  deliberately does NOT fabricate them.)
+# (The BSM Yukawas yh1/yh2 carry physics, so the completion helper does NOT
+#  fabricate them — they must already be Block BSMPARAMS 3/4 in slha_path.
+#  As of the spheno-build fix, the analytic SLHA writer emits BSMPARAMS from
+#  each param's spec `les_houches` mapping, so a spec-built .spc carries them.
+#  If you overlay an SLHA from a source that only echoes yh1/yh2 into MINPAR,
+#  add Block BSMPARAMS here from the benchmark spec before launch, or MG5 will
+#  read yh1=0 and σ_SI collapses to the vector floor.)
+if "block bsmparams" not in dd_card.read_text().lower():
+    raise RuntimeError(
+        f"{dd_card} has no Block BSMPARAMS — yh1/yh2 will default to 0 and "
+        f"σ_SI will be unphysical. Overlay BSMPARAMS from the benchmark spec."
+    )
 
 # Phase 2: launch MadDM with direct_detection target
 subprocess.run(
