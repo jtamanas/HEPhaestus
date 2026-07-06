@@ -1,30 +1,31 @@
 ---
 name: demo
-description: Constraint-first interactive front door to the Profumo blind-spot demo (arXiv:2506.19062). Presents a model picker (Singlet-Doublet, 2HDM+a, Dark SU(3)) and delegates to the chosen per-model skill, which interviews the user for constraint selection (relic/DD/ID) and runs the prereq chain. Invoke when the user says "run the demo", "show me HEPhaestus" / "show me hephaestus", "reproduce the blind spot", or on fresh-install evaluation.
+description: Constraint-first interactive front door to the Profumo blind-spot demo (arXiv:2506.19062). Presents a model picker (Singlet-Doublet, 2HDM+a, Dark SU(3)) and delegates to the chosen per-model skill. Invoke when the user says "run the demo", "show me HEPhaestus", "reproduce the blind spot", or on fresh-install evaluation.
 ---
 
 # Demo
 
-Thin front door to the Profumo blind-spot demo. Presents a paper intro, lets the user pick a model, and hands off to the per-model skill (`/singlet-doublet`, `/2hdm-a`, or `/dark-su3`). Each per-model skill owns its own constraint interview, time-estimate gate, and execution chain.
+Thin front door to the Profumo blind-spot demo. Presents a paper intro, lets the
+user pick a model, and hands off to the per-model skill (`/singlet-doublet`,
+`/2hdm-a`, or `/dark-su3`). Each per-model skill owns its own constraint
+interview, time-estimate gate, and execution chain.
 
-This skill must never fall back to analytic Python for an observable. All physics observables come from real tools driven by the per-model skills.
+This skill must never fall back to analytic Python for an observable. All physics
+observables come from real tools driven by the per-model skills.
 
 ## Flow
-
----
 
 ### Step 0 — Preflight
 
 Read `${XDG_CONFIG_HOME:-~/.config}/hephaestus/config.json`. Required keys:
+`madgraph_path`, `sarah_path`, `spheno_path`, `wolfram_engine_path`.
 
-- `madgraph_path`
-- `sarah_path`
-- `spheno_path`
-- `wolfram_engine_path`
-
-For each key, confirm the executable responds (e.g., `--version` or equivalent no-op). Build the missing-list: every required key that is absent from the config or whose executable does not respond. If the missing-list is empty, continue to Step 1.
-
-Otherwise, present an `AskUserQuestion` gate offering to install the missing tools now. The `pick_subset` option is only included when the missing-list has more than one entry.
+For each key, confirm the executable responds (`--version` or equivalent no-op).
+Build the missing-list: every required key absent from the config or whose
+executable does not respond. If it is empty, continue to Step 1. Otherwise,
+present an `AskUserQuestion` gate offering to install the missing tools. The
+`pick_subset` option is included only when the missing-list has more than one
+entry.
 
 ```json
 {
@@ -41,7 +42,7 @@ Otherwise, present an `AskUserQuestion` gate offering to install the missing too
 
 Dispatch per answer:
 
-- **`install_now`** — for each tool in the missing-list, invoke `/install --tool <tool>` (where `<tool>` is one of `wolfram`, `sarah`, `spheno`, `mg5`; map `madgraph_path → mg5`, `sarah_path → sarah`, `spheno_path → spheno`, `wolfram_engine_path → wolfram`). After all installs return, re-read the config and re-probe the four keys. If the missing-list is now empty, continue to Step 1. Otherwise stop and print:
+- **`install_now`** — for each tool in the missing-list, invoke `/install --tool <tool>` (mapping `madgraph_path → mg5`, `sarah_path → sarah`, `spheno_path → spheno`, `wolfram_engine_path → wolfram`). After all installs return, re-read the config and re-probe the four keys. If the missing-list is now empty, continue to Step 1. Otherwise stop and print:
 
   > "Install finished but these tools are still missing/unresponsive: `<list>`. Inspect the install logs, then re-run `/demo`."
 
@@ -53,9 +54,11 @@ Dispatch per answer:
 
   > "The demo needs MadGraph, SARAH, SPheno, and Wolfram Engine configured. Missing or unresponsive: `<list>`. Run `/install` to set them up, then re-run `/demo`."
 
-Do not probe common install paths from `/demo` itself. `/install` owns installation; `/demo` only orchestrates the gate above.
+Do not probe common install paths from `/demo` itself. `/install` owns
+installation; `/demo` only orchestrates the gate above.
 
----
+**Completion:** all four keys present and responsive (continue to Step 1), or the
+skill has stopped with one of the printed messages above.
 
 ### Step 1 — Paper introduction
 
@@ -65,11 +68,9 @@ Print verbatim:
 >
 > This demo walks the full pipeline for one of three paper-benchmark models — Lagrangian → SARAH → SPheno → MadGraph/MadDM → a figure — with constraint selection (relic, direct, indirect) driving which sub-skills run. Some prereq skills (the multi-component DM combiner and ID pull-computation) are on the roadmap. For **2HDM+a** the loop-only direct-detection chain (FeynArts → FormCalc → `/looptools eval` → `/ddcalc`) is now wired end-to-end and yields a real, EW-anchor-validated σ_SI at one benchmark point (box not folded into f_N (≤1.7× upward), SI only; not an experimental exclusion; Tier-3 smoke gated off by default, green on a tooled box); for the other models the per-model loop-DD chain is not yet integrated end-to-end. Pending constraints will surface as `[COMING SOON]` and you can choose to run only the ready subset.
 
----
-
 ### Step 2 — Gate: continue?
 
-`AskUserQuestion` with options:
+`AskUserQuestion`:
 
 ```json
 {
@@ -83,9 +84,7 @@ Print verbatim:
 }
 ```
 
-On `not_now`, stop cleanly with no output.
-
----
+On `not_now`, stop cleanly with no output. On `continue`, proceed to Step 3.
 
 ### Step 3 — Model picker
 
@@ -106,23 +105,22 @@ On `not_now`, stop cleanly with no output.
 
 > **Disclosure (dsu3-002):** dark-SU(3) relic uses sigma_v approximations (sigmav_approx=True). Paper fidelity (Ω_tot h² ≈ 0.12) is out of reach this run; values reported are regression-anchors, not physics targets.
 
-The cold-hour estimates are total overlap-adjusted estimates assuming all prereqs were implemented; they are hard-coded from each per-model skill's `## Constraints and time estimates` table and `constraints.yaml`. The user sees which constraints are actually blocked inside the per-model skill's Step 3.
-
----
+The cold-hour estimates are total overlap-adjusted estimates assuming all prereqs
+were implemented; they are hard-coded from each per-model skill's `## Constraints`
+table and `constraints.yaml`. The user sees which constraints are actually
+blocked inside the per-model skill's Step 3.
 
 ### Delegation
 
-Based on the user's choice, read and execute `plugins/hep-ph-toolkit/skills/<singlet-doublet|2hdm-a|dark-su3>/SKILL.md`.
-
-The per-model skill runs its own Steps 1–4 (candidate declaration → constraint interview → time-estimate gate → execution). `/demo` does not intervene.
-
----
+Based on the user's choice, read and execute
+`plugins/hep-ph-toolkit/skills/<singlet-doublet|2hdm-a|dark-su3>/SKILL.md`. The
+per-model skill runs its own Steps 1–4 (candidate declaration → constraint
+interview → time-estimate gate → execution). `/demo` does not intervene.
 
 ### Closing block
 
-After the per-model skill returns, read `./demo_output/<model>/summary.json` (where `<model>` is the id chosen in Step 3).
-
-If the file exists, print three lines:
+After the per-model skill returns, read `./demo_output/<model>/summary.json`
+(`<model>` = the id chosen in Step 3). If it exists, print three lines:
 
 ```
 Model run:    <summary.model>
@@ -130,13 +128,12 @@ Artifacts:    <summary.artifacts_dir>
 Skipped:      <comma-separated list of summary.skipped_constraints[*].id> — <reason> (or "none")
 ```
 
-If the file does not exist (per-model skill exited via Cancel or encountered an error before writing), print:
+If it does not exist (per-model skill exited via Cancel or errored before
+writing), print:
 
 ```
 <model> interview was cancelled.
 ```
-
----
 
 ## Non-goals
 
@@ -144,6 +141,5 @@ If the file does not exist (per-model skill exited via Cancel or encountered an 
 - `/demo` does not probe the marketplace for prereq availability at runtime. Prereq status is static — declared in `plugins/hep-ph-toolkit/skills/_shared/constraints.yaml`.
 - `/demo` does not implement multi-component DM combination. Dark SU(3) per-candidate relic runs through the analytic-only branch of `/dark-matter-constraints [EXISTS]`; paper-fidelity multi-component combination into `Ω_tot h² ≈ 0.12` is on the upgrade roadmap of `analytic_models.dark_su3` (per the `dsu3-002` regression-anchor banner in dark-su3 SKILL.md), not blocked on `/dark-matter-constraints` itself.
 - `/demo` does not install tools. `/install` owns environment setup.
-- `/demo` does not compute any physics observable. All observables come from tools driven by the per-model skills.
 - No collider execution. The collider option in per-model Step 2 is a placeholder only.
 - Per-model skills are scoped to Profumo arXiv:2506.19062 benchmark ranges in this iteration.
