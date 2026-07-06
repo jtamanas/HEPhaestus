@@ -252,8 +252,13 @@ Drive `/maddm` for the single benchmark point with:
 - `param_card_source` = `config.models.singlet_doublet.latest_slha`
   (the SPheno `SPheno.spc` produced in 4b) — `/maddm` overlays it on
   `Cards/param_card.dat` before launching so MadDM reads the SLHA-formatted
-  mass spectrum + mixing matrices (`MASS`, `BSMPARAMS`, `ZNMIX`, `UMMIX`,
-  `UPMIX`, `HMIX`, `GAUGE`, `SMINPUTS`, `PHASES`) directly.
+  mass spectrum + mixing matrices directly. SPheno actually emits `MASS`,
+  `SMINPUTS`, `MINPAR`, and the BSM mixing blocks `ZNMIX`/`IMZNMIX`/`UMMIX`/
+  `UPMIX`/`IMUMMIX`/`IMUPMIX`. It does **not** emit `BSMPARAMS` (the BSM
+  Yukawas yh1/yh2 — echoed only into `MINPAR` 26/27), the SM quark rotation
+  matrices `UDLMIX`/`UDRMIX`/`UULMIX`/`UURMIX`, or `PHASES`/`IMPHASES`. Those
+  gaps are load-bearing for direct detection — see the σ_SI reliability note
+  in 4e — and must be repaired before launch, not assumed present.
 
 `/maddm` emits the MadDM 3.2 session
 `import model <ufo_path>` → `define darkmatter chi1` →
@@ -272,9 +277,36 @@ SLHA, so emit the session as two scripts via
 with `mg5_aMC --mode=maddm`:
 
 ```python
-from scripts.maddm_run import generate_maddm_script
+# ── Setup (paths resolved once, reused by 4c/4e) ──────────────────────────
+# $STATE_ROOT is the hephaestus state directory. It is NOT defined by this
+# skill — it comes from install/SKILL.md: config lives at
+# $XDG_CONFIG_HOME/hephaestus/config.json (default ~/.config/hephaestus/),
+# and per-model artifacts under $STATE_ROOT = ~/.local/share/hephaestus.
+import json, os, shutil, subprocess, sys
+import importlib.util
 from pathlib import Path
-import shutil, subprocess
+
+STATE_ROOT = Path(os.environ.get(
+    "XDG_DATA_HOME", Path.home() / ".local/share")) / "hephaestus"
+config = json.loads((Path(os.environ.get(
+    "XDG_CONFIG_HOME", Path.home() / ".config"))
+    / "hephaestus/config.json").read_text())
+model_cfg = config["models"]["singlet_doublet"]
+ufo_path  = model_cfg["ufo"]            # the state_dir/SingletDoublet symlink
+slha_path = model_cfg["latest_slha"]    # SPheno.spc from 4b
+mg5_bin   = config["madgraph"]["mg5_bin"] if "madgraph" in config else "mg5_aMC"
+
+# `plugins/hep-ph-toolkit` has a hyphen, so the maddm scripts are NOT
+# importable as a dotted package path (`from scripts.maddm_run import …`
+# raises ModuleNotFoundError). Load the module by file path instead.
+def _load(mod_path):
+    p = f"plugins/hep-ph-toolkit/skills/maddm/scripts/{mod_path}"
+    spec = importlib.util.spec_from_file_location(Path(mod_path).stem, p)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+generate_maddm_script = _load("maddm_run.py").generate_maddm_script
 
 setup_script, launch_script = generate_maddm_script(
     ufo_path=ufo_path,
@@ -292,8 +324,12 @@ subprocess.run(
     cwd=workdir, check=True,
 )
 
-# Overlay the SPheno SLHA onto the card MG5 just wrote.
-shutil.copy(slha_path, Path(out_dir) / "Cards" / "param_card.dat")
+# Overlay the SPheno SLHA onto the card MG5 just wrote, then repair the
+# SARAH quark-mixing/phase gaps (see 4e for why — the same silent-zero bug
+# suppresses any Yukawa-mediated relic subchannel, not just direct detection).
+relic_card = Path(out_dir) / "Cards" / "param_card.dat"
+shutil.copy(slha_path, relic_card)
+_load("slha_complete.py").complete_sarah_param_card(relic_card, ufo_path)
 
 # Phase 2: launch -f using the overlaid card.
 subprocess.run(
@@ -347,26 +383,44 @@ results["sigmav_channels"]     = flat_channels  # legacy alias (raw %)
 # WS2: emit summary["dm_indirect_detection_status"] = "parser-only"
 
 
-def parse_chi1_mass(slha_path: str | Path) -> float:
-    """Return FChi_1 pole mass from an SPheno SLHA Block MASS.
+def dm_pdg_from_ufo(ufo_path: str | Path, name: str = "Chi1") -> int:
+    """Return the PDG id the UFO assigns to a particle by name.
 
-    The SARAH-assigned PDG id for FChi_1 is model-specific (for
-    singlet-doublet it currently lands on 9958431), so match on the
-    `# FChi_1` comment tail instead of the numeric id.
+    The SARAH-assigned PDG id for the DM candidate is model-specific (for
+    singlet-doublet Chi1 currently lands on 9958431). Read it from the UFO's
+    particles.py rather than hard-coding it.
+    """
+    import re
+    text = (Path(ufo_path) / "particles.py").read_text()
+    # Match a Particle(pdg_code=<id>, ... name = '<name>' ...) declaration.
+    for m in re.finditer(r"pdg_code\s*=\s*(-?\d+)\s*,\s*\n\s*name\s*=\s*'([^']+)'", text):
+        if m.group(2) == name:
+            return int(m.group(1))
+    raise RuntimeError(f"particle {name!r} not found in {ufo_path}/particles.py")
+
+
+def parse_mass_by_pdg(slha_path: str | Path, pdg: int) -> float:
+    """Return a pole mass from an SPheno SLHA Block MASS by numeric PDG id.
+
+    Match the id in column 1 — the standard SLHA identifier. Do NOT match on
+    the trailing comment: real SPheno.spc rows are commented `# pdg=<id>`, not
+    `# FChi_1`, so a comment-tail match raises spuriously.
     """
     in_mass = False
     for line in Path(slha_path).read_text().splitlines():
-        stripped = line.strip()
-        if stripped.startswith("Block MASS"):
+        stripped = line.split("#")[0].strip()
+        if line.strip().lower().startswith("block mass"):
             in_mass = True
             continue
-        if in_mass and stripped.startswith("Block "):
+        if in_mass and line.strip().lower().startswith("block "):
             break
-        if in_mass and stripped.endswith("# FChi_1"):
-            return float(stripped.split()[1])
-    raise RuntimeError(f"FChi_1 mass not found in {slha_path}")
+        if in_mass and stripped:
+            parts = stripped.split()
+            if len(parts) >= 2 and int(parts[0]) == pdg:
+                return float(parts[1])
+    raise RuntimeError(f"pdg {pdg} not found in Block MASS of {slha_path}")
 
-m_chi1 = parse_chi1_mass(slha_path)
+m_chi1 = parse_mass_by_pdg(slha_path, dm_pdg_from_ufo(ufo_path, "Chi1"))
 ```
 
 `mg5_aMC --mode=maddm` is required — bare `mg5_aMC <script>` loads the
@@ -497,7 +551,31 @@ subprocess.run(
 )
 
 # Overlay the SPheno SLHA from 4b before launch
-shutil.copy(slha_path, dd_out_dir / "Cards" / "param_card.dat")
+dd_card = dd_out_dir / "Cards" / "param_card.dat"
+shutil.copy(slha_path, dd_card)
+
+# CRITICAL — complete the SARAH SLHA gaps before launching, or σ_SI is
+# silently wrong. SPheno omits the SM quark rotation matrices
+# (UDLMIX/UDRMIX/UULMIX/UURMIX) and the field-redefinition phase (PHASES)
+# whenever they are the identity/unity. The UFO reads them as *external*
+# params defaulting to 0, so MadGraph fills 0 -- which is the ZERO matrix,
+# not the identity. That collapses the rotated Higgs-quark Yukawa
+# ZDL†·Yd·ZDR to zero, deletes the entire Higgs t-channel from the DD
+# matrix element, and pins σ_SI at the ~1e-58 cm² Z-exchange (vector) floor,
+# independent of the Higgs-portal coupling yh1. See maddm/scripts/slha_complete.py.
+import importlib.util as _ilu
+_spec = _ilu.spec_from_file_location(
+    "slha_complete",
+    "plugins/hep-ph-toolkit/skills/maddm/scripts/slha_complete.py",
+)
+_slha_complete = _ilu.module_from_spec(_spec)
+_spec.loader.exec_module(_slha_complete)
+completed_blocks = _slha_complete.complete_sarah_param_card(dd_card, ufo_path)
+# (The BSM Yukawas yh1/yh2 carry physics and must be present as Block
+#  BSMPARAMS in slha_path itself — SPheno echoes them only into MINPAR, so
+#  /spheno-build must emit BSMPARAMS[3]=yh1, BSMPARAMS[4]=yh2, OR overlay
+#  them here from the benchmark spec before launch. The completion helper
+#  deliberately does NOT fabricate them.)
 
 # Phase 2: launch MadDM with direct_detection target
 subprocess.run(
@@ -516,6 +594,32 @@ subprocess.run([
 ], check=True)
 gamlike_dd = json.loads(gamlike_dd_json.read_text())
 direct = gamlike_dd["direct"]
+
+# ── σ_SI RELIABILITY GATE (run BEFORE trusting any SigmaN value) ──────────
+# A near-zero σ_SI here is almost always an artifact, not physics. Two
+# independent failure modes both produce a σ_SI ~1e-58 cm² "vector floor"
+# that looks superficially allowed:
+#   (1) missing SM quark-rotation blocks (UDLMIX/UDRMIX/…) → Higgs t-channel
+#       zeroed at the quark vertex (fixed by complete_sarah_param_card above);
+#   (2) missing Block BSMPARAMS / PHASES → h-χ₁-χ₁ vertex zeroed.
+# NOTE: grepping the MadDM/MG5 log for "parameter mdl_yh1 not found" is NOT a
+# sufficient gate — patching yh1 alone leaves σ_SI at the floor because the
+# quark-vertex coupling is the dominant zero. Gate on the *value* instead.
+#
+# At this benchmark (θ=0, m_χ₁≈133 GeV, Higgs portal ON) the physical σ_SI is
+# O(1e-47 cm²). Anything ≲1e-55 cm² at a non-blind-spot point means the Higgs
+# channel is dead — STOP and inspect the param card, do not report the number.
+VECTOR_FLOOR_CM2 = 1e-55
+si_p = direct.get("sigma_si_proton_cm2")
+if si_p is not None and abs(si_p) < VECTOR_FLOOR_CM2:
+    raise RuntimeError(
+        f"σ_SI_p={si_p:.2e} cm² is at/below the Z-exchange vector floor "
+        f"({VECTOR_FLOOR_CM2:.0e}) at a non-blind-spot benchmark — the Higgs "
+        f"t-channel is zeroed. Verify the completed param card {dd_card} "
+        f"contains populated Block UDLMIX/UDRMIX (identity), Block PHASES "
+        f"(unit), and Block BSMPARAMS (yh1). Completion inserted: "
+        f"{completed_blocks}. Do NOT record this σ_SI — it is unphysical."
+    )
 
 # /gamlike surfaces MadDM's four `SigmaN_*` per-nucleon σ as named fields.
 # All four are required by scattering/v1; if any are missing here the upstream
