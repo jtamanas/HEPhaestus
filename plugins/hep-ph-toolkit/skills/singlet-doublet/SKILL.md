@@ -292,17 +292,20 @@ expected and is not a failure. Record the Planck comparison for orientation, but
 do **not** gate on it.
 
 The acceptance reference is `benchmarks/canonical-2026/expectations.json` (see
-the Acceptance criteria section). Note that fixture currently carries
-`validation_status = UNRECONCILED_WITH_TOOLKIT`: its paper-sourced central
-`omega_h2 = 0.292` does not match the toolkit's own MadDM measurements — `0.0717`
-from the corrected param card (yh1=1 in Block BSMPARAMS, identity quark-rotation
-blocks, Block PHASES) versus `0.166` from the earlier zeroed-Yukawa card (both
-eval relic runs logged `parameter mdl_yh1 not found -> 0`). The ~4× spread
-between `0.0717` (toolkit) and `0.292` (paper) is an **open question** — likely a
-spec/paper convention mismatch in the same family as the blind-spot sign issue —
-so treat none of the three numbers as a hard pass/fail threshold until a
-from-scratch spectrum+relic run reconciles them. The demo does not sit on the
-blind spot; this single point illustrates the pipeline.
+the Acceptance criteria section): `omega_h2 = 0.242 ± 3%`
+(`validation_status = TOOLKIT_VALIDATED`, MadDM 3.2 with the
+Majorana-phase-consistent card; dominant channels WW 42% / Zh 17% / ZZ 15% /
+hh 11% / bb 9%). Three historical values are retired and must NOT be used as
+references: `0.292` (a MadDM output-parser smoke-fixture number mis-cited to
+the paper — arXiv:2506.19062 contains no relic benchmark at all), `0.166`
+(zeroed-Yukawa card: `parameter mdl_yh1 not found -> 0`), and `0.0717`
+(correct couplings but the negative χ₂ eigenvalue's Majorana phase was
+dropped — real ZNMIX row instead of IMZNMIX — corrupting χ₂-exchange
+interference and making χ₁χ₁→Zh spuriously 92% of σv). If a relic run lands
+near 0.07 with Zh ≳ 90%, check that the card carries the χ₂ row of the
+neutral mixing matrix in `IMZNMIX` (see `spheno-build` analytic writer). The
+demo does not sit on the blind spot; this single point illustrates the
+pipeline.
 
 **Completion:** `relic.json` written with non-null `omega_h2`; channel fractions
 pass the `[0.99, 1.01]` gate (see reference).

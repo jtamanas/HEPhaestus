@@ -149,11 +149,24 @@ if "block bsmparams" not in card.read_text().lower():
 # Set_All_Parameters_0 sentinel leaking into the SLHA. Every h-χ₁-χ₁-type
 # coupling carries conjg(PhaseFS), so PhaseFS=0 kills the Higgs-portal sector
 # on the RELIC branch too — the symptom is Ωh² ≈ 0.166 (χ₁χ₁→hh closed)
-# instead of the correct ≈ 0.0717 (χ₁χ₁→hh open at ~3.8%), which looks like a
+# instead of the correct ≈ 0.242 (WW/Zh/ZZ/hh mix), which looks like a
 # perfectly valid result. complete_sarah_param_card() coerces a present zero
 # real phase to 1 and reports {"phases": "coerced present zero phase -> 1"};
 # if you bypass the completion helper, check the card for a zero PHASES entry
 # yourself before launch.
+
+# Majorana-phase gate (fourth silent-value bug, found 2026-07-06): Block MASS
+# carries |m|, so ZNMIX must satisfy ZN·M·ZNᵀ = diag(+|m|). The mass matrix at
+# the canonical point has a NEGATIVE χ₂ eigenvalue (−523.03); its eigenvector
+# row must be carried in IMZNMIX (row × i), with the real ZNMIX row zero. A
+# card with |MASS| and a purely real ZNMIX is internally inconsistent: every
+# χ₂ vertex gets a wrong phase, χ₂-exchange interference in χ₁χ₁→Zh flips,
+# and the relic comes out ≈ 0.0717 with Zh ≈ 92% of σv instead of the correct
+# ≈ 0.242 with a physical WW 42% / Zh 17% / ZZ 15% / hh 11% mix. Tree-level
+# direct detection is UNAFFECTED (only χ₁ vertices enter), so a correct σ_SI
+# does not validate the relic. The spheno-build analytic writer emits the
+# phase correctly since the 2026-07 fix; gate any hand-built card on it:
+# if the relic lands near 0.07 with one ≳90% channel, inspect IMZNMIX.
 
 # Phase 2: launch -f using the overlaid, completed card.
 subprocess.run(

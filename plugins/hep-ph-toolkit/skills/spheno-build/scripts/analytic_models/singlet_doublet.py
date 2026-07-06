@@ -78,9 +78,22 @@ def compute(spec: dict, params: dict) -> dict:
     M = _mass_matrix(MS, MPsi, yh1, yh2)
     eigvals, U = np.linalg.eigh(M)
     idx = np.argsort(np.abs(eigvals))
-    masses = np.abs(eigvals[idx])
+    signed = eigvals[idx]
+    masses = np.abs(signed)
     U_sorted = U[:, idx]
     ZN = U_sorted.T  # rows=mass eigenstate, cols=interaction (SARAH convention)
+
+    # Majorana phase: the SLHA carries |m| in MASS, so ZN must satisfy
+    # ZN . M . ZN^T = diag(+|m|). A real orthogonal ZN can only produce the
+    # SIGNED eigenvalue on the diagonal; a negative-eigenvalue row must be
+    # multiplied by i (then (i z) M (i z)^T = -z M z^T = +|m|), i.e. that
+    # row belongs in IMZNMIX with the ZNMIX row zero. Emitting |m| with a
+    # purely real ZN gives every vertex linear in that row a wrong phase:
+    # it corrupted the chi2-exchange interference in chi1 chi1 -> Zh
+    # (Omega h^2 = 0.0717 instead of 0.242 at the canonical benchmark) and
+    # displaced the sigma_SI blind spot from the true theta = -0.152
+    # (m_chi1 + MPsi sin 2theta = 0, paper Eq. 8) to a spurious +0.79.
+    is_neg = signed < 0.0
 
     masses_out = {
         SINGLET_DOUBLET_PDG_IDS["Chi1"]: float(masses[0]),
@@ -91,8 +104,10 @@ def compute(spec: dict, params: dict) -> dict:
     masses_out.update(_SM_MASS_BLOCK)
 
     mixing: dict[str, dict] = {}
-    mixing["ZNMIX"]   = {(i + 1, j + 1): float(ZN[i, j]) for i in range(3) for j in range(3)}
-    mixing["IMZNMIX"] = {(i + 1, j + 1): 0.0            for i in range(3) for j in range(3)}
+    mixing["ZNMIX"]   = {(i + 1, j + 1): 0.0 if is_neg[i] else float(ZN[i, j])
+                         for i in range(3) for j in range(3)}
+    mixing["IMZNMIX"] = {(i + 1, j + 1): float(ZN[i, j]) if is_neg[i] else 0.0
+                         for i in range(3) for j in range(3)}
     mixing["UMMIX"]   = {(1, 1): 1.0}
     mixing["UPMIX"]   = {(1, 1): 1.0}
     mixing["IMUMMIX"] = {(1, 1): 0.0}
@@ -103,9 +118,13 @@ def compute(spec: dict, params: dict) -> dict:
         "mixing": mixing,
         "problem": [],
         "diagnostics": {
+            # Eq. 8 of 2506.19062 uses the SIGNED lightest eigenvalue: with
+            # |m| the residual can never vanish for theta > 0 yet spuriously
+            # tracks the wrong branch when m_chi1 < 0.
             "blind_spot_residual":
-                float(masses[0] + abs(MPsi) * np.sin(
+                float(signed[0] + abs(MPsi) * np.sin(
                     2.0 * np.arctan2(yh2, yh1)
                 )),
+            "m_chi1_signed": float(signed[0]),
         },
     }

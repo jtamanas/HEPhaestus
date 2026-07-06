@@ -11,26 +11,30 @@
   },
   "expectations": {
     "omega_h2": {
-      "central": 0.292,
-      "band": [0.290, 0.294],
-      "tolerance": "±0.002",
-      "validation_status": "UNRECONCILED_WITH_TOOLKIT"
+      "central": 0.242,
+      "band": [0.235, 0.249],
+      "tolerance": "±3%",
+      "validation_status": "TOOLKIT_VALIDATED"
     }
   },
   "source": {
+    "provenance": "MadDM 3.2 relic run with the Majorana-phase-consistent param card (chi2 signed eigenvalue -523.03: ZNMIX row 2 carried as +i x row in IMZNMIX, per SARAH convention ZN.M.ZN^T = diag(+|m|)). Analytic h/Z chi1-chi1 couplings cross-checked against arXiv:2506.19062 Eq. 7 (c_h = -0.12223, exact match to Hellmann-Feynman dm_chi1/dv; c_Z magnitude agrees to 0.4%).",
     "paper": "arXiv:2506.19062",
-    "section": "II Fig. 1",
-    "commit": "20616cd"
+    "paper_note": "The paper contains NO relic benchmark: Fig. 1 plots sigma_SI with points only color-coded by relic fraction, and there is no benchmark table or quoted Omega h^2 anywhere. The previous central 0.292 was a MadDM output-PARSER smoke-fixture number from an early /demo playtest, mis-cited to 'II Fig. 1' in the repo's initial commit.",
+    "history": [
+      {"omega_h2": 0.292, "status": "RETRACTED", "why": "parser smoke-fixture value with fabricated paper citation; never a physics prediction"},
+      {"omega_h2": 0.166, "status": "INVALID", "why": "run with yh1 silently zeroed (MINPAR-vs-BSMPARAMS silent-zero bug)"},
+      {"omega_h2": 0.0717, "status": "INVALID", "why": "correct couplings but real ZNMIX for the negative chi2 eigenvalue (missing Majorana phase i); corrupted chi2-exchange interference made chi1chi1->Zh spuriously dominant at 92%"}
+    ]
   },
   "toolkit_measurements": {
-    "note": "central=0.292 is paper-sourced and left unchanged pending a dedicated relic validation; the MadDM value below does NOT match it and the discrepancy is unresolved. Do not treat 0.292 as toolkit-reproduced.",
-    "maddm_3_2_correct_couplings": {
-      "omega_h2": 0.0717,
-      "x_f": 21.0,
-      "dominant_channels": {"chi1chi1_zh": 0.920, "chi1chi1_hh": 0.038, "chi1chi1_wpwm": 0.021, "chi1chi1_zz": 0.013},
-      "provenance": "harness-climb-a: reran the eval's compiled MadDM relic executable with a param card carrying correct yh1=1 (Block BSMPARAMS), identity SM quark-rotation blocks, and Block PHASES (see maddm/scripts/slha_complete.py). The chi1chi1_hh channel (3.8%) opens only when the Higgs-portal coupling is nonzero, confirming yh1 is active.",
-      "eval_run_value_invalid": {"omega_h2": 0.166, "why": "both eval relic runs logged 'parameter mdl_yh1 not found -> 0'; computed with the Yukawa sector zeroed, so 0.166 is not the benchmark value"}
+    "maddm_3_2_phase_corrected": {
+      "omega_h2": 0.2420,
+      "x_f": 20,
+      "sigmav_xf": 8.99e-10,
+      "dominant_channels": {"chi1chi1_wpwm": 0.4226, "chi1chi1_zh": 0.1738, "chi1chi1_zz": 0.1548, "chi1chi1_hh": 0.1061, "chi1chi1_bb": 0.0942, "chi1chi1_cc": 0.0138},
+      "provenance": "relic-dive 2026-07-06: MadDM relic with the phase-corrected card; the pre-fix baseline (real ZNMIX, 0.0717) was reproduced bit-for-bit in the same setup before applying the fix, isolating the phase as the only change."
     },
-    "open_question": "0.0717 (toolkit) vs 0.292 (paper) differ ~4x. Likely a spec/paper convention mismatch, same family as the blind-spot sign/location issue: the h-chi1-chi1 coupling vanishes near theta~+0.79 in this UFO, not the paper's -0.148. Needs a from-scratch spectrum+relic run before central is changed."
+    "blind_spot": "with signed masses the c_h(chi1,chi1) zero sits at theta = -0.152 and coincides exactly with paper Eq. 8 (m_chi1 + MPsi sin 2theta = 0), verified via Hellmann-Feynman dm_chi1/dv; the previously reported sigma_SI dip at theta = +0.79 was an artifact of the stripped Majorana phase"
   }
 }

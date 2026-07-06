@@ -24,6 +24,16 @@ Return-dict keys:
 | `minpar` | `list[tuple[int, float, str]]` | optional | If absent, `slha_writer` echoes `params` in insertion order. |
 | `problem` | `list[int]` | optional | Non-empty → recoverable `ANALYTIC_SPECTRUM_PROBLEM`. |
 
+**Majorana phase contract.** `Block MASS` carries `|m|`, so for every Majorana
+mixing matrix the module must emit rows satisfying `ZN·M·ZNᵀ = diag(+|m|)`: a
+row whose eigenvalue is **negative** must be carried in the `IM*` block (row
+× i) with the real-block row zero. Emitting `|m|` with a purely real matrix is
+internally inconsistent and silently corrupts every vertex linear in that row
+(at the singlet-doublet canonical point: relic 0.0717 with a spurious 92%
+χ₁χ₁→Zh instead of the correct 0.242, and a σ_SI blind spot displaced from
+θ = −0.152 to +0.79 — found and fixed 2026-07-06). See
+`analytic_models/singlet_doublet.py` for the reference implementation.
+
 Raise `ValueError` for an invalid parameter range → recoverable
 `ANALYTIC_INVALID_PARAMS`. Raise `numpy.linalg.LinAlgError` for a
 diagonalisation failure → recoverable `ANALYTIC_SPECTRUM_PROBLEM`. Any other
