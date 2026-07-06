@@ -149,7 +149,7 @@ if "block bsmparams" not in card.read_text().lower():
 # Set_All_Parameters_0 sentinel leaking into the SLHA. Every h-χ₁-χ₁-type
 # coupling carries conjg(PhaseFS), so PhaseFS=0 kills the Higgs-portal sector
 # on the RELIC branch too — the symptom is Ωh² ≈ 0.166 (χ₁χ₁→hh closed)
-# instead of the correct ≈ 0.242 (WW/Zh/ZZ/hh mix), which looks like a
+# instead of the correct ≈ 0.2916 (WW/Zh/ZZ/hh mix), which looks like a
 # perfectly valid result. complete_sarah_param_card() coerces a present zero
 # real phase to 1 and reports {"phases": "coerced present zero phase -> 1"};
 # if you bypass the completion helper, check the card for a zero PHASES entry
@@ -162,11 +162,22 @@ if "block bsmparams" not in card.read_text().lower():
 # card with |MASS| and a purely real ZNMIX is internally inconsistent: every
 # χ₂ vertex gets a wrong phase, χ₂-exchange interference in χ₁χ₁→Zh flips,
 # and the relic comes out ≈ 0.0717 with Zh ≈ 92% of σv instead of the correct
-# ≈ 0.242 with a physical WW 42% / Zh 17% / ZZ 15% / hh 11% mix. Tree-level
+# ≈ 0.2916 with a physical WW 33% / Zh 20% / ZZ 18% / hh 12% / bb 11% mix. Tree-level
 # direct detection is UNAFFECTED (only χ₁ vertices enter), so a correct σ_SI
 # does not validate the relic. The spheno-build analytic writer emits the
 # phase correctly since the 2026-07 fix; gate any hand-built card on it:
 # if the relic lands near 0.07 with one ≳90% channel, inspect IMZNMIX.
+
+# Mass-matrix sign gate (fifth silent-value bug, same day): ZNMIX must
+# diagonalize SARAH's OWN mass matrix — for this model
+# [[MS, −yh2·v/√2, +yh1·v/√2],[·, 0, −MPsi],[·, ·, 0]] (transcribed from the
+# generated CalculateMFChi) — not the paper's all-plus Eq. 3 matrix. The two
+# have identical eigenvalues, so MASSES CANNOT CATCH THIS; only the
+# eigenvector component signs differ. Cards built from the paper matrix are
+# internally inconsistent for any yh2 ≠ 0: the σ_SI blind spot shows up at
+# θ = ±π/4 (yh1 = ±yh2) instead of the true θ = −0.152 (paper Eq. 8,
+# MadDM-verified ~7-order dip). The 2026-07 analytic writer uses the SARAH
+# matrix; gate hand-built cards by checking ZN·M_SARAH·ZNᵀ is diagonal.
 
 # Phase 2: launch -f using the overlaid, completed card.
 subprocess.run(

@@ -292,19 +292,22 @@ expected and is not a failure. Record the Planck comparison for orientation, but
 do **not** gate on it.
 
 The acceptance reference is `benchmarks/canonical-2026/expectations.json` (see
-the Acceptance criteria section): `omega_h2 = 0.242 ± 3%`
-(`validation_status = TOOLKIT_VALIDATED`, MadDM 3.2 with the
-Majorana-phase-consistent card; dominant channels WW 42% / Zh 17% / ZZ 15% /
-hh 11% / bb 9%). Three historical values are retired and must NOT be used as
-references: `0.292` (a MadDM output-parser smoke-fixture number mis-cited to
-the paper — arXiv:2506.19062 contains no relic benchmark at all), `0.166`
-(zeroed-Yukawa card: `parameter mdl_yh1 not found -> 0`), and `0.0717`
-(correct couplings but the negative χ₂ eigenvalue's Majorana phase was
-dropped — real ZNMIX row instead of IMZNMIX — corrupting χ₂-exchange
-interference and making χ₁χ₁→Zh spuriously 92% of σv). If a relic run lands
-near 0.07 with Zh ≳ 90%, check that the card carries the χ₂ row of the
-neutral mixing matrix in `IMZNMIX` (see `spheno-build` analytic writer). The
-demo does not sit on the blind spot; this single point illustrates the
+the Acceptance criteria section): `omega_h2 = 0.2916 ± 3%`
+(`validation_status = TOOLKIT_VALIDATED`, MadDM 3.2 with the fully
+SARAH-consistent card; dominant channels WW 34% / Zh 20% / ZZ 18% / hh 12% /
+bb 11%). Three historical values are retired and must NOT be used as
+references: `0.166` (zeroed-Yukawa card: `parameter mdl_yh1 not found -> 0`),
+`0.0717` (the negative χ₂ eigenvalue's Majorana phase was dropped — real
+ZNMIX row instead of IMZNMIX — corrupting χ₂-exchange interference and making
+χ₁χ₁→Zh spuriously 92% of σv), and `0.242` (phase fixed, but the card
+diagonalized the paper's all-plus mass matrix instead of SARAH's `−yh2`/`−MPsi`
+signed one, leaving the eigenvector column-2 signs wrong). σ_SI is even in
+that column-2 sign and reads `3.71e-47 cm²` for all but the zeroed-Yukawa
+card — a correct σ_SI does NOT validate the relic. If a relic run lands near
+0.07 with Zh ≳ 90%, check IMZNMIX; if it lands near 0.24, check the mass
+matrix signs against the generated `CalculateMFChi` (see the `spheno-build`
+analytic writer, which implements both). The demo does not sit on the blind
+spot (that is θ = −0.152, paper Eq. 8); this single point illustrates the
 pipeline.
 
 **Completion:** `relic.json` written with non-null `omega_h2`; channel fractions

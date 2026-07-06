@@ -115,7 +115,7 @@ def render(result: dict, spec: dict | None = None,
                 # phase has unit modulus); it is SARAH's Set_All_Parameters_0
                 # sentinel leaking through the analytic model's param store.
                 # Emitting it verbatim zeroes every conjg(PhaseFS)-carrying
-                # coupling downstream (relic 0.166-instead-of-0.242 symptom).
+                # coupling downstream (relic 0.166-instead-of-0.2916 symptom).
                 if block == "PHASES" and v == 0.0:
                     v = 1.0
                     name = f"{name} (coerced 0->1: zero phase unphysical)"

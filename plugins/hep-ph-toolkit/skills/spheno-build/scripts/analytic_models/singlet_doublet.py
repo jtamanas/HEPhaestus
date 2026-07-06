@@ -4,11 +4,14 @@ Basis: (s0, PsiDd0, PsiDu0), matching the SARAH ordering declared in the
 modelspec yaml (ewsb.mixings.weyls). The yh1 Yukawa (conj[H].FS.PsiDu) couples
 s0↔PsiDu0; yh2 (H.FS.PsiDd) couples s0↔PsiDd0.
 
-Mass matrix (Eq. 3, in this basis):
-    M = [[MS,  b,    a   ],
-         [b,   0,    MPsi],
-         [a,   MPsi, 0   ]]
-where a = yh1 * v / sqrt(2), b = yh2 * v / sqrt(2).
+Mass matrix (SARAH's CalculateMFChi, in this basis — NOT the paper's Eq. 3,
+which has all-plus off-diagonals; see _mass_matrix for the sign provenance):
+    M = [[MS,  -b,    a    ],
+         [-b,   0,   -MPsi ],
+         [a,  -MPsi,  0    ]]
+where a = yh1 * v / sqrt(2), b = yh2 * v / sqrt(2). Same eigenvalues as the
+paper's matrix; eigenvector component signs differ, and the UFO vertices
+require SARAH's.
 
 Charged Dirac sector: m_chi± = |MPsi|, UMMIX = UPMIX = [[1]].
 
@@ -51,12 +54,26 @@ _SM_MASS_BLOCK = {
 
 def _mass_matrix(MS: float, MPsi: float, yh1: float, yh2: float,
                  v: float = V_H) -> np.ndarray:
+    # Sign convention: this is SARAH's OWN matrix, transcribed from the
+    # generated CalculateMFChi (TreeLevelMasses_SingletDoublet.f90:767-775,
+    # PhaseFS = 1):
+    #     mat(1,2) = -yh2*v/sqrt(2)   (H.FS.PsiDd through the SU(2) epsilon)
+    #     mat(1,3) = +yh1*v/sqrt(2)   (conj[H].FS.PsiDu, direct contraction)
+    #     mat(2,3) = -MPsi            (PsiDu.PsiDd through the epsilon)
+    # The UFO vertices (e.g. GC_99 ~ yh2*ZN12 - yh1*ZN13) were generated
+    # from the same Lagrangian, so ZNMIX must diagonalise THIS matrix.
+    # Diagonalising the paper-style all-plus matrix instead (the pre-2026-07
+    # behaviour) yields eigenvector rows whose 2nd component has the wrong
+    # sign — an internally inconsistent card whose symptom is a spurious
+    # sigma_SI blind spot at theta = +/- pi/4 (where yh1 = +/- yh2) instead
+    # of the true theta = -0.152. Eigenvalues equal the paper matrix's
+    # (similar via diag(1,-1,1)), so masses and paper Eq. 8 are unchanged.
     a = yh1 * v / np.sqrt(2.0)
     b = yh2 * v / np.sqrt(2.0)
     return np.array([
-        [MS, b,    a   ],
-        [b,  0.0,  MPsi],
-        [a,  MPsi, 0.0 ],
+        [MS,  -b,    a    ],
+        [-b,  0.0,  -MPsi ],
+        [a,  -MPsi,  0.0  ],
     ], dtype=float)
 
 
@@ -87,12 +104,12 @@ def compute(spec: dict, params: dict) -> dict:
     # ZN . M . ZN^T = diag(+|m|). A real orthogonal ZN can only produce the
     # SIGNED eigenvalue on the diagonal; a negative-eigenvalue row must be
     # multiplied by i (then (i z) M (i z)^T = -z M z^T = +|m|), i.e. that
-    # row belongs in IMZNMIX with the ZNMIX row zero. Emitting |m| with a
+    # row belongs in IMZNMIX with the ZNMIX row zero. This is exactly what
+    # SARAH's own SPheno code does (TreeLevelMasses CalculateMFChi:
+    # ``ZN(i1,:) = (0,1)*ZNa(i1,:)`` for Eig < 0). Emitting |m| with a
     # purely real ZN gives every vertex linear in that row a wrong phase:
     # it corrupted the chi2-exchange interference in chi1 chi1 -> Zh
-    # (Omega h^2 = 0.0717 instead of 0.242 at the canonical benchmark) and
-    # displaced the sigma_SI blind spot from the true theta = -0.152
-    # (m_chi1 + MPsi sin 2theta = 0, paper Eq. 8) to a spurious +0.79.
+    # (Omega h^2 = 0.0717 instead of 0.2916 at the canonical benchmark).
     is_neg = signed < 0.0
 
     masses_out = {
@@ -118,8 +135,10 @@ def compute(spec: dict, params: dict) -> dict:
         "mixing": mixing,
         "problem": [],
         "diagnostics": {
-            # Eq. 8 of 2506.19062 uses the SIGNED lightest eigenvalue: with
-            # |m| the residual can never vanish for theta > 0 yet spuriously
+            # Eq. 8 of 2506.19062: m_chi1 + MPsi sin(2 theta) = 0 with
+            # theta = arctan2(yh2, yh1) — SARAH's matrix has the same
+            # spectrum as the paper's, so paper coordinates apply directly.
+            # Uses the SIGNED lightest eigenvalue: with |m| the residual
             # tracks the wrong branch when m_chi1 < 0.
             "blind_spot_residual":
                 float(signed[0] + abs(MPsi) * np.sin(

@@ -118,7 +118,7 @@ def complete_sarah_param_card(
     # Repair a PRESENT real phase block whose entry is exactly 0. That value
     # is SARAH's Set_All_Parameters_0 sentinel, not physics: a phase has unit
     # modulus, so 0 silently deletes every conjg(Phase*)-carrying coupling
-    # (relic 0.166-instead-of-0.242 symptom). Present blocks are otherwise
+    # (relic 0.166-instead-of-0.2916 symptom). Present blocks are otherwise
     # trusted verbatim; this is the one exception, justified because no
     # legitimate spectrum can put a zero here.
     repaired = False
