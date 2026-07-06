@@ -116,5 +116,6 @@ Then `scripts/analytic_models/new_name.py` defines
 `compute(spec, params) -> dict` returning `masses`, `mixing`,
 `problem`, etc. See `singlet_doublet.py` for the canonical pattern.
 
-Common sharp edges are covered in `SKILL.md` § "Authoring an analytic
-module".
+Common sharp edges are covered in
+[`analytic-backend.md`](analytic-backend.md) § "Interface contract" and
+"Location and discovery".
