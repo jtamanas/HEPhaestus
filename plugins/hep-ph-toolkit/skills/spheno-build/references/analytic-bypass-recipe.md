@@ -38,7 +38,7 @@ backends:
 ```
 
 Then run `/spheno-build` as usual. The dispatcher resolution order is
-documented in `spheno-build/SKILL.md` § "Backend inventory":
+documented in `spheno-build/SKILL.md` § "Spectrum backends" (Selection rule):
 
 1. `spec['backends']['spectrum']` wins if set.
 2. Else `outputs` contains `spheno` → `spheno`.
@@ -116,5 +116,6 @@ Then `scripts/analytic_models/new_name.py` defines
 `compute(spec, params) -> dict` returning `masses`, `mixing`,
 `problem`, etc. See `singlet_doublet.py` for the canonical pattern.
 
-Common sharp edges are covered in `SKILL.md` § "Authoring an analytic
-module".
+Common sharp edges are covered in
+[`analytic-backend.md`](analytic-backend.md) § "Interface contract" and
+"Location and discovery".

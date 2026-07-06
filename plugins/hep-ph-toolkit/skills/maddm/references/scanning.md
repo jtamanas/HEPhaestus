@@ -127,9 +127,9 @@ for i, point in enumerate(grid):
     results.append(obs)
 ```
 
-See `maddm/SKILL.md` §"Reading MadDM output (agent-driven)" for the full
-field-extraction patterns (including per-channel percentages). Do not use
-`parse_maddm_output` — it is not defined in `maddm_run.py` and was removed.
+See [`reading-output.md`](reading-output.md) for the full field-extraction
+patterns (including per-channel percentages). Do not use `parse_maddm_output` —
+it is not defined in `maddm_run.py` and was removed.
 
 ### Result format
 

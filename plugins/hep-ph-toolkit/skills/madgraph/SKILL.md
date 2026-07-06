@@ -97,35 +97,9 @@ Covers: LHE XML structure (`<init>`, `<event>` blocks), banner files, cross-sect
 | Z+bb | `generate p p > z b b~` |
 | 4-lepton | `generate p p > e+ e- mu+ mu-` |
 
-### Multiparticle Labels (default in SM)
-
-| Label | Definition |
-|-------|-----------|
-| `p` | `g u c d s u~ c~ d~ s~` |
-| `j` | `g u c d s u~ c~ d~ s~` |
-| `l+` | `e+ mu+ ta+` |
-| `l-` | `e- mu- ta-` |
-| `vl` | `ve vm vt` |
-| `vl~` | `ve~ vm~ vt~` |
-
-### Key run_card Fields
-
-| Field | Description | Example value |
-|-------|-------------|---------------|
-| `ebeam1` / `ebeam2` | Beam energies [GeV] | `6800` (13.6 TeV LHC) |
-| `nevents` | Number of events | `100000` |
-| `lhaid` | LHAPDF set ID | `331100` (NNPDF4.0 NLO) |
-| `ptj` | Min jet pT cut [GeV] | `20.0` |
-| `ptl` | Min lepton pT cut [GeV] | `10.0` |
-| `etaj` / `etal` | Max jet/lepton \|η\| | `5.0` / `2.5` |
-| `drjj` / `drll` | Min ΔR(j,j) / ΔR(l,l) | `0.4` / `0.4` |
-| `mmll` | Min m(l+l−) [GeV] | `10.0` |
-| `dynamical_scale_choice` | Scale choice | `-1` (default), `3` (HT/2) |
-| `fixed_ren_scale` | Fixed μ_R | `.false.` |
-| `fixed_fac_scale` | Fixed μ_F | `.false.` |
-| `ickkw` | Matching scheme | `0` (none), `1` (MLM), `3` (FxFx) |
-| `xqcut` | Matching scale [GeV] | `20.0` (for MLM) |
-| `use_syst` | Systematics | `.true.` |
+Multiparticle labels (`p`, `j`, `l+`, `vl`, …) and the full `run_card`
+field reference (beam, cuts, scale, matching) live in `references/generation.md`
+— consult it when writing cards.
 
 ### PDF Set IDs (LHAPDF)
 
@@ -164,17 +138,25 @@ Covers: LHE XML structure (`<init>`, `<event>` blocks), banner files, cross-sect
 
 ## Gotchas
 
-<!-- Populated from real usage — add entries here as edge cases are discovered -->
+Non-obvious UFO-import failure modes are catalogued in
+[`references/mg5-model-import-gotchas.md`](references/mg5-model-import-gotchas.md):
 
-*No entries yet.*
+1. **`import model <bare-name>` can silently resolve to a `$MG5_HOME/models/`
+   stub** with a completely different particle set. Always pass the **absolute
+   path** to the SARAH-output UFO (or `config.json`'s `models.<name>.ufo`), never
+   the bare name.
+2. **MG5 lowercases UFO particle names at import** (`Chi1` → `chi1`). Use the
+   lowercased name in all MG5/MadDM commands — this is why the singlet-doublet
+   workflow passes `dm_candidate = "chi1"`.
 
 ## File Map
 
 | Path | Description |
 |------|-------------|
 | `references/setup.md` | Installation, environment, GPU backend, Pythia8 linking |
-| `references/generation.md` | Process definition → event output, full card reference |
+| `references/generation.md` | Process definition → event output, full card reference (multiparticle labels, run_card fields) |
 | `references/analysis.md` | LHE parsing, scanning, cross-section extraction |
+| `references/mg5-model-import-gotchas.md` | UFO-import failure modes (bare-name stub resolution, particle-name lowercasing) |
 | `scripts/resolve_named_model.py` | Named-model resolver: looks up UFO/SLHA paths from config.json |
 | `scripts/card_io.py` | SLHA param_card + run_card read/write/update functions |
 | `scripts/lhe_parser.py` | LHE XML parser, cross-section extraction, kinematics |

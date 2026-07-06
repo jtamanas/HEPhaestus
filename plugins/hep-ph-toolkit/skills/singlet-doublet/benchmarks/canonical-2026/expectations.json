@@ -13,12 +13,24 @@
     "omega_h2": {
       "central": 0.292,
       "band": [0.290, 0.294],
-      "tolerance": "±0.002"
+      "tolerance": "±0.002",
+      "validation_status": "UNRECONCILED_WITH_TOOLKIT"
     }
   },
   "source": {
     "paper": "arXiv:2506.19062",
     "section": "II Fig. 1",
     "commit": "20616cd"
+  },
+  "toolkit_measurements": {
+    "note": "central=0.292 is paper-sourced and left unchanged pending a dedicated relic validation; the MadDM value below does NOT match it and the discrepancy is unresolved. Do not treat 0.292 as toolkit-reproduced.",
+    "maddm_3_2_correct_couplings": {
+      "omega_h2": 0.0717,
+      "x_f": 21.0,
+      "dominant_channels": {"chi1chi1_zh": 0.920, "chi1chi1_hh": 0.038, "chi1chi1_wpwm": 0.021, "chi1chi1_zz": 0.013},
+      "provenance": "harness-climb-a: reran the eval's compiled MadDM relic executable with a param card carrying correct yh1=1 (Block BSMPARAMS), identity SM quark-rotation blocks, and Block PHASES (see maddm/scripts/slha_complete.py). The chi1chi1_hh channel (3.8%) opens only when the Higgs-portal coupling is nonzero, confirming yh1 is active.",
+      "eval_run_value_invalid": {"omega_h2": 0.166, "why": "both eval relic runs logged 'parameter mdl_yh1 not found -> 0'; computed with the Yukawa sector zeroed, so 0.166 is not the benchmark value"}
+    },
+    "open_question": "0.0717 (toolkit) vs 0.292 (paper) differ ~4x. Likely a spec/paper convention mismatch, same family as the blind-spot sign/location issue: the h-chi1-chi1 coupling vanishes near theta~+0.79 in this UFO, not the paper's -0.148. Needs a from-scratch spectrum+relic run before central is changed."
   }
 }
