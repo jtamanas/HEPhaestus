@@ -8,8 +8,8 @@ missing), **cause** (why it has to exist), **mitigation** (what we do), and
 
 For the separate class of *model-authoring* traps that SARAH silently tolerates
 (wrong Weyl decomposition, single-letter BSM names, Majorana in `LagNoHC`, etc.),
-see `SKILL.md` → "Gotchas (SARAH-idiom discrepancies)". That section documents
-six more items; they're not repeated here.
+see [`authoring-gotchas.md`](authoring-gotchas.md). That file documents six more
+items; they're not repeated here.
 
 ---
 
@@ -231,7 +231,7 @@ six more items; they're not repeated here.
   `LL[{1}][{i1}], LL[{lef2}][{i2}]` with the canonical
   `(3*(g1^2 + 5*g2^2)*Xi*…)/20` form. (A downstream rank-1 Dirac
   sub-block compile error in `TreeLevelMasses` is a separate known
-  class — see SKILL.md Gotcha #6 in the pointer below — and is
+  class — see authoring-gotchas.md Gotcha #6 — and is
   unrelated to this workaround.)
 - **Where:** the v3 renderer at
   `plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/render/`.
@@ -278,7 +278,7 @@ six more items; they're not repeated here.
   cold rebuilds of `singlet_doublet` (charged eigenstate ChiM);
   conjectured to trigger for any model with a 1×1 Dirac sub-block, but
   not reproduced on a second spec. Related but distinct failure shape
-  from Gotcha #6 in `SKILL.md`, which covers `Param.$Failed` leakage
+  from Gotcha #6 in [`authoring-gotchas.md`](authoring-gotchas.md), which covers `Param.$Failed` leakage
   that escapes the scanner; the rank-mismatch here is caught by
   gfortran and never reaches the scanner. Cross-reference: §15 above
   is the *upstream* blocker (SM lepton doublet atom `l`) whose fix
@@ -417,11 +417,11 @@ six more items; they're not repeated here.
 
 ## Model-authoring traps (pointer)
 
-`SKILL.md` → "Gotchas (SARAH-idiom discrepancies)" catalogues six
-workarounds that exist at the *spec*/*template* level, not at the wrapper
-level. They are there because SARAH accepts structurally-valid Lagrangians
-that it silently refuses to canonicalise. Summary index — follow the
-SKILL.md section for the full reproduction and fix:
+[`authoring-gotchas.md`](authoring-gotchas.md) catalogues six workarounds that
+exist at the *spec*/*template* level, not at the wrapper level. They are there
+because SARAH accepts structurally-valid Lagrangians that it silently refuses to
+canonicalise. Summary index — follow that file for the full reproduction and
+fix:
 
 1. Vectorlike fermion doublets → declare as two left-Weyl, not one Dirac pair.
 2. Majorana mass terms → `LagHC` with `AddHC -> True`, not `LagNoHC`.

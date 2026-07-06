@@ -158,7 +158,7 @@ and check if `l` has an `OwnValue`.
 ### H3 — `CheckModelFiles::MissingParameter` silently degrades
 matter-rep registration
 
-Gotcha #6 in `sarah-build/SKILL.md` documents a similar "silent
+Gotcha #6 in [`authoring-gotchas.md`](authoring-gotchas.md) documents a similar "silent
 degradation" where a missing `ParameterDefinitions` entry causes
 downstream emission to use `Param.$Failed`. The iter5 output **does**
 contain `$Failed` in the hypercharge slot
@@ -218,7 +218,7 @@ yet know how to prevent it at emission time.
 ## Cross-references
 
 - `sarah-workarounds.md` § 6 — pattern catalog + scanner hook.
-- `SKILL.md` § "Gotchas (SARAH-idiom discrepancies)" #4 — single-letter
+- [`authoring-gotchas.md`](authoring-gotchas.md) #4 — single-letter
   BSM field names, the only already-known path to `l`-like shadowing
   (but `l` itself is an SM field, not a BSM one — so #4 alone doesn't
   explain this).
