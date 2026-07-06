@@ -181,6 +181,26 @@ scan.**
 
 > Invoke /lagrangian-builder on input path (a) (interactive interview), with the practitioner script at `plugins/hep-ph-toolkit/skills/singlet-doublet/practitioner_script.md` playing the role of the user.
 
+**Interactive vs. scripted.** The `practitioner_script.md` interview replay is
+**presentation only** — it exists to show, in an interactive session, what a
+live `/lagrangian-builder` interview looks like while both sides are pre-written.
+It is not the model-build path. An **unattended or scripted run** SHOULD skip the
+replay entirely and drive `/sarah-build`'s builder directly with the canonical
+spec:
+
+```
+python plugins/hep-ph-toolkit/skills/sarah-build/scripts/build.py \
+    plugins/hep-ph-toolkit/skills/_shared/modelspec_v3/specs/singlet_doublet.yaml \
+    --model-dir ./demo_output/singlet-doublet/ --outputs ufo spheno
+```
+
+That is the documented direct path: it authors the SARAH model from the vetted
+`singlet_doublet.yaml` without an interview, producing the same UFO + SPheno
+source the replay would eventually reach. (`spec_path` is positional;
+`--model-dir` is required; `--outputs` defaults to `ufo` only, so pass
+`ufo spheno` when the SPheno source is needed.) Use the replay only when a human
+is watching and the demonstration value matters.
+
 This replays the four-question interview from
 `plugins/hep-ph-toolkit/skills/lagrangian-builder/references/interview.md` with
 both sides pre-written. For each question:
@@ -264,9 +284,25 @@ parsed from the SLHA `Block MASS` (never hardcoded):
 }
 ```
 
-The Planck value is `Omega h^2 = 0.120 ± 0.001`; record whether the computed
-`omega_h2` is within 3σ. The demo does not sit on the blind spot — this single
-point illustrates the pipeline.
+The Planck value `Omega h^2 = 0.120 ± 0.001` is **context, not an acceptance
+gate**. This benchmark is **not cosmologically viable by design** — the fiducial
+`(MS, MPsi, y, θ) = (150, 500, 1, 0)` point was chosen to exercise the pipeline,
+not to land on the relic band, so a computed `omega_h2` far from 0.120 is
+expected and is not a failure. Record the Planck comparison for orientation, but
+do **not** gate on it.
+
+The acceptance reference is `benchmarks/canonical-2026/expectations.json` (see
+the Acceptance criteria section). Note that fixture currently carries
+`validation_status = UNRECONCILED_WITH_TOOLKIT`: its paper-sourced central
+`omega_h2 = 0.292` does not match the toolkit's own MadDM measurements — `0.0717`
+from the corrected param card (yh1=1 in Block BSMPARAMS, identity quark-rotation
+blocks, Block PHASES) versus `0.166` from the earlier zeroed-Yukawa card (both
+eval relic runs logged `parameter mdl_yh1 not found -> 0`). The ~4× spread
+between `0.0717` (toolkit) and `0.292` (paper) is an **open question** — likely a
+spec/paper convention mismatch in the same family as the blind-spot sign issue —
+so treat none of the three numbers as a hard pass/fail threshold until a
+from-scratch spectrum+relic run reconciles them. The demo does not sit on the
+blind spot; this single point illustrates the pipeline.
 
 **Completion:** `relic.json` written with non-null `omega_h2`; channel fractions
 pass the `[0.99, 1.01]` gate (see reference).

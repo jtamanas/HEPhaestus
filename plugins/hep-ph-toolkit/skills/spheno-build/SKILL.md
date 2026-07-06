@@ -94,6 +94,16 @@ redirection:
 $STATE_ROOT/models/<name>/spheno_bin/SPheno<SarahName>  <out_dir>/LesHouches.in  <out_dir>/SPheno.spc
 ```
 
+> **The compiled SPheno binary silently truncates its input-card path argument
+> at 120 characters.** The Fortran read into a fixed-length `CHARACTER(len=120)`
+> buffer drops anything past column 120, so a `LesHouches.in` path longer than
+> that becomes a *different, non-existent* path — SPheno then reports the input
+> card as not found (or reads garbage) with no indication that truncation
+> happened. Keep the absolute path to `LesHouches.in` under 120 chars: prefer a
+> short `$STATE_ROOT` and short run-dir names, and if a deep worktree pushes you
+> over the limit, run the binary from a `cwd` inside `<out_dir>` and pass the
+> bare filenames (`LesHouches.in` / `SPheno.spc`) rather than absolute paths.
+
 With `--input-card`, the card is copied verbatim into the run directory (no
 templating). Otherwise `leshouches_template.py` generates it from
 `spec.parameters` defaults, optionally patched by `--params`.
@@ -221,6 +231,19 @@ directly.
 Spec-level coherence between `outputs` and `backends.spectrum` is enforced by
 `/sarah-build`'s `validate_spec._validate_backends`.
 
+> **The effective default is `analytic`, not `spheno`.** Rules 1–2 both require
+> keys the spec must actually carry: a top-level `backends.spectrum`, or a
+> top-level `outputs` list containing `"spheno"`. When a spec has **neither**
+> (as `singlet_doublet.yaml` currently does — its only `outputs:` keys are
+> nested mixing-matrix names, not a top-level output list), the dispatcher falls
+> through to rule 3 and runs the **analytic** backend. On that path the
+> **compiled SPheno binary is never invoked** — the SLHA is produced by
+> `analytic_models/singlet_doublet.py` → `slha_writer.py`, not by SPheno. Any
+> claim below that `singlet_doublet` is "spheno-backed by default" describes the
+> intended end state, not what the dispatcher does today: to actually exercise
+> the SPheno binary you must add `backends: {spectrum: spheno}` (or a top-level
+> `outputs: [ufo, spheno]`) to the spec, or pass the backend explicitly.
+
 ### Choosing a backend
 
 | Symptom | Backend |
@@ -236,9 +259,12 @@ backend is cost without value: a Fortran compile and a multi-step failure surfac
 for arithmetic a NumPy eigensolve does in microseconds. **Most demo benchmarks
 don't need it** — Profumo's three models take EWSB-scale Lagrangian inputs, have
 closed-form spectra, and feed a tree-level MadDM relic computation.
-`singlet_doublet` is nonetheless `spheno`-backed by default (its SARAH → SPheno
-path is verified end-to-end; commit `1fb8ad8`), with the analytic 3×3
-diagonalisation as an opt-in fast path; `two_hdm_a` and `dark_su3` declare
+`singlet_doublet` is *intended* to be `spheno`-backed (its SARAH → SPheno path
+is verified end-to-end; commit `1fb8ad8`), with the analytic 3×3 diagonalisation
+as a fast path — **but note the correction under Selection rule above: because
+the current spec carries no top-level `backends.spectrum`/`outputs` key, the
+dispatcher default actually resolves to `analytic` and the compiled binary is
+not run unless you add the key**; `two_hdm_a` and `dark_su3` declare
 `backends.spectrum: analytic` with `outputs: [ufo]` and route to
 `analytic_models.stub_unimplemented` (their SPheno paths are blocked on unrelated
 bugs — SARAH `RecursionLimit` for 2hdm_a; the missing `/dark-matter-constraints`
