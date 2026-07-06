@@ -38,7 +38,7 @@ backends:
 ```
 
 Then run `/spheno-build` as usual. The dispatcher resolution order is
-documented in `spheno-build/SKILL.md` § "Backend inventory":
+documented in `spheno-build/SKILL.md` § "Spectrum backends" (Selection rule):
 
 1. `spec['backends']['spectrum']` wins if set.
 2. Else `outputs` contains `spheno` → `spheno`.
