@@ -340,11 +340,25 @@ class TestBlindSpotSelfConsistent:
             f"Coupling at blind spot θ={theta_bs:.6f}: y_h={y_h:.2e}"
         )
 
-        # Verify the blind spot parameter itself is zero
+        # Verify the blind spot parameter itself is zero.
+        #
+        # bs = m_chi1 + m_D*sin(2theta) is a MASS-dimension quantity (GeV)
+        # formed by cancelling two O(m_D)=500 GeV terms. It is exactly the
+        # function brentq drove to zero, but brentq converges on the abscissa
+        # theta (to ~xtol=2e-12), NOT on the function value: the residual is
+        # therefore ~ |d(bs)/dtheta| * dtheta. The full derivative is
+        # d(m_chi1)/dtheta + 2*m_D*cos(2theta) ~ 842 (m_chi1 also varies
+        # with theta), so residual ~ 842 * 2e-12 ~ 1e-9 GeV (observed
+        # 3.2e-10). A 1e-10 ABSOLUTE tolerance demanded ~13 sig figs
+        # (2e-13 relative to the 500 GeV scale) — below both this brentq
+        # abscissa floor and the float64 cancellation floor eps*m_D ~ 1e-13.
+        # The invariant IS satisfied; use a tolerance scaled to the mass
+        # magnitude: resolve the O(m_D) cancellation to 1e-10 relative.
+        m_D = 500.0
         y1, y2 = y1_y2_from_y_theta(1.0, theta_bs)
-        masses, _ = diagonalize(150.0, 500.0, y1, y2)
-        bs = blind_spot_parameter(masses[0], 500.0, theta_bs)
-        assert abs(bs) < 1e-10, f"Blind spot parameter = {bs:.2e}"
+        masses, _ = diagonalize(150.0, m_D, y1, y2)
+        bs = blind_spot_parameter(masses[0], m_D, theta_bs)
+        assert abs(bs) < 1e-10 * m_D, f"Blind spot parameter = {bs:.2e}"
 
     def test_blind_spot_zeros_coupling_mS300_mD700(self):
         """Same check at a different point in parameter space."""
