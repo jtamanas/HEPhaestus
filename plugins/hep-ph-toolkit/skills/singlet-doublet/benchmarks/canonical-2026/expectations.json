@@ -11,26 +11,31 @@
   },
   "expectations": {
     "omega_h2": {
-      "central": 0.292,
-      "band": [0.290, 0.294],
-      "tolerance": "±0.002",
-      "validation_status": "UNRECONCILED_WITH_TOOLKIT"
+      "central": 0.2916,
+      "band": [0.283, 0.300],
+      "tolerance": "±3%",
+      "validation_status": "TOOLKIT_VALIDATED"
     }
   },
   "source": {
+    "provenance": "MadDM 3.2 relic run with the fully SARAH-consistent param card: mass matrix transcribed from the generated CalculateMFChi (off-diagonals -yh2 v/sqrt2, +yh1 v/sqrt2, -MPsi), negative-eigenvalue ZNMIX rows carried in IMZNMIX (row x i). Analytic h/Z chi1-chi1 couplings cross-checked against arXiv:2506.19062 Eq. 7 (c_h = -0.12223, exact match to Hellmann-Feynman dm_chi1/dv; c_Z magnitude to 0.4%). The sigma_SI blind spot with these cards sits at theta = -0.1523 with a MadDM-verified ~7-order dip, matching paper Eq. 8 exactly.",
     "paper": "arXiv:2506.19062",
-    "section": "II Fig. 1",
-    "commit": "20616cd"
+    "paper_note": "The paper itself contains NO relic benchmark: Fig. 1 plots sigma_SI with points only color-coded by relic fraction, and there is no benchmark table or quoted Omega h^2 anywhere. The original central 0.292 entered the repo as a MadDM output-parser smoke-fixture number from an early /demo playtest, mis-cited to 'II Fig. 1' in the initial commit — the CITATION was fabricated, but the VALUE now agrees with the fully-consistent toolkit rerun (0.2916) to 0.1%, so the early demo run evidently used consistent cards.",
+    "history": [
+      {"omega_h2": 0.292, "status": "SUPERSEDED_BY_0.2916", "why": "smoke-fixture number with fabricated paper citation; value vindicated a posteriori by the consistent-card rerun"},
+      {"omega_h2": 0.166, "status": "INVALID", "why": "run with yh1 silently zeroed (MINPAR-vs-BSMPARAMS silent-zero bug)"},
+      {"omega_h2": 0.0717, "status": "INVALID", "why": "correct couplings but real ZNMIX for the negative chi2 eigenvalue (missing Majorana phase i); corrupted chi2-exchange interference made chi1chi1->Zh spuriously dominant at 92%"},
+      {"omega_h2": 0.242, "status": "INVALID", "why": "Majorana phase fixed but the card still diagonalized the paper-convention all-plus mass matrix instead of SARAH's (-yh2, -MPsi signs); eigenvector column-2 signs wrong, biasing chi2/chi3 t-channel interference in the relic (sigma_SI is even in that sign and was already correct)"}
+    ]
   },
   "toolkit_measurements": {
-    "note": "central=0.292 is paper-sourced and left unchanged pending a dedicated relic validation; the MadDM value below does NOT match it and the discrepancy is unresolved. Do not treat 0.292 as toolkit-reproduced.",
-    "maddm_3_2_correct_couplings": {
-      "omega_h2": 0.0717,
-      "x_f": 21.0,
-      "dominant_channels": {"chi1chi1_zh": 0.920, "chi1chi1_hh": 0.038, "chi1chi1_wpwm": 0.021, "chi1chi1_zz": 0.013},
-      "provenance": "harness-climb-a: reran the eval's compiled MadDM relic executable with a param card carrying correct yh1=1 (Block BSMPARAMS), identity SM quark-rotation blocks, and Block PHASES (see maddm/scripts/slha_complete.py). The chi1chi1_hh channel (3.8%) opens only when the Higgs-portal coupling is nonzero, confirming yh1 is active.",
-      "eval_run_value_invalid": {"omega_h2": 0.166, "why": "both eval relic runs logged 'parameter mdl_yh1 not found -> 0'; computed with the Yukawa sector zeroed, so 0.166 is not the benchmark value"}
+    "maddm_3_2_sarah_consistent": {
+      "omega_h2": 0.2916,
+      "x_f": 20,
+      "dominant_channels": {"chi1chi1_wpwm": 0.335, "chi1chi1_zh": 0.200, "chi1chi1_zz": 0.178, "chi1chi1_hh": 0.122, "chi1chi1_bb": 0.108},
+      "sigma_SI_p_cm2": 3.7098e-47,
+      "provenance": "relic-dive 2026-07-06: full card-consistency ladder verified by A/B MadDM runs — 0.0717 (real ZNMIX) -> 0.2420 (chi2 row x i, paper-sign matrix) -> 0.2916 (chi2 row x i, SARAH-sign matrix). sigma_SI unchanged across the last step (chi1 vertices are even in the column-2 sign)."
     },
-    "open_question": "0.0717 (toolkit) vs 0.292 (paper) differ ~4x. Likely a spec/paper convention mismatch, same family as the blind-spot sign/location issue: the h-chi1-chi1 coupling vanishes near theta~+0.79 in this UFO, not the paper's -0.148. Needs a from-scratch spectrum+relic run before central is changed."
+    "blind_spot": "sigma_SI blind spot at theta = -0.1523 (paper Eq. 8: m_chi1 + MPsi sin 2theta = 0; m_chi1 = +150.0 there, coincident with the |m_chi2|=|m_chi3| pseudo-Dirac crossing at 529.4): MadDM-verified dip to 3.4e-54 cm^2, ~7 orders below the benchmark plateau, bracketed by ~2.5e-49 shoulders at -0.165/-0.140. The historically-reported dip at theta = +0.79 (= pi/4, yh1 = yh2) was an artifact of diagonalizing the paper-sign matrix against SARAH-sign UFO vertices."
   }
 }

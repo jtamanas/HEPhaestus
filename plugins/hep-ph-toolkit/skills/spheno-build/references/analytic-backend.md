@@ -24,6 +24,30 @@ Return-dict keys:
 | `minpar` | `list[tuple[int, float, str]]` | optional | If absent, `slha_writer` echoes `params` in insertion order. |
 | `problem` | `list[int]` | optional | Non-empty → recoverable `ANALYTIC_SPECTRUM_PROBLEM`. |
 
+**Majorana phase contract.** `Block MASS` carries `|m|`, so for every Majorana
+mixing matrix the module must emit rows satisfying `ZN·M·ZNᵀ = diag(+|m|)`: a
+row whose eigenvalue is **negative** must be carried in the `IM*` block (row
+× i) with the real-block row zero — exactly what SARAH's generated SPheno does
+(`CalculateMFChi`: `ZN(i1,:) = (0,1)*ZNa(i1,:)` for `Eig < 0`). Emitting `|m|`
+with a purely real matrix is internally inconsistent and silently corrupts
+every vertex linear in that row (at the singlet-doublet canonical point: relic
+0.0717 with a spurious 92% χ₁χ₁→Zh instead of the correct 0.2916 — found and
+fixed 2026-07-06).
+
+**Mass-matrix sign contract.** The matrix the module diagonalises must be
+SARAH's, not the paper's: SU(2)-epsilon contractions put relative minus signs
+on some entries (singlet-doublet: `−yh2·v/√2` and `−MPsi`, per the generated
+`CalculateMFChi`), and the UFO vertices were generated from the same
+Lagrangian. Diagonalising a differently-signed but "equivalent-looking" matrix
+produces eigenvector rows with wrong component signs — internally inconsistent
+cards whose symptoms at the singlet-doublet point were a spurious σ_SI blind
+spot at θ = ±π/4 instead of the true θ = −0.152 (paper Eq. 8) and a relic
+biased to 0.242 instead of 0.2916 even at θ = 0 (χ₂/χ₃ t-channel interference
+is odd in the column-2 sign; σ_SI is even in it and cannot catch this).
+Transcribe the matrix from the generated Fortran, never from the paper. See
+`analytic_models/singlet_doublet.py` for the reference implementation of both
+contracts.
+
 Raise `ValueError` for an invalid parameter range → recoverable
 `ANALYTIC_INVALID_PARAMS`. Raise `numpy.linalg.LinAlgError` for a
 diagonalisation failure → recoverable `ANALYTIC_SPECTRUM_PROBLEM`. Any other
