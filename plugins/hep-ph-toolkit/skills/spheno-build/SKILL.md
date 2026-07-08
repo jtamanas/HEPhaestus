@@ -146,6 +146,7 @@ is byte-identical across runs given identical inputs.
 | Clean `Block MASS` present | success | — |
 | `spheno_src_path` absent | `SPHENO_PATH_INVALID` | **fatal** |
 | SARAH output tree missing | `SPHENO_COMPILE_FAILED` (compile stage) | **fatal** |
+| Invocation path exceeds ~120-char Fortran argv limit and can't be shortened | `SPHENO_PATH_TOO_LONG` | **fatal** |
 
 Recoverable blockers let scans continue (`status=recoverable` + the
 `blocker_code` in `scan_index.csv`). Blockers are single-line JSON on **stderr**

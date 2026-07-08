@@ -46,6 +46,47 @@ class TestDefaultBackend:
         assert dispatcher_mod._resolve_backend_name(spec) == "analytic"
 
 
+class TestNoBackendsKeyWarning:
+    """WS-A follow-up: the silent analytic fallback must be loud on stderr
+    whenever resolution lands on the analytic default WITHOUT an explicit
+    spectrum choice -- whether 'backends' is absent, empty ({}), or present
+    but spectrum-less. It must stay silent when a backend was resolved
+    explicitly (backends.spectrum set, or "spheno" in outputs)."""
+
+    def test_warns_when_backends_key_absent(self, dispatcher_mod, capsys):
+        spec = {"outputs": ["ufo"]}  # no 'backends' key at all
+        assert dispatcher_mod._resolve_backend_name(spec) == "analytic"
+        err = capsys.readouterr().err
+        assert "no explicit spectrum-backend choice" in err
+        assert "ANALYTIC" in err
+        assert "compiled SPheno was NOT run" in err
+
+    def test_warns_when_backends_present_but_empty(self, dispatcher_mod, capsys):
+        spec = {"outputs": ["ufo"], "backends": {}}  # present but no spectrum choice
+        assert dispatcher_mod._resolve_backend_name(spec) == "analytic"
+        err = capsys.readouterr().err
+        assert "no explicit spectrum-backend choice" in err
+        assert "compiled SPheno was NOT run" in err
+
+    def test_warns_when_backends_spectrum_less(self, dispatcher_mod, capsys):
+        spec = {"outputs": ["ufo"], "backends": {"foo": "x"}}  # no 'spectrum' key
+        assert dispatcher_mod._resolve_backend_name(spec) == "analytic"
+        err = capsys.readouterr().err
+        assert "no explicit spectrum-backend choice" in err
+
+    def test_no_warning_when_backends_spectrum_explicit(self, dispatcher_mod, capsys):
+        spec = {"outputs": ["ufo"], "backends": {"spectrum": "analytic"}}
+        assert dispatcher_mod._resolve_backend_name(spec) == "analytic"
+        err = capsys.readouterr().err
+        assert err == ""
+
+    def test_no_warning_when_spheno_in_outputs(self, dispatcher_mod, capsys):
+        spec = {"outputs": ["ufo", "spheno"]}  # no 'backends' key, but resolves to spheno
+        assert dispatcher_mod._resolve_backend_name(spec) == "spheno"
+        err = capsys.readouterr().err
+        assert err == ""
+
+
 class TestAnalyticMissingModule:
     def test_unregistered_model_emits_ANALYTIC_MODULE_MISSING(self, dispatcher_mod, tmp_path, capsys):
         spec = {"outputs": ["ufo"], "backends": {"spectrum": "analytic"}}

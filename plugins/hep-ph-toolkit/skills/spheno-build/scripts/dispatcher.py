@@ -6,6 +6,11 @@ out_dir, config). Used by run_spheno.py (single-point) and scan.py (parameter
 scan). All classification is backend-scoped: SPHENO_* for spheno path,
 ANALYTIC_* for analytic path.
 
+If a spec has no 'backends' key at all (and outputs doesn't list 'spheno'),
+resolution silently falls back to the analytic backend -- the compiled SPheno
+binary is NOT run. That fallback prints a one-line warning to stderr so it
+isn't mistaken for a real SPheno run.
+
 Test-injection hook: dispatch() accepts an optional ``backend_factory`` kwarg.
 When provided, the caller controls backend instantiation (used by
 test_spheno_backend_unchanged.py and any future consumer that needs to inject
@@ -15,6 +20,7 @@ a fake backend). Default None preserves the production dynamic-load path.
 from __future__ import annotations
 
 import importlib.util as _ilu
+import sys
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -33,7 +39,23 @@ def _resolve_backend_name(spec: dict) -> str:
     if "spectrum" in backends:
         return backends["spectrum"]
     outputs = spec.get("outputs", [])
-    return "spheno" if "spheno" in outputs else "analytic"
+    if "spheno" in outputs:
+        return "spheno"
+    # Falling through to the analytic default. Warn whenever we land here
+    # WITHOUT an explicit spectrum selection -- i.e. the author made no
+    # spectrum choice, whether the 'backends' key is absent entirely, empty
+    # ({}), or present but spectrum-less ({"foo": "x"}). Only backends.spectrum
+    # (handled above) or "spheno" in outputs counts as an explicit choice, so
+    # if we reach this point the selection was never explicit. This is the
+    # silent path that made the compiled SPheno binary look like it ran when
+    # it never did (SPINFO said "hephaestus analytic" and output was still
+    # named SPheno.spc).
+    print(
+        "spheno-build: spec makes no explicit spectrum-backend choice; "
+        "defaulting to the ANALYTIC backend — compiled SPheno was NOT run",
+        file=sys.stderr,
+    )
+    return "analytic"
 
 
 def _load_backend(name: str):
