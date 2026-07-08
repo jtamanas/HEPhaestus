@@ -18,10 +18,26 @@ upgrade does not leave the config pointing at a stale tree.
 
 ## Disk footprint
 
-- **Tarball:** ~33 MB (`micromegas_6.0.5.tgz` from LAPTh; Zenodo mirror: ~33 MB for 6.1.15)
-- **Installed tree:** ~151 MB partial (build fails at CalcHEP `getFlags` on arm64; full build on x86_64 expected ~300–400 MB)
+- **Tarball:** ~33 MB (`micromegas_6.0.5.tgz` from LAPTh; Zenodo mirror: ~32.5 MB / 32588296 B for 6.1.15)
+- **Installed tree:** ~300–400 MB for a full build (x86_64 measured; the arm64 full build succeeds on 6.1.15, size expected comparable but not separately measured; see arm64 note below)
 - **Build-time peak (transient):** ~3 GB warned / ~5 GB max (includes CalcHEP compile)
-- **Measured 2026-04-25 on macOS arm64 (partial — arm64 known broken).** Source: run-20260425-dmc partial; `skill_env.yaml` `disk_min_gb: 3` / `disk_warn_gb: 5`.
+- **Sources:** `skill_env.yaml` `disk_min_gb: 3` / `disk_warn_gb: 5`.
+
+> **arm64 builds natively — no Rosetta.** The "build fails at CalcHEP `getFlags`
+> on arm64 / arm64 known broken" warning came from an early 6.0.5 partial
+> (run-20260425-dmc) and **did NOT reproduce on 6.1.15**: `make` returned 0,
+> `s_calchep` and all CalcHEP libs built, and the bundled `SingletDM` example ran
+> end-to-end (`darkOmega`/`nucleonAmplitudes`) — clang + Homebrew gfortran, native
+> arm64, with `SDKROOT=$(xcrun --show-sdk-path)`. The only patch still required is
+> the CalcHEP `make -j` archive race (see `## macOS build notes` /
+> `.NOTPARALLEL` on the `CalcHEP_src/c_source/*` Makefiles). Do not add a
+> Rosetta/x86-only requirement.
+
+> **LAPTh 6.0.5 URL 404s.** The pinned LAPTh archive URL for 6.0.5 currently
+> returns 404 (stale upstream). In network mode the installer already falls back
+> to the Zenodo mirror pinned at **6.1.15** (see `install` below); that is the
+> working source today. Zenodo throttles/aborts the 32.5 MB tarball mid-transfer —
+> download with a `curl -L -C -` resume loop until the size reaches 32588296 B.
 
 ---
 

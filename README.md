@@ -140,6 +140,14 @@ Longer-term: detector simulation (Delphes/MadAnalysis), jet algorithms
 (FastJet/RIVET), broader UFO-generation coverage (FeynRules / SARAH / LanHEP /
 hand-authored), and a Whizard driver for lepton-collider work.
 
+## Contributing
+
+Tests are collected from the repo root with `python -m pytest plugins/ eval/`.
+**Before adding or removing any `tests/__init__.py`, read
+[`docs/testing.md`](docs/testing.md)** — duplicate-basename test modules must not
+collapse to the same import package name, and several `__init__.py` markers are
+load-bearing for exactly that reason.
+
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).

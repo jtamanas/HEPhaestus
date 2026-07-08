@@ -226,6 +226,17 @@ Render `—` and explain the skip in one sentence.
 **Step 4b.5 — Do NOT** silently average, pick a winner, or paper over a flag.
 If you cannot adjudicate, surface both values and the disagreement to the user.
 
+**Step 4b.6 — Isoscalar sanity on σ_SI (model-file bug detector).** For
+Higgs-portal / scalar-exchange Majorana DM, σ_SI is nearly isoscalar: **p/n ≈
+0.97**. If *either* tool reports σ_SI(p)/σ_SI(n) far from 1 (a ~8× asymmetry) or
+opposite-sign proton/neutron amplitudes, that is the fingerprint of an up/down
+Yukawa **relative sign error** in the SARAH model export (suppresses σ_SI ~200×),
+**not** physics and **not** a genuine tool disagreement. Cross-tool *agreement* on
+a large asymmetry does not vindicate it — both tools inherit the same broken
+export. Flag it as a model bug, point the user at the SARAH quark-sector Yukawa
+signs (regenerate via `/sarah-build --force`), and do not report the suppressed
+σ_SI or an exclusion verdict built from it. See `/ddcalc` SE-DD-3.
+
 The MadDM side calls `parse_maddm_results.py` for deterministic JSON extraction;
 the micrOMEGAs side calls `extract_field`. The judgment (skip rules, threshold,
 render-vs-flag) remains the LLM's own.
@@ -414,6 +425,12 @@ failure modes that affect when you should trust its results.
 > report proxy values as native predictions; do not compute relic pulls
 > against Planck using proxy numbers; do not apply LZ-SD or PICO cuts to
 > proxy σ_SD; tag every affected table row with `[proxy]`.
+
+**Relic caveat for negative-Majorana-eigenvalue models.** Even off the proxy
+path, a SARAH-CalcHEP export reads real `ZNMIX` only (no `IMZNMIX`), so it drops
+the Majorana phase and returns an **invalid relic** for models with a negative
+fermion eigenvalue. Keep **MadDM as the relic authority**; use the micrOMEGAs
+cross-check for σ_SI/σ_SD only. See `/micromegas` SKILL.md #5.
 
 - CalcHEP path can silently mishandle non-standard Lorentz/color structures.
   Results for exotic mediators (higher-spin, colored DM, etc.) should be

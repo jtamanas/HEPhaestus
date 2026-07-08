@@ -7,6 +7,12 @@ These are spec/template-level traps, distinct from the wrapper-level
 infrastructure workarounds in [`sarah-workarounds.md`](sarah-workarounds.md).
 Cite the reference models when writing new specs.
 
+A one-character *sign* drift in a spec is the same silent class — it passes
+`CheckModel[]`, emits cleanly, and (because the golden suite never byte-compared
+`render(spec)` against the goldens) survived every test. See
+[`golden-test-conventions.md`](golden-test-conventions.md) for the byte/AST-compare
+golden convention that catches it.
+
 Six patterns follow. `/sarah-build`'s SKILL.md carries the one-line index; this
 file is the full reproduction and fix for each.
 

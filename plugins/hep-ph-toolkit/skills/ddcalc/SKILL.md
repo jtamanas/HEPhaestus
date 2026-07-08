@@ -192,6 +192,34 @@ the model Lagrangian.
 `/ddcalc run --sigma-json <path>`. Do not pass a SLHA file or raw Wilson
 coefficients.
 
+### SE-DD-3 — isoscalar p/n sanity check on σ_SI input (catch model-file bugs before the exclusion plot)
+
+**Symptom:** The `scattering/v1` input has `sigma_si_proton_cm2` and
+`sigma_si_neutron_cm2` differing by a large factor (~8×), or — from the upstream
+nucleon *amplitudes* — proton and neutron SI amplitudes of **opposite sign**. The
+exclusion verdict computed from it looks plausible but is wrong.
+
+**Root cause — this is a MODEL-FILE bug, not physics.** For Higgs-portal /
+scalar-exchange Majorana DM the only tree-level SI operator is scalar Higgs
+exchange, which couples nearly isoscalar: every quark scalar coupling shares one
+sign, so σ_SI(p) ≈ σ_SI(n) and **p/n ≈ 0.97** (micrOMEGAs' own default form
+factors give `f_N^p = 0.2837` vs `f_N^n = 0.2868`). A large asymmetry or an
+opposite-sign p/n amplitude is impossible for pure isoscalar Higgs exchange; it is
+the fingerprint of a broken model file. The canonical case: an up/down Yukawa
+**relative sign error** in the SARAH export made up-type couplings `+m_q/v` and
+down-type `−m_q/v`, degrading the coherent nucleon sum to a small
+isospin-violating residual — suppressing σ_SI **~200×** and faking p/n ≈ 8
+(MadDM) / opposite-sign −4 (micrOMEGAs). There is **no** physical destructive
+cancellation here (Majorana χ has no second tree SI operator to cancel against).
+
+**One-line check (run before drawing any exclusion contour):** for scalar/Higgs-
+portal Majorana DM, assert `0.9 ≲ sigma_si_neutron_cm2 / sigma_si_proton_cm2 ≲ 1.1`
+(isoscalar) and reject any input whose upstream proton/neutron SI amplitudes carry
+opposite signs. A failure means the upstream model file (SARAH quark-sector
+Yukawa signs) is wrong — fix the model and regenerate; do **not** feed the number
+to `run`/`exclude`. This is a sibling of the PR #1 SARAH quark-sector bug class
+(there: h-q vertices silently zeroed; here: up-vs-down Yukawa relative sign).
+
 ## Notes and linkage
 
 - `scripts/_parse_driver_stdout.py` is kept (not shed with the other regex
