@@ -42,7 +42,7 @@ _MODEL_OBS = [(m, o) for m in _MODELS for o in _OBSERVABLES]
 # Module-level cache: route each model once per session to avoid 8× re-routes.
 # We call conftest helpers directly (they are importable as module-level funcs).
 # ---------------------------------------------------------------------------
-from tests.integration.conftest import report_pair, load_expected, route_for  # noqa: E402
+from .conftest import report_pair, load_expected, route_for  # noqa: E402
 
 
 @functools.lru_cache(maxsize=None)
@@ -180,7 +180,7 @@ def test_dsu3_dark_color_wall_surfaces_in_disclosure_banner() -> None:
     GREEN against post-S0.5 fixture banner (iter-2 confirmed).
     Uses recompute_assertion_categories for DRY consistency (plan R7).
     """
-    from tests.integration.conftest import recompute_assertion_categories  # noqa: local import
+    from .conftest import recompute_assertion_categories  # noqa: local import
     default_report, _ = _get_reports("dark-su3")
 
     placements = default_report.get("placements", [])
@@ -410,7 +410,7 @@ def _snapshot_path(model_id: str, mode: str) -> pathlib.Path:
 
 def _recompute_snapshot(model_id: str, mode: str) -> dict:
     """Re-route model in given mode and apply Option B normalization."""
-    from tests.integration.conftest import route_for  # noqa: late import
+    from .conftest import route_for  # noqa: late import
     from model_router.types import MatrixAcknowledgementMissing
 
     strict = mode == "strict"
