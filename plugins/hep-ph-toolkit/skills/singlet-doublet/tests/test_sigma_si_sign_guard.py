@@ -36,7 +36,16 @@ _ROOT = _HERE.parents[4]  # tests → singlet-doublet → skills → hep-ph-tool
 
 _EXPECTATIONS = _SKILL / "benchmarks" / "canonical-2026" / "expectations.json"
 _ANCHOR = _ROOT / "eval" / "2506.19062_wimps_blind_spots" / "cross_sections" / "si_tree_level.py"
-_SPEC = _ROOT / "plugins" / "hep-ph-toolkit" / "skills" / "_shared" / "modelspec_v3" / "specs" / "singlet_doublet.yaml"
+
+# The up-Yukawa sign fix landed in THREE ModelSpec files; a revert of ANY of them
+# reintroduces the σ_SI sign bug, so the guard must cover all three (a
+# golden-validation blind spot: the golden test never byte-compares this sign).
+_MODELSPEC = _ROOT / "plugins" / "hep-ph-toolkit" / "skills" / "_shared" / "modelspec_v3"
+_SIGN_FIXED_SPECS = [
+    _MODELSPEC / "specs" / "singlet_doublet.yaml",
+    _MODELSPEC / "specs" / "dark_su3.yaml",
+    _MODELSPEC / "templates" / "sm.yaml",
+]
 
 # Canonical benchmark (MS=150, MPsi=500, yh1=1, yh2=0, θ=0), validated values.
 # m_χ = m_χ1 and the effective h-χ1-χ1 coupling are the anchor inputs (VERDICT header).
@@ -119,21 +128,23 @@ def test_recorded_sigma_si_matches_anchor():
     )
 
 
-# ── Assertion C (root-cause guard): ModelSpec renders the sign-matched up-Yukawa
-def test_modelspec_up_yukawa_has_leading_minus():
-    """The canonical ModelSpec must carry the up-Yukawa as '-Yu H.u.q' (leading
+# ── Assertion C (root-cause guard): every fixed ModelSpec renders the sign-matched up-Yukawa
+@pytest.mark.parametrize("spec_path", _SIGN_FIXED_SPECS, ids=lambda p: p.name)
+def test_modelspec_up_yukawa_has_leading_minus(spec_path):
+    """Each fixed ModelSpec must carry the up-Yukawa as '-Yu H.u.q' (leading
     minus), matching the down-type sign so the exported h-quark couplings are all
-    −m_q/v. Dropping the minus is the root cause of the σ_SI sign bug. This is the
-    byte-check the golden validation never made (T3 blind spot)."""
-    text = _SPEC.read_text()
+    −m_q/v. Dropping the minus is the root cause of the σ_SI sign bug. The fix
+    landed in three specs, so all three are guarded here — this is the byte-check
+    the golden validation never made (T3 blind spot)."""
+    text = spec_path.read_text()
     assert "-Yu H.u.q" in text, (
-        "singlet_doublet.yaml up-Yukawa term is not '-Yu H.u.q' — the leading "
-        "minus that keeps up/down Higgs–quark couplings same-sign is missing. "
-        "This collapses tree σ_SI ~200× and fakes isospin violation."
+        f"{spec_path.name} up-Yukawa term is not '-Yu H.u.q' — the leading "
+        f"minus that keeps up/down Higgs–quark couplings same-sign is missing. "
+        f"This collapses tree σ_SI ~200× and fakes isospin violation."
     )
     # And it must NOT carry the bugged unsigned form as an active term.
     assert "'Yu H.u.q'" not in text and '"Yu H.u.q"' not in text, (
-        "singlet_doublet.yaml still contains an unsigned 'Yu H.u.q' term."
+        f"{spec_path.name} still contains an unsigned 'Yu H.u.q' term."
     )
 
 
