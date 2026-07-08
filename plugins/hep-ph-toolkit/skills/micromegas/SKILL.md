@@ -242,6 +242,80 @@ after `calcSpectrum()` has been called. Do not call `vSigmaA(0.0)` directly in
 
 ---
 
+### 4. There is no UFO→CalcHEP importer — "Route A" does not exist; use SARAH `MakeCHep[]`
+
+**Symptom:** You reach for a UFO→CalcHEP conversion step (a `ufo_to_calchep`
+"Route A") and find no such tool. `newProject <X>` only unpacks a blank CalcHEP
+project template; there is no `ufo`/import binary anywhere in the micrOMEGAs or
+bundled-CalcHEP tree.
+
+**Cause:** micrOMEGAs 6.1.x and its bundled CalcHEP ship **no UFO importer**. The
+only supported way to get CalcHEP `.mdl` files for a SARAH model is to export them
+from SARAH directly. (`scripts/ufo_to_calchep.sh` / the `UFO_CONVERT_FAILED`
+blocker presuppose an importer that this distribution does not contain.)
+
+**Fix — Route B (the working route):** generate the CalcHEP model in the same
+SARAH session that produced the UFO:
+
+```wolfram
+Get["…/SARAH.m"]; Start["<ModelName>"]; MakeCHep[]
+```
+
+`MakeCHep[]` == SARAH's `WriteCalcHEP[]` (sharp edge #1). It writes
+`{prtcls1,vars1,func1,lgrng1}.mdl` under
+`Output/<ModelName>/EWSB/CHep/`; copy them into the micrOMEGAs project's
+`work/models/` and hand-author a minimal `extlib1.mdl` (SARAH does not emit that
+one). Because it comes from the same SARAH source as the UFO, the CalcHEP export
+is consistent with what MadDM consumes. Verified end-to-end for singlet-doublet
+(28.5 s export) on native arm64 micrOMEGAs 6.1.15.
+
+---
+
+### 5. SARAH-CalcHEP export is real-mixing-only (no `IMZNMIX`) — relic is invalid for negative Majorana eigenvalues
+
+**Symptom:** For a Majorana model with a **negative** fermion mass eigenvalue,
+micrOMEGAs' relic density lands in a known-invalid family — for singlet-doublet
+`canonical-2026` (MS=150, MPsi=500, yh1=1, yh2=0, θ=0): **Ωh² = 0.0742** with
+**χ1χ1→hZ spuriously dominant at 52.8%** (h h 30.4%, W⁺W⁻ 8.8%, ZZ 6.1%),
+versus the correct **MadDM Ωh² = 0.2916** whose decomposition has WW dominant
+(~33.5%) and Zh subdominant (~20%). The `hZ`-dominant signature is the tell.
+
+**Cause:** SARAH's CalcHEP export reads the **real `ZNMIX` only** (`func1.mdl`:
+`slhaVal("ZNMIX",…)`) — there is **no `IMZNMIX` slot at all**. The Majorana phase
+of the negative eigenvalue (carried as `IMZNMIX` in the SPheno/UFO convention
+MadDM uses) is silently dropped, so the real-orthogonal mixing corrupts the
+χ2/χ3 t-channel interference in χ1χ1→hZ. The physically-correct alternative —
+real eigenvectors with a **signed** negative mass — **SEGFAULTS** micrOMEGAs/
+CalcHEP (`RUN=139` = SIGSEGV in the width/phase-space machinery; the failing card
+differs from the working one by a single sign bit). You cannot represent the
+phase in this path either way.
+
+**Rule:** For models with complex/negative Majorana mixing, **MadDM (UFO path,
+complex `ZN`/`IMZNMIX`) is the relic authority**; micrOMEGAs-via-CalcHEP is a
+**DD / σ_SI / σ_SD cross-check tool only** and MUST NOT arbitrate Ωh² for such
+models. (σ_SI is unaffected when the DM candidate is the *positive* eigenvalue —
+its `IMZNMIX` row is identically zero, so its own couplings are phase-free.) This
+matches `/dark-matter-constraints`' MadDM-primary policy.
+
+---
+
+### 6. `CDM1` global comes back NULL for SARAH models — use `sortOddParticles(cdmName)`
+
+**Symptom:** Printing or passing the `CDM1` global segfaults
+(`nucleonAmplitudes(WIMP=CDM1)` → `pMass(NULL)` → `strcmp(NULL)`), even though the
+relic and spectrum ran fine.
+
+**Cause:** For a SARAH-generated CalcHEP model, micrOMEGAs' `CDM1` global is not
+populated (comes back NULL); the DM name is only available from
+`sortOddParticles(cdmName)`.
+
+**Fix:** Use the name filled by `sortOddParticles(cdmName)` (e.g. `~Chi1`) for the
+DM candidate everywhere the driver needs it — that is what `nucleonAmplitudes`
+must receive. The `Mcdm` mass macro is fine to use; only the `CDM1` name global is
+the trap. (See sharp edge #2 for the separate `Mcdm`-as-identifier hazard.)
+
+---
+
 ## Fixture and testing notes
 
 Unit tests are always-on. Integration tests require `HEPPH_RUN_NETWORK_TESTS=1`.
