@@ -13,18 +13,29 @@ lagrangian.hc:  { term: 'Yu H.u.q', ... }      # WRONG (was)
 lagrangian.hc:  { term: '-Yu H.u.q', ... }     # RIGHT (now)
 ```
 
-The renderer wraps every `hc` term as `LagHC = -( … )`
-(`_shared/modelspec_v3/render/lagrangian.py`), so a bare `Yu H.u.q` renders to
-an effective **+Yu** coupling — the **opposite sign** from the down-type
-`-Yd conj[H].d.q` (effective −Yd). Both up and down couplings should be
-−m_q/v.
+The SM Higgs couples to *every* quark with the **same** physical sign: mass and
+coupling both descend from one Yukawa term `L ⊃ −(Y_q/√2)(v+h) q̄q`, giving
+`g_hqq = −m_q/v` for up and down alike. The up- and down-type terms are written
+with different SU(2) doublet structure, though — down as `conj[H].d.q`, up as
+`H.u.q` — and that H-vs-`conj[H]` / doublet-ordering difference in the
+antisymmetric SU(2) contraction is exactly what the up-type's **explicit leading
+minus** compensates for. So the canonical, sign-matched form is `-Yu H.u.q`
+(leading minus present) alongside the down-type `Yd conj[H].d.q`. Dropping that
+leading minus makes the SARAH export emit up-type `+m_q/v` against down-type
+`−m_q/v` — a **relative** sign error between up and down. (Full derivation:
+`~/.claude/jobs/c703354a/tmp/sigma-si/adjudication/VERDICT.md`; the same contract
+is stated in `skills/spheno-build/references/analytic-backend.md` under
+"Quark-sector Higgs–Yukawa sign contract".)
 
-Physics impact: the wrong relative up/down sign flips the sign of the up-quark
-contribution to the spin-independent DM–nucleon amplitude. Because the proton
-amplitude is a sum over quark contributions, the flip causes a near-cancellation
-that **collapses tree-level σ_SI by ~200×** and manufactures a **fake isospin
-violation** (spurious f_p ≠ f_n). Full reasoning:
-`~/.claude/jobs/c703354a/tmp/sigma-si/adjudication/VERDICT.md`.
+Physics impact: with that relative sign, the coherent nucleon scalar sum
+`A_N ∝ Σ_q (g_hqq/m_q) m_N f_Tq` degrades into a `(f_Tu − f_Td − …)`
+near-cancellation. Tree-level σ_SI **collapses by ~200×** and the proton/neutron
+amplitudes split (opposite-sign p/n), manufacturing a **fake isospin violation**.
+For Majorana DM the only tree SI operator is scalar Higgs exchange, so there is
+no second amplitude this could legitimately cancel against — a large or
+opposite-sign p/n here is never physics, only this broken sign. The relic density
+is UNAFFECTED (the h–quark scalar vertices do not drive χ₁χ₁ annihilation), so a
+correct Ωh² does not catch it.
 
 Fixed specs:
 - `_shared/modelspec_v3/specs/singlet_doublet.yaml`
