@@ -379,6 +379,11 @@ PDG-code list size must equal mixing cardinality).
 - [`references/saxdynkin-investigation.md`](references/saxdynkin-investigation.md)
   — open-bug notes on non-deterministic `SAxDynkin`/`$Failed` leakage into
   emitted Fortran.
+- [`references/golden-test-conventions.md`](references/golden-test-conventions.md)
+  — why a golden test must byte/AST-compare rendered output against a stored
+  golden, not merely check that generation succeeded; a golden that isn't
+  compared verifies nothing about content (root-caused by the `singlet_doublet`
+  up-Yukawa sign bug surviving every suite in the repo).
 - [`references/MIGRATION-sigma-si-sign-fix.md`](references/MIGRATION-sigma-si-sign-fix.md)
   — up-Yukawa sign fix: users with a pre-fix `singlet_doublet`/`dark_su3` export
   must rebuild with `--force` (fixed a ~200× σ_SI suppression / fake isospin
