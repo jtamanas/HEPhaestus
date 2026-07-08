@@ -379,6 +379,10 @@ PDG-code list size must equal mixing cardinality).
 - [`references/saxdynkin-investigation.md`](references/saxdynkin-investigation.md)
   — open-bug notes on non-deterministic `SAxDynkin`/`$Failed` leakage into
   emitted Fortran.
+- [`references/MIGRATION-sigma-si-sign-fix.md`](references/MIGRATION-sigma-si-sign-fix.md)
+  — up-Yukawa sign fix: users with a pre-fix `singlet_doublet`/`dark_su3` export
+  must rebuild with `--force` (fixed a ~200× σ_SI suppression / fake isospin
+  violation).
 
 ## Scripts
 

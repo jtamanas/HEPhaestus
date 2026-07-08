@@ -282,6 +282,18 @@ results["sigmav_channels"]     = flat_channels  # legacy alias (raw %)
 four are required by `scattering/v1`; if any are missing the upstream MadDM run
 did not produce the canonical DD lines — fail loud.
 
+> **DD-only rerun staleness — always use FRESH output dirs.** MadDM
+> `direct_detection`-only reruns can serve a STALE/frozen SI value
+> (bit-identical `2.4258…E-31 GeV⁻²` regardless of the couplings in the param
+> card — same MD5 across genuinely different coupling points), because the
+> DD-assembly path does not always re-read the param card. Verify the SI value
+> *responds* to coupling changes: run into a fresh `output` dir each time
+> (`rmtree` first, as the template below does) and, when validating a fix,
+> confirm the SI number actually moved. Root-fixing the staleness is out of
+> scope; this fresh-dir discipline is the workaround. (The T2 σ_SI sign-fix
+> verification used separate `out-baseline`/`out-fixed` dirs for exactly this
+> reason.)
+
 ```python
 maddm_dd_results = dd_out_dir / "output" / "run_01" / "MadDM_results.txt"
 gamlike_dd_json  = dd_out_dir / "gamlike.json"
@@ -305,9 +317,16 @@ direct = gamlike_dd["direct"]
 # sufficient gate — patching yh1 alone leaves σ_SI at the floor because the
 # quark-vertex coupling is the dominant zero. Gate on the *value* instead.
 #
-# At this benchmark (θ=0, m_χ₁≈133 GeV, Higgs portal ON) the physical σ_SI is
-# O(1e-47 cm²). Anything ≲1e-55 cm² at a non-blind-spot point means the Higgs
-# channel is dead — STOP and inspect the param card, do not report the number.
+# At this benchmark (θ=0, m_χ₁≈133 GeV, Higgs portal ON) the physical σ_SI(p) is
+# O(1e-45 cm²) — tree level ~7.6e-45, MadDM-verified (see
+# benchmarks/canonical-2026/expectations.json). Anything ≲1e-55 cm² at a
+# non-blind-spot point means the Higgs channel is dead — STOP and inspect the
+# param card, do not report the number.
+# NOTE (up/down Higgs–Yukawa sign): an O(1e-47 cm²) reading with p/n ≈ 8 (or
+# opposite-sign p/n) is NOT the vector floor but the relative-sign artifact
+# between up-type (+m_q/v) and down-type (−m_q/v) h-quark couplings — a ~200x
+# suppression that fakes isospin violation. Fixed at the ModelSpec level
+# (−Yu H.u.q); if you see it, the UFO predates the fix. Gate p/n ∈ [0.9,1.1].
 VECTOR_FLOOR_CM2 = 1e-55
 si_p = direct.get("sigma_si_proton_cm2")
 if si_p is not None and abs(si_p) < VECTOR_FLOOR_CM2:

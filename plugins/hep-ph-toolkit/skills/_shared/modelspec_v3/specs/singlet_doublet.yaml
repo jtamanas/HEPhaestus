@@ -163,7 +163,7 @@ lagrangian:
   hc:
     - { term: 'Yd conj[H].d.q',       description: 'Down Yukawa' }
     - { term: 'Ye conj[H].e.LL',      description: 'Lepton Yukawa' }
-    - { term: 'Yu H.u.q',             description: 'Up Yukawa' }
+    - { term: '-Yu H.u.q',            description: 'Up Yukawa' }
     - { term: '1/2 MS FS.FS',         description: 'Singlet Majorana mass' }
     - { term: 'MPsi PsiDu.PsiDd',     description: 'Doublet Dirac mass' }
     - { term: 'yh1 conj[H].FS.PsiDu', description: 'Singlet-doublet-Higgs Yukawa (Y=+1/2)' }

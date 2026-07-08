@@ -127,7 +127,7 @@ lagrangian:
   hc:
     - { term: 'Yd conj[H].d.q',  description: 'Down Yukawa' }
     - { term: 'Ye conj[H].e.LL', description: 'Lepton Yukawa' }
-    - { term: 'Yu H.u.q',        description: 'Up Yukawa' }
+    - { term: '-Yu H.u.q',       description: 'Up Yukawa' }
     - { term: 'MpsiD psiDL.psiDR', description: 'Vectorlike dark fermion mass' }
   no_hc:
     - { term: '-mu2 conj[H].H',                     description: 'Higgs mass term' }
