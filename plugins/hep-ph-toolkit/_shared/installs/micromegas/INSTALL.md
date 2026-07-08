@@ -19,7 +19,7 @@ upgrade does not leave the config pointing at a stale tree.
 ## Disk footprint
 
 - **Tarball:** ~33 MB (`micromegas_6.0.5.tgz` from LAPTh; Zenodo mirror: ~32.5 MB / 32588296 B for 6.1.15)
-- **Installed tree:** ~300–400 MB for a full native build (both arm64 and x86_64; see arm64 note below)
+- **Installed tree:** ~300–400 MB for a full build (x86_64 measured; the arm64 full build succeeds on 6.1.15, size expected comparable but not separately measured; see arm64 note below)
 - **Build-time peak (transient):** ~3 GB warned / ~5 GB max (includes CalcHEP compile)
 - **Sources:** `skill_env.yaml` `disk_min_gb: 3` / `disk_warn_gb: 5`.
 

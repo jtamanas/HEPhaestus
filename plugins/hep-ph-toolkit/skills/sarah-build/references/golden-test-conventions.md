@@ -7,10 +7,10 @@ and faked isospin violation (opposite-sign proton/neutron amplitudes). It
 survived **every** suite in the repo. This file records why, and the
 convention that would have caught it.
 
-The fix landed with the σ_SI up/down-Yukawa sign-fix work (see the
-`MIGRATION-sigma-si-sign-fix.md` note in this `references/` dir, which lands with
-that change); the up-Yukawa sign drift is a sibling of the PR #1 SARAH
-quark-sector bug class.
+The up-Yukawa sign drift is a sibling of the PR #1 SARAH quark-sector bug class.
+The spec fix itself ships with the σ_SI sign-fix change (PR #5), which also adds a
+`MIGRATION-sigma-si-sign-fix.md` note to this `references/` dir — not present on
+this branch, so do not follow that filename as a link yet.
 
 ---
 

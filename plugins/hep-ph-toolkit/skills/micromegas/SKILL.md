@@ -163,8 +163,8 @@ continue. The CSV will be byte-identical across runs given the same inputs.
 | `DM_CANDIDATE_UNPHYSICAL` | fatal | Charged LSP |
 | `DM_CANDIDATE_COLOR_MISMATCH` | fatal | Colored LSP |
 | `MULTICOMPONENT_UNSUPPORTED` | fatal | Two stable DM candidates (v1) |
-| `UFO_CONVERT_FAILED` | fatal | CalcHEP converter error |
-| `CALCHEP_CONVERTER_VERSION_SKEW` | fatal | Cache/version mismatch |
+| `UFO_CONVERT_FAILED` | fatal | **Vestigial** — presupposes a UFO→CalcHEP importer that does not ship (sharp edge #4). Use the SARAH `MakeCHep[]` export instead. |
+| `CALCHEP_CONVERTER_VERSION_SKEW` | fatal | **Vestigial** — same dead UFO-importer path as `UFO_CONVERT_FAILED` (sharp edge #4). |
 | `MICROMEGAS_PROJECT_BUILD_FAILED` | fatal | `make main` non-zero |
 | `MICROMEGAS_RUNTIME_FAILURE` | recoverable | Binary crash on scan point |
 | `OMEGA_UNCONVERGED` | recoverable | NaN/negative Ωh² |
@@ -176,8 +176,11 @@ No `reference_only` state or analytic fallback — per manager rule.
 
 ## Data contracts
 
-**Input from `/sarah-build`:** UFO model at `$STATE_ROOT/models/<name>/sarah_output/UFO/<SarahName>/`.
-Cache key for CalcHEP conversion: `sha256(ufo_dir_tar) || micromegas_version || ufo_dialect`.
+**Input from `/sarah-build`:** the CalcHEP model files (`{prtcls1,vars1,func1,lgrng1}.mdl`)
+from the SARAH `MakeCHep[]` export (sharp edge #1/#4) — SARAH must have run
+`MakeCHep[]`/`WriteCalcHEP[]` alongside the UFO. (The `sha256(ufo_dir_tar) || … ||
+ufo_dialect` cache key documented here belonged to the vestigial UFO→CalcHEP
+converter path — see sharp edge #4; there is no UFO importer to cache.)
 
 **Input from `/spheno-build`:** SLHA at `config.models[<name>].latest_slha`.
 
@@ -269,6 +272,11 @@ one). Because it comes from the same SARAH source as the UFO, the CalcHEP export
 is consistent with what MadDM consumes. Verified end-to-end for singlet-doublet
 (28.5 s export) on native arm64 micrOMEGAs 6.1.15.
 
+**Version note:** this skill's pin is 6.0.5, but neither bundled CalcHEP ships a
+UFO importer — the fact is version-independent (6.0.5 and 6.1.x alike). The
+network-fallback install actually lands **6.1.15** (Zenodo mirror; see the install
+reference), which is the build these gotchas were reproduced on.
+
 ---
 
 ### 5. SARAH-CalcHEP export is real-mixing-only (no `IMZNMIX`) — relic is invalid for negative Majorana eigenvalues
@@ -355,7 +363,7 @@ The golden fixture uses the micrOMEGAs-shipped `Singlet_DM/` benchmark project
 | `scripts/main_c_template.py` | Deterministic C driver generator (SEED=42) |
 | `scripts/parse_slha_mass_block.py` | SLHA Block MASS reader |
 | `scripts/resolve_dm_candidate.py` | DM candidate resolver (spec>CLI>auto-detect) |
-| `scripts/ufo_to_calchep.sh` | UFO → CalcHEP project conversion (flock cache) |
+| `scripts/ufo_to_calchep.sh` | **Vestigial** — no UFO→CalcHEP importer ships (sharp edge #4); the working route is SARAH `MakeCHep[]`. Do not rely on this. |
 | `scripts/build_project.sh` | `make main` + log tail |
 | `scripts/regenerate_fixture.py` | Regenerate golden from shipped Singlet_DM benchmark |
 
