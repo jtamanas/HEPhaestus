@@ -302,8 +302,12 @@ ZNMIX row instead of IMZNMIX — corrupting χ₂-exchange interference and maki
 χ₁χ₁→Zh spuriously 92% of σv), and `0.242` (phase fixed, but the card
 diagonalized the paper's all-plus mass matrix instead of SARAH's `−yh2`/`−MPsi`
 signed one, leaving the eigenvector column-2 signs wrong). σ_SI is even in
-that column-2 sign and reads `3.71e-47 cm²` for all but the zeroed-Yukawa
-card — a correct σ_SI does NOT validate the relic. If a relic run lands near
+that column-2 sign and is the same across all three of these relic-card
+variants (~`7.6e-45 cm²` tree-level proton once the up-Yukawa sign is
+correct — see the σ_SI expectation and note below) — a correct σ_SI does NOT
+validate the relic, and a valid relic does NOT validate σ_SI. (The earlier
+`3.71e-47 cm²` reading was itself a *separate* sign-bug artifact — the up vs
+down Higgs–Yukawa relative-sign error, now fixed; see the σ_SI note.) If a relic run lands near
 0.07 with Zh ≳ 90%, check IMZNMIX; if it lands near 0.24, check the mass
 matrix signs against the generated `CalculateMFChi` (see the `spheno-build`
 analytic writer, which implements both). The demo does not sit on the blind
@@ -445,6 +449,16 @@ block degrades to `"singlet-doublet interview was cancelled."`.
 Acceptance values for the canonical benchmark live in
 `benchmarks/canonical-2026/expectations.json`. Plans MUST cite that fixture in
 any gate that compares against `omega_h2`.
+
+Tree-level direct detection also has recorded acceptance values there:
+`sigma_SI_p_cm2 = 7.6e-45 cm²` (central; band `[5e-45, 1.1e-44]`, ±40%
+form-factor), `sigma_SI_n_cm2 ≈ 7.8e-45`, and the isoscalar ratio
+`p_over_n ≈ 0.987`. These are `TOOLKIT_VALIDATED` by MadDM 3.2 (7.6847e-45),
+the analytic anchor `si_tree_level.py` (7.636e-45), and micrOMEGAs (5.46e-45),
+all with the up-Yukawa Higgs–quark sign corrected (branch `sigma-si-sign-fix`).
+A large or opposite-sign `p/n` (e.g. the old 8.17) is a model bug, not physics —
+Majorana pure-Higgs SI is isoscalar. The regression guard is
+`tests/test_sigma_si_sign_guard.py`.
 
 ## Error paths
 

@@ -48,6 +48,28 @@ Transcribe the matrix from the generated Fortran, never from the paper. See
 `analytic_models/singlet_doublet.py` for the reference implementation of both
 contracts.
 
+**Quark-sector Higgs–Yukawa sign contract.** The SM Higgs couples to *every*
+quark with the **same sign**: mass and coupling both descend from the one Yukawa
+term `L ⊃ −(Y_q/√2)(v+h) q̄q`, giving `g_hqq = −m_q/v` for all flavors (up and
+down alike). The ModelSpec Lagrangian must therefore carry the up-Yukawa in its
+canonical sign-matched form `−Yu H.u.q` (leading minus present), matching the
+down-type `Yd conj[H].d.q`; dropping that leading minus makes the SARAH export
+emit up-type `+m_q/v` against down-type `−m_q/v`. With that *relative* sign the
+coherent nucleon scalar sum `A_N ∝ Σ_q (g_hqq/m_q) m_N f_Tq` degrades to a
+`(f_Tu − f_Td − …)` near-cancellation: tree σ_SI collapses by ~200× and the
+proton/neutron amplitudes split (opposite-sign p/n), faking isospin violation.
+Because for Majorana DM the only tree SI operator is scalar Higgs exchange,
+there is no second amplitude to cancel against — a large or opposite-sign p/n is
+never physics, it is this broken model. The relic is UNAFFECTED (the h-quark
+scalar vertices enter χ₁χ₁ annihilation squared / not at all), so a correct
+Ωh² does not catch it. *Violation example* (singlet-doublet canonical point,
+θ=0): σ_SI(p) 3.71e-47 cm² with p/n 8.17 instead of the correct ~7.6e-45 cm²
+with p/n 0.97. Fixed at the ModelSpec level (`−Yu H.u.q` restored in three
+specs); see the σ_SI adjudication VERDICT §2/§6/§7 and
+`skills/singlet-doublet/benchmarks/canonical-2026/expectations.json`. This is a
+sibling of the PR #1 SARAH-quark-sector bug class (wrong *sign* here, silent
+*zero* there).
+
 Raise `ValueError` for an invalid parameter range → recoverable
 `ANALYTIC_INVALID_PARAMS`. Raise `numpy.linalg.LinAlgError` for a
 diagonalisation failure → recoverable `ANALYTIC_SPECTRUM_PROBLEM`. Any other

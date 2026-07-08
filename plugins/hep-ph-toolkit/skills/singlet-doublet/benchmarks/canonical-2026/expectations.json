@@ -15,6 +15,34 @@
       "band": [0.283, 0.300],
       "tolerance": "±3%",
       "validation_status": "TOOLKIT_VALIDATED"
+    },
+    "sigma_SI_p_cm2": {
+      "central": 7.6e-45,
+      "band": [5.0e-45, 1.1e-44],
+      "tolerance": "±40% (form-factor / running-mass)",
+      "validation_status": "TOOLKIT_VALIDATED",
+      "measured_maddm": 7.6847e-45,
+      "cross_check_analytic": 7.636e-45,
+      "cross_check_micromegas": 5.46e-45,
+      "note": "Tree-level Higgs-portal SI (proton). Central per VERDICT §6; MadDM 3.2 (SARAH-UFO, up-Yukawa sign fixed) measures 7.6847e-45, analytic anchor si_tree_level.py gives 7.636e-45 (matches paper Eq. 5), micrOMEGAs with the same sign fix gives 5.46e-45. See VERDICT §6."
+    },
+    "sigma_SI_n_cm2": {
+      "central": 7.8e-45,
+      "band": [5.0e-45, 1.1e-44],
+      "tolerance": "±40% (form-factor / running-mass)",
+      "validation_status": "TOOLKIT_VALIDATED",
+      "measured_maddm": 7.7835e-45,
+      "cross_check_analytic": 7.844e-45,
+      "note": "Tree-level Higgs-portal SI (neutron)."
+    },
+    "p_over_n": {
+      "central": 0.987,
+      "band": [0.9, 1.1],
+      "tolerance": "isoscalar (Majorana pure-Higgs SI ⇒ p/n ≈ 1)",
+      "validation_status": "TOOLKIT_VALIDATED",
+      "measured_maddm": 0.9873,
+      "cross_check_analytic": 0.974,
+      "note": "For Majorana DM the only tree SI operator is scalar Higgs exchange, which is nearly isoscalar. Any large or opposite-sign p/n asymmetry is a model bug (the up/down Higgs–Yukawa relative-sign artifact), NOT physics. See VERDICT §1, §2."
     }
   },
   "source": {
@@ -25,7 +53,9 @@
       {"omega_h2": 0.292, "status": "SUPERSEDED_BY_0.2916", "why": "smoke-fixture number with fabricated paper citation; value vindicated a posteriori by the consistent-card rerun"},
       {"omega_h2": 0.166, "status": "INVALID", "why": "run with yh1 silently zeroed (MINPAR-vs-BSMPARAMS silent-zero bug)"},
       {"omega_h2": 0.0717, "status": "INVALID", "why": "correct couplings but real ZNMIX for the negative chi2 eigenvalue (missing Majorana phase i); corrupted chi2-exchange interference made chi1chi1->Zh spuriously dominant at 92%"},
-      {"omega_h2": 0.242, "status": "INVALID", "why": "Majorana phase fixed but the card still diagonalized the paper-convention all-plus mass matrix instead of SARAH's (-yh2, -MPsi signs); eigenvector column-2 signs wrong, biasing chi2/chi3 t-channel interference in the relic (sigma_SI is even in that sign and was already correct)"}
+      {"omega_h2": 0.242, "status": "INVALID", "why": "Majorana phase fixed but the card still diagonalized the paper-convention all-plus mass matrix instead of SARAH's (-yh2, -MPsi signs); eigenvector column-2 signs wrong, biasing chi2/chi3 t-channel interference in the relic (sigma_SI is even in that sign and was already correct)"},
+      {"sigma_SI_p_cm2": 3.7098e-47, "status": "INVALID", "why": "up/down Higgs-Yukawa RELATIVE SIGN bug: the leading minus was dropped on the up-Yukawa term ('Yu H.u.q' instead of '-Yu H.u.q') in three ModelSpec YAMLs, so the SARAH-exported h-quark couplings had up-type +m_q/v vs down-type -m_q/v. This drove a ~207x destructive up-vs-down cancellation in the nucleon scalar amplitude, suppressing tree sigma_SI and faking isospin violation. Root-caused and fixed on branch sigma-si-sign-fix (commits 4254e25 + 2562b12); MadDM-remeasured to 7.6847e-45 (see expectations.sigma_SI_p_cm2). See VERDICT sections 2, 6, 7."},
+      {"p_over_n": 8.172, "status": "INVALID", "why": "unphysical proton/neutron SI ratio, same up/down Higgs-Yukawa sign-bug artifact (MadDM baseline; micrOMEGAs saw the sibling -4 opposite-sign version). Majorana pure-Higgs SI is isoscalar (true p/n = 0.987), so any large/opposite-sign asymmetry is the fingerprint of a broken model, not new physics. See VERDICT section 2."}
     ]
   },
   "toolkit_measurements": {
@@ -33,8 +63,10 @@
       "omega_h2": 0.2916,
       "x_f": 20,
       "dominant_channels": {"chi1chi1_wpwm": 0.335, "chi1chi1_zh": 0.200, "chi1chi1_zz": 0.178, "chi1chi1_hh": 0.122, "chi1chi1_bb": 0.108},
-      "sigma_SI_p_cm2": 3.7098e-47,
-      "provenance": "relic-dive 2026-07-06: full card-consistency ladder verified by A/B MadDM runs — 0.0717 (real ZNMIX) -> 0.2420 (chi2 row x i, paper-sign matrix) -> 0.2916 (chi2 row x i, SARAH-sign matrix). sigma_SI unchanged across the last step (chi1 vertices are even in the column-2 sign)."
+      "sigma_SI_p_cm2": 7.6847e-45,
+      "sigma_SI_n_cm2": 7.7835e-45,
+      "p_over_n": 0.9873,
+      "provenance": "relic: relic-dive 2026-07-06 card-consistency ladder — 0.0717 (real ZNMIX) -> 0.2420 (chi2 row x i, paper-sign matrix) -> 0.2916 (chi2 row x i, SARAH-sign matrix). sigma_SI: T2 MadDM 3.2 verification 2026-07-08 on the up-Yukawa-sign-fixed UFO (branch sigma-si-sign-fix), FRESH output dirs, validated param card — sigmaN_SI_p=7.6847e-45, sigmaN_SI_n=7.7835e-45, p/n=0.9873; a 207x rise over the sign-bug baseline (3.7098e-47, p/n 8.172; both demoted to source.history). Omega h^2 byte-identical (0.29159355) across the sign flip since h-quark scalar vertices do not enter chi1chi1 annihilation. Independent cross-checks: analytic anchor si_tree_level.py 7.636e-45(p)/7.844e-45(n) p/n=0.974; micrOMEGAs (same fix) 5.46e-45(p)."
     },
     "blind_spot": "sigma_SI blind spot at theta = -0.1523 (paper Eq. 8: m_chi1 + MPsi sin 2theta = 0; m_chi1 = +150.0 there, coincident with the |m_chi2|=|m_chi3| pseudo-Dirac crossing at 529.4): MadDM-verified dip to 3.4e-54 cm^2, ~7 orders below the benchmark plateau, bracketed by ~2.5e-49 shoulders at -0.165/-0.140. The historically-reported dip at theta = +0.79 (= pi/4, yh1 = yh2) was an artifact of diagonalizing the paper-sign matrix against SARAH-sign UFO vertices."
   }
