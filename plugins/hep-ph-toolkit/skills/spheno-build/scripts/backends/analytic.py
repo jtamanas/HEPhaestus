@@ -176,6 +176,11 @@ class AnalyticBackend:
                     mixing_serializable[block_name] = entries
             summary["mixing"] = mixing_serializable
 
+        # Record which backend produced this summary so downstream readers
+        # (and humans skimming summary.json) don't have to infer it from
+        # SPINFO text or file layout.
+        summary.setdefault("backend", "analytic")
+
         (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))
 
         # Also emit a separate diagnostics.json next to summary.json so

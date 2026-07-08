@@ -60,6 +60,52 @@ def _emit_blocker(code: str, mode: str, message: str, context: dict | None = Non
     print(json.dumps(blocker), file=sys.stderr)
 
 
+# SPheno's Fortran command-line parsing reads its positional args into a
+# fixed-length buffer and silently truncates anything past ~120 chars —
+# the truncated path then doesn't exist, so SPheno reports a plain
+# file-not-found with no hint that the *original* path was fine. We keep
+# one char of margin below the observed 120-char cutoff.
+SPHENO_ARG_LIMIT = 119
+
+
+class PathTooLongError(RuntimeError):
+    """Raised when no argv-safe (<= SPHENO_ARG_LIMIT chars) path can be built."""
+
+
+def safe_spheno_arg(path: Path, cwd: Path, limit: int = SPHENO_ARG_LIMIT) -> str:
+    """Return the string to hand SPheno for ``path``, guaranteed <= ``limit`` chars.
+
+    Preflight for the truncation bug described above: never let a
+    silently-truncated path reach SPheno's argv.
+
+      1. If the absolute path already fits, use it unchanged (today's
+         behaviour, untouched for the common case).
+      2. Else, since we always invoke SPheno with ``cwd=out_dir``, try the
+         path relative to ``cwd`` — SPheno resolves relative argv entries
+         against its own cwd, so this is a transparent fix requiring no
+         file copying, and it is short regardless of how long ``out_dir``
+         itself is (LesHouches.in / SPheno.spc are direct children of it).
+      3. Else (path isn't under cwd, or even the relative form is too
+         long) raise ``PathTooLongError`` — callers must turn this into a
+         loud fatal blocker rather than invoke SPheno with a truncated arg.
+    """
+    abs_path = Path(path).resolve()
+    candidate = str(abs_path)
+    if len(candidate) <= limit:
+        return candidate
+
+    try:
+        rel = abs_path.relative_to(Path(cwd).resolve())
+    except ValueError:
+        rel = None
+    if rel is not None and len(str(rel)) <= limit:
+        return str(rel)
+
+    raise PathTooLongError(
+        f"Cannot construct a SPheno-safe argv path (<= {limit} chars) for {abs_path}"
+    )
+
+
 def run(
     model_name: str,
     input_card: Path,
@@ -123,7 +169,26 @@ def run(
     abs_lh_in = Path(lh_in).resolve()
     abs_spc_out = Path(spc_out).resolve()
     abs_out_dir = Path(out_dir).resolve()
-    cmd = [str(spheno_bin), str(abs_lh_in), str(abs_spc_out)]
+
+    # Preflight: SPheno truncates argv positional paths past ~120 chars
+    # (fixed-length Fortran buffer), which is a *silent* file-not-found —
+    # SPheno just reports it can't find the (truncated) path. Prefer the
+    # cwd-relative form when the absolute path is too long; only if even
+    # that doesn't fit do we fail loudly instead of invoking SPheno with
+    # a path that would be silently mangled.
+    try:
+        lh_arg = safe_spheno_arg(abs_lh_in, abs_out_dir)
+        spc_arg = safe_spheno_arg(abs_spc_out, abs_out_dir)
+    except PathTooLongError as e:
+        msg = (
+            "SPheno invocation path exceeds the ~120-char Fortran argv limit "
+            f"and could not be shortened: {e}"
+        )
+        ctx = {"lh_in": str(abs_lh_in), "spc_out": str(abs_spc_out), "limit": SPHENO_ARG_LIMIT}
+        _emit_blocker("SPHENO_PATH_TOO_LONG", "fatal", msg, ctx)
+        return {"status": "fatal", "blocker_code": "SPHENO_PATH_TOO_LONG", "slha_path": None, "summary": None}
+
+    cmd = [str(spheno_bin), lh_arg, spc_arg]
     try:
         proc = subprocess.run(
             cmd,
@@ -157,7 +222,11 @@ def run(
         _emit_blocker("SPHENO_NO_OUTPUT", "fatal", msg)
         return {"status": "fatal", "blocker_code": "SPHENO_NO_OUTPUT", "slha_path": str(spc_out), "summary": None}
 
-    # Write summary.json
+    # Write summary.json. Record the backend name so downstream readers
+    # (and humans skimming summary.json) don't have to infer it from
+    # SPINFO text or file layout -- this run always used the compiled
+    # SPheno binary.
+    summary.setdefault("backend", "spheno")
     summary_path = out_dir / "summary.json"
     summary_path.write_text(json.dumps(summary, indent=2))
 
