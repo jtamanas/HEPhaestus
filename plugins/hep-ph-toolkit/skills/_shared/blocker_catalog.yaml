@@ -319,6 +319,28 @@ blockers:
     workaround_codes: [LOOP_DD_TOOLING_PLANNED]
     owned_by: this-ws
 
+  MADDM_STALE_DD_RESULT:
+    class: missing-tool-feature
+    fix_locality: upstream
+    severity: recoverable
+    emitted_by: [maddm]
+    triggered_by_axes: [A6]
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "singlet-doublet/references/maddm-invocation.md (frozen-SI DD-rerun staleness); maddm/SKILL.md"
+    description: >-
+      MadDM direct_detection-only reruns can serve a STALE spin-independent
+      cross-section: the DD-assembly path does not always re-read the param
+      card, and a reused output dir keeps previously compiled DD matrix
+      elements, so sigma_SI stays bit-identical across genuinely different
+      coupling points (canonical frozen sentinel 2.4258097266847696e-31
+      GeV^-2). Emitted by maddm/scripts/staleness.py::detect_stale_dd when the
+      parsed sigma_SI matches the sentinel or is bit-identical to a prior run
+      whose param-card fingerprint differs. The runner recomputes into a fresh
+      output dir by default (generate_maddm_script fresh=True); this blocker is
+      the loud complement when upstream still serves a stale value.
+    workaround_codes: []
+    owned_by: this-ws
+
   DM_PROVENANCE_INCONSISTENT_WITH_A2:
     class: spec-authoring-gap
     severity: fatal

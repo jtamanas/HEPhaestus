@@ -161,6 +161,156 @@ def get_model(name: str) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
+# latest_slha provenance guard (§ frozen-SI staleness handoff, scope note #2)
+# ---------------------------------------------------------------------------
+#
+# ``latest_slha`` is a *convenience cache*: a single per-model pointer to the
+# most recently written SLHA spectrum. It is easy to trust stale: a later run
+# for a DIFFERENT parameter point overwrites the pointer, and nothing records
+# which point the file on disk actually corresponds to. ``register_latest_slha``
+# records provenance alongside the pointer (a content fingerprint plus the
+# point/params it was produced for); ``read_latest_slha`` warns loudly when the
+# on-disk file drifted from the fingerprint or the caller asked for a different
+# point than the cache holds. Both are additive and backward compatible:
+# configs written before this guard simply lack the ``latest_slha_provenance``
+# sibling, and reads then warn that provenance is unavailable rather than crash.
+
+
+def _sha256_file(path: Path) -> str | None:
+    """Return the hex sha256 of *path*, or None if it cannot be read."""
+    import hashlib
+
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
+
+
+def register_latest_slha(
+    model: str,
+    slha_path: str,
+    point: str | None = None,
+    params: dict | None = None,
+    **extra_fields: object,
+) -> None:
+    """Record ``latest_slha`` for *model* together with provenance.
+
+    Writes ``models[model]["latest_slha"]`` (the convenience-cache pointer) and
+    a sibling ``models[model]["latest_slha_provenance"]`` dict:
+
+        {"path", "sha256", "point", "params", "recorded_at"}
+
+    ``point`` is any caller-side identifier for the parameter point/benchmark
+    (e.g. a label); ``params`` is the key physics inputs (e.g. MS/MPsi/theta).
+    Either may be None when the caller does not have it — provenance still
+    records the content fingerprint so a later drift is detectable. Additional
+    ``extra_fields`` are upserted onto the model entry unchanged (e.g.
+    ``spheno_bin``, ``latest_run``), so this can replace a plain
+    ``register_model(..., latest_slha=...)`` call.
+    """
+    resolved = str(Path(slha_path).resolve())
+    provenance = {
+        "path": resolved,
+        "sha256": _sha256_file(Path(resolved)),
+        "point": point,
+        "params": params,
+        "recorded_at": _utc_now(),
+    }
+    register_model(
+        model,
+        latest_slha=resolved,
+        latest_slha_provenance=provenance,
+        **extra_fields,
+    )
+
+
+def read_latest_slha(
+    model: str,
+    expected_point: str | None = None,
+    expected_params: dict | None = None,
+) -> str | None:
+    """Return ``latest_slha`` for *model*, warning loudly on any mismatch.
+
+    ``latest_slha`` is a convenience cache. This reader returns the recorded
+    path (or None if unset) and prints a loud ``WARNING:`` line to stderr when:
+
+      * the model or pointer is absent;
+      * no provenance was recorded (pre-guard config — cannot verify);
+      * the on-disk file's sha256 no longer matches the recorded fingerprint
+        (the card changed under the pointer);
+      * ``expected_point`` / ``expected_params`` are given and differ from the
+        point/params the cache was recorded for (the pointer holds a different
+        parameter point than the caller wants).
+
+    Warnings never raise — the path is still returned so callers can decide.
+    Every warning names the model and the recorded point so mismatches are
+    self-describing.
+    """
+    def _warn(msg: str) -> None:
+        print(f"WARNING: latest_slha[{model!r}] convenience cache: {msg}",
+              file=sys.stderr)
+
+    entry = get_model(model)
+    if not entry:
+        _warn("model not found in config; no cached SLHA.")
+        return None
+
+    path = entry.get("latest_slha")
+    if not path:
+        _warn("no latest_slha pointer recorded for this model.")
+        return None
+
+    prov = entry.get("latest_slha_provenance")
+    if not prov:
+        _warn(
+            "no provenance recorded (config predates the provenance guard); "
+            "cannot verify the file matches any parameter point. Re-run the "
+            "spectrum writer to record provenance."
+        )
+        return path
+
+    recorded_point = prov.get("point")
+    recorded_sha = prov.get("sha256")
+
+    # Content drift: did the file change under the pointer?
+    if recorded_sha is not None:
+        current_sha = _sha256_file(Path(path))
+        if current_sha is None:
+            _warn(
+                f"recorded for point {recorded_point!r} but the file at {path} "
+                "cannot be read now (moved/deleted)."
+            )
+        elif current_sha != recorded_sha:
+            _warn(
+                f"the SLHA file at {path} changed under the pointer "
+                f"(sha256 {current_sha[:12]}... != recorded {recorded_sha[:12]}"
+                f"...); it may no longer correspond to point "
+                f"{recorded_point!r}."
+            )
+
+    # Point / params mismatch: is the cache the point the caller wants?
+    if expected_point is not None and expected_point != recorded_point:
+        _warn(
+            f"caller requested point {expected_point!r} but the cache holds "
+            f"point {recorded_point!r}; use a per-point SLHA path, not the "
+            "convenience cache."
+        )
+    if expected_params is not None:
+        recorded_params = prov.get("params")
+        if recorded_params != expected_params:
+            _warn(
+                f"caller requested params {expected_params!r} but the cache "
+                f"holds params {recorded_params!r} (point {recorded_point!r})."
+            )
+
+    return path
+
+
+# ---------------------------------------------------------------------------
 # CLI shim (minimal; mainly for quick smoke tests)
 # ---------------------------------------------------------------------------
 

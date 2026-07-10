@@ -264,13 +264,26 @@ def main() -> None:
     if result.get("status") in ("ok", "recoverable"):
         slha_path = result.get("slha_path")
         now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        config_helpers.register_model(
-            args.model_name,
-            spheno_bin=spheno_bin_path,
-            latest_slha=slha_path,
-            latest_run=run_tag,
-            spheno_built_at=now,
-        )
+        if slha_path:
+            # Record latest_slha WITH provenance (content fingerprint + the
+            # parameter point/params it was produced for) so a later stale
+            # pointer is detectable. latest_slha is only a convenience cache.
+            config_helpers.register_latest_slha(
+                args.model_name,
+                slha_path,
+                point=run_tag,
+                params=params_for_dispatch,
+                spheno_bin=spheno_bin_path,
+                latest_run=run_tag,
+                spheno_built_at=now,
+            )
+        else:
+            config_helpers.register_model(
+                args.model_name,
+                spheno_bin=spheno_bin_path,
+                latest_run=run_tag,
+                spheno_built_at=now,
+            )
 
 
 if __name__ == "__main__":
