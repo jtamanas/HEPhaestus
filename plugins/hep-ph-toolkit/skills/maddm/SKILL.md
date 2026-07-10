@@ -232,6 +232,21 @@ diagnostics when `/gamlike` is unavailable, the agent-driven prose extraction
 (field-by-field line patterns + the `gamlike/v1` DD JSON shape) is in
 [`references/reading-output.md`](references/reading-output.md).
 
+The router-canonical output field names this skill produces (kept inline here so
+the `/dark-matter-constraints` router-field contract resolves them against the
+producer SKILL.md; full extraction detail lives in `references/reading-output.md`):
+
+- **Ωh²** — line matching `Omegah2 = <value>` (MadDM 3.2+) or `Omega h^2 = <value>`
+  (legacy). Router-canonical field name: `Omegah2`.
+- **Spin-independent proton cross-section** — from `SigmaN_SI_p = [<sigma>, <lim>]`
+  (cm²). Router-canonical field name: `sigma_si_proton`.
+- **Spin-dependent proton cross-section** — from `SigmaN_SD_p = [<sigma>, <lim>]`
+  (cm²). Router-canonical field name: `sigma_sd_proton`.
+- **Total annihilation cross-section** — line matching `sigmav_xf = <value>`
+  (cm³/s) in the Relic Density section. (Earlier MadDM 3.2 outputs labeled this
+  `sigmav_total`; treat the two as aliases — the `sigmav_total` canonical rename
+  is still pending in the router contract.)
+
 ### Cross-Skill Dependencies
 
 - **param_card manipulation**: Use `madgraph/scripts/card_io.py` — the SLHA parser is shared, not duplicated.
