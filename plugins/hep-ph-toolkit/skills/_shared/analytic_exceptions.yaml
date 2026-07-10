@@ -57,7 +57,7 @@ proxy_runs:
   - id: micromegas-singlet-doublet-proxy-001
     kind: proxy_run
     model: singlet-doublet
-    status: active
+    status: retired
     proxy_model: SingletDM
     signals_recorded: [PROXY_NO_CALCHEP_FROM_SARAH]
     placements:
@@ -70,5 +70,13 @@ proxy_runs:
       report proxy values as native predictions; do not compute relic pulls
       against Planck using proxy numbers; do not apply LZ-SD or PICO cuts to
       proxy σ_SD; tag every affected table row with `[proxy]`.
-    deprecated_in: null
-    retired_in: null
+    deprecated_in: proxy-retire
+    retired_in: proxy-retire
+    retirement_rationale: >
+      Retired 2026-07-10. The proxy-run pattern is obsolete: SARAH's MakeCHep[]
+      now produces a native CalcHEP export, so micrOMEGAs no longer runs on the
+      SingletDM proxy and PROXY_NO_CALCHEP_FROM_SARAH no longer fires. The native
+      route's actual limitation (no IMZNMIX slot -> Majorana phases dropped ->
+      invalid singlet-doublet relic) fits no existing registry kind and is
+      documented as prose caveats in the micromegas and dark-matter-constraints
+      SKILL.md files; MadDM remains the relic authority.
