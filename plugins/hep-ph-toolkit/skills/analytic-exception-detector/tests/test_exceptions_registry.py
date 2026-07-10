@@ -1,7 +1,7 @@
 """test_exceptions_registry.py — unit tests for the registry loader (S2).
 
 Tests:
-  test_loader_parses_seed         — seed registry has ≥1 active analytic + ≥1 proxy_run
+  test_loader_parses_seed         — seed registry has ≥1 active analytic + ≥1 proxy_run entry of any status
   test_by_id_lookup               — by_id('dsu3-002').banner contains REGRESSION-ANCHOR ONLY
   test_by_model_lookup            — by_model('dark-su3') returns dsu3-002 entry
   test_by_kind_filter             — by_kind('analytic') ≥1; by_kind('proxy_run') ≥1
@@ -47,13 +47,16 @@ ExceptionRegistryMalformed = _mod.ExceptionRegistryMalformed
 
 
 def test_loader_parses_seed():
-    """Seed registry must have ≥1 active analytic and ≥1 active proxy_run entry."""
+    """Seed registry must have ≥1 active analytic + ≥1 proxy_run entry of any status."""
     rv = load_exceptions(_REGISTRY_PATH)
     active = list(rv.all_active())
     analytic_active = [e for e in active if e.kind == "analytic"]
-    proxy_active = [e for e in active if e.kind == "proxy_run"]
     assert len(analytic_active) >= 1, "Expected ≥1 active analytic entry in seed registry"
-    assert len(proxy_active) >= 1, "Expected ≥1 active proxy_run entry in seed registry"
+    # proxy_runs may legitimately ALL be retired (PR proxy-retire retired the last
+    # active one), so check presence status-agnostically via by_kind (ignores status),
+    # not active status.
+    proxy_entries = rv.by_kind("proxy_run")
+    assert len(proxy_entries) >= 1, "Expected ≥1 proxy_run entry (any status) in seed registry"
 
     # dsu3-002 should be accessible
     entry = rv.by_id("dsu3-002")
