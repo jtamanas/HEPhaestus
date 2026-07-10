@@ -36,7 +36,7 @@ time_overrides:
   dd: {cold: [1.0, 2.0]}
 ```
 
-## Constraints
+## Constraints and time estimates
 
 Prereq chains and time ranges resolve from
 `plugins/hep-ph-toolkit/skills/_shared/constraints.yaml` (model
