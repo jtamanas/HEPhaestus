@@ -154,6 +154,37 @@ unless the caller clears the directory first. Before Phase 1, do
 `shutil.rmtree(out_dir, ignore_errors=True)` (or equivalent). Applies to
 every `generate_maddm_script` caller, not just the split-for-overlay path.
 
+### Frozen-SI DD-rerun staleness — recompute fresh, then gate on the value
+
+MadDM `direct_detection`-only reruns can serve a **stale / frozen** σ_SI: the
+DD-assembly path does not always re-read the param card, and a reused `output`
+dir keeps the previously compiled DD matrix elements, so σ_SI stays
+**bit-identical across genuinely different coupling points** — the canonical
+symptom is a σ_SI frozen at the sentinel `2.4258097266847696E-31 GeV⁻²`
+regardless of the Higgs-portal coupling. This is an upstream MadDM
+DD-assembly bug, not a param-card content problem (contrast the zeroed-Higgs
+gotcha below, which *is* a card problem).
+
+Two defenses, both live in the `maddm` skill:
+
+1. **Fresh recompute by default (prevention).**
+   `scripts/maddm_run.py::generate_maddm_script` now clears the output dir
+   (`prepare_output_dir(out_dir, fresh=True)`, a `shutil.rmtree`) before
+   emitting the session script, so every run recompiles from the current param
+   card. Pass `fresh=False` only when you deliberately want to reuse an
+   existing dir and accept the staleness risk.
+
+2. **Loud staleness guard (detection).**
+   `scripts/staleness.py::detect_stale_dd(si_value, previous_si=…,
+   previous_params_hash=…, current_params_hash=…)` flags staleness when the
+   parsed σ_SI equals the frozen sentinel, or is bit-identical to a prior run
+   whose param-card fingerprint differs. When stale it returns (and
+   `check_and_emit` prints on stderr) the recoverable blocker
+   **`MADDM_STALE_DD_RESULT`** (registered in
+   `_shared/blocker_catalog.yaml`), whose `user_instruction` points back to the
+   fresh-output-dir workaround. Always confirm σ_SI *responds* to coupling
+   changes before trusting it.
+
 ### SARAH/SPheno SLHA silently zeroes the DD Higgs channel
 
 When the UFO comes from SARAH and the SLHA from SPheno, the SPheno spectrum
@@ -187,6 +218,7 @@ the warning while σ_SI stays on the floor. See
 | `references/scanning.md` | Parameter scans and experimental limit comparison |
 | `references/reading-output.md` | Diagnostics-only manual parse of `MadDM_results.txt` (prefer `/gamlike`) |
 | `scripts/maddm_run.py` | MadDM session script generator (`generate_maddm_script`) |
+| `scripts/staleness.py` | Frozen-SI DD-rerun staleness detector (`detect_stale_dd`, `MADDM_STALE_DD_RESULT`) |
 | `scripts/scan_grid.py` | Grid generation and batch orchestration |
 | `scripts/limits.py` | Experimental exclusion curve loading and comparison |
 | `assets/limit_data/README.md` | Pointers to public experimental limit data |
@@ -199,6 +231,21 @@ a `gamlike/v1` JSON document covering every section MadDM 3.2 writes. For
 diagnostics when `/gamlike` is unavailable, the agent-driven prose extraction
 (field-by-field line patterns + the `gamlike/v1` DD JSON shape) is in
 [`references/reading-output.md`](references/reading-output.md).
+
+The router-canonical output field names this skill produces (kept inline here so
+the `/dark-matter-constraints` router-field contract resolves them against the
+producer SKILL.md; full extraction detail lives in `references/reading-output.md`):
+
+- **Ωh²** — line matching `Omegah2 = <value>` (MadDM 3.2+) or `Omega h^2 = <value>`
+  (legacy). Router-canonical field name: `Omegah2`.
+- **Spin-independent proton cross-section** — from `SigmaN_SI_p = [<sigma>, <lim>]`
+  (cm²). Router-canonical field name: `sigma_si_proton`.
+- **Spin-dependent proton cross-section** — from `SigmaN_SD_p = [<sigma>, <lim>]`
+  (cm²). Router-canonical field name: `sigma_sd_proton`.
+- **Total annihilation cross-section** — line matching `sigmav_xf = <value>`
+  (cm³/s) in the Relic Density section. (Earlier MadDM 3.2 outputs labeled this
+  `sigmav_total`; treat the two as aliases — the `sigmav_total` canonical rename
+  is still pending in the router contract.)
 
 ### Cross-Skill Dependencies
 

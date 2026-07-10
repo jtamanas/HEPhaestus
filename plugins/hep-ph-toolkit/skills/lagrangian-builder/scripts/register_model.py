@@ -46,6 +46,7 @@ def main() -> None:
     parser.add_argument("--spec", required=True, help="Absolute path to spec YAML.")
     parser.add_argument("--ufo", required=True, help="Absolute path to UFO directory.")
     parser.add_argument("--latest-slha", default=None, help="Path to latest SPheno.spc.")
+    parser.add_argument("--point", default=None, help="Parameter-point/benchmark label the latest_slha corresponds to (provenance).")
     parser.add_argument("--spheno-bin", default=None, help="Path to compiled SPheno binary.")
     parser.add_argument("--sarah-built-at", default=None, help="UTC ISO 8601 SARAH build timestamp.")
     parser.add_argument("--spheno-built-at", default=None, help="UTC ISO 8601 SPheno build timestamp.")
@@ -66,8 +67,6 @@ def main() -> None:
         "spec": str(Path(args.spec).resolve()),
         "ufo": str(Path(args.ufo).resolve()),
     }
-    if args.latest_slha is not None:
-        fields["latest_slha"] = str(Path(args.latest_slha).resolve())
     if args.spheno_bin is not None:
         fields["spheno_bin"] = str(Path(args.spheno_bin).resolve())
     if args.sarah_built_at is not None:
@@ -75,7 +74,18 @@ def main() -> None:
     if args.spheno_built_at is not None:
         fields["spheno_built_at"] = args.spheno_built_at
 
-    config_helpers.register_model(args.name, **fields)
+    if args.latest_slha is not None:
+        # Record latest_slha WITH provenance (content fingerprint + point) so a
+        # later stale pointer is detectable. latest_slha is only a convenience
+        # cache. Other fields are upserted in the same write.
+        config_helpers.register_latest_slha(
+            args.name,
+            args.latest_slha,
+            point=args.point,
+            **fields,
+        )
+    else:
+        config_helpers.register_model(args.name, **fields)
     print(f"Registered model {args.name!r} in config.")
 
 
