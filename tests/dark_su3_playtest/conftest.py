@@ -187,11 +187,12 @@ def _is_check_prereqs_execution(cmd: str) -> bool:
 
     Execution evidence, not co-occurrence: after the ``check_prereqs``/
     ``check_prereqs.py`` script token, *within the same shell segment*
-    (i.e. before any ``|``, ``;``, ``&``), there must be a ``--model`` or
-    ``--config`` flag (either ``--flag value`` or ``--flag=value`` spelling)
-    AND the ``darksu3`` model reference. This accepts live-LLM presentation
-    variance (flag order, ``=`` form, ``python``/``python3``/direct
-    invocation) while rejecting mere mentions of the script:
+    (i.e. before any ``|``, ``;``, ``&``, or newline), there must be a
+    ``--model`` or ``--config`` flag (either ``--flag value`` or
+    ``--flag=value`` spelling) AND the ``darksu3`` model reference. This
+    accepts live-LLM presentation variance (flag order, ``=`` form,
+    ``python``/``python3``/direct invocation) while rejecting mere mentions
+    of the script:
 
       grep darksu3 check_prereqs.py          -> no flags after the token: NO
       cat check_prereqs.py   # darksu3        -> no flags after the token: NO
@@ -199,12 +200,16 @@ def _is_check_prereqs_execution(cmd: str) -> bool:
                                               -> flags in a different segment: NO
       python check_prereqs.py --model othermodel --config c.json
                                               -> no darksu3 in the args: NO
+      cat <<EOF ... check_prereqs.py ...\\n--model darksu3\\nEOF
+                                              -> flags on another line: NO
     """
     m = re.search(r"\bcheck_prereqs(?:\.py)?\b", cmd)
     if not m:
         return False
-    # Arguments to the script live in the same shell segment only.
-    segment = re.split(r"[|;&]", cmd[m.end():])[0]
+    # Arguments to the script live in the same shell segment only. Newline is
+    # a segment boundary too: a multi-line command or heredoc that merely
+    # CONTAINS the invocation text on another line is not execution evidence.
+    segment = re.split(r"[|;&\n]", cmd[m.end():])[0]
     if not re.search(r"--(?:model|config)\b", segment):
         return False
     return "darksu3" in segment

@@ -236,6 +236,14 @@ def test_crosscheck_matcher_robust_but_not_vacuous(text, should_match):
         ("cat check_prereqs.py && echo --model darksu3", False),  # flags in another segment
         ("echo darksu3 && cat check_prereqs.py", False),
         ("ls scripts/ | grep check_prereqs && echo darksu3 --model", False),
+        # round-2 LOW: multi-line/heredoc CONTAINMENT of the invocation text is
+        # not execution evidence — newline is a segment boundary
+        (
+            "cat > notes.md <<EOF\nTo check prereqs run check_prereqs.py\n"
+            "--model darksu3 --config c.json\nEOF",
+            False,
+        ),
+        ("echo check_prereqs.py\necho --model darksu3", False),
     ],
 )
 def test_check_prereqs_matcher_robust_but_not_vacuous(cmd, should_pass):

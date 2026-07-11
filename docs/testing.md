@@ -132,10 +132,12 @@ non-vacuous (they still fail when the behavior is genuinely absent): the
 rather than exact `--model`/`--config` flag spelling; the
 `CROSSCHECK_DISAGREEMENT` blocker check matches the structured token with
 tolerance only for casing and a single space/`_`/`-` internal separator —
-prose narration ("cross-check disagreement"), punctuation-separated, or negated
-mentions never match, and the check_prereqs matcher requires execution shape
-(flags after the script token in the same shell segment), not a mere mention
-of the script. The `extract_field` schema-version and
+prose narration ("cross-check disagreement") and punctuation-separated or
+negated *prose* mentions fail (a verbatim negated structured token, e.g. "no
+CROSSCHECK_DISAGREEMENT was raised", would still match — an accepted inherent
+limit of token matching), and the check_prereqs matcher requires execution
+shape (flags after the script token in the same shell segment, where `|`, `;`,
+`&`, and newline all end a segment), not a mere mention of the script. The `extract_field` schema-version and
 `sigma_v_zero` checks deliberately still require the *guarded* extractor —
 reading the JSON via `jq`/`Read` bypasses the schema-drift guard and is treated
 as a genuine gap, not a flake. Deterministic coverage of all of this lives in
