@@ -60,26 +60,16 @@ def _state_root() -> Path:
 
 # ── DDCalc data-dir symlink fixer ─────────────────────────────────────────────
 
-def _ensure_ddcalc_data_symlinks(ddcalc_path: str) -> None:
+def _find_compile_data_dir(ddcalc_path: str) -> Path | None:
     """
-    DDCalc 2.2.0 compiles DDInput.f90 with a hardcoded DATA_DIR pointing to the
-    build-time temp directory (e.g. /private/var/folders/.../tmp.XXXX/src/data/).
-    Experiments with external data files (LZ, DARWIN, etc.) will fail to load if
-    that path no longer exists — which is always the case after the build temp dir
-    is cleaned up.
-
-    This function:
-    1. Reads libDDCalc.a strings to find the compile-time data path.
-    2. Creates the directory tree at that path (if needed).
-    3. Symlinks each experiment data subdirectory from ddcalc_path into the
-       compile-time path.
-
-    Called once per run; the stat() checks are fast (no-op on re-runs).
+    Return DDCalc's compile-time DATA_DIR as baked into libDDCalc.a, or None
+    if the library is missing / unreadable / carries no recognizable baked
+    path (e.g. a Linux build compiled with a stable, still-valid DATA_DIR).
     """
     import re
     lib_path = Path(ddcalc_path) / "lib" / "libDDCalc.a"
     if not lib_path.exists():
-        return
+        return None
 
     try:
         result = subprocess.run(
@@ -87,26 +77,102 @@ def _ensure_ddcalc_data_symlinks(ddcalc_path: str) -> None:
             capture_output=True, text=True, timeout=10,
         )
         if result.returncode != 0:
-            return
+            return None
     except Exception:
-        return
+        return None
 
     # Find the compile-time data directory: a line ending in /data/ or /data
-    compile_data_dir: str | None = None
     pattern = re.compile(r"^(/[^ \t\n]+/src/data/?)\s*$")
     for line in result.stdout.splitlines():
         m = pattern.match(line.strip())
         if m:
-            compile_data_dir = m.group(1).rstrip("/")
-            break
+            return Path(m.group(1).rstrip("/"))
+    return None
 
-    if not compile_data_dir:
+
+def _verify_sd_data_dirs(ddcalc_path: str) -> str | None:
+    """
+    Loud runtime guard against the silent dead-SD failure class.
+
+    DDCalc zeroes the spin-dependent form factor when DATA_DIR/SDFF/ does not
+    resolve (DDNuclear.f90:542-544) — the resulting lnL is *finite* and equal
+    to background-only, so it slips past the driver's non-finite checks and
+    every SD verdict silently degrades to "no signal". This check runs after
+    _ensure_ddcalc_data_symlinks and returns an error message (for a
+    DDCALC_DRIVER_FAILED blocker) if the SD tables still do not resolve to
+    readable, non-empty directories; None if everything is healthy.
+    """
+    baked = _find_compile_data_dir(ddcalc_path)
+    if baked is None:
+        # No baked tmp path in the lib: DATA_DIR is assumed stable/correct
+        # (nothing we can verify without knowing where it points).
+        return None
+
+    for name in ("SDFF", "Wbar"):
+        target = baked / name
+        try:
+            if not target.is_dir():  # follows symlinks; False if broken/missing
+                return (
+                    f"DDCalc data dir {target} does not resolve; the "
+                    f"spin-dependent form factors cannot load and every SD "
+                    f"rate would silently be zero. Expected a symlink to "
+                    f"{Path(ddcalc_path) / name} (created by "
+                    f"_ensure_ddcalc_data_symlinks); check that the DDCalc "
+                    f"install at {ddcalc_path} still contains {name}/."
+                )
+            if not any(target.iterdir()):
+                return (
+                    f"DDCalc data dir {target} resolves but is empty; "
+                    f"spin-dependent form factors cannot load (SD rates "
+                    f"would silently be zero)."
+                )
+        except OSError as e:
+            return f"DDCalc data dir {target} is unreadable: {e}"
+    return None
+
+
+def _ensure_ddcalc_data_symlinks(ddcalc_path: str) -> None:
+    """
+    DDCalc 2.2.0 compiles DDInput.f90 with a hardcoded DATA_DIR pointing to the
+    build-time temp directory (e.g. /private/var/folders/.../tmp.XXXX/src/data/).
+    Everything that DDCalc loads from a file — experiment data (LZ, DARWIN, ...)
+    AND the nuclear structure-function tables (SDFF/, Wbar/) — is opened as
+    ``DATA_DIR/<subdir>/<file>`` (see DDInput.f90:261-265, DDNuclear.f90:509-551).
+    If that path no longer exists (always the case after the build temp dir is
+    cleaned up) the OPEN fails silently and the table is left as all-zeros.
+
+    Consequences:
+    - Missing experiment dirs => that experiment's init fails loudly.
+    - Missing SDFF/ (and Wbar/) => LoadSDFFFile sets the spin-dependent form
+      factor WTilde(9,...) to zero (DDNuclear.f90:542-544), so **every**
+      spin-dependent rate silently collapses to zero.  Spin-independent rates
+      are unaffected because the Helm form factor is computed analytically
+      (CalcF2, no file).  This is exactly the "dead SD channel" bug: SI works,
+      SD produces zero signal in every experiment.
+
+    This function:
+    1. Reads libDDCalc.a strings to find the compile-time data path.
+    2. Creates the directory tree at that path (if needed).
+    3. Symlinks each experiment data subdirectory AND each nuclear-data
+       subdirectory (SDFF, Wbar) from ddcalc_path into the compile-time path.
+
+    Called once per run; the stat() checks are fast (no-op on re-runs).
+    A silently-unhealed SDFF/ is *not* left to chance: cmd_run calls
+    _verify_sd_data_dirs afterwards and errors out loudly if the SD tables do
+    not resolve (a zeroed SD form factor yields a finite lnL equal to
+    background, which would otherwise slip past every non-finite guard).
+    """
+    compile_data_path = _find_compile_data_dir(ddcalc_path)
+    if compile_data_path is None:
         return  # no compile-time path found (Linux build or path already correct)
 
-    compile_data_path = Path(compile_data_dir)
     ddcalc = Path(ddcalc_path)
 
-    # Find experiment subdirs in the install tree (any subdir that contains energies.dat):
+    # Find data subdirs in the install tree that DDCalc opens at runtime:
+    #   * experiment dirs — any subdir that contains energies.dat
+    #   * nuclear structure-function tables — SDFF/ and Wbar/ (no energies.dat,
+    #     so they must be named explicitly).  SDFF/ is what makes the SD channel
+    #     live; omitting it silently zeroes every spin-dependent rate.
     try:
         exp_dirs = [
             d for d in ddcalc.iterdir()
@@ -115,26 +181,35 @@ def _ensure_ddcalc_data_symlinks(ddcalc_path: str) -> None:
     except Exception:
         return
 
-    if not exp_dirs:
+    nuclear_dirs = [
+        ddcalc / name for name in ("SDFF", "Wbar")
+        if (ddcalc / name).is_dir()
+    ]
+    data_dirs = exp_dirs + nuclear_dirs
+
+    if not data_dirs:
         return
 
     # Check if all symlinks already exist and are valid:
     if all(
         (compile_data_path / d.name).is_symlink()
         and (compile_data_path / d.name).exists()
-        for d in exp_dirs
+        for d in data_dirs
     ):
         return  # already set up
 
-    # Create directory and symlinks:
+    # Create directory and symlinks (replacing broken symlinks, e.g. after the
+    # install tree moved — a broken link is is_symlink()=True/exists()=False):
     try:
         compile_data_path.mkdir(parents=True, exist_ok=True)
-        for d in exp_dirs:
+        for d in data_dirs:
             link = compile_data_path / d.name
+            if link.is_symlink() and not link.exists():
+                link.unlink(missing_ok=True)
             if not link.exists() and not link.is_symlink():
                 link.symlink_to(d.resolve())
     except Exception:
-        pass  # best-effort; if it fails, LZ init will report the error anyway
+        pass  # best-effort; cmd_run's _verify_sd_data_dirs guard reports loudly
 
 
 # ── Driver compilation + caching ───────────────────────────────────────────────
@@ -250,6 +325,15 @@ def cmd_run(args) -> int:
     #     disappears after the build temp tree is removed).
     _ensure_ddcalc_data_symlinks(ddcalc_path)
 
+    # 5a'. Loud guard: if the spin-dependent form-factor tables still do not
+    #      resolve, DDCalc would silently zero every SD rate (finite lnL ==
+    #      background — invisible to the driver's non-finite checks). Refuse
+    #      to run rather than emit silently SD-blind verdicts.
+    sd_data_err = _verify_sd_data_dirs(ddcalc_path)
+    if sd_data_err is not None:
+        _blocker("DDCALC_DRIVER_FAILED", sd_data_err, {"ddcalc_path": ddcalc_path})
+        return 1
+
     # 5b. Ensure driver
     try:
         driver_bin = _ensure_driver(ddcalc_path)
@@ -295,6 +379,38 @@ def cmd_run(args) -> int:
     except ValueError as e:
         _blocker("DDCALC_DRIVER_FAILED", f"Driver output parse error: {e}")
         return 1
+
+    # 8b. Wrapper-level sanity for the silent dead-SD failure class: a nonzero
+    #     sigma_SD that leaves EVERY SD-sensitive experiment at exactly p==1.0
+    #     is the signature of zeroed SD form factors (not of a weak signal).
+    #     Threshold 1e-45 cm^2: above it LZ's SD response is large enough that
+    #     the driver's %.6e-printed p must differ from 1.0 (measured: sd_n=
+    #     1e-40 => p~1e-201; scaling the lnL shift linearly in sigma puts the
+    #     printed-1.0 boundary near ~1e-47), so no false positives for
+    #     legitimately tiny SD inputs. Warning only (stderr), never fatal.
+    sd_inputs = [
+        sigma_doc.get("sigma_sd_proton_cm2") or 0.0,
+        sigma_doc.get("sigma_sd_neutron_cm2") or 0.0,
+    ]
+    if max(sd_inputs) >= 1e-45:
+        sd_sensitive = ("XENON1T_2018", "LUX_2016", "PandaX_2017",
+                        "PICO_60_2019", "LZ_2022")
+        pvals = [
+            driver_result["experiments"][name]["p_value"]
+            for name in sd_sensitive
+            if name in driver_result["experiments"]
+        ]
+        if pvals and all(p == 1.0 for p in pvals):
+            print(
+                "WARNING: sigma_SD is nonzero "
+                f"(sd_p={sd_inputs[0]:.3g}, sd_n={sd_inputs[1]:.3g} cm^2) but "
+                "every SD-sensitive experiment returned p_value == 1.0 exactly. "
+                "This is the signature of the dead-SD-channel failure mode "
+                "(unresolvable DATA_DIR/SDFF => DDCalc silently zeroes the SD "
+                "form factor; see run_ddcalc._verify_sd_data_dirs). "
+                "SD-driven verdicts in this output are NOT trustworthy.",
+                file=sys.stderr,
+            )
 
     # 9. Determine overall verdict
     any_excluded = any(
