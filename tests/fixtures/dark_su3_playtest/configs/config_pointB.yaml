@@ -9,6 +9,6 @@ models:
     latest_slha: null
     spec_yaml: "tests/fixtures/dark_su3_playtest/specs/spec_pointB.yaml"
 
-maddm_path: "/usr/local/bin/maddm-launcher"
-micromegas_path: "/usr/local/lib/micromegas"
-drake_path: "/usr/local/lib/drake"
+maddm_path: "tests/fixtures/dark_su3_playtest/stubs/maddm-launcher"
+micromegas_path: "tests/fixtures/dark_su3_playtest/stubs/micromegas-lib"
+drake_path: "tests/fixtures/dark_su3_playtest/stubs/drake-lib"

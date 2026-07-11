@@ -323,3 +323,139 @@ def test_check_prereqs_structural_outputs(tmp_path):
     codes = [b["code"] for b in result2["blockers"]]
     assert "MADDM_MISSING" in codes, codes
     assert "MICROMEGAS_MISSING" in codes, codes
+
+
+# ---------------------------------------------------------------------------
+# Conditional config-key gating (manifest `condition` field)
+# ---------------------------------------------------------------------------
+#
+# The canonical router_contract.json declares class_path / looptools_path as
+# CONDITIONAL keys. check_prereqs must evaluate each entry's `condition` against
+# the model's ModelSpec and skip a key whose condition does not match. The
+# _DEFAULT_MANIFEST (real contract) is used here — the minimal test manifest has
+# no conditional keys.
+
+
+def _build_conditional_config(tmp_path: pathlib.Path, spec_fixture: str) -> pathlib.Path:
+    """Materialise config_conditional.json against a spec fixture.
+
+    All unconditional tool paths + the UFO dir are created so the ONLY thing
+    that can flip status is conditional-key evaluation. class_path /
+    looptools_path are intentionally absent from the config.
+    """
+    spec_src = _FIXTURES / spec_fixture
+    raw = (_FIXTURES / "config_conditional.json").read_text()
+    raw = raw.replace("__TMPDIR__", str(tmp_path))
+    raw = raw.replace("__SPEC_YAML__", str(spec_src))
+    cfg = tmp_path / "config_conditional.json"
+    cfg.write_text(raw)
+    d = json.loads(raw)
+    for key in ["maddm_path", "micromegas_path", "drake_path"]:
+        pathlib.Path(d[key]).mkdir(parents=True, exist_ok=True)
+    for model_cfg in d.get("models", {}).values():
+        ufo = model_cfg.get("ufo_path", "")
+        if ufo:
+            pathlib.Path(ufo).mkdir(parents=True, exist_ok=True)
+    return cfg
+
+
+def test_conditional_keys_skipped_for_standard_thermal_spec(tmp_path):
+    """Standard-thermal, non-loop spec → class_path/looptools_path are SKIPPED.
+
+    This is the root-cause regression: without condition evaluation, the two
+    conditional keys behave as unconditional hard blockers
+    (CLASS_PATH_MISSING / LOOPTOOLS_PATH_MISSING) for EVERY config. With the
+    fix, a plain spec skips them and the run is 'ok'.
+    """
+    cfg = _build_conditional_config(tmp_path, "spec_standard_thermal.yaml")
+    cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
+    assert cp.returncode == 0, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "ok", result
+    codes = [b["code"] for b in result["blockers"]]
+    assert "CLASS_PATH_MISSING" not in codes, codes
+    assert "LOOPTOOLS_PATH_MISSING" not in codes, codes
+    # The skipped keys must not even appear in checked[].
+    checked_keys = [c["key"] for c in result["checked"]]
+    assert "config.class_path" not in checked_keys, checked_keys
+    assert "config.looptools_path" not in checked_keys, checked_keys
+
+
+def test_class_path_enforced_for_nonstandard_cosmology(tmp_path):
+    """cosmology.kind != standard_thermal → class_path condition ACTIVE, enforced."""
+    cfg = _build_conditional_config(tmp_path, "spec_nonstandard_cosmology.yaml")
+    cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
+    assert cp.returncode == 1, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "blocked", result
+    codes = [b["code"] for b in result["blockers"]]
+    assert "CLASS_PATH_MISSING" in codes, codes
+
+
+def test_looptools_path_enforced_for_loop_only_candidate(tmp_path):
+    """candidates[?].mediator_regime ∈ loop-only set → looptools_path enforced."""
+    cfg = _build_conditional_config(tmp_path, "spec_loop_only.yaml")
+    cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
+    assert cp.returncode == 1, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "blocked", result
+    codes = [b["code"] for b in result["blockers"]]
+    assert "LOOPTOOLS_PATH_MISSING" in codes, codes
+
+
+# ---------------------------------------------------------------------------
+# YAML config loading (parity with JSON)
+# ---------------------------------------------------------------------------
+
+
+def test_check_prereqs_loads_yaml_config(tmp_path):
+    """A YAML config (not just JSON) parses and yields the same happy-path result.
+
+    SKILL.md documents configs under "## Config (YAML)"; historically the helper
+    only accepted JSON, which killed live playtests. check_prereqs must try JSON
+    then fall back to yaml.safe_load.
+    """
+    raw = (_FIXTURES / "config_all_present.yaml").read_text().replace("__TMPDIR__", str(tmp_path))
+    cfg = tmp_path / "config_all_present.yaml"
+    cfg.write_text(raw)
+    import yaml as _yaml
+    d = _yaml.safe_load(raw)
+    for key in ["maddm_path", "micromegas_path", "drake_path"]:
+        pathlib.Path(d[key]).mkdir(parents=True, exist_ok=True)
+    for model_cfg in d.get("models", {}).values():
+        pathlib.Path(model_cfg["ufo_path"]).mkdir(parents=True, exist_ok=True)
+    cp = _run(cfg)  # default model singletDM, minimal manifest
+    assert cp.returncode == 0, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "ok", result
+    assert result["blockers"] == []
+
+
+# ---------------------------------------------------------------------------
+# Regression: the live-playtest bell-ring config must not be blocked
+# ---------------------------------------------------------------------------
+
+
+def test_bellring_config_not_blocked():
+    """config_bellring.json (real fixture, repo-root-relative stub paths) → ok.
+
+    Pins the end-to-end consequence of the condition-gating fix against the real
+    router_contract.json manifest: a standard-thermal dark-SU(3) config with
+    stub tool paths and no class/looptools paths must return status 'ok'. Runs
+    from the repo root because the fixture's paths are repo-root-relative.
+    """
+    config = _REPO_ROOT / "tests" / "fixtures" / "dark_su3_playtest" / "configs" / "config_bellring.json"
+    assert config.is_file(), f"bellring config missing at {config}"
+    args = [
+        sys.executable, str(_HELPER),
+        "--config", str(config),
+        "--model", "darksu3",
+        "--manifest", str(_DEFAULT_MANIFEST),
+    ]
+    cp = subprocess.run(args, capture_output=True, text=True, cwd=str(_REPO_ROOT))
+    assert cp.returncode == 0, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "ok", result
+    codes = [b["code"] for b in result["blockers"]]
+    assert "CLASS_PATH_MISSING" not in codes, codes
+    assert "LOOPTOOLS_PATH_MISSING" not in codes, codes

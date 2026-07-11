@@ -1,0 +1,9 @@
+# Minimal ModelSpec — a loop-only-DD candidate. This genuinely triggers the
+# looptools_path condition (candidates[?].mediator_regime in the loop-only set),
+# so check_prereqs MUST enforce config.looptools_path. SYNTHETIC test fixture.
+model: "toyDM"
+cosmology:
+  kind: standard_thermal
+candidates:
+  - name: chi
+    mediator_regime: "loop-only-CP-forbidden"

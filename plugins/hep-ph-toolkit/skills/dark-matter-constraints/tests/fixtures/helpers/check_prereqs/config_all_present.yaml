@@ -1,0 +1,8 @@
+# YAML twin of config_all_present.json — proves check_prereqs loads YAML
+# configs, not just JSON (SKILL.md documents "## Config (YAML)"). SYNTHETIC.
+maddm_path: "__TMPDIR__/fake_maddm"
+micromegas_path: "__TMPDIR__/fake_micromegas"
+drake_path: "__TMPDIR__/fake_drake"
+models:
+  singletDM:
+    ufo_path: "__TMPDIR__/singletDM_UFO"

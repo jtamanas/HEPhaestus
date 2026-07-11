@@ -1,0 +1,7 @@
+# Minimal ModelSpec — non-standard cosmology. This genuinely triggers the
+# class_path condition (cosmology.kind not_in [standard_thermal]), so
+# check_prereqs MUST enforce config.class_path. SYNTHETIC test fixture.
+model: "toyDM"
+cosmology:
+  kind: non_standard
+dm_candidate: {name: chi, m_chi: 100}
