@@ -1,0 +1,13 @@
+{
+  "code": "LOOPTOOLS_EVAL_NO_OUTPUT",
+  "mode": "recoverable",
+  "message": "run_eval.wls produced no usable eval_output.json (cause: unbound_model_parameters).",
+  "context": {
+    "point_id": 9958431,
+    "cause": "unbound_model_parameters",
+    "returncode": 3,
+    "unbound_symbols": ["Masshh[2](H,35)", "MassAh[2](a,9931569)", "MassHm[2](Hp,9920911)", "gchi(DMSECTOR:2)", "ZAMIX(ZAMIX:i,j)"],
+    "log_tail": "run_eval: UNBOUND-MODEL-PARAMETERS {...}"
+  },
+  "user_instruction": "run_eval.wls is specialised to the 2HDM+a (TwoHdmAfix) model and cannot bind this model's amplitude symbols. Generalising the substitution/projection/matching layer off TwoHdmAfix is roadmap step 3 (LOOP-FLOOR-ROADMAP.md)."
+}

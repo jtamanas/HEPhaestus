@@ -859,3 +859,31 @@ blockers:
       resolves (see _shared/installs/formcalc), then rerun /formcalc reduce.
     workaround_codes: []
     owned_by: formcalc
+
+  LOOPTOOLS_EVAL_NO_OUTPUT:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/run_looptools.py run_driver (require-the-artifact guard); STEP2.md subtask 3a"
+    description: >-
+      The LoopTools eval driver (run_eval.wls) yielded no usable eval_output.json
+      — missing, empty, or non-JSON — so PV evaluation did not produce a result.
+      run_eval.wls can exit 0 while writing an empty file, and an aborted eval
+      (MathLink::MLException → libc++abi terminating) can leave garbage; both
+      previously surfaced as a raw Python JSONDecodeError traceback in run_driver.
+      run_looptools.py now requires a non-empty, valid eval_output.json, scans the
+      driver log, and reports a named context.cause: unbound_model_parameters |
+      mathlink_aborted | looptools_selftest_failed | looptools_install_failed |
+      point_unreadable | amp_unreadable | unknown. The dominant cause is a MODEL
+      MISMATCH (STEP2.md subtask 3a): run_eval.wls is specialised to the 2HDM+a
+      (TwoHdmAfix) model and looks masses up by 2HDM+a PDG codes / substitutes
+      2HDM+a couplings; a different model (e.g. singlet-doublet) leaves those
+      amplitude symbols unbound ($Failed / Missing), which run_eval.wls now
+      detects BEFORE the MathLink call and reports as context.unbound_symbols.
+      Generalising the substitution/projection/matching layer off TwoHdmAfix is
+      roadmap step 3 (LOOP-FLOOR-ROADMAP.md); for a non-model cause, inspect
+      context.log_tail and run/<ts>/.
+    workaround_codes: []
+    owned_by: looptools

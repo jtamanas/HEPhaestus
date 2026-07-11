@@ -141,6 +141,61 @@ repair (`formcalc-fix/`). Decide these before committing a floor number:
    generation, not the class-level sum. Pending: pin externals to `F[5,{1}]`
    and a down-type generation before extracting a per-point σ_SI.
 
+## (iii-c) Step-2 status (done) + what step 3 needs
+
+**Step-2 status — DONE (evidence, not a physics claim).** Full account in the
+runner log `loopset-step2/STEP2.md` (ran against shared checkout main=283f046).
+Roadmap evidence only — **no σ_SI numbers** (SD nucleon matching does not exist
+yet, so any σ would be untraceable). Summary:
+
+- **χ₁-pinned 1PI core reduced.** Externals pinned to `F[5,{1}]` (χ₁, the
+  step-(iii-b).3 pending item) via `/feynarts`; the diagram set is structurally
+  identical to the class-level step-1 census (4 diagrams: 2 tri + 2 box), with
+  only the two external-neutralino `SumOver` factors dropping. `/formcalc reduce
+  --gamma5 naive` succeeded on the χ₁-pinned 1PI core → `reduce_chi1/amp_reduced.m`
+  (107 KB) carrying genuine symbolic PV heads (B0i×23, C0i×319, D0i×286).
+  **γ₅ = naive is evidence-only; sign-off pending** (step-(iii-b).1: the W-boxes +
+  chiral/pseudoscalar content argue for `hv`/`bmhv`).
+- **All 505 distinct PV heads finite** by direct MathLink evaluation
+  (`pv_eval.json`): PV integrals depend only on masses + momentum invariants, so
+  they were evaluated decoupled from the (non-applicable) nucleon matching —
+  505/505 finite complex numbers at the benchmark point (χ₁=132.69 GeV). This
+  demonstrates the SD 1PI core's loop integrals are well-defined and numerically
+  evaluable; it is **finiteness evidence only** (no effective coupling, no σ).
+- **`/looptools eval` blocked on 2HDM+a hardcoding.** `run_eval.wls` is
+  specialised to the 2HDM+a (`TwoHdmAfix`) model: it looks masses up by 2HDM+a
+  PDG codes (all `Missing` against the SD SLHA) and substitutes 2HDM+a couplings
+  (`gchi, lamP, lam1..8, vu, vd, ZA/ZH/ZP`, all `$Failed`), and its scalar
+  projection assumes Dirac DM + up-quark. The SD amplitude therefore cannot be
+  consumed — the core step-3 gap, not a physics failure of the SD amplitude.
+  **Now a guided error, not a crash:** this tranche hardened the two looptools
+  loud-failure gaps (STEP2.md friction 2) — a missing/empty/garbage
+  `eval_output.json` yields a structured `LOOPTOOLS_EVAL_NO_OUTPUT` blocker
+  (never a raw `JSONDecodeError`), and `run_eval.wls` now detects unbound
+  `$Failed`/`Missing` bindings **before** the MathLink call and names the 20
+  unbound SD symbols in `context.unbound_symbols` (verified on the real SD point:
+  `run_eval.wls` exits 3 with the `UNBOUND-MODEL-PARAMETERS` marker → the wrapper
+  emits `LOOPTOOLS_EVAL_NO_OUTPUT` cause `unbound_model_parameters`).
+
+**What step 3 needs** (from `STEP2.md` "What step 3 needs" — the SD eval layer
+that generalises `run_eval.wls` off `TwoHdmAfix`):
+
+1. **SD symbol-binding map.** Bind SD SLHA blocks to amplitude symbols:
+   `ZNMIX→ZN`, `UMMIX/UPMIX→UM/UP`, `UDLMIX/UDRMIX→ZDL/ZDR`, `Yu/Yd`,
+   `PHASES→PhaseFS`, `GAUGE→g1/g2`, `HMIX`, plus `yh1/yh2` (SD Higgs-portal
+   Yukawas). The SD SLHA already carries all these blocks. Mediator/scalar masses
+   by **SD** PDG codes (h=25, χ±=9984071, χ₁=9958431, …), plus a decision on the
+   eaten-Goldstone (Ah/Hp) mass/gauge treatment. (The new loud-failure guard
+   already enumerates exactly which symbols this map must cover.)
+2. **Majorana-χ + down-quark scalar projection.** The current projection is
+   Dirac + up-quark; SD is a Majorana χ scattering off a down-type quark.
+3. **SD nucleon matching.** Through the SD Higgs sector (`yh1/yh2`,
+   down-type-quark coupling), replacing the `ZH/vu/vd` 2HDM+a formula.
+4. **`SumOver` handling.** Handle the internal generation/eigenstate sums
+   properly rather than pinning gen-1 (gen-1 pinning was used only for the
+   finiteness scan).
+5. **γ₅ scheme sign-off.** naive vs `hv`/`bmhv` (step-(iii-b).1).
+
 ## (iv) Norms (non-negotiable)
 
 - **No analytic-approximation shortcuts.** PV integrals via LoopTools;

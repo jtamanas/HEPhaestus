@@ -51,7 +51,7 @@ def test_codes_in_looptools_namespace():
         "LOOPTOOLS_MATHLINK_UNAVAILABLE", "WOLFRAM_KERNEL_ABSENT",
         "LOOPTOOLS_META_INCOMPATIBLE", "LOOPTOOLS_DRIVER_FAILED",
         "LOOPTOOLS_AMPLITUDE_NONFINITE", "LOOPTOOLS_SCHEMA_INVALID",
-        "LOOPTOOLS_MASS_DEGENERATE",
+        "LOOPTOOLS_MASS_DEGENERATE", "LOOPTOOLS_EVAL_NO_OUTPUT",
     }
     for bf in _get_blocker_files():
         code = json.loads(bf.read_text())["code"]
