@@ -4,7 +4,7 @@
 # Owned by WS2 (tool-capability matrix).
 #
 # Two categories:
-#   - "owned" (owned_by: this-ws): WS2-authored codes; 29 total.
+#   - "owned" (owned_by: this-ws): WS2-authored codes.
 #   - "mirrored" (owned_by: dark-matter-constraints): codes emitted by
 #     /dark-matter-constraints that WS2 mirrors for cross-reference. The
 #     canonical source is dark-matter-constraints/SKILL.md and scripts/.
@@ -17,7 +17,7 @@ catalog_date: "2026-04-26"
 
 blockers:
   # ============================================================================
-  # OWNED CODES (this-ws; 29 total)
+  # OWNED CODES (this-ws)
   # ============================================================================
 
   MG5_DARK_COLOR_TENSOR_WALL:
@@ -461,6 +461,24 @@ blockers:
       The model spec's requested_emissions does not include 'spheno';
       SPheno cannot be run and downstream tools that require an SLHA2 file
       (HiggsTools) are blocked.
+    workaround_codes: []
+    owned_by: this-ws
+
+  FEYNARTS_SARAH_STATE_MISSING:
+    class: spec-authoring-gap
+    severity: fatal
+    emitted_by: [feynarts]
+    triggered_by_axes: []
+    ws1_reference: "brainstorm/ws1_taxonomy_synthesis.md §6"
+    digest_reference: "plugins/hep-ph-toolkit/skills/feynarts/SKILL.md (Caps and blockers)"
+    description: >-
+      /feynarts --sarah-model could not obtain a registered FeynArts state
+      for the model AND could not bootstrap one: either the slug is not a
+      valid toolkit model name, SARAH is not configured (sarah_path unset),
+      or SARAH MakeFeynArts[] ran but produced no .mod. The blocker message
+      names which of these was attempted. Fix by running
+      _shared/installs/sarah and /sarah-build for the model, or supply a
+      .mod directly via --model-file.
     workaround_codes: []
     owned_by: this-ws
 

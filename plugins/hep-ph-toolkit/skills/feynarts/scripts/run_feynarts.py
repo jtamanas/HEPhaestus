@@ -2,13 +2,14 @@
 
 Orchestrates:
   1. Prerequisite checks (FeynArts installed, Wolfram present).
-  2. Model resolution (builtin / file / SARAH).
+  2. Model resolution (builtin / file / SARAH). For --sarah-model, a missing
+     FeynArts state is first bootstrapped: SARAH MakeFeynArts[] + register
+     into $STATE_ROOT/models/<slug>/feynarts_state/ (idempotent).
   3. Process resolution (alias / raw tuple).
-  4. Optional post-hoc SARAH MakeFeynArts[] (if --sarah-model).
-  5. Cache probe.
-  6. Template rendering + wolframscript execution (timeout enforced).
-  7. Postprocessing (size-cap check, JSON sidecars).
-  8. Cache write.
+  4. Cache probe.
+  5. Template rendering + wolframscript execution (timeout enforced).
+  6. Postprocessing (size-cap check, JSON sidecars).
+  7. Cache write.
 
 Exit codes:
   0  — success
@@ -238,7 +239,7 @@ def run(
     process_tuple = _normalize_process_tuple(proc_info["feynarts_tuple"])
     processspec = proc_info["processspec"]
 
-    # --- 5. Cache probe ---
+    # --- 4. Cache probe ---
     cache_key = compute_cache_key(
         mod_path=mod_path,
         gen_path=gen_path,
@@ -265,7 +266,7 @@ def run(
         summary["cached"] = True
         return summary
 
-    # --- 6. Template rendering + wolframscript ---
+    # --- 5. Template rendering + wolframscript ---
     excludes_m = ", ".join(excludes or [])
     model_hash = _sha256_file(mod_path) if mod_path and Path(mod_path).exists() else ""
 
@@ -353,7 +354,7 @@ def run(
     finally:
         Path(script_path).unlink(missing_ok=True)
 
-    # --- 7. Postprocessing ---
+    # --- 6. Postprocessing ---
     try:
         summary = postprocess_output(
             run_dir=str(out_dir),
@@ -370,7 +371,7 @@ def run(
     except PostprocessError as e:
         _blocker(e.code, str(e), e.context, exit_code=4)
 
-    # --- 8. Cache write ---
+    # --- 7. Cache write ---
     cache_dir.mkdir(parents=True, exist_ok=True)
     for fname in ["FeynAmpList.m", "FeynAmpList.meta.json", "summary.json",
                   "topologies.json", "diagrams.pdf"]:
@@ -408,7 +409,17 @@ def _bootstrap_sarah_state(
     if (state_dir / f"{slug}.mod").exists():
         return  # already bootstrapped / registered — nothing to do
 
-    sarah_name = modelspec_name_to_sarah(slug)
+    try:
+        sarah_name = modelspec_name_to_sarah(slug)
+    except ValueError as e:
+        _blocker(
+            "FEYNARTS_SARAH_STATE_MISSING",
+            f"No FeynArts state is registered for '{slug}', and it is not a "
+            f"valid toolkit model slug ({e}), so a SARAH model name could not "
+            f"be derived to bootstrap via MakeFeynArts[]. Slugs are snake_case, "
+            f"e.g. 'singlet_doublet'.",
+            {"model_name": slug, "state_dir": str(state_dir)},
+        )
 
     if not sarah_path:
         _blocker(

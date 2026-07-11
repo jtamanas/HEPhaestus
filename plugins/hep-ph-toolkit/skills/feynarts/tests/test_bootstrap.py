@@ -14,6 +14,8 @@ monkeypatched.  They cover the two things that were broken:
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -198,3 +200,53 @@ class TestBootstrapBlocker:
             )
         assert captured["code"] == "FEYNARTS_SARAH_STATE_MISSING"
         assert "no" in captured["message"].lower() and ".mod" in captured["message"]
+
+    def test_blocker_when_slug_invalid(self, tmp_path, monkeypatch):
+        """Invalid slug (not modelspec snake_case) -> blocker, not ValueError."""
+        captured = _capture_blocker(monkeypatch)
+        with pytest.raises(SystemExit):
+            run_feynarts._bootstrap_sarah_state(
+                slug="Foo_Bar",  # uppercase — violates MODEL_NAME_REGEX
+                state_root=str(tmp_path / "state"),
+                sarah_path=str(tmp_path),
+                ws_path="/usr/bin/wolframscript",
+                timeout_s=60,
+            )
+        assert captured["code"] == "FEYNARTS_SARAH_STATE_MISSING"
+        assert "Foo_Bar" in captured["message"]
+        assert captured["context"]["model_name"] == "Foo_Bar"
+
+
+# --------------------------------------------------------------------------
+# CLI contract: invalid slug must emit a blocker JSON, never a traceback
+# --------------------------------------------------------------------------
+class TestCliInvalidSlug:
+    def test_cli_emits_blocker_json_for_invalid_slug(self, tmp_path, fake_feynarts_dir):
+        """generate.py --sarah-model <invalid> exits 1 with structured JSON on stderr.
+
+        Pinned regression for the agent-CLI contract: an invalid slug used to
+        escape as an uncaught ValueError traceback from modelspec_name_to_sarah.
+        Hermetic: FeynArts dir is fake, wolfram path is any existing file —
+        the blocker fires before any Wolfram invocation.
+        """
+        generate_py = Path(__file__).parent.parent / "scripts" / "generate.py"
+        proc = subprocess.run(
+            [
+                sys.executable, str(generate_py), "generate",
+                "--process", "e+ e- -> mu+ mu-",
+                "--sarah-model", "Foo_Bar",
+                "--state-root", str(tmp_path / "scratch_state"),
+                "--feynarts-path", str(fake_feynarts_dir),
+                "--wolfram-path", sys.executable,  # exists; never invoked
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert proc.returncode == 1
+        assert "Traceback" not in proc.stderr, f"traceback leaked:\n{proc.stderr}"
+        blocker = json.loads(proc.stderr.strip().splitlines()[-1])
+        assert blocker["code"] == "FEYNARTS_SARAH_STATE_MISSING"
+        assert blocker["mode"] == "fatal"
+        assert "Foo_Bar" in blocker["message"]
+        assert blocker["context"]["model_name"] == "Foo_Bar"
