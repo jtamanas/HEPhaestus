@@ -206,6 +206,40 @@ that generalises `run_eval.wls` off `TwoHdmAfix`):
    CalcFeynAmp; the naive == FormCalc-9.10-NDR-default equivalence is recorded in
    the sidecar caveats (refuse-to-lie guard, R1).
 
+### Step-3 build-order item 3 — `run_eval_sd.wls` (PARTIAL, honest)
+
+Landed (`scripts/run_eval_sd.wls`, `sd_projection.wl`, `run_projection_sd.wls`;
+`run_looptools.py` `--model {2hdma|singlet_doublet}` dispatch):
+
+- **SD binding map — DONE & runtime-verified.** All ~27 SD amplitude symbols bind
+  from the real SD SPheno spectrum (no `UNBOUND-MODEL-PARAMETERS` fired on the
+  canonical point). Two `[VERIFY]` flags resolved against the SLHA: **ZN =
+  ZNMIX + I·IMZNMIX** (the SD neutralino mixing is genuinely complex — binding
+  from `ZNMIX` alone would zero χ₂'s coupling, whose `ZNMIX` row is 0 but
+  `IMZNMIX` row is not); **yh1/yh2 from `BSMPARAMS`(3,4)** (running values at Q,
+  consistent with Yu/Yd/GAUGE), MINPAR(3,4) documented fallback. Goldstones
+  `MassAh→m_Z`, `MassHp→m_W` (Feynman gauge).
+- **Majorana-χ + down-quark projection — DONE at fixture level, chain-coefficient
+  (Decision 3), NOT the static spin-summed collapse.** Scalar `{F1..F4}` vs
+  twist-2 `{F5..F8}` separated; proven on the R2 fixtures (clean recovery,
+  zero cross-talk). Per-coefficient setdelta/setmudim UV-residue guard wired
+  (Decision 2, load-bearing).
+- **R2 cross-talk fixture — DONE** (Decision 6 R2): pure-scalar / pure-twist-2 /
+  mixed pre-reduced fixtures + tests; hermetic block-disjointness invariant.
+- **Gated real SD eval — runs, fails LOUDLY at a named guard** (acceptable
+  item-3 outcome). Blocked upstream: the STEP2 `reduce_chi1/amp_reduced.m` was
+  written by `Put[reduced]` **without** its FormCalc `Subexpr[]` table, so the
+  `Sub####` abbreviations (which hide the external Weyl chains + couplings) are
+  undefined → `SD-AMP-ABBREVIATIONS-UNRESOLVED` (exit 3). **This is a
+  `/formcalc reduce` writer gap**, not an SD-driver defect: `run_calcfeynamp.wls`
+  must persist `Subexpr[]` into a wrapped `{"amp"->..,"subexpr"->..}` association
+  (as the 2HDM+a test fixture already is) and the SD reduction re-run. Until
+  then the real-amp projection + UV residue path cannot execute on live data.
+
+WIP / next (item 4): fix the reduce writer + re-reduce SD (unblocks the real
+projection), per-flavor (u,d,s) runs, driver-side twist-2 + 2/27-gluon nucleon
+matching through the SD Higgs sector, internal checks (e).
+
 ## (iv) Norms (non-negotiable)
 
 - **No analytic-approximation shortcuts.** PV integrals via LoopTools;
