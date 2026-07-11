@@ -42,6 +42,7 @@ Library function Claude composes per-task — not a CLI executable.
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 # Blocks whose UFO default of 0 must be reinterpreted when the block is
@@ -108,10 +109,13 @@ def strip_maddm_indigestible_blocks(text: str) -> tuple[str, list[str]]:
     whose first non-space character is a letter, i.e. a new ``Block``/``DECAY``/
     ``DECAY1L`` header). Comment and indented/numeric lines belong to the block.
 
-    Pure function: returns ``(new_text, removed)`` where ``removed`` is the list
-    of stripped header lines (empty when nothing matched). Matching is on the
-    first whitespace token, uppercased/lowercased, so the ordinary
-    ``DECAY <pdg>`` block is never removed.
+    Returns ``(new_text, removed)`` where ``removed`` is the list of stripped
+    header lines (empty when nothing matched). Matching is on the first
+    whitespace token, uppercased/lowercased, so the ordinary ``DECAY <pdg>``
+    block is never removed. Loud at the library level: when anything is
+    removed, a ``WARNING:`` line naming the stripped headers is printed to
+    stderr (no filesystem side effects — the caller still decides what to do
+    with the returned text).
     """
     out_lines: list[str] = []
     removed: list[str] = []
@@ -132,6 +136,15 @@ def strip_maddm_indigestible_blocks(text: str) -> tuple[str, list[str]]:
             # Indented/comment/numeric continuation of an indigestible block.
             continue
         out_lines.append(line)
+    if removed:
+        print(
+            "WARNING: maddm param-card prep: stripped MG5-indigestible SLHA "
+            f"block(s) {removed!r} — MG5's param_card reader crashes on these "
+            "inside `launch -f` while exiting 0 and echoing the Planck "
+            "constant (silent fake success). The tree-level DECAY blocks are "
+            "untouched.",
+            file=sys.stderr,
+        )
     return "".join(out_lines), removed
 
 

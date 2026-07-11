@@ -66,6 +66,23 @@ MadDM plugin; the `generate relic_density` line then fails with
 `_shared/installs/maddm/INSTALL.md` for the plugin-loader
 mechanics.
 
+**Mandatory after every launch:** verify the launch actually wrote results
+before parsing anything from stdout —
+
+```python
+maddm_run.assert_launch_produced_output(
+    out_dir, returncode=proc.returncode, stdout_tail=proc.stdout,
+)
+```
+
+`mg5_aMC` can exit 0 having written no output while echoing the Planck
+constant (`Omega h^2 = 1.2000e-01`) as if computed — see the DECAY1L gotcha
+below. The guard raises `MADDM_LAUNCH_NO_OUTPUT` (recoverable) when no
+`output/run_*/MadDM_results.txt` exists. Pair it with a fresh output dir
+(`generate_maddm_script` default `fresh=True`): the check resolves the newest
+results file by mtime, so a reused dir could satisfy it with a *previous*
+run's stale results.
+
 ### Key Commands
 
 | Command | Description |

@@ -528,6 +528,12 @@ def assert_launch_produced_output(
     than letting a stdout-echoed Planck constant masquerade as a computed
     result. A returncode of 0 is NOT sufficient evidence of success here — the
     DECAY1L crash exits 0. Returns the results-file path on success.
+
+    Use a FRESH output dir per launch (``generate_maddm_script``'s default
+    ``fresh=True`` run-time cleanup): this check resolves the newest results
+    file by mtime, so on a REUSED dir a crashed launch can still "pass" by
+    finding the previous run's stale results — the guard proves a results file
+    exists, not that this launch wrote it.
     """
     results = find_maddm_results(out_dir)
     if results is not None:

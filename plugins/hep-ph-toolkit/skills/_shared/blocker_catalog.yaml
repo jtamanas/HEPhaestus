@@ -754,6 +754,27 @@ blockers:
     workaround_codes: []
     owned_by: dark-matter-constraints
 
+  HIGGSTOOLS_HB_NO_RESULT:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [higgstools]
+    triggered_by_axes: []
+    digest_reference: "higgstools/scripts/legacy_driver.py (HiggsBoundsNoResultError)"
+    description: >-
+      HiggsBounds-5 exited 0/1 but produced ZERO parsable results: no Block
+      HiggsBoundsResults was written into the SLHA file and stdout carried no
+      per-channel table, so HB did no work. Known trigger: HB's Fortran
+      command-line buffer truncates file prefixes at ~100 chars, it prints
+      "problem opening the SLHA file", runs on unusable input, and still exits
+      0. Returning an empty channel list would make compute_hb_allowed([])
+      vacuously True — a silent false "allowed". Emitted by
+      legacy_driver.run_higgsbounds when both the SLHA-block read-back and the
+      stdout parse are empty. HB-side sibling of HIGGSTOOLS_HS_NO_RESULT
+      (introduced in PR #19; catalog entry added retroactively).
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
   HIGGSTOOLS_HS_NO_RESULT:
     class: missing-tool-feature
     fix_locality: local_patch

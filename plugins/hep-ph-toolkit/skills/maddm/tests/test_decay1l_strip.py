@@ -71,6 +71,20 @@ class TestStripFunction:
         assert removed == []
         assert out == clean
 
+    def test_strip_warns_loudly_on_stderr(self, capsys):
+        """Library-level loudness: any removal prints a WARNING naming the
+        stripped headers to stderr (the report-dict record alone is not enough
+        for a caller watching logs)."""
+        slha_complete.strip_maddm_indigestible_blocks(CARD)
+        err = capsys.readouterr().err
+        assert "WARNING" in err
+        assert "DECAY1L" in err
+
+    def test_no_warning_when_nothing_stripped(self, capsys):
+        clean = "Block MASS\n  25  125.0  # hh\n"
+        slha_complete.strip_maddm_indigestible_blocks(clean)
+        assert capsys.readouterr().err == ""
+
 
 class TestCompleteSarahParamCardStrips:
     """complete_sarah_param_card is the card-prep step every documented overlay
