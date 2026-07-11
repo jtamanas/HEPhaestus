@@ -223,7 +223,8 @@ The amplitude → σ matching owned in Python is the textbook coherent formula
 | `scripts/run_looptools.py` | CLI entry (`eval`): preflight, gates, cache, dispatch, emit |
 | `scripts/cache_key.py` | SHA256 cache key (amp bytes + point + versions) |
 | `scripts/prepare_point.py` | SLHA/param_card → numeric substitution dict + DM mass |
-| `scripts/run_eval.wls` | Wolfram + LoopTools-2.16 MathLink driver — real numerical PV core (evaluates the loop amplitude → effective couplings) |
+| `scripts/run_eval.wls` | 2HDM+a model driver — real numerical PV core (binds the amplitude symbols, Dirac+up-quark scalar projection, Higgs-portal nucleon matching → effective couplings) |
+| `scripts/run_eval_common.wl` | Model-AGNOSTIC plumbing `Get[]`ed by the driver: argv contract, FormCalc + LoopTools Install/ltini load + C0i self-test, the `evalTermCommon` SumOver/IndexSum engine, the `emitUnboundGuard` (UNBOUND-MODEL-PARAMETERS + Exit[3]) guard, and `writeEvalOutput`. Shared with the future `run_eval_sd.wls`; its header documents the driver contract. |
 | `scripts/parse_eval_output.py` | Driver output → Python dict + finiteness gate |
 | `scripts/match_nucleon.py` | Effective DM–nucleon couplings → σ_SI/σ_SD (owned transport) |
 | `scripts/emit_scattering.py` | Assemble + validate `scattering/v1` |
