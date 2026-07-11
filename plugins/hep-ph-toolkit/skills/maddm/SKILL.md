@@ -185,6 +185,24 @@ Two defenses, both live in the `maddm` skill:
    fresh-output-dir workaround. Always confirm σ_SI *responds* to coupling
    changes before trusting it.
 
+3. **SLHA provenance check (right-card gate).**
+   Before a `direct_detection` run, call
+   `scripts/maddm_run.py::check_slha_provenance(model, slha_path,
+   observables=["direct_detection"])` on the SLHA/param card you are about to
+   overlay onto `Cards/param_card.dat`. It fingerprints that card and compares
+   it against the `latest_slha` provenance recorded for the model by
+   `spheno-build` / `lagrangian-builder` (via
+   `config_helpers.register_latest_slha`), and prints a loud `WARNING:` (naming
+   both paths + sha256 and a "re-run SPheno / register the spectrum"
+   remediation) when the card is not the model's latest registered spectrum —
+   the most common cause of a DD number that describes the wrong point. It is
+   **non-fatal by default** (returns a result dict, never raises; skips
+   non-DD-only runs; stays quiet on an exact match and on pre-guard configs it
+   cannot verify), so it is backward compatible. Pass `fatal=True` to raise
+   `SlhaProvenanceMismatch` instead. This complements — does not replace — the
+   value-level staleness guard above: provenance catches the *wrong card going
+   in*, staleness catches a *stale value coming out*.
+
 ### SARAH/SPheno SLHA silently zeroes the DD Higgs channel
 
 When the UFO comes from SARAH and the SLHA from SPheno, the SPheno spectrum
