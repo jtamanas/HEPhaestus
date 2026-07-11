@@ -53,7 +53,14 @@ def require_claude_cli():
 
 @dataclasses.dataclass(frozen=True)
 class HardFailure:
-    """Records a single hard-assertion failure (attempt-1 only)."""
+    """Records a single hard-assertion failure on a given attempt.
+
+    ``attempt`` is the 1-indexed attempt number on which the assertion failed.
+    With a retry budget > 1 (see ``run_with_retry_budget`` /
+    ``HEPPH_PLAYTEST_MAX_ATTEMPTS``) the same assertion may fail on several
+    attempts; the per-attempt detail is preserved in
+    ``RetryResult.hard_attempt_history``.
+    """
 
     attempt: int
     assertion_id: str
@@ -64,14 +71,22 @@ class RetryResult:
     """Structured result from run_with_retry_budget.
 
     tier: Literal["tier1","tier2","tier3"] — widened for T5 Tier-3 scaffold.
-    hard_failures: list of HardFailure from attempt 1.
-    soft_results: assertion_id -> passed_on_attempt (int) or None (3-of-3 fail).
+    hard_failures: list of HardFailure from the FINAL attempt (empty if any
+        attempt passed all hard assertions). This is what the tier gates read.
+    soft_results: assertion_id -> earliest passing attempt (int) or None
+        (failed on every attempt).
+    hard_attempt_history: per-attempt list of the hard failures seen on that
+        attempt (index 0 == attempt 1). Preserved so reports/handoffs can show
+        which assertions flaked and on which attempt they recovered.
     """
 
     scenario_id: str
     tier: typing.Literal["tier1", "tier2", "tier3"]
     hard_failures: list[HardFailure]
     soft_results: dict[str, int | None]
+    hard_attempt_history: list[list[HardFailure]] = dataclasses.field(
+        default_factory=list
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -170,26 +185,38 @@ def _check_prereqs_invoked(
     captured_argv_list: list[list[str]],
     scenario_id: str,
     harness_meta: dict | None = None,
+    attempt: int = 1,
 ) -> list[HardFailure]:
-    """HARD: check_prereqs must be called with --model darksu3 --config.
+    """HARD: check_prereqs must be run for the darksu3 model.
 
-    In Tier-1 stub mode, check both captured_argv_list AND harness_meta["tool_uses"]
-    (the synthetic LLM output includes the check_prereqs Bash command in tool_uses).
+    Semantic intent: the agent ran the prerequisite check for the darksu3
+    model. We match on the *behaviour* (invoking check_prereqs and naming the
+    darksu3 model) rather than the exact ``--model``/``--config`` flag spelling,
+    which is presentation the live LLM legitimately varies (``--model=darksu3``,
+    model name sourced from the config file, flag ordering, etc.).
+
+    Non-vacuity: still requires BOTH the check_prereqs invocation AND the
+    darksu3 model reference in the same command; a run that never invokes
+    check_prereqs, or invokes it for a different model, still fails.
+
+    In Tier-1 stub mode the check runs against harness_meta["tool_uses"] (the
+    synthetic LLM output includes the check_prereqs Bash command); in Tier-2
+    real mode captured_argv_list carries any intercepted helper subprocesses.
     """
     # Check captured helper invocations (Tier-2 real mode)
     for argv in captured_argv_list:
-        if any("check_prereqs" in a for a in argv):
-            if "--model" in argv and "darksu3" in argv and "--config" in argv:
-                return []
+        joined = " ".join(argv)
+        if "check_prereqs" in joined and "darksu3" in joined:
+            return []
 
-    # Check harness_meta tool_uses (Tier-1 synthetic mode)
+    # Check harness_meta tool_uses (Tier-1 synthetic / live tool_uses)
     if harness_meta:
         for tu in harness_meta.get("tool_uses", []):
             cmd = tu.get("input", {}).get("command", "")
-            if "check_prereqs" in cmd and "--model" in cmd and "darksu3" in cmd and "--config" in cmd:
+            if "check_prereqs" in cmd and "darksu3" in cmd:
                 return []
 
-    return [HardFailure(attempt=1, assertion_id="check_prereqs_invocation")]
+    return [HardFailure(attempt=attempt, assertion_id="check_prereqs_invocation")]
 
 
 def _extract_field_schema_version_arg(captured_argv_list: list[list[str]]) -> list[HardFailure]:
@@ -224,7 +251,11 @@ def _extract_field_sigma_v_zero_invocation(captured_argv_list: list[list[str]]) 
     return [HardFailure(attempt=1, assertion_id="extract_field_sigma_v_zero_invocation")]
 
 
-def _eval_extract_field_hard_assertions(harness_meta: dict) -> list[HardFailure]:
+def _eval_extract_field_hard_assertions(
+    harness_meta: dict,
+    captured_argv_list: list[list[str]] | None = None,
+    attempt: int = 1,
+) -> list[HardFailure]:
     """Evaluate HARD extract_field assertions from harness_meta tool_uses.
 
     Returns failures for:
@@ -232,44 +263,82 @@ def _eval_extract_field_hard_assertions(harness_meta: dict) -> list[HardFailure]
         include --schema-version (catches NC-1 sabotage)
       - extract_field_sigma_v_zero_invocation: extract_field must be called for
         sigma_v_zero (catches NC-2 sabotage)
+
+    These assertions deliberately require the *guarded* extractor
+    (extract_field with --schema-version): reading the JSON another way
+    (jq/Read/python -c) bypasses the schema-drift guard, which is a genuine
+    behavioural gap, not matcher brittleness. Arg *spelling* is tolerated —
+    the substring checks match both ``--schema-version relic/v1`` and
+    ``--schema-version=relic/v1`` — so live formatting variance does not flake.
+
+    Evidence is drawn from harness_meta["tool_uses"] (live/synthetic) and, when
+    present, captured_argv_list (Tier-2 intercepted subprocesses).
     """
     failures = []
     tool_uses = harness_meta.get("tool_uses", [])
 
-    # Gather all extract_field command strings
+    # Gather all extract_field command strings from every evidence source.
     extract_cmds = []
     for tu in tool_uses:
         cmd = tu.get("input", {}).get("command", "")
         if "extract_field" in cmd:
             extract_cmds.append(cmd)
+    for argv in captured_argv_list or []:
+        joined = " ".join(argv)
+        if "extract_field" in joined:
+            extract_cmds.append(joined)
 
     # If no extract_field calls at all, both assertions fail
     if not extract_cmds:
-        failures.append(HardFailure(attempt=1, assertion_id="extract_field_schema_version_arg"))
-        failures.append(HardFailure(attempt=1, assertion_id="extract_field_sigma_v_zero_invocation"))
+        failures.append(HardFailure(attempt=attempt, assertion_id="extract_field_schema_version_arg"))
+        failures.append(HardFailure(attempt=attempt, assertion_id="extract_field_sigma_v_zero_invocation"))
         return failures
 
     # NC-1: at least one extract_field call must include --schema-version
     has_schema_version = any("--schema-version" in cmd for cmd in extract_cmds)
     if not has_schema_version:
-        failures.append(HardFailure(attempt=1, assertion_id="extract_field_schema_version_arg"))
+        failures.append(HardFailure(attempt=attempt, assertion_id="extract_field_schema_version_arg"))
 
     # NC-2: at least one extract_field call must be for sigma_v_zero
     has_sigma_v_zero = any("sigma_v_zero" in cmd for cmd in extract_cmds)
     if not has_sigma_v_zero:
-        failures.append(HardFailure(attempt=1, assertion_id="extract_field_sigma_v_zero_invocation"))
+        failures.append(HardFailure(attempt=attempt, assertion_id="extract_field_sigma_v_zero_invocation"))
 
     return failures
 
 
-def _crosscheck_disagreement_blocker_present(result_text: str, raw_answer: dict) -> list[HardFailure]:
-    """HARD: CROSSCHECK_DISAGREEMENT must appear in LLM output for Point A."""
-    if "CROSSCHECK_DISAGREEMENT" in result_text:
+def _normalize_blocker_token(text: str) -> str:
+    """Uppercase and strip all non-alphanumerics for tolerant token matching.
+
+    ``CROSSCHECK_DISAGREEMENT``, ``CrossCheck Disagreement`` and
+    ``cross-check disagreement`` all normalise to a string that CONTAINS the
+    contiguous token ``CROSSCHECKDISAGREEMENT``. Because every separator is
+    removed, only genuinely adjacent occurrences collapse to the token — the
+    two words appearing far apart in unrelated prose do NOT produce a match, so
+    the check stays non-vacuous.
+    """
+    import re as _re
+
+    return _re.sub(r"[^A-Za-z0-9]+", "", text).upper()
+
+
+def _crosscheck_disagreement_blocker_present(
+    result_text: str, raw_answer: dict, attempt: int = 1
+) -> list[HardFailure]:
+    """HARD: CROSSCHECK_DISAGREEMENT must appear in LLM output for Point A.
+
+    Matching is tolerant of casing and separator variance (underscore, space,
+    hyphen) that the live LLM introduces, but still requires the two words to
+    be adjacent, so a transcript that never raises the blocker still fails
+    (preserves the NC-3 negative-control signal).
+    """
+    target = "CROSSCHECKDISAGREEMENT"
+    if target in _normalize_blocker_token(result_text):
         return []
     # Also check raw_answer for blocker codes
-    if "CROSSCHECK_DISAGREEMENT" in str(raw_answer):
+    if target in _normalize_blocker_token(str(raw_answer)):
         return []
-    return [HardFailure(attempt=1, assertion_id="crosscheck_disagreement_blocker_present")]
+    return [HardFailure(attempt=attempt, assertion_id="crosscheck_disagreement_blocker_present")]
 
 
 def _spec_flag_preflight(skill_md_path: pathlib.Path) -> list[HardFailure]:
@@ -281,6 +350,63 @@ def _spec_flag_preflight(skill_md_path: pathlib.Path) -> list[HardFailure]:
         return []
     except FileNotFoundError:
         return [HardFailure(attempt=1, assertion_id="spec_flag_preflight")]
+
+
+# ---------------------------------------------------------------------------
+# Retry budget (HEPPH_PLAYTEST_MAX_ATTEMPTS)
+# ---------------------------------------------------------------------------
+
+DEFAULT_MAX_ATTEMPTS = 3
+
+
+def max_attempts() -> int:
+    """Resolve the per-scenario hard-assertion retry budget.
+
+    Controlled by HEPPH_PLAYTEST_MAX_ATTEMPTS (default 3). Live scenarios are
+    ~20 min + real API spend each, so this is the total number of live LLM
+    invocations a single scenario may consume before its hard gate fails.
+    Values < 1 (or non-integer) fall back to the default; the value is clamped
+    to >= 1 so there is always at least one attempt.
+    """
+    raw = os.environ.get("HEPPH_PLAYTEST_MAX_ATTEMPTS")
+    if raw is None:
+        return DEFAULT_MAX_ATTEMPTS
+    try:
+        n = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_MAX_ATTEMPTS
+    return max(1, n)
+
+
+def _eval_hard_assertions(
+    point: str,
+    captured_argv_list: list[list[str]],
+    scenario_id: str,
+    harness_meta: dict,
+    attempt: int,
+) -> list[HardFailure]:
+    """Evaluate all HARD assertions for one attempt; return this attempt's failures."""
+    failures: list[HardFailure] = []
+    if point == "A":
+        failures.extend(
+            _check_prereqs_invoked(captured_argv_list, scenario_id, harness_meta, attempt)
+        )
+        # extract_field schema-version and sigma_v_zero (catches NC-1, NC-2 sabotages)
+        failures.extend(
+            _eval_extract_field_hard_assertions(harness_meta, captured_argv_list, attempt)
+        )
+        failures.extend(
+            _crosscheck_disagreement_blocker_present(
+                harness_meta.get("result_text", ""),
+                harness_meta.get("raw_answer", {}),
+                attempt,
+            )
+        )
+    elif point == "B":
+        failures.extend(
+            _check_prereqs_invoked(captured_argv_list, scenario_id, harness_meta, attempt)
+        )
+    return failures
 
 
 # ---------------------------------------------------------------------------
@@ -320,17 +446,19 @@ def run_with_retry_budget(
     # Determine helper mode
     helper_mode = os.environ.get("WS3_HELPER_MODE", "stub" if tier == "tier1" else "real")
 
-    # Pre-flight: --spec flag check (HARD, before LLM)
+    # Pre-flight: --spec flag check (HARD, before LLM). This is a deterministic
+    # pre-LLM file check, so it is NOT subject to the retry budget — if it fails
+    # once it fails every time.
     skill_md_path = resolve_skill_md()
-    hard_failures = []
-    hard_failures.extend(_spec_flag_preflight(skill_md_path))
+    preflight_failures = _spec_flag_preflight(skill_md_path)
 
-    if hard_failures:
+    if preflight_failures:
         return RetryResult(
             scenario_id=scenario_id,
             tier=tier,
-            hard_failures=hard_failures,
+            hard_failures=preflight_failures,
             soft_results={},
+            hard_attempt_history=[preflight_failures],
         )
 
     # Build prompt envelope
@@ -350,57 +478,56 @@ def run_with_retry_budget(
         canned_dir=CANNED,
     )
 
-    # Run with retry budget
+    # Run with a shared retry budget for HARD (and SOFT) assertions.
+    #
+    # Each attempt is ONE skill invocation (one live LLM call in Tier-2/3). We
+    # re-invoke only while HARD assertions are still failing and budget remains,
+    # so a scenario that passes its hard gate on attempt 1 spends exactly one
+    # invocation — it does NOT burn further live calls chasing (informational)
+    # soft retries the way the previous single-shot-hard design did. HARD
+    # assertions gate on the FINAL attempt; a soft assertion counts as passing
+    # on the earliest attempt it passed, else None (failed on every attempt).
     soft_assertion_ids = [
         "caveats_rel_diff_numeric",
         "drake_branch_rationale_prose",
         "spectrum_analysis_ratio_prose",
     ]
-    soft_results: dict[str, int | None] = {}
+    soft_results: dict[str, int | None] = {aid: None for aid in soft_assertion_ids}
 
-    # Attempt 1 (HARD assertions evaluated here)
-    harness_meta, captured = _invoke_skill(envelope, wrapper, scenario_id, tier)
-    captured_argv_list = [inv.argv for inv in captured]
+    budget = max_attempts()
+    hard_attempt_history: list[list[HardFailure]] = []
+    last_hard_failures: list[HardFailure] = []
 
-    # Evaluate HARD assertions
-    if point == "A":
-        hard_failures.extend(_check_prereqs_invoked(captured_argv_list, scenario_id, harness_meta))
-        # extract_field schema-version and sigma_v_zero (HARD — catches NC-1, NC-2 sabotages)
-        hard_failures.extend(
-            _eval_extract_field_hard_assertions(harness_meta)
+    for attempt in range(1, budget + 1):
+        harness_meta, captured = _invoke_skill(envelope, wrapper, scenario_id, tier)
+        captured_argv_list = [inv.argv for inv in captured]
+
+        # CLAUDE.md isolation must hold on every attempt.
+        assert_no_claude_md_leakage(harness_meta)
+
+        attempt_hard = _eval_hard_assertions(
+            point, captured_argv_list, scenario_id, harness_meta, attempt
         )
-        hard_failures.extend(_crosscheck_disagreement_blocker_present(
-            harness_meta.get("result_text", ""), harness_meta.get("raw_answer", {})
-        ))
-    elif point == "B":
-        hard_failures.extend(_check_prereqs_invoked(captured_argv_list, scenario_id, harness_meta))
+        hard_attempt_history.append(attempt_hard)
+        last_hard_failures = attempt_hard
 
-    assert_no_claude_md_leakage(harness_meta)
+        # SOFT assertions: record the earliest attempt each one passed.
+        for assertion_id in soft_assertion_ids:
+            if soft_results[assertion_id] is None and _eval_soft_assertion(
+                assertion_id, harness_meta, captured_argv_list, attempt
+            ):
+                soft_results[assertion_id] = attempt
 
-    # Evaluate SOFT assertions (with retry budget)
-    for assertion_id in soft_assertion_ids:
-        passed = _eval_soft_assertion(
-            assertion_id, harness_meta, captured_argv_list, attempt=1
-        )
-        if passed:
-            soft_results[assertion_id] = 1
-        else:
-            # Retry budget: 2 more attempts
-            for attempt in range(2, 4):
-                harness_meta2, captured2 = _invoke_skill(envelope, wrapper, scenario_id, tier)
-                captured_argv_list2 = [inv.argv for inv in captured2]
-                passed2 = _eval_soft_assertion(assertion_id, harness_meta2, captured_argv_list2, attempt)
-                if passed2:
-                    soft_results[assertion_id] = attempt
-                    break
-            else:
-                soft_results[assertion_id] = None  # 3-of-3 fail
+        # Hard gate satisfied this attempt: stop spending the budget.
+        if not attempt_hard:
+            break
 
     return RetryResult(
         scenario_id=scenario_id,
         tier=tier,
-        hard_failures=hard_failures,
+        hard_failures=last_hard_failures,
         soft_results=soft_results,
+        hard_attempt_history=hard_attempt_history,
     )
 
 

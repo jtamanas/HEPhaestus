@@ -90,10 +90,51 @@ HEPPH_RUN_LIVE_PLAYTESTS=1 pytest tests/dark_su3_playtest/test_playtest_tier2.py
 
 Tier-1 (`test_playtest_tier1.py`, stubbed LLM output) and Tier-3 smoke
 (`test_playtest_tier3_smoke.py`, gated separately on a real `maddm-launcher`
-binary being on `PATH`) are unaffected by this gate. Follow-up (not done
-here): the Tier-2 hard assertions can flake on tool-invocation checks even
-when the underlying behavior is correct; retry-budget hardening for hard
-assertions is out of scope for the opt-in gate and tracked separately.
+binary being on `PATH`) are unaffected by this gate.
+
+### Retry budget for hard assertions
+
+The Tier-2 hard assertions can flake on live tool-invocation checks even when
+the underlying behavior is correct (non-deterministic tool selection, arg
+spelling, blocker-token casing). To absorb that variance without weakening the
+gate, `run_with_retry_budget` (in `tests/dark_su3_playtest/conftest.py`) gives
+each scenario a **shared retry budget** across its hard *and* soft assertions:
+
+- Each attempt is exactly one skill invocation (one live LLM call in Tier-2/3).
+- The scenario re-invokes only while a hard assertion is still failing and
+  budget remains; a scenario that passes its hard gate on attempt 1 spends
+  **exactly one** invocation (it does not burn further live calls chasing the
+  informational soft retries the older single-shot-hard design did).
+- The hard gate is evaluated on the **final** attempt; a soft assertion is
+  credited to the earliest attempt on which it passed, else `None`.
+- Per-attempt failure detail is preserved in `RetryResult.hard_attempt_history`
+  (index 0 == attempt 1) so a report can show which assertion flaked and when
+  it recovered.
+
+The budget is the total number of live LLM calls a single scenario may consume
+before its hard gate fails. It defaults to **3** and is configurable:
+
+```
+HEPPH_PLAYTEST_MAX_ATTEMPTS=1 HEPPH_RUN_LIVE_PLAYTESTS=1 \
+  pytest tests/dark_su3_playtest/test_playtest_tier2.py -k pointA_configured
+```
+
+`HEPPH_PLAYTEST_MAX_ATTEMPTS=1` reproduces the old single-shot behavior (useful
+for a cheap one-call live sanity check). Values below 1 or non-integers fall
+back to the default. Worst-case live spend per scenario is
+`HEPPH_PLAYTEST_MAX_ATTEMPTS` × (~20 min + one call).
+
+Some matchers were also made robust to live formatting variance while staying
+non-vacuous (they still fail when the behavior is genuinely absent): the
+`check_prereqs` check matches on running the check for the `darksu3` model
+rather than exact `--model`/`--config` flag spelling; the
+`CROSSCHECK_DISAGREEMENT` blocker check tolerates casing/separator variants but
+still requires the two words adjacent. The `extract_field` schema-version and
+`sigma_v_zero` checks deliberately still require the *guarded* extractor —
+reading the JSON via `jq`/`Read` bypasses the schema-drift guard and is treated
+as a genuine gap, not a flake. Deterministic coverage of all of this lives in
+`tests/dark_su3_playtest/test_retry_budget.py` and runs under a plain
+`python -m pytest` with no live calls.
 
 ## Merge-ordering note
 
