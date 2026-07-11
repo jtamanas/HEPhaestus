@@ -43,15 +43,57 @@ def test_parse_scan_spec_bad():
 # ── eval_params: the scan variable drives derived params ───────────────────
 
 def test_eval_params_derived():
+    # theta is a pure DRIVER (feed_scan_var=False): it is NOT itself a spectrum
+    # input, it only feeds the derived yh1/yh2. The theta value must NOT appear
+    # as a spheno override key.
     import math
     p = scan.eval_params(
         ["MS=150", "MPsi=500", "yh1=cos(theta)", "yh2=sin(theta)"],
-        "theta", -0.152,
+        "theta", -0.152, feed_scan_var=False,
     )
     assert p["MS"] == 150.0
     assert p["MPsi"] == 500.0
     assert p["yh1"] == pytest.approx(math.cos(-0.152))
     assert p["yh2"] == pytest.approx(math.sin(-0.152))
+    assert "theta" not in p  # driver var is not fed to spheno
+
+
+def test_eval_params_feeds_scan_var_by_default():
+    # THE FIX: scanning a real spectrum parameter under its own name
+    # (`--scan MS=...`, no --param) must feed MS to spheno as an override.
+    # On the unfixed driver this returned {} and MS never reached spheno.
+    p = scan.eval_params([], "MS", 158.62)
+    assert p == {"MS": 158.62}
+
+
+def test_eval_params_feed_and_derive():
+    # The scan var is fed directly AND still available to derive further
+    # params in the same call (scan MS, derive something from MS).
+    p = scan.eval_params(["ratio=MS/2"], "MS", 300.0)
+    assert p["MS"] == 300.0
+    assert p["ratio"] == pytest.approx(150.0)
+
+
+def test_eval_params_drives_only_suppresses_feed():
+    p = scan.eval_params(["yh1=cos(theta)"], "theta", -0.152, feed_scan_var=False)
+    assert "theta" not in p
+    import math
+    assert p["yh1"] == pytest.approx(math.cos(-0.152))
+
+
+def test_eval_params_ordered_chaining():
+    # A later --param EXPR can reference an earlier --param output (ordered
+    # chaining). On the unfixed driver this raised NameError.
+    p = scan.eval_params(["a=MS*2", "b=a+1"], "MS", 10.0)
+    assert p["a"] == pytest.approx(20.0)
+    assert p["b"] == pytest.approx(21.0)
+
+
+def test_eval_params_forward_reference_raises():
+    # Referencing a name defined by a LATER --param is a loud NameError, not a
+    # silent zero — ordered chaining has no forward refs / no cycles.
+    with pytest.raises(NameError):
+        scan.eval_params(["a=b+1", "b=2"], "MS", 10.0)
 
 
 def test_eval_params_no_builtins():
@@ -90,11 +132,11 @@ def test_param_names_no_evaluation():
 
 # ── run_point: EXPR failure marks the POINT failed, scan continues ─────────
 
-def _dummy_args(tmp_path, params):
+def _dummy_args(tmp_path, params, scan_drives_only=False):
     import types
     return types.SimpleNamespace(out_dir=str(tmp_path), param=params,
                                  model="singlet_doublet", dm_candidate="chi1",
-                                 prune=True)
+                                 prune=True, scan_drives_only=scan_drives_only)
 
 
 def test_run_point_marks_expr_failure_as_failed_point(tmp_path):
@@ -116,6 +158,61 @@ def test_run_point_marks_non_finite_as_failed_point(tmp_path):
     assert r["status"] == "failed"
     assert r["stage"] == "param_eval"
     assert "non-finite" in r["stderr"]
+
+
+# ── THE FIX, end-to-end: natural `--scan MS=...` feeds a VARYING MS to spheno ─
+
+def test_natural_scan_var_reaches_spheno_and_varies(tmp_path, monkeypatch):
+    """Hermetic proof of the bug fix: with the natural invocation
+    `--scan MS=...` and NO `--param`, each point must hand spheno a `--params`
+    argument that actually contains the point's MS value, and it must differ
+    across points. No real spheno/MG5 is run — subprocess is stubbed to fail at
+    the spheno stage after we capture the command line.
+
+    On the unfixed driver both captured `--params` strings were empty (MS was
+    dropped), so the vary assertion is RED on main.
+    """
+    import types
+    calls = []
+
+    def fake_run(cmd, *a, **k):
+        calls.append(list(cmd))
+        return types.SimpleNamespace(returncode=1, stdout="", stderr="stub")
+
+    monkeypatch.setattr(scan, "subprocess", types.SimpleNamespace(run=fake_run))
+    args = _dummy_args(tmp_path, [])  # natural invocation: no --param
+    for v, tag in [(158.62, "pt0"), (466.28, "pt1")]:
+        r = scan.run_point(args, None, None, None, None, 999, "MS", v, tag)
+        assert r["status"] == "failed" and r["stage"] == "spheno"
+
+    def params_of(cmd):
+        return cmd[cmd.index("--params") + 1]
+
+    p0, p1 = params_of(calls[0]), params_of(calls[1])
+    assert "MS=" in p0 and "MS=" in p1
+    assert "158.62" in p0
+    assert "466.28" in p1
+    assert p0 != p1  # the fed spectrum input actually varies per point
+
+
+def test_run_point_drives_only_does_not_feed_scan_var(tmp_path, monkeypatch):
+    """With --scan-drives-only, the scan var (theta) is NOT a spheno override;
+    only the derived --param outputs are fed."""
+    import types
+    calls = []
+
+    def fake_run(cmd, *a, **k):
+        calls.append(list(cmd))
+        return types.SimpleNamespace(returncode=1, stdout="", stderr="stub")
+
+    monkeypatch.setattr(scan, "subprocess", types.SimpleNamespace(run=fake_run))
+    args = _dummy_args(tmp_path, ["yh1=cos(theta)", "yh2=sin(theta)"],
+                       scan_drives_only=True)
+    r = scan.run_point(args, None, None, None, None, 999, "theta", -0.152, "pt0")
+    assert r["status"] == "failed" and r["stage"] == "spheno"
+    params = calls[0][calls[0].index("--params") + 1]
+    assert "theta=" not in params
+    assert "yh1=" in params and "yh2=" in params
 
 
 # ── validate_ufo_path: the read-time guard (item 2) ────────────────────────
