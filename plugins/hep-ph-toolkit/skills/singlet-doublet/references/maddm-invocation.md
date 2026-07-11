@@ -19,9 +19,19 @@ interpreter without the MadDM plugin and `generate relic_density` raises
 
 ## Shared inputs
 
-- `ufo_path` = `config.models.singlet_doublet.ufo` (the
-  `state_dir/SingletDoublet` symlink from `/sarah-build` — its basename
-  matches the target directory, which MG5 `import model` requires).
+- `ufo_path` = the absolute, hyphen-free
+  `$STATE_ROOT/models/singlet_doublet/SingletDoublet` symlink from
+  `/sarah-build` (its basename matches the target directory, which MG5
+  `import model` requires). **Construct it from `$STATE_ROOT`, do not read
+  `config.models.singlet_doublet.ufo` verbatim.** A legacy config may hold a
+  *relative*, *hyphenated* `demo_output/singlet-doublet/SingletDoublet` value
+  (written by an old demo replay run from a since-deleted worktree); MG5
+  mis-tokenizes the hyphen as a CLI flag and fails with `Path
+  .../demo_output/singlet is not a valid pathname`. `sarah-build` now writes an
+  absolute path, and `generate_maddm_script` emits a loud `WARNING:` if it is
+  ever handed a hyphenated UFO path, or a relative one that does not resolve
+  from the current working directory — but the durable
+  `$STATE_ROOT` symlink is the value to feed it.
 - `dm_candidate` = `"chi1"` (lowercase — MG5 normalises UFO particle names on
   import; see `/maddm` §Gotchas).
 - `param_card_source` = `config.models.singlet_doublet.latest_slha` (the SPheno
@@ -86,8 +96,14 @@ config = json.loads((Path(os.environ.get(
     "XDG_CONFIG_HOME", Path.home() / ".config"))
     / "hephaestus/config.json").read_text())
 model_cfg = config["models"]["singlet_doublet"]
-ufo_path  = model_cfg["ufo"]            # the state_dir/SingletDoublet symlink
-slha_path = model_cfg["latest_slha"]    # SPheno.spc from Step 4b
+# Prefer the durable, absolute, hyphen-free $STATE_ROOT symlink over the config
+# `ufo` key: a legacy config may hold a relative/hyphenated demo_output path
+# that MG5 rejects. `SingletDoublet` is the SARAH name (the symlink basename).
+ufo_path  = str(STATE_ROOT / "models" / "singlet_doublet" / "SingletDoublet")
+slha_path = model_cfg["latest_slha"]    # SPheno.spc from Step 4b (single point;
+                                        # for a SCAN pass the per-point SLHA
+                                        # explicitly — see maddm/references/
+                                        # scanning.md, "SARAH-model DD scans")
 mg5_bin   = config.get("madgraph_path", "mg5_aMC")  # top-level key, a path to bin/mg5_aMC
 
 # `plugins/hep-ph-toolkit` has a hyphen, so the maddm scripts are NOT

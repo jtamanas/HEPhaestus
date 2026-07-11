@@ -97,6 +97,17 @@ def main() -> None:
         help="Skip the compile stage (binary must already exist)."
     )
     parser.add_argument(
+        "--no-register", action="store_true",
+        help="Do NOT move the model's latest_slha convenience pointer to this "
+             "run. The per-run SLHA is still written under $STATE_ROOT and its "
+             "path is echoed in stdout; only the global latest_slha cache is "
+             "left untouched. Use for parameter scans, where every point would "
+             "otherwise overwrite the pointer and leave it stuck at whichever "
+             "point ran last (poisoning the next latest_slha consumer). The "
+             "provenance guard (register_latest_slha) is what --no-register "
+             "skips, so pass the per-point slha_path explicitly downstream."
+    )
+    parser.add_argument(
         "--backend", choices=["spheno", "analytic"], default=None,
         help="Override the spectrum backend for this run. Without this flag "
              "the spec's backends.spectrum (or the analytic fallback) decides. "
@@ -301,8 +312,22 @@ def main() -> None:
     result["stage"] = "run"
     print(json.dumps(result))
 
-    # Update config on success
-    if result.get("status") in ("ok", "recoverable"):
+    # Update config on success.
+    #
+    # --no-register skips this entirely: the per-run SLHA still exists on disk
+    # (its path is in `result["slha_path"]`, printed above), but the global
+    # latest_slha convenience pointer is NOT moved. This keeps a scan from
+    # rewriting the pointer once per point and leaving it stuck at the last
+    # point run. When should the pointer move? On a single canonical-point run
+    # you want downstream DD consumers to pick up automatically. When should it
+    # NOT? During a scan, where "latest" is ambiguous — pass the per-point
+    # slha_path explicitly to each DD run instead of trusting latest_slha.
+    if args.no_register:
+        if result.get("status") in ("ok", "recoverable"):
+            print(json.dumps({"stage": "register", "status": "skipped",
+                              "reason": "--no-register",
+                              "slha_path": result.get("slha_path")}))
+    elif result.get("status") in ("ok", "recoverable"):
         slha_path = result.get("slha_path")
         now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         if slha_path:

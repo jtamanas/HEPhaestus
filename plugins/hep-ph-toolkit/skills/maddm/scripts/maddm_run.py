@@ -31,6 +31,7 @@ still serves one. See ``maddm/SKILL.md`` section 'Frozen-SI DD-rerun staleness'.
 from __future__ import annotations
 
 import hashlib
+import os
 import shlex
 import sys
 from pathlib import Path
@@ -42,6 +43,49 @@ _OBSERVABLE_TO_GENERATE = {
     "direct_detection": "direct_detection",
     "indirect_detection": "indirect_detection",
 }
+
+
+def validate_ufo_path(ufo_path: str | Path) -> list[str]:
+    """Return (and warn about) reasons *ufo_path* may break MG5 ``import model``.
+
+    MG5's command interpreter tokenizes ``import model <path>`` on whitespace
+    *and* mis-parses a hyphen in a path component as the start of a CLI flag, so
+    a hyphenated path like ``.../demo_output/singlet-doublet/SingletDoublet``
+    fails with ``Path .../demo_output/singlet is not a valid pathname``. A
+    relative path is CWD-dependent; one that no longer resolves from the
+    current working directory was recorded against some other session's CWD —
+    the worktree-relative trap from the θ-scan friction log. A relative path
+    that DOES resolve from here is legitimate and is not warned about.
+
+    This is a LOUD-but-non-fatal read-time guard: it prints a ``WARNING:`` line
+    to stderr for each problem and returns the list of warning strings (empty
+    when the path is clean). It never raises — the caller may have a good reason
+    (e.g. a path it will normalise itself). Prefer the absolute, hyphen-free
+    ``$STATE_ROOT/models/<model>/<SarahName>`` symlink written by /sarah-build.
+    """
+    p = str(ufo_path)
+    warnings: list[str] = []
+    if not os.path.isabs(p) and not Path(p).exists():
+        warnings.append(
+            f"UFO path {p!r} is RELATIVE and does not resolve from the current "
+            f"working directory ({os.getcwd()}) — it was likely recorded "
+            "against a different session's CWD. Pass an absolute path "
+            "(e.g. $STATE_ROOT/models/<model>/<SarahName>)."
+        )
+    # Check every component from the model dir down for a hyphen. MG5 chokes on
+    # any hyphen in the imported path, but the common offender is a hyphenated
+    # model directory (``singlet-doublet``) vs. the underscore config slug.
+    hyphenated = [part for part in Path(p).parts if "-" in part]
+    if hyphenated:
+        warnings.append(
+            f"UFO path {p!r} contains hyphenated component(s) {hyphenated} — "
+            "MG5 `import model` mis-tokenizes a hyphen as a CLI flag and fails "
+            "with 'Path ... is not a valid pathname'. Use the hyphen-free "
+            "$STATE_ROOT/models/<model>/<SarahName> symlink instead."
+        )
+    for w in warnings:
+        print(f"WARNING: maddm UFO path: {w}", file=sys.stderr)
+    return warnings
 
 
 def prepare_output_dir(out_dir: str | Path, fresh: bool = True) -> None:
@@ -166,6 +210,12 @@ def generate_maddm_script(
             f"unknown observable(s): {unknown}; "
             f"expected any of {sorted(_OBSERVABLE_TO_GENERATE)}"
         )
+
+    # Read-time guard: warn loudly (non-fatal) if the UFO path is relative or
+    # hyphenated — both make the emitted `import model <ufo_path>` line fail
+    # inside MG5. The script is still generated verbatim so a caller that knows
+    # what it is doing is not blocked.
+    validate_ufo_path(ufo_path)
 
     candidate_token = (
         dm_candidate.lower() if isinstance(dm_candidate, str) else dm_candidate
