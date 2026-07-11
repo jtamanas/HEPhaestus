@@ -168,6 +168,12 @@ log "Wolfram \$SystemID: $SYSTEM_ID"
 
 TARGET_BIN_DIR="$APP_DIR/$SYSTEM_ID"
 if [ ! -x "$TARGET_BIN_DIR/ReadForm" ] || [ ! -x "$TARGET_BIN_DIR/ToForm" ]; then
+  # Primary lookup: the DeveloperKit path relative to $InstallationDirectory.
+  # NB: on some layouts (e.g. WE 14.3, where $InstallationDirectory points
+  # inside "Wolfram Player.app/Contents") this path does NOT exist and the
+  # PATH fallback below is what actually resolves mcc — both are needed.
+  # The ./compile C toolchain (mcc->cc, gfortran) is not pre-flighted; a
+  # missing toolchain surfaces as the loud "./compile failed" blocker below.
   FC_MCC="$WOLFRAM_INSTALL_DIR/SystemFiles/Links/MathLink/DeveloperKit/$SYSTEM_ID/CompilerAdditions/mcc"
   FC_MATHKERNEL="$WOLFRAM_INSTALL_DIR/MacOS/MathKernel"
   if [ ! -x "$FC_MCC" ]; then
