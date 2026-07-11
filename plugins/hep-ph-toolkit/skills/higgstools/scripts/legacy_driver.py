@@ -88,6 +88,30 @@ class HiggsBoundsNoResultError(HiggsToolsNumericCrash):
         self.code = "HIGGSTOOLS_HB_NO_RESULT"
 
 
+class HiggsSignalsNoResultError(HiggsToolsNumericCrash):
+    """HS ran (exit 0) but produced NO ``HiggsSignalsResults`` block.
+
+    Exact HS-side analogue of :class:`HiggsBoundsNoResultError`. HiggsSignals-2
+    writes its chi^2 into ``Block HiggsSignalsResults`` INSIDE the SLHA file
+    (parallel to HB's ``HiggsBoundsResults``); nothing lands on stdout. Two
+    known ways it exits 0 while doing no work:
+
+    * wrong command-line argument count — HS-2.6.2 prints "Incorrect number of
+      parameters given on command line" and does a Fortran STOP that exits 0;
+    * unopenable input (truncated prefix, missing file).
+
+    In every case the driver used to fall through to a hardcoded
+    ``chi2_total=0.0 / ndf=0`` default, making ``hs_consistent =
+    (0.0 - chi2_sm_ref) < delta`` vacuously True for EVERY model — a silent
+    "consistent" for a point HS never touched. Raise instead so the failure is
+    loud and diagnosable, mirroring the HB-side HIGGSTOOLS_HB_NO_RESULT guard.
+    """
+
+    def __init__(self, message: str, context: dict | None = None):
+        super().__init__(message, context)
+        self.code = "HIGGSTOOLS_HS_NO_RESULT"
+
+
 def _find_binary(build_dir: str, name: str) -> str:
     """Find HB or HS binary in build dir. Raises FileNotFoundError if absent."""
     candidates = [
@@ -214,6 +238,79 @@ def _parse_hb_output(stdout: str) -> list[ChannelResult]:
             except (ValueError, IndexError):
                 pass
     return channels
+
+
+def _parse_hs_slha_results(slha_text: str) -> HSResult | None:
+    """Parse the ``Block HiggsSignalsResults`` HS-2 writes back into the SLHA.
+
+    HiggsSignals-2 in SLHA mode does NOT print its chi^2 to stdout — it appends
+    a ``HiggsSignalsResults`` block to the input file (exactly parallel to how
+    HiggsBounds-5 writes ``HiggsBoundsResults``). Rows are ``<key> <value>``;
+    the keys we consume (HS-2.6.2 layout, verified against a live run on the
+    canonical singlet_doublet SPheno.spc)::
+
+        4  Number of signal strength peak observables
+        5  Number of STXS signal rate observables
+        6  Number of LHC Run-1 signal rate observables
+        7  Number of Higgs mass observables
+        8  Number of observables (total)
+       15  chi^2 (signal strength) (total)      -> chi2_rates
+       16  chi^2 (Higgs mass) (total)           -> chi2_masses
+       17  chi^2 (total)                        -> chi2_total
+
+    ndf_rates is the count of signal-strength observables (keys 4+5+6),
+    ndf_masses the count of Higgs-mass observables (key 7). Rows 0/1 carry
+    ``||text||`` version/dataset strings and are skipped.
+
+    Returns None when the block is absent (e.g. HS never ran, or exited 0 on
+    bad args writing nothing), so callers can raise the loud no-result blocker.
+    If the file happens to contain more than one such block (HS appends on each
+    invocation), the LAST one wins — it is the most recent run's verdict.
+    """
+    fields: dict[int, float] = {}
+    in_block = False
+    found = False
+    for line in slha_text.splitlines():
+        stripped = line.strip()
+        if re.match(r"^Block\s+HiggsSignalsResults\b", stripped, re.IGNORECASE):
+            in_block = True
+            found = True
+            fields = {}  # last block wins
+            continue
+        if re.match(r"^(Block|DECAY)\b", stripped, re.IGNORECASE):
+            in_block = False
+            continue
+        if not in_block or not stripped or stripped.startswith("#"):
+            continue
+        # Numeric rows only: "<key>  <value>  # comment". Skip ||text|| rows.
+        m = re.match(r"^(\d+)\s+([0-9.eE+\-]+)\s*(?:#.*)?$", stripped)
+        if not m:
+            continue
+        try:
+            fields[int(m.group(1))] = float(m.group(2))
+        except ValueError:
+            continue
+
+    if not found or 17 not in fields:
+        return None
+
+    chi2_total = fields.get(17, 0.0)
+    chi2_rates = fields.get(15, 0.0)
+    chi2_masses = fields.get(16, 0.0)
+    ndf_rates = int(fields.get(4, 0) + fields.get(5, 0) + fields.get(6, 0))
+    ndf_masses = int(fields.get(7, 0))
+
+    from p_value import compute_p_value
+
+    return HSResult(
+        chi2_total=chi2_total,
+        chi2_rates=chi2_rates,
+        chi2_masses=chi2_masses,
+        ndf_rates=ndf_rates,
+        ndf_masses=ndf_masses,
+        p_value_rates=compute_p_value(chi2_rates, ndf_rates) if ndf_rates else float("nan"),
+        p_value_masses=compute_p_value(chi2_masses, ndf_masses) if ndf_masses else float("nan"),
+    )
 
 
 def _parse_hs_output(stdout: str) -> dict[str, Any]:
@@ -391,6 +488,8 @@ def run_higgsbounds(
 def run_higgssignals(
     hs_build: str,
     slha_file: str,
+    n_neutral: int,
+    n_charged: int,
     dMh: dict[str, float] | None = None,
 ) -> HSResult:
     """
@@ -402,22 +501,48 @@ def run_higgssignals(
         Path to HiggsSignals build directory.
     slha_file : str
         Path to SLHA2 input file.
+    n_neutral : int
+        Number of neutral Higgs bosons (nHzero).
+    n_charged : int
+        Number of charged Higgs pairs (nHplus).
     dMh : dict or None
-        Theoretical mass uncertainties per Higgs state.
+        Theoretical mass uncertainties per Higgs state. Accepted for API
+        parity with the unified backend; HS-2's command line takes the mass
+        pdf choice (arg 2) rather than per-state dMh, so this is not currently
+        mapped onto the invocation.
 
     Returns
     -------
     HSResult
-        Parsed chi2/ndf results from HS native output.
+        Parsed chi2/ndf results read back from the SLHA
+        ``Block HiggsSignalsResults`` HS-2 appends to the input file.
+
+    Raises
+    ------
+    HiggsSignalsNoResultError
+        When HS exits 0 but writes no results block (wrong argument count,
+        unopenable input, etc.) — the silent-no-op class this guard kills.
     """
     hs_bin = _find_binary(hs_build, "HiggsSignals")
 
+    # HS-2.6.2 SLHA invocation (6 positional args):
+    #   HiggsSignals <expdata> <pdf> <whichinput> <nHzero> <nHplus> <prefix>
+    # The as-shipped driver passed 5 args ("latestresults peak SLHA SLHA
+    # <prefix>"), so HS printed "Incorrect number of parameters given on
+    # command line" and did a Fortran STOP that EXITS 0 — the returncode!=0
+    # guard never fired, and the function fell through to a hardcoded
+    # chi2_total=0.0 default, making hs_consistent vacuously True for EVERY
+    # model. expdata=latestresults, pdf=2 (gaussian mass uncertainty); results
+    # land in Block HiggsSignalsResults inside the SLHA file, NOT on stdout.
+    #
     # Basename + cwd, same as run_higgsbounds: the HB/HS Fortran command-line
     # buffer truncates file prefixes at ~100 chars (real state-root run paths
     # exceed that), silently running on unopenable input.
     slha_abs = os.path.abspath(slha_file)
-    cmd = [hs_bin, "latestresults", "peak", "SLHA", "SLHA",
-           os.path.basename(slha_abs)]
+    slha_dir = os.path.dirname(slha_abs)
+    slha_base = os.path.basename(slha_abs)
+    cmd = [hs_bin, "latestresults", "2", "SLHA",
+           str(n_neutral), str(n_charged), slha_base]
 
     try:
         proc = subprocess.run(
@@ -425,7 +550,7 @@ def run_higgssignals(
             capture_output=True,
             text=True,
             timeout=120,
-            cwd=os.path.dirname(slha_abs),
+            cwd=slha_dir,
         )
     except subprocess.TimeoutExpired:
         raise HiggsToolsNumericCrash(
@@ -448,20 +573,40 @@ def run_higgssignals(
             },
         )
 
-    parsed = _parse_hs_output(proc.stdout)
+    # HS-2 writes its chi^2 into Block HiggsSignalsResults INSIDE the SLHA
+    # file; stdout carries only BR diagnostics. Read the block back. If it is
+    # absent, HS did no work despite exiting 0 (the classic wrong-arg-count
+    # STOP, or unopenable input) — raise a loud blocker instead of fabricating
+    # a chi2=0 "consistent". Detect the specific bad-arg banner for a clearer
+    # message when present.
+    try:
+        slha_after = open(slha_abs).read()
+    except OSError:
+        slha_after = ""
+    hs_result = _parse_hs_slha_results(slha_after)
+    if hs_result is not None:
+        return hs_result
 
-    from p_value import compute_p_value
-    p_rates = compute_p_value(parsed["chi2_rates"], parsed["ndf_rates"])
-    p_masses = compute_p_value(parsed["chi2_masses"], parsed["ndf_masses"])
-
-    return HSResult(
-        chi2_total=parsed["chi2_total"],
-        chi2_rates=parsed["chi2_rates"],
-        chi2_masses=parsed["chi2_masses"],
-        ndf_rates=parsed["ndf_rates"],
-        ndf_masses=parsed["ndf_masses"],
-        p_value_rates=p_rates,
-        p_value_masses=p_masses,
+    combined = (proc.stdout or "") + "\n" + (proc.stderr or "")
+    bad_args = "incorrect number of parameters" in combined.lower()
+    detail = (
+        " HiggsSignals reported 'Incorrect number of parameters given on "
+        "command line' — the invocation argument count is wrong."
+        if bad_args else ""
+    )
+    raise HiggsSignalsNoResultError(
+        "HiggsSignals produced no results: no HiggsSignalsResults block was "
+        "written into the SLHA file." + detail + " HS-2 exits 0 even when it "
+        "does no work (bad argument count, unopenable input), so an empty "
+        "result must not be reported as a vacuous 'consistent'.",
+        context={
+            "slha_file": slha_file,
+            "cmd": cmd,
+            "returncode": proc.returncode,
+            "bad_arg_count": bad_args,
+            "stdout_tail": proc.stdout[-500:] if proc.stdout else "",
+            "stderr_tail": proc.stderr[-500:] if proc.stderr else "",
+        },
     )
 
 

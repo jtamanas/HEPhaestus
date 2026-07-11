@@ -145,6 +145,10 @@ subprocess.run(
 # ~1e-58 cm² Z-exchange (vector) floor. See maddm/scripts/slha_complete.py.
 card = Path(out_dir) / "Cards" / "param_card.dat"
 shutil.copy(slha_path, card)
+# complete_sarah_param_card also STRIPS MG5-indigestible blocks (SPheno's
+# 1-loop DECAY1L) before returning — see the Gotcha below. Left in place they
+# crash `launch -f` while mg5_aMC exits 0 and echoes the Planck constant, a
+# silent failure; the report includes {"_stripped_indigestible": "DECAY1L"}.
 completed_blocks = _load("slha_complete.py").complete_sarah_param_card(card, ufo_path)
 
 # The BSM Yukawas yh1/yh2 carry physics, so the completion helper does NOT
@@ -196,9 +200,17 @@ if "block bsmparams" not in card.read_text().lower():
 # matrix; gate hand-built cards by checking ZN·M_SARAH·ZNᵀ is diagonal.
 
 # Phase 2: launch -f using the overlaid, completed card.
-subprocess.run(
+launch_proc = subprocess.run(
     [mg5_bin, "--mode=maddm", str(workdir / "launch.mg5")],
-    cwd=workdir, check=True,
+    cwd=workdir, capture_output=True, text=True,
+)
+# LOUD no-output guard: mg5_aMC can EXIT 0 while writing no results (e.g. a
+# param-card crash inside `launch -f`), echoing the Planck constant
+# `Omega h^2 = 1.2000e-01` on stdout as if computed. A returncode of 0 is NOT
+# evidence of success — verify a results file was written before parsing
+# stdout. Raises MADDM_LAUNCH_NO_OUTPUT (recoverable) when absent.
+_load("maddm_run.py").assert_launch_produced_output(
+    out_dir, returncode=launch_proc.returncode, stdout_tail=launch_proc.stdout,
 )
 ```
 
@@ -382,8 +394,13 @@ sigma_json = dd_out_dir / "scattering.json"
 sigma_json.write_text(json.dumps(scattering, indent=2))
 
 # Dispatch /ddcalc for the per-experiment 90%-CL exclusion verdict.
+# Invoke run_ddcalc.py by FILE PATH, not `-m plugins.hep_ph_toolkit...`:
+# `plugins/hep-ph-toolkit` has a hyphen, so it is not a valid dotted package
+# path and `-m` raises ModuleNotFoundError (same hyphen gotcha noted for the
+# maddm scripts above — run_ddcalc.py is a standalone CLI, so a direct path
+# just works).
 ddcalc_proc = subprocess.run(
-    ["python3", "-m", "plugins.hep_ph_toolkit.skills.ddcalc.scripts.run_ddcalc",
+    ["python3", "plugins/hep-ph-toolkit/skills/ddcalc/scripts/run_ddcalc.py",
      "run", "--sigma-json", str(sigma_json)],
     capture_output=True, text=True, check=True,
 )

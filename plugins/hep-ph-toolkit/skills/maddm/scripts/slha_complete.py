@@ -42,6 +42,7 @@ Library function Claude composes per-task — not a CLI executable.
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 # Blocks whose UFO default of 0 must be reinterpreted when the block is
@@ -55,6 +56,21 @@ from pathlib import Path
 _ROTATION_HINT = re.compile(r"(MIX|MIXING)$", re.IGNORECASE)
 _PHASE_RE_HINT = re.compile(r"^PHASES$", re.IGNORECASE)
 _PHASE_IM_HINT = re.compile(r"^IM(PHASES)$", re.IGNORECASE)
+
+# SLHA keywords SPheno legitimately emits but MG5's param_card.dat reader
+# cannot digest. ``DECAY1L`` is SPheno's 1-loop-corrected partial-width block
+# (emitted alongside the tree-level ``DECAY`` when a spectrum is produced with
+# loop corrections, e.g. for the top and the Higgs). MG5's reader does not
+# recognise ``DECAY1L`` as a block keyword; it tries to parse
+# ``DECAY1L         6    1.38499650E+00   # Fu_3`` as ordinary parameter lines
+# and crashes with ``InvalidParam : line was ['l', '6', '1.38499650e+00']``.
+# CRUCIALLY that crash happens INSIDE ``launch -f`` yet the enclosing
+# ``mg5_aMC --mode=maddm`` process still EXITS 0 and prints the Planck relic
+# constant (Omega h^2 = 1.2000e-01) it loaded before the crash, writing no
+# output/run_01/ — a silent failure that masquerades as a landed-on-the-band
+# success. Each keyword is matched as a whole first token (case-insensitive),
+# so the ordinary ``DECAY <pdg>`` block is never touched.
+_MADDM_INDIGESTIBLE_KEYWORDS = frozenset({"decay1l"})
 
 
 def _external_blocks(ufo_path: str | Path) -> dict[str, list]:
@@ -79,6 +95,57 @@ def _external_blocks(ufo_path: str | Path) -> dict[str, list]:
     for b in blocks:
         blocks[b].sort()
     return blocks
+
+
+def strip_maddm_indigestible_blocks(text: str) -> tuple[str, list[str]]:
+    """Remove SLHA blocks MG5's param_card reader cannot parse (e.g. DECAY1L).
+
+    SPheno legitimately emits a 1-loop ``DECAY1L`` block alongside the
+    tree-level ``DECAY``; MG5 chokes on it and — worst of all — the resulting
+    crash inside ``launch -f`` still exits 0 while echoing the Planck relic
+    constant, a silent failure (see ``_MADDM_INDIGESTIBLE_KEYWORDS``). This
+    strips each such block: its header line plus every following BR/parameter
+    sub-line, up to (but not including) the next top-level keyword line (one
+    whose first non-space character is a letter, i.e. a new ``Block``/``DECAY``/
+    ``DECAY1L`` header). Comment and indented/numeric lines belong to the block.
+
+    Returns ``(new_text, removed)`` where ``removed`` is the list of stripped
+    header lines (empty when nothing matched). Matching is on the first
+    whitespace token, uppercased/lowercased, so the ordinary ``DECAY <pdg>``
+    block is never removed. Loud at the library level: when anything is
+    removed, a ``WARNING:`` line naming the stripped headers is printed to
+    stderr (no filesystem side effects — the caller still decides what to do
+    with the returned text).
+    """
+    out_lines: list[str] = []
+    removed: list[str] = []
+    skipping = False
+    for line in text.splitlines(keepends=True):
+        stripped = line.strip()
+        first_token = stripped.split()[0].lower() if stripped else ""
+        is_top_level = bool(line[:1].isalpha())
+        if is_top_level:
+            # A new top-level keyword line always ends any prior skip and
+            # decides whether we start a new one.
+            if first_token in _MADDM_INDIGESTIBLE_KEYWORDS:
+                skipping = True
+                removed.append(stripped)
+                continue
+            skipping = False
+        if skipping:
+            # Indented/comment/numeric continuation of an indigestible block.
+            continue
+        out_lines.append(line)
+    if removed:
+        print(
+            "WARNING: maddm param-card prep: stripped MG5-indigestible SLHA "
+            f"block(s) {removed!r} — MG5's param_card reader crashes on these "
+            "inside `launch -f` while exiting 0 and echoing the Planck "
+            "constant (silent fake success). The tree-level DECAY blocks are "
+            "untouched.",
+            file=sys.stderr,
+        )
+    return "".join(out_lines), removed
 
 
 def complete_sarah_param_card(
@@ -107,13 +174,25 @@ def complete_sarah_param_card(
     expected = _external_blocks(ufo_path)
 
     text = card_path.read_text()
+
+    # Strip MG5-indigestible blocks (e.g. SPheno's 1-loop DECAY1L) FIRST. Left
+    # in place they crash `launch -f` while it exits 0 and echoes the Planck
+    # relic constant — a silent failure. SPheno legitimately emits DECAY1L, so
+    # this must be scrubbed in the card-prep step every documented overlay
+    # recipe already routes through, not left for each caller to rediscover.
+    report: dict[str, str] = {}
+    text, stripped_blocks = strip_maddm_indigestible_blocks(text)
+    if stripped_blocks:
+        report["_stripped_indigestible"] = ", ".join(sorted(set(
+            b.split()[0] for b in stripped_blocks
+        )))
+
     present = {
         m.group(1).lower()
         for m in re.finditer(r"(?im)^\s*block\s+(\w+)", text)
     }
 
     inserts: list[str] = []
-    report: dict[str, str] = {}
 
     # Repair a PRESENT real phase block whose entry is exactly 0. That value
     # is SARAH's Set_All_Parameters_0 sentinel, not physics: a phase has unit
@@ -188,7 +267,7 @@ def complete_sarah_param_card(
             text = text[:pos] + block_text.lstrip("\n") + "\n" + text[pos:]
         else:
             text = text.rstrip("\n") + "\n" + block_text
-    if (inserts or repaired) and in_place:
+    if (inserts or repaired or stripped_blocks) and in_place:
         card_path.write_text(text)
 
     return report

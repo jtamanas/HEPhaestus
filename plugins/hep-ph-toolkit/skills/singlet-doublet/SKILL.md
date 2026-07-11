@@ -265,7 +265,12 @@ consumable effective-coupling blocks** (`HiggsCouplingsBosons`/`Fermions` +
 adapter consumes. The full gate has been run on this output with the real
 HiggsBounds-5.10.2 + HiggsSignals-2.6.2 binaries: **HBresult = 1 (allowed)**,
 obsratio 0.606, most sensitive channel `(pp)→h1→ZZ→4l` (CMS 1312.5353),
-HS χ² ≈ 0. SPheno additionally provides RGE running, 1-loop mass
+HS **χ²_total = 118.84 over 111 observables** (signal-strength 118.42 + mass
+0.42). (The earlier "HS χ² ≈ 0" here was the pre-fix legacy-driver no-op — HS
+was invoked with the wrong argument count, exited 0, and the driver fabricated
+χ²=0; the corrected 6-arg invocation reads HS's real `Block
+HiggsSignalsResults` back from the SLHA. Note the raw χ² inherits SPheno's
+h1 BR-sum ≈ 1.25 over-count on this card.) SPheno additionally provides RGE running, 1-loop mass
 corrections, and decay widths; reach for it when those matter.
 
 | MS  | MPsi | y   | θ | (yh1, yh2)     | Position            |

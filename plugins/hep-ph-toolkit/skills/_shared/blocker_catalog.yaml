@@ -341,6 +341,26 @@ blockers:
     workaround_codes: []
     owned_by: this-ws
 
+  MADDM_LAUNCH_NO_OUTPUT:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [maddm]
+    triggered_by_axes: []
+    digest_reference: "maddm/scripts/maddm_run.py (MadDMNoOutputError); singlet-doublet/references/maddm-invocation.md"
+    description: >-
+      mg5_aMC --mode=maddm launch exited but wrote no
+      output/run_*/MadDM_results.txt. Canonical trigger: an unparseable
+      param-card block (SPheno's 1-loop DECAY1L) crashes the reader INSIDE
+      `launch -f`, yet the enclosing process still exits 0 and stdout echoes the
+      Planck reference constant (Omega h^2 = 1.2000e-01) as if computed —
+      writing no output. A returncode of 0 is NOT evidence of success. Emitted by
+      maddm_run.assert_launch_produced_output; the loud complement to
+      slha_complete.strip_maddm_indigestible_blocks, protecting the whole
+      no-output class (not just DECAY1L).
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
   DM_PROVENANCE_INCONSISTENT_WITH_A2:
     class: spec-authoring-gap
     severity: fatal
@@ -731,6 +751,47 @@ blockers:
     triggered_by_axes: []
     digest_reference: "intel/digest.md §50 (HIGGSTOOLS_NUMERIC_CRASH)"
     description: "Backend segfault on one scan row; row marked bad."
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  HIGGSTOOLS_HB_NO_RESULT:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [higgstools]
+    triggered_by_axes: []
+    digest_reference: "higgstools/scripts/legacy_driver.py (HiggsBoundsNoResultError)"
+    description: >-
+      HiggsBounds-5 exited 0/1 but produced ZERO parsable results: no Block
+      HiggsBoundsResults was written into the SLHA file and stdout carried no
+      per-channel table, so HB did no work. Known trigger: HB's Fortran
+      command-line buffer truncates file prefixes at ~100 chars, it prints
+      "problem opening the SLHA file", runs on unusable input, and still exits
+      0. Returning an empty channel list would make compute_hb_allowed([])
+      vacuously True — a silent false "allowed". Emitted by
+      legacy_driver.run_higgsbounds when both the SLHA-block read-back and the
+      stdout parse are empty. HB-side sibling of HIGGSTOOLS_HS_NO_RESULT
+      (introduced in PR #19; catalog entry added retroactively).
+    workaround_codes: []
+    owned_by: dark-matter-constraints
+
+  HIGGSTOOLS_HS_NO_RESULT:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [higgstools]
+    triggered_by_axes: []
+    digest_reference: "higgstools/scripts/legacy_driver.py (HiggsSignalsNoResultError)"
+    description: >-
+      HiggsSignals-2 exited 0 but wrote NO Block HiggsSignalsResults into the
+      SLHA file, so it did no work. HS-2 writes its chi^2 into that block (not
+      stdout) and exits 0 even on a wrong command-line argument count
+      ("Incorrect number of parameters given on command line" -> Fortran STOP)
+      or unopenable input. Returning the hardcoded chi2_total=0.0/ndf=0 default
+      made hs_consistent = (0.0 - chi2_sm_ref) < delta vacuously True for EVERY
+      model — a silent no-op. Emitted by
+      legacy_driver.run_higgssignals when the block read-back is empty. HS-side
+      analogue of HIGGSTOOLS_HB_NO_RESULT.
     workaround_codes: []
     owned_by: dark-matter-constraints
 

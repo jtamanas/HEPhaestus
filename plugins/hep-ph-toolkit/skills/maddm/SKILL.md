@@ -66,6 +66,23 @@ MadDM plugin; the `generate relic_density` line then fails with
 `_shared/installs/maddm/INSTALL.md` for the plugin-loader
 mechanics.
 
+**Mandatory after every launch:** verify the launch actually wrote results
+before parsing anything from stdout —
+
+```python
+maddm_run.assert_launch_produced_output(
+    out_dir, returncode=proc.returncode, stdout_tail=proc.stdout,
+)
+```
+
+`mg5_aMC` can exit 0 having written no output while echoing the Planck
+constant (`Omega h^2 = 1.2000e-01`) as if computed — see the DECAY1L gotcha
+below. The guard raises `MADDM_LAUNCH_NO_OUTPUT` (recoverable) when no
+`output/run_*/MadDM_results.txt` exists. Pair it with a fresh output dir
+(`generate_maddm_script` default `fresh=True`): the check resolves the newest
+results file by mtime, so a reused dir could satisfy it with a *previous*
+run's stale results.
+
 ### Key Commands
 
 | Command | Description |
@@ -240,6 +257,33 @@ warning is neither necessary nor sufficient — patching one coupling can clear
 the warning while σ_SI stays on the floor. See
 `singlet-doublet/SKILL.md` step 4e for the reference wiring and the σ_SI gate.
 
+### SPheno's `DECAY1L` block crashes `launch -f` while it exits 0 (silent no-op)
+
+A spectrum from `--backend spheno` carries a **1-loop `DECAY1L`** block (loop-
+corrected partial widths, e.g. for the top and the Higgs) alongside the tree-
+level `DECAY`. MG5's `param_card.dat` reader does not recognise `DECAY1L` as a
+block keyword and crashes parsing its BR sub-lines
+(`InvalidParam : line was ['l', '6', '1.38499650e+00']`). The crash happens
+**inside `launch -f`**, but the enclosing `mg5_aMC --mode=maddm` process still
+**exits 0** and stdout still prints `INFO: Omega h^2 = 1.2000e-01 +- 1.2000e-03`
+— **that line is MadDM echoing the Planck reference constant loaded before the
+crash, not a computed relic density.** No `output/run_01/` is created. Reading
+stdout for `Omega h^2 = …` without checking that `MadDM_results.txt` exists
+silently reports the Planck fiducial (0.1200) as the model's relic density — a
+nasty trap because 0.1200 looks like a "landed on the relic band" success.
+
+Two-layer fix, both in place:
+- **Strip:** `complete_sarah_param_card` (and the standalone
+  `slha_complete.strip_maddm_indigestible_blocks`) now removes any `DECAY1L`
+  block before overlay, so every documented recipe that routes through the
+  card-prep step is fixed automatically. SPheno legitimately emits `DECAY1L`;
+  only MG5 can't digest it.
+- **Loud guard:** after the launch subprocess returns, call
+  `maddm_run.assert_launch_produced_output(out_dir, returncode=rc, stdout_tail=…)`.
+  It raises `MADDM_LAUNCH_NO_OUTPUT` (recoverable) when no
+  `output/run_*/MadDM_results.txt` exists — protecting the whole no-output
+  class, not just `DECAY1L`. A returncode of 0 is **not** evidence of success.
+
 ## File Map
 
 | Path | Description |
@@ -248,7 +292,8 @@ the warning while σ_SI stays on the floor. See
 | `references/observables.md` | Relic density, DD, ID computation details |
 | `references/scanning.md` | Parameter scans and experimental limit comparison |
 | `references/reading-output.md` | Diagnostics-only manual parse of `MadDM_results.txt` (prefer `/gamlike`) |
-| `scripts/maddm_run.py` | MadDM session script generator (`generate_maddm_script`) |
+| `scripts/maddm_run.py` | MadDM session script generator (`generate_maddm_script`); launch-no-output guard (`assert_launch_produced_output`, `MADDM_LAUNCH_NO_OUTPUT`) |
+| `scripts/slha_complete.py` | SARAH param-card completion (`complete_sarah_param_card`) + MG5-indigestible-block strip (`strip_maddm_indigestible_blocks`, e.g. `DECAY1L`) |
 | `scripts/staleness.py` | Frozen-SI DD-rerun staleness detector (`detect_stale_dd`, `MADDM_STALE_DD_RESULT`) |
 | `scripts/scan_grid.py` | Grid generation and batch orchestration |
 | `scripts/limits.py` | Experimental exclusion curve loading and comparison |

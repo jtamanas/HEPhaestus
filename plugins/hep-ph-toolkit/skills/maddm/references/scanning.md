@@ -179,6 +179,19 @@ After all grid points complete, read `MadDM_results.txt` directly for each
 point. MadDM 3.2+ writes results to
 `<output_dir>/output/run_01/MadDM_results.txt`.
 
+**Mandatory per point, before parsing anything:** call
+`maddm_run.assert_launch_produced_output(output_dir, returncode=rc,
+stdout_tail=stdout)` right after each launch returns. `mg5_aMC` can exit 0
+having written no results while echoing the Planck constant
+(`Omega h^2 = 1.2000e-01`) on stdout as if computed (see the DECAY1L gotcha in
+`SKILL.md`); the guard raises `MADDM_LAUNCH_NO_OUTPUT` (recoverable) instead
+of letting that echo enter your scan table. Use a fresh output dir per point
+(`fresh=True`, the default) — the guard resolves the newest results file by
+mtime, so a reused dir could satisfy it with a previous run's stale results.
+(`scan_sarah_dd.py` performs the equivalent check itself, marking the point
+`stage: "no_results_txt"`; this step is for hand-rolled loops like the one
+below.)
+
 ```python
 import re
 from pathlib import Path
