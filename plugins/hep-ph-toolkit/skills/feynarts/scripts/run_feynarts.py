@@ -34,11 +34,18 @@ from typing import Optional
 _SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(_SCRIPT_DIR))
 
+# Cross-skill helpers live in skills/_shared/. The slug -> SARAH-name mapping is
+# the single source of truth shared with sarah-build / spheno-build; do NOT
+# re-derive it here.
+_SHARED_DIR = _SCRIPT_DIR.parent.parent / "_shared"
+sys.path.insert(0, str(_SHARED_DIR))
+
 from cache_key import compute_cache_key
 from postprocess import PostprocessError, postprocess_output
 from render_driver import render_driver, render_make_feynarts_driver
 from resolve_model import ModelResolutionError, resolve_model
 from resolve_process import ProcessResolutionError, resolve_process
+from sarah_name import modelspec_name_to_sarah
 
 _DEFAULT_STATE_ROOT = os.path.expanduser(
     os.environ.get("HEPPH_FEYNARTS_STATE_ROOT", "~/.local/share/hephaestus")
@@ -186,6 +193,20 @@ def run(
     lorentz_gen = str(Path(fa_path) / "Models" / "Lorentz.gen")
 
     # --- 2. Model resolution ---
+    # For --sarah-model, ensure the FeynArts state exists BEFORE resolving.
+    # A first-ever SARAH model has no feynarts_state/ yet; bootstrap it here
+    # (SARAH MakeFeynArts[] + register) so resolve_model below can succeed.
+    # Idempotent: a no-op once <slug>.mod is registered, so re-runs and the
+    # already-registered production state are untouched.
+    if sarah_model is not None:
+        _bootstrap_sarah_state(
+            slug=sarah_model,
+            state_root=state_root or _DEFAULT_STATE_ROOT,
+            sarah_path=_read_config("sarah_path"),
+            ws_path=ws_path,
+            timeout_s=_timeout,
+        )
+
     try:
         model_info = resolve_model(
             model=model,
@@ -216,26 +237,6 @@ def run(
     n_out = proc_info["n_out"]
     process_tuple = _normalize_process_tuple(proc_info["feynarts_tuple"])
     processspec = proc_info["processspec"]
-
-    # --- 4. Optional post-hoc SARAH MakeFeynArts[] ---
-    if sarah_model is not None:
-        _run_make_feynarts(
-            model_name=model_name,
-            sarah_path=_read_config("sarah_path"),
-            feynarts_state_dir=model_info.get("state_dir", ""),
-            ws_path=ws_path,
-            timeout_s=_timeout,
-        )
-        # Re-resolve model after MakeFeynArts[] has written .mod/.gen
-        try:
-            model_info = resolve_model(
-                sarah_model=sarah_model,
-                state_root=state_root or _DEFAULT_STATE_ROOT,
-            )
-        except ModelResolutionError as e:
-            _blocker(e.code, str(e), e.context)
-        mod_path = model_info["mod_path"]
-        gen_path = model_info["gen_path"]
 
     # --- 5. Cache probe ---
     cache_key = compute_cache_key(
@@ -380,14 +381,126 @@ def run(
     return summary
 
 
+def _bootstrap_sarah_state(
+    slug: str,
+    state_root: str,
+    sarah_path: str,
+    ws_path: str,
+    timeout_s: int,
+) -> None:
+    """Ensure ``feynarts_state/<slug>.mod`` exists, bootstrapping it if not.
+
+    For a first-ever SARAH model there is no FeynArts state yet.  This runs
+    SARAH ``MakeFeynArts[]`` (keyed by the *SARAH* model name, via the shared
+    ``modelspec_name_to_sarah`` map) and registers its ``.mod`` into
+    ``$STATE_ROOT/models/<slug>/feynarts_state/<slug>.mod`` so the subsequent
+    ``resolve_model`` succeeds.
+
+    Idempotent: returns immediately if the state is already registered, which
+    keeps the ``--model-file`` path, re-runs, and the already-registered
+    production state untouched.
+
+    Emits FEYNARTS_SARAH_STATE_MISSING (naming what was attempted) only when
+    bootstrap genuinely cannot proceed: SARAH unconfigured, or MakeFeynArts[]
+    ran but produced no ``.mod``.
+    """
+    state_dir = Path(state_root) / "models" / slug / "feynarts_state"
+    if (state_dir / f"{slug}.mod").exists():
+        return  # already bootstrapped / registered — nothing to do
+
+    sarah_name = modelspec_name_to_sarah(slug)
+
+    if not sarah_path:
+        _blocker(
+            "FEYNARTS_SARAH_STATE_MISSING",
+            f"No FeynArts state is registered for '{slug}' and SARAH is not "
+            f"configured (sarah_path unset), so MakeFeynArts[] could not be run "
+            f"to bootstrap it. Run _shared/installs/sarah and /sarah-build for "
+            f"this model, or supply a .mod via --model-file.",
+            {"model_name": slug, "sarah_name": sarah_name, "state_dir": str(state_dir)},
+        )
+
+    # 1. Run SARAH MakeFeynArts[] (writes into SARAH's own Output/ tree).
+    _run_make_feynarts(
+        sarah_name=sarah_name,
+        sarah_path=sarah_path,
+        feynarts_state_dir=str(state_dir),
+        ws_path=ws_path,
+        timeout_s=timeout_s,
+    )
+    # 2. Register that output into feynarts_state/<slug>.mod (+ aux files).
+    _register_feynarts_state(
+        sarah_path=sarah_path,
+        sarah_name=sarah_name,
+        slug=slug,
+        state_dir=state_dir,
+    )
+
+
+def _register_feynarts_state(
+    sarah_path: str,
+    sarah_name: str,
+    slug: str,
+    state_dir: Path,
+) -> None:
+    """Copy SARAH's MakeFeynArts[] ``.mod`` into feynarts_state/ as ``<slug>.mod``.
+
+    SARAH writes to ``$sarah_path/Output/<SarahName>/<State>/FeynArts/`` (the
+    state suffix is usually ``EWSB`` but is not assumed).  The ``.mod`` is
+    renamed to ``<slug>.mod`` so ``InsertFields[Model->"<slug>"]`` resolves it;
+    ``ParticleNamesFeynArts.dat`` and any ``Substitutions-*.m`` are copied
+    alongside, and a ``PROVENANCE.txt`` records the source.
+    """
+    out_base = Path(sarah_path) / "Output" / sarah_name
+    mod_src: Optional[Path] = None
+    fa_out: Optional[Path] = None
+    for fa_dir in sorted(out_base.glob("*/FeynArts")):
+        mods = sorted(fa_dir.glob("*.mod"))
+        if mods:
+            mod_src, fa_out = mods[0], fa_dir
+            break
+
+    if mod_src is None or fa_out is None:
+        _blocker(
+            "FEYNARTS_SARAH_STATE_MISSING",
+            f"SARAH MakeFeynArts[] ran for model '{sarah_name}' but produced no "
+            f".mod under {out_base}/*/FeynArts/. Confirm /sarah-build succeeds "
+            f"for this model and that it defines an EWSB (or equivalent) state.",
+            {"model_name": slug, "sarah_name": sarah_name, "searched": str(out_base)},
+        )
+
+    state_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(mod_src, state_dir / f"{slug}.mod")
+    for extra in sorted(fa_out.glob("ParticleNamesFeynArts.dat")) + sorted(
+        fa_out.glob("Substitutions-*.m")
+    ):
+        shutil.copy2(extra, state_dir / extra.name)
+
+    (state_dir / "PROVENANCE.txt").write_text(
+        "Registered by /feynarts --sarah-model bootstrap.\n"
+        f"source: {mod_src}\n"
+        f"sarah_model: {sarah_name}\n"
+        f"feynarts_model_name: {slug}\n"
+        f"registered: {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}\n"
+        f"note: .mod renamed {mod_src.name} -> {slug}.mod so "
+        f'InsertFields[Model->"{slug}"] resolves it. No .gen (SARAH uses the '
+        "generic Lorentz.gen).\n"
+    )
+
+
 def _run_make_feynarts(
-    model_name: str,
+    sarah_name: str,
     sarah_path: str,
     feynarts_state_dir: str,
     ws_path: str,
     timeout_s: int,
 ) -> None:
-    """Run the post-hoc SARAH MakeFeynArts[] in a separate Wolfram session."""
+    """Run SARAH ``MakeFeynArts[]`` for ``sarah_name`` in a separate session.
+
+    ``sarah_name`` is the SARAH model name (e.g. ``SingletDoublet``), used for
+    ``Start[]``; the output lands in SARAH's own Output/ tree and is copied out
+    by ``_register_feynarts_state``.
+    """
     if not sarah_path:
         _blocker(
             "FEYNARTS_SARAH_STATE_MISSING",
@@ -399,7 +512,7 @@ def _run_make_feynarts(
     script_content = render_make_feynarts_driver(
         feynarts_state_dir=feynarts_state_dir,
         sarah_path=sarah_path,
-        model_name=model_name,
+        model_name=sarah_name,
     )
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".m", delete=False) as tmp:
@@ -430,8 +543,8 @@ def _run_make_feynarts(
         if proc.returncode != 0:
             _blocker(
                 "FEYNARTS_SARAH_STATE_MISSING",
-                f"MakeFeynArts[] failed with exit code {proc.returncode}.\n"
-                f"stderr: {proc.stderr[:500]}",
+                f"SARAH MakeFeynArts[] for model '{sarah_name}' failed with exit "
+                f"code {proc.returncode}.\nstderr: {proc.stderr[:500]}",
             )
     finally:
         Path(script_path).unlink(missing_ok=True)
