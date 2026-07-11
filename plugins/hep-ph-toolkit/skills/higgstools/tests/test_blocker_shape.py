@@ -32,6 +32,7 @@ ALL_BLOCKER_CODES = [
     ("HIGGSTOOLS_SM_REF_MISSING", "fatal"),
     ("HIGGSTOOLS_DATASET_MISMATCH", "fatal"),
     ("HIGGSTOOLS_NUMERIC_CRASH", "recoverable"),
+    ("HIGGSTOOLS_HB_NO_RESULT", "recoverable"),
 ]
 
 

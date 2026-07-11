@@ -228,11 +228,16 @@ def _parse_coupling_block(
                     elif partners == [22, 22]:
                         entry_for_named["aa"] = coupling_val
                     elif partners == [5, 5]:
-                        entry_for_named.setdefault("bb", coupling_val)
+                        # Plain assignment (last-wins), matching the boson
+                        # branches above — uniform duplicate-row precedence.
+                        # Real SPheno output never repeats a vertex; if a
+                        # block ever does, the later row wins for ALL named
+                        # couplings consistently.
+                        entry_for_named["bb"] = coupling_val
                     elif partners == [6, 6]:
-                        entry_for_named.setdefault("tt", coupling_val)
+                        entry_for_named["tt"] = coupling_val
                     elif partners == [15, 15]:
-                        entry_for_named.setdefault("tautau", coupling_val)
+                        entry_for_named["tautau"] = coupling_val
                 continue
 
             row_index += 1

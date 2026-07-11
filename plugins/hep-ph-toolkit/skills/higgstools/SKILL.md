@@ -250,6 +250,7 @@ checks is the job of `run --scan-dir <dir>`.
 | `HIGGSTOOLS_DATASET_MISMATCH` | `fatal` | (unified) dataset SHA ≠ config pin |
 | `HIGGSTOOLS_BACKEND_UNAVAILABLE` | `recoverable` | unified Python module import failed |
 | `HIGGSTOOLS_NUMERIC_CRASH` | `recoverable` | backend segfault on one scan row; row marked bad, scan continues |
+| `HIGGSTOOLS_HB_NO_RESULT` | `recoverable` | HB exited 0/1 but produced zero parsable results (no `HiggsBoundsResults` block, no stdout table); never reported as vacuously allowed |
 
 No `reference_only` exits. No `--native` path (dropped per manager decision).
 
