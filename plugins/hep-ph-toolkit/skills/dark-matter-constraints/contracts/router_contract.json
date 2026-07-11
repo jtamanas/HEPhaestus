@@ -270,7 +270,11 @@
       "writer": "_shared/installs/class",
       "reader": "/dark-matter-constraints SKILL.md Step 6",
       "audit_status": "verified_in_writer_skill",
-      "condition": {"spec_field": "cosmology.kind", "not_in": ["standard_thermal"]}
+      "condition": {
+        "_doc": "Runner specs carry `cosmology` at TOP LEVEL (SKILL.md Step 6 / should_invoke_class design §4.1; tests/fixtures/class/spec_cosmology_*.yaml). Absent-field semantics: no `cosmology` field ⇒ standard_thermal default ⇒ condition inactive ⇒ key skipped (mirrors should_invoke_class returning False for absent cosmology).",
+        "spec_field": "cosmology.kind",
+        "not_in": ["standard_thermal"]
+      }
     },
     {
       "key": "config.looptools_path",
@@ -278,7 +282,11 @@
       "writer": "_shared/installs/looptools",
       "reader": "/dark-matter-constraints SKILL.md Step 2 (loop-only DD sub-branch)",
       "audit_status": "verified_in_writer_skill",
-      "condition": {"spec_field": "candidates[?].mediator_regime", "in": ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]}
+      "condition": {
+        "_doc": "v2 ModelSpecs nest candidates under `dm_phenomenology.candidates` (ground truth: _shared/router_specs/dark_su3.yaml, model-router tests/fixtures/specs/*.yaml; _shared/blocker_class_map.yaml also uses the nested form). The former top-level `candidates[?]` path matched no real spec and silently disabled enforcement. Absent-field semantics: no dm_phenomenology/candidates ⇒ condition inactive ⇒ key skipped.",
+        "spec_field": "dm_phenomenology.candidates[?].mediator_regime",
+        "in": ["loop-only-CP-forbidden", "loop-only-anomaly-induced"]
+      }
     }
   ],
 

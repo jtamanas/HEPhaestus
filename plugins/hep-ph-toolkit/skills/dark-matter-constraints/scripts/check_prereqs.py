@@ -159,13 +159,19 @@ def _spec_field_values(spec: dict, field: str) -> list:
 
     Supports exactly the two shapes the manifest uses:
       * a dotted path — ``cosmology.kind`` → the value at that path
-      * a single ``[?]`` wildcard — ``candidates[?].mediator_regime`` → the
-        sub-value for *every* element of the (top-level) list.
+      * a single ``[?]`` wildcard — ``dm_phenomenology.candidates[?].mediator_regime``
+        → the sub-value for *every* element of the list at the dotted prefix.
 
     An absent field (or absent container) resolves to an empty list, so a
     conditional key guarded by it is treated as inactive (not required). This
-    is the desired behaviour: a plain spec that never mentions ``cosmology`` or
-    ``candidates`` must not be forced to supply class/looptools paths.
+    is the DOCUMENTED default (see the manifest condition ``_doc`` notes):
+      * ``cosmology.kind`` — runner specs carry ``cosmology`` at TOP LEVEL
+        (SKILL.md Step 6 / design §4.1 / should_invoke_class). An absent
+        ``cosmology`` field means standard_thermal, so class_path is skipped —
+        mirroring ``should_invoke_class`` returning False for absent cosmology.
+      * ``dm_phenomenology.candidates[?].mediator_regime`` — v2 ModelSpecs nest
+        candidates under ``dm_phenomenology`` (never top-level). A spec with no
+        candidates block has no loop-only mediator, so looptools_path is skipped.
     """
     if "[?]" in field:
         before, after = field.split("[?]", 1)

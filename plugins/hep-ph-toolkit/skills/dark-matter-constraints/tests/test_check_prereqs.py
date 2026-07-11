@@ -336,21 +336,28 @@ def test_check_prereqs_structural_outputs(tmp_path):
 # no conditional keys.
 
 
-def _build_conditional_config(tmp_path: pathlib.Path, spec_fixture: str) -> pathlib.Path:
+def _build_conditional_config(
+    tmp_path: pathlib.Path,
+    spec_fixture: str,
+    extra_paths: list[str] | None = None,
+) -> pathlib.Path:
     """Materialise config_conditional.json against a spec fixture.
 
     All unconditional tool paths + the UFO dir are created so the ONLY thing
     that can flip status is conditional-key evaluation. class_path /
-    looptools_path are intentionally absent from the config.
+    looptools_path are absent from the config unless named in ``extra_paths``,
+    in which case they are added pointing at real (created) directories.
     """
     spec_src = _FIXTURES / spec_fixture
     raw = (_FIXTURES / "config_conditional.json").read_text()
     raw = raw.replace("__TMPDIR__", str(tmp_path))
     raw = raw.replace("__SPEC_YAML__", str(spec_src))
-    cfg = tmp_path / "config_conditional.json"
-    cfg.write_text(raw)
     d = json.loads(raw)
-    for key in ["maddm_path", "micromegas_path", "drake_path"]:
+    for key in extra_paths or []:
+        d[key] = str(tmp_path / f"fake_{key}")
+    cfg = tmp_path / "config_conditional.json"
+    cfg.write_text(json.dumps(d))
+    for key in ["maddm_path", "micromegas_path", "drake_path", *(extra_paths or [])]:
         pathlib.Path(d[key]).mkdir(parents=True, exist_ok=True)
     for model_cfg in d.get("models", {}).values():
         ufo = model_cfg.get("ufo_path", "")
@@ -359,15 +366,25 @@ def _build_conditional_config(tmp_path: pathlib.Path, spec_fixture: str) -> path
     return cfg
 
 
-def test_conditional_keys_skipped_for_standard_thermal_spec(tmp_path):
-    """Standard-thermal, non-loop spec → class_path/looptools_path are SKIPPED.
+@pytest.mark.parametrize("spec_fixture", [
+    # Explicit standard-thermal cosmology (object form, real class-fixture shape).
+    "spec_standard_thermal.yaml",
+    # NO cosmology field at all — the common real case (spec_pointA.yaml shape).
+    # Documented absent-field semantics: absent ⇒ standard_thermal ⇒ skipped.
+    "spec_no_cosmology.yaml",
+    # Realistic v2 ModelSpec with NESTED non-loop candidates (dark_su3.yaml
+    # shape): the nested location IS resolved but the regime is off-resonance.
+    "spec_nested_nonloop.yaml",
+])
+def test_conditional_keys_skipped_for_inactive_conditions(tmp_path, spec_fixture):
+    """Inactive conditions → class_path/looptools_path are SKIPPED.
 
     This is the root-cause regression: without condition evaluation, the two
     conditional keys behave as unconditional hard blockers
     (CLASS_PATH_MISSING / LOOPTOOLS_PATH_MISSING) for EVERY config. With the
-    fix, a plain spec skips them and the run is 'ok'.
+    fix, specs that don't trigger the conditions skip them and the run is 'ok'.
     """
-    cfg = _build_conditional_config(tmp_path, "spec_standard_thermal.yaml")
+    cfg = _build_conditional_config(tmp_path, spec_fixture)
     cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
     assert cp.returncode == 0, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
     result = json.loads(cp.stdout)
@@ -382,7 +399,9 @@ def test_conditional_keys_skipped_for_standard_thermal_spec(tmp_path):
 
 
 def test_class_path_enforced_for_nonstandard_cosmology(tmp_path):
-    """cosmology.kind != standard_thermal → class_path condition ACTIVE, enforced."""
+    """cosmology.kind != standard_thermal (top-level, real runner-spec shape
+    mirroring tests/fixtures/class/spec_cosmology_non_standard.yaml)
+    → class_path condition ACTIVE; absent class_path blocks."""
     cfg = _build_conditional_config(tmp_path, "spec_nonstandard_cosmology.yaml")
     cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
     assert cp.returncode == 1, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
@@ -392,8 +411,28 @@ def test_class_path_enforced_for_nonstandard_cosmology(tmp_path):
     assert "CLASS_PATH_MISSING" in codes, codes
 
 
+def test_class_path_satisfied_for_nonstandard_cosmology(tmp_path):
+    """Same non-standard-cosmology spec WITH class_path set → passes."""
+    cfg = _build_conditional_config(
+        tmp_path, "spec_nonstandard_cosmology.yaml", extra_paths=["class_path"]
+    )
+    cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
+    assert cp.returncode == 0, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "ok", result
+    checked = {c["key"]: c["exists"] for c in result["checked"]}
+    assert checked.get("config.class_path") is True, checked
+
+
 def test_looptools_path_enforced_for_loop_only_candidate(tmp_path):
-    """candidates[?].mediator_regime ∈ loop-only set → looptools_path enforced."""
+    """REAL-structured loop-only spec (candidates nested under
+    dm_phenomenology.candidates, per every actual v2 ModelSpec) with
+    looptools_path absent → LOOPTOOLS_PATH_MISSING blocks.
+
+    Regression for the dead-gate bug: the manifest's former top-level
+    `candidates[?]` spec_field matched no real ModelSpec, so enforcement was
+    silently dead for every real loop-only spec.
+    """
     cfg = _build_conditional_config(tmp_path, "spec_loop_only.yaml")
     cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
     assert cp.returncode == 1, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
@@ -401,6 +440,54 @@ def test_looptools_path_enforced_for_loop_only_candidate(tmp_path):
     assert result["status"] == "blocked", result
     codes = [b["code"] for b in result["blockers"]]
     assert "LOOPTOOLS_PATH_MISSING" in codes, codes
+
+
+def test_looptools_path_satisfied_for_loop_only_candidate(tmp_path):
+    """Same real-structured loop-only spec WITH looptools_path set → passes."""
+    cfg = _build_conditional_config(
+        tmp_path, "spec_loop_only.yaml", extra_paths=["looptools_path"]
+    )
+    cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
+    assert cp.returncode == 0, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "ok", result
+    checked = {c["key"]: c["exists"] for c in result["checked"]}
+    assert checked.get("config.looptools_path") is True, checked
+
+
+def test_manifest_condition_paths_match_real_spec_shapes():
+    """Pin the contract's spec_field paths against REAL spec ground truth.
+
+    - looptools: real v2 ModelSpecs nest candidates under
+      `dm_phenomenology.candidates` (_shared/router_specs/dark_su3.yaml); the
+      manifest spec_field must be the nested path AND the resolver must find
+      values there in the real dark_su3 spec.
+    - class: runner specs carry `cosmology` at TOP LEVEL (should_invoke_class
+      design §4.1); the manifest spec_field must be exactly `cosmology.kind`.
+    """
+    manifest = json.loads(_DEFAULT_MANIFEST.read_text())
+    by_key = {e["key"]: e for e in manifest["config_keys"]}
+    lt_cond = by_key["config.looptools_path"]["condition"]
+    assert lt_cond["spec_field"] == "dm_phenomenology.candidates[?].mediator_regime", lt_cond
+    cl_cond = by_key["config.class_path"]["condition"]
+    assert cl_cond["spec_field"] == "cosmology.kind", cl_cond
+
+    # Resolver must find values at the nested path in a REAL spec.
+    import importlib.util as _ilu
+    import yaml as _yaml
+    real_spec_path = (
+        _REPO_ROOT / "plugins" / "hep-ph-toolkit" / "skills" / "_shared"
+        / "router_specs" / "dark_su3.yaml"
+    )
+    real_spec = _yaml.safe_load(real_spec_path.read_text())
+    spec_m = _ilu.spec_from_file_location("check_prereqs_mod", _HELPER)
+    mod = _ilu.module_from_spec(spec_m)
+    spec_m.loader.exec_module(mod)
+    values = mod._spec_field_values(real_spec, lt_cond["spec_field"])
+    assert values, "nested spec_field resolved no values from the real dark_su3 spec"
+    assert all(isinstance(v, str) for v in values), values
+    # And the former (wrong) top-level path must resolve nothing.
+    assert mod._spec_field_values(real_spec, "candidates[?].mediator_regime") == []
 
 
 # ---------------------------------------------------------------------------

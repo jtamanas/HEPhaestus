@@ -122,7 +122,7 @@
           },
           "condition": {
             "type": "object",
-            "description": "Documentation-only condition for when this key is relevant. Not consumed by code in v1.",
+            "description": "Condition for when this key is enforced. Consumed by scripts/check_prereqs.py: {spec_field: <dotted path, one optional [?] list wildcard>, in|not_in: [...]} evaluated against the model's spec_yaml. An absent spec_field yields no values, so the condition is inactive and the key is SKIPPED (e.g. absent `cosmology` ⇒ standard_thermal default). Malformed/unknown condition shapes fail safe to enforced.",
             "additionalProperties": true
           }
         }

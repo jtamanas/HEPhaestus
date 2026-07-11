@@ -1,0 +1,14 @@
+# Realistic RUNNER spec with NO `cosmology` field at all — the common case
+# (no real playtest spec carries one; see tests/fixtures/dark_su3_playtest/
+# specs/spec_pointA.yaml whose shape this mirrors). Documented absent-field
+# semantics: absent cosmology ⇒ standard_thermal default ⇒ class_path condition
+# inactive ⇒ key SKIPPED (mirrors should_invoke_class returning False).
+# SYNTHETIC test fixture.
+dm_candidate:
+  name: "chi"
+  m_chi: 100
+  m_med: 199
+  width_over_mass: 0.005
+
+model: "toyDM"
+observables: "all"
