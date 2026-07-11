@@ -33,6 +33,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -228,6 +229,68 @@ def cache_hit(output_dir: Path, cache_key: str) -> bool:
 
 # ── Driver dispatch ────────────────────────────────────────────────────────────
 
+class EvalNoOutput(RuntimeError):
+    """run_eval.wls yielded no usable eval_output.json (missing / empty / invalid).
+
+    The defining loud-failure of the eval leg: the Wolfram/LoopTools driver can
+    exit 0 (or abort mid-run via MathLink::MLException / libc++abi) yet leave
+    eval_output.json absent, empty, or non-JSON — which previously surfaced as a
+    raw Python JSONDecodeError traceback.  Carries a classified ``cause`` and, for
+    the model-mismatch case, the ``unbound`` amplitude symbols named by the driver.
+    """
+
+    def __init__(self, message: str, *, cause: str, log_tail: str,
+                 returncode: int, unbound: list[str] | None = None):
+        super().__init__(message)
+        self.cause = cause
+        self.log_tail = log_tail
+        self.returncode = returncode
+        self.unbound = unbound or []
+
+
+def _diagnose_eval_failure(driver_log: str, returncode: int) -> str:
+    """Classify why the eval produced no output, by scanning the driver log.
+
+    Returns a short cause tag for the LOOPTOOLS_EVAL_NO_OUTPUT blocker context.
+    The dominant real-world cause (STEP2.md subtask 3a) is a model mismatch: the
+    2HDM+a-specialised run_eval.wls leaves a different model's symbols unbound
+    ($Failed / Missing), LoopTools then receives non-numeric args and the MathLink
+    aborts (libc++abi) with an empty output.
+    """
+    log = driver_log or ""
+    # Most specific first — the self-test / install messages themselves mention
+    # $Failed, so the generic "$Failed ⇒ unbound" heuristic must come last.
+    if "UNBOUND-MODEL-PARAMETERS" in log:
+        return "unbound_model_parameters"
+    if "LoopTools C0i self-test failed" in log:
+        return "looptools_selftest_failed"
+    if "Install[LoopTools] failed" in log or "LoopTools MathLink binary not found" in log:
+        return "looptools_install_failed"
+    if "could not read point.json" in log:
+        return "point_unreadable"
+    if "Get[amp_reduced.m] failed" in log:
+        return "amp_unreadable"
+    if any(m in log for m in ("MathLink::MLException", "MLException", "libc++abi")):
+        return "mathlink_aborted"
+    if "$Failed" in log or "Missing[" in log:
+        return "unbound_model_parameters"
+    return "unknown"
+
+
+def _extract_unbound(driver_log: str) -> list[str]:
+    """Pull the unbound-symbol names out of the driver's UNBOUND-MODEL-PARAMETERS
+    marker line (``... {"sym1", "sym2"}``).  Empty list when the marker is absent."""
+    if not driver_log:
+        return []
+    m = re.search(r"UNBOUND-MODEL-PARAMETERS\s*\{([^}]*)\}", driver_log)
+    if not m:
+        return []
+    # Each symbol is a double-quoted string in the driver's InputForm list; the
+    # names themselves contain commas (e.g. "ZAMIX(ZAMIX:i,j)"), so extract the
+    # quoted tokens rather than splitting on commas.
+    return re.findall(r'"([^"]*)"', m.group(1))
+
+
 def run_driver(
     wolfram_bin: str,
     amp_reduced_path: Path,
@@ -240,9 +303,16 @@ def run_driver(
     """Dispatch run_eval.wls and return the parsed driver output dict.
 
     Writes point.json into run_dir for the driver to read, invokes wolframscript,
-    and reads run_dir/eval_output.json.  Raises RuntimeError on driver failure.
+    and reads run_dir/eval_output.json.
+
+    Loud-failure contract (STEP2.md subtask 3a): the driver can exit 0 while
+    leaving eval_output.json missing/empty, and an aborted eval can write garbage.
+    A missing / empty / non-JSON output is therefore a structured EvalNoOutput
+    (never a raw JSONDecodeError), with the cause scanned from the driver log and,
+    for the model-mismatch case, the unbound amplitude symbols named.  A genuine
+    nonzero exit that still produced a valid output raises RuntimeError.
     """
-    driver_script = SCRIPT_DIR / "run_eval.wls"
+    driver_script = str(SCRIPT_DIR / "run_eval.wls")
     point_path = run_dir / "point.json"
     point_path.write_text(json.dumps(point, indent=2))
     eval_out_path = run_dir / "eval_output.json"
@@ -256,13 +326,39 @@ def run_driver(
         looptools_path,
     ]
     result = subprocess.run(args, capture_output=True, text=True, timeout=3600)
+    driver_log = "\n".join(p for p in (result.stdout or "", result.stderr or "") if p)
+
+    # Require the expected artifact.  Missing OR empty ⇒ the eval did not produce
+    # a result, whatever the exit code (the observed defect: exit 0 + empty file).
+    if not eval_out_path.exists() or eval_out_path.stat().st_size == 0:
+        raise EvalNoOutput(
+            "run_eval.wls produced no usable eval_output.json "
+            f"({'missing' if not eval_out_path.exists() else 'empty'}); the eval did not run.",
+            cause=_diagnose_eval_failure(driver_log, result.returncode),
+            log_tail=driver_log[-2000:],
+            returncode=result.returncode,
+            unbound=_extract_unbound(driver_log),
+        )
+
+    # A nonzero exit that nonetheless wrote a file is an infra failure, not a
+    # no-output; surface it as a driver failure with the log.
     if result.returncode != 0:
         raise RuntimeError(
             f"run_eval.wls exited {result.returncode}: {result.stderr[-2000:]}"
         )
-    if not eval_out_path.exists():
-        raise RuntimeError("run_eval.wls produced no eval_output.json")
-    return json.loads(eval_out_path.read_text())
+
+    # Parse; a non-JSON body (aborted/garbage write) is a no-output, not a
+    # raw JSONDecodeError traceback.
+    try:
+        return json.loads(eval_out_path.read_text())
+    except json.JSONDecodeError as exc:
+        raise EvalNoOutput(
+            f"eval_output.json is not valid JSON ({exc}); the eval aborted mid-write.",
+            cause=_diagnose_eval_failure(driver_log, result.returncode),
+            log_tail=driver_log[-2000:],
+            returncode=result.returncode,
+            unbound=_extract_unbound(driver_log),
+        ) from None
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
@@ -341,6 +437,40 @@ def main(argv=None):
                 run_dir=run_dir,
                 looptools_path=tools["looptools_path"],
             )
+        except EvalNoOutput as exc:
+            # Loud-failure: the eval leg produced no usable output.  Name the
+            # cause from the driver log; for a model mismatch (the singlet-doublet
+            # symptom) surface the unbound amplitude symbols so step-3 work starts
+            # from a guided error, not a crash.
+            ctx = {
+                "point_id": point.get("dm_pdg"),
+                "cause": exc.cause,
+                "returncode": exc.returncode,
+                "log_tail": exc.log_tail,
+            }
+            if exc.unbound:
+                ctx["unbound_symbols"] = exc.unbound
+            if exc.cause == "unbound_model_parameters":
+                instruction = (
+                    "run_eval.wls is specialised to the 2HDM+a (TwoHdmAfix) model "
+                    "and cannot bind this model's amplitude symbols "
+                    f"({', '.join(exc.unbound) if exc.unbound else 'see log_tail'}). "
+                    "Generalising the substitution/projection/matching layer off "
+                    "TwoHdmAfix is roadmap step 3 (LOOP-FLOOR-ROADMAP.md)."
+                )
+            else:
+                instruction = (
+                    "Inspect context.log_tail and run/<ts>/ for the driver failure; "
+                    "a MathLink abort or LoopTools self-test failure leaves the "
+                    "eval output empty."
+                )
+            emit_blocker(
+                "LOOPTOOLS_EVAL_NO_OUTPUT", "recoverable",
+                f"run_eval.wls produced no usable eval_output.json (cause: {exc.cause}).",
+                context=ctx,
+                user_instruction=instruction,
+            )
+            sys.exit(1)
         except (RuntimeError, subprocess.TimeoutExpired) as exc:
             emit_blocker(
                 "LOOPTOOLS_DRIVER_FAILED", "fatal",

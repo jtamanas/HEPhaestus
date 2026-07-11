@@ -127,7 +127,7 @@ Module[{
     triIndex, alphaUpPhi, Uphi,
     Msame, Mdiff, alphaUpFull, alphaUpTri, alphaUpBox,
     nucF, fp, fn, ffP, ffN, uvRes, scaleRes, finiteQ, jsonAssoc,
-    mq, sq, nPV, mDM, pointId
+    mq, sq, nPV, mDM, pointId, unboundQ, bindGuard, unbound
   },
 
   point = Quiet[Check[Import[pointPath, "RawJSON"], $Failed]];
@@ -154,6 +154,42 @@ Module[{
   ZHm = Table[getParam["ZHMIX:" <> ToString[i] <> "," <> ToString[j]], {i,2},{j,2}];
   ZPm = Table[getParam["ZPMIX:" <> ToString[i] <> "," <> ToString[j]], {i,2},{j,2}];
   ctw = mW/mZ; stw = Sqrt[1 - ctw^2];
+
+  (* ---- MODEL-BINDING GUARD (loud-failure; DETECTION ONLY) -------------------
+     run_eval.wls is specialised to the 2HDM+a (TwoHdmAfix) model: masses are
+     looked up by 2HDM+a PDG codes and couplings by 2HDM+a SLHA blocks.  A
+     different model (e.g. singlet-doublet) leaves these amplitude symbols
+     unbound — getMass returns Missing[] for an absent PDG, getParam returns
+     $Failed for an absent block — and if we proceed, LoopTools receives
+     non-numeric args and the MathLink aborts (MathLink::MLException →
+     libc++abi terminating) leaving eval_output.json EMPTY.  Detect that HERE,
+     before any PV / MathLink call, and name the unbound symbols so the caller
+     gets a guided LOOPTOOLS_EVAL_NO_OUTPUT blocker instead of a crash.
+     This changes NO binding — generalising the substitution layer off
+     TwoHdmAfix is roadmap step 3. *)
+  unboundQ[v_] := (v === $Failed) || MatchQ[v, _Missing];
+  bindGuard = {
+    "MassFchi(m_dm)" -> mchi, "Masshh[1](h,25)" -> mh, "Masshh[2](H,35)" -> mHH,
+    "MassAh[1](G0,36)" -> mG0, "MassAh[2](a,9931569)" -> ma, "MassAh[3](A0,9949515)" -> mA0,
+    "MassHm[1](Gp,37)" -> mGp, "MassHm[2](Hp,9920911)" -> mHp,
+    "MassVWp(24)" -> mW, "MassVZ(23)" -> mZ, "MassFu[3](t,6)" -> mtq, "MassFd[3](b,5)" -> mbq,
+    "vd(HMIX:102)" -> vdv, "vu(HMIX:103)" -> vuv,
+    "lam1(THDMPOT:3)" -> lam1v, "lam2(THDMPOT:4)" -> lam2v, "lam3(THDMPOT:5)" -> lam3v,
+    "lam4(THDMPOT:6)" -> lam4v, "lam5r(THDMPOT:7)" -> lam5rv, "lam7(THDMPOT:10)" -> lam7v,
+    "lam8(THDMPOT:11)" -> lam8v, "lamP(THDMPOT:13)" -> lamPv, "gchi(DMSECTOR:2)" -> gchiv};
+  unbound = Join[
+    Keys[Select[bindGuard, unboundQ[Last[#]] &]],
+    If[MemberQ[Flatten[ZAm], $Failed] || ! FreeQ[ZAm, _Missing], {"ZAMIX(ZAMIX:i,j)"}, {}],
+    If[MemberQ[Flatten[ZHm], $Failed] || ! FreeQ[ZHm, _Missing], {"ZHMIX(ZHMIX:i,j)"}, {}],
+    If[MemberQ[Flatten[ZPm], $Failed] || ! FreeQ[ZPm, _Missing], {"ZPMIX(ZPMIX:i,j)"}, {}]];
+  If[Length[unbound] > 0,
+    WriteString["stderr",
+      "run_eval: UNBOUND-MODEL-PARAMETERS " <> ToString[unbound, InputForm] <> "\n" <>
+      "  The supplied model point does not bind these amplitude symbols. run_eval.wls\n" <>
+      "  is specialised to the 2HDM+a (TwoHdmAfix) model (masses by 2HDM+a PDG codes,\n" <>
+      "  2HDM+a couplings). A different model (e.g. singlet-doublet) needs an\n" <>
+      "  SD-generic substitution/projection/matching layer -- roadmap step 3.\n"];
+    Exit[3]];
 
   amp = Quiet[Check[Get[ampPath], $Failed]];
   If[amp === $Failed,
