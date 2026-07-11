@@ -53,6 +53,19 @@ if str(SCRIPT_DIR) not in sys.path:
 
 FORM_FACTOR_PRESETS = {"default_2018", "A1"}
 
+# Model dispatch (STEP3-DESIGN.md Decision 4): each model id maps to its parallel
+# Wolfram driver.  The 2HDM+a path is the EW-anchor-validated default and is left
+# byte-untouched; singlet_doublet dispatches to run_eval_sd.wls.
+MODEL_DRIVERS = {
+    "2hdma": "run_eval.wls",
+    "singlet_doublet": "run_eval_sd.wls",
+}
+# Per-model default DM PDG id used when --dm-pdg is not supplied.
+MODEL_DM_PDG = {
+    "2hdma": None,               # -> prepare_point.DM_PDG_2HDMA
+    "singlet_doublet": 9958431,  # chi1 (FChi_1), STEP2.md
+}
+
 
 # ── Config helpers ─────────────────────────────────────────────────────────────
 
@@ -107,6 +120,13 @@ def parse_args(argv=None):
         help="Nucleon form-factor preset",
     )
     ev.add_argument("--dm-pdg", type=int, default=None, help="Override DM PDG id")
+    ev.add_argument(
+        "--model",
+        choices=sorted(MODEL_DRIVERS),
+        default="2hdma",
+        help="Model driver to dispatch (Decision 4). 2hdma = run_eval.wls (default, "
+             "validated); singlet_doublet = run_eval_sd.wls.",
+    )
     ev.add_argument("--force", action="store_true", help="Ignore cache and rerun")
     ev.add_argument(
         "--eval-output",
@@ -262,6 +282,8 @@ def _diagnose_eval_failure(driver_log: str, returncode: int) -> str:
     # $Failed, so the generic "$Failed ⇒ unbound" heuristic must come last.
     if "UNBOUND-MODEL-PARAMETERS" in log:
         return "unbound_model_parameters"
+    if "SD-AMP-ABBREVIATIONS-UNRESOLVED" in log:
+        return "sd_abbreviations_unresolved"
     if "LoopTools C0i self-test failed" in log:
         return "looptools_selftest_failed"
     if "Install[LoopTools] failed" in log or "LoopTools MathLink binary not found" in log:
@@ -299,11 +321,13 @@ def run_driver(
     output_dir: Path,
     run_dir: Path,
     looptools_path: str,
+    driver_script_name: str = "run_eval.wls",
 ) -> dict:
-    """Dispatch run_eval.wls and return the parsed driver output dict.
+    """Dispatch the model's Wolfram driver and return the parsed output dict.
 
     Writes point.json into run_dir for the driver to read, invokes wolframscript,
-    and reads run_dir/eval_output.json.
+    and reads run_dir/eval_output.json.  ``driver_script_name`` selects the
+    parallel driver (run_eval.wls / run_eval_sd.wls) per Decision 4.
 
     Loud-failure contract (STEP2.md subtask 3a): the driver can exit 0 while
     leaving eval_output.json missing/empty, and an aborted eval can write garbage.
@@ -312,7 +336,7 @@ def run_driver(
     for the model-mismatch case, the unbound amplitude symbols named.  A genuine
     nonzero exit that still produced a valid output raises RuntimeError.
     """
-    driver_script = str(SCRIPT_DIR / "run_eval.wls")
+    driver_script = str(SCRIPT_DIR / driver_script_name)
     point_path = run_dir / "point.json"
     point_path.write_text(json.dumps(point, indent=2))
     eval_out_path = run_dir / "eval_output.json"
@@ -391,7 +415,10 @@ def main(argv=None):
 
     # Step 6 — prepare point (before cache key — it feeds the key).
     from prepare_point import prepare_point, DM_PDG_2HDMA
-    dm_pdg = args.dm_pdg if args.dm_pdg is not None else DM_PDG_2HDMA
+    model = getattr(args, "model", "2hdma")
+    driver_script_name = MODEL_DRIVERS[model]
+    model_default_dm = MODEL_DM_PDG.get(model) or DM_PDG_2HDMA
+    dm_pdg = args.dm_pdg if args.dm_pdg is not None else model_default_dm
     try:
         point = prepare_point(point_path, dm_pdg=dm_pdg)
     except ValueError as exc:
@@ -436,6 +463,7 @@ def main(argv=None):
                 output_dir=output_dir,
                 run_dir=run_dir,
                 looptools_path=tools["looptools_path"],
+                driver_script_name=driver_script_name,
             )
         except EvalNoOutput as exc:
             # Loud-failure: the eval leg produced no usable output.  Name the
@@ -458,6 +486,15 @@ def main(argv=None):
                     "Generalising the substitution/projection/matching layer off "
                     "TwoHdmAfix is roadmap step 3 (LOOP-FLOOR-ROADMAP.md)."
                 )
+            elif exc.cause == "sd_abbreviations_unresolved":
+                instruction = (
+                    "The SD amp_reduced.m was written without its FormCalc Subexpr[] "
+                    "abbreviation table, so the Sub#### symbols (which hide the "
+                    "external Weyl chains and couplings) are undefined and the "
+                    "coefficient-level projection cannot resolve them. Re-run "
+                    "/formcalc reduce persisting the abbreviation table into "
+                    "amp_reduced.m as a wrapped {\"amp\"->..,\"subexpr\"->..} association."
+                )
             else:
                 instruction = (
                     "Inspect context.log_tail and run/<ts>/ for the driver failure; "
@@ -479,6 +516,40 @@ def main(argv=None):
             )
             sys.exit(1)
     wall_clock = time.time() - t0
+
+    # SD branch (Decision 4): the singlet-doublet driver emits per-operator Wilson
+    # coefficients (looptools_sd_coefficients/v1), NOT a sigma_SI — nucleon
+    # matching (twist-2 + 2/27-gluon through the SD Higgs sector) is build-order
+    # item 4.  So we persist the coefficient artifact and stop here, WITHOUT
+    # touching the 2HDM+a match_nucleon / emit_scattering path below.
+    if model == "singlet_doublet":
+        coeff_path = output_dir / "sd_coefficients.json"
+        coeff_path.write_text(json.dumps(raw, indent=2) + "\n")
+        summary = {
+            "model": model,
+            "n_diagrams": raw.get("n_diagrams"),
+            "wall_clock_s": round(wall_clock, 3),
+            "cached": False,
+            "looptools_version": lt_version,
+            "n_pv_calls": raw.get("n_pv_calls"),
+            "point_id": raw.get("point_id"),
+            "finite": raw.get("amplitude", {}).get("finite"),
+            "sigma_provisional": True,
+            "nucleon_matching": "deferred_item4",
+        }
+        (run_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+        _write_build_key(output_dir, key)
+        print(json.dumps({
+            "status": "ok",
+            "cached": False,
+            "model": model,
+            "output_dir": str(output_dir),
+            "sd_coefficients": str(coeff_path),
+            "wilson_coefficients": raw.get("wilson_coefficients"),
+            "finite": raw.get("amplitude", {}).get("finite"),
+            "wall_clock_s": round(wall_clock, 3),
+        }))
+        return 0
 
     # Step 8 — parse + finiteness gate.
     from parse_eval_output import parse as parse_eval, AmplitudeNonFinite
