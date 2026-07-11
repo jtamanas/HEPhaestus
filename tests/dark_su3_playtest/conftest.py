@@ -409,6 +409,47 @@ def _eval_hard_assertions(
     return failures
 
 
+def _dump_failed_attempt(
+    scenario_id: str,
+    tier: str,
+    attempt: int,
+    failures: list[HardFailure],
+    harness_meta: dict,
+    captured_argv_list: list[list[str]],
+) -> pathlib.Path:
+    """Write the failing attempt's transcript evidence to a JSON debug file.
+
+    Live attempts are ~20 min + real API spend; discarding harness_meta on a
+    hard failure makes the failure undiagnosable. Target directory is
+    HEPPH_PLAYTEST_DEBUG_DIR if set, else the system temp dir. The path is
+    printed (visible under ``pytest -s``) and returned.
+    """
+    import json
+    import tempfile
+    import time
+
+    debug_dir = pathlib.Path(
+        os.environ.get("HEPPH_PLAYTEST_DEBUG_DIR") or tempfile.gettempdir()
+    )
+    debug_dir.mkdir(parents=True, exist_ok=True)
+    path = debug_dir / (
+        f"hepph_playtest_{scenario_id}_{tier}_attempt{attempt}_{int(time.time())}.json"
+    )
+    payload = {
+        "scenario_id": scenario_id,
+        "tier": tier,
+        "attempt": attempt,
+        "hard_failures": [
+            {"attempt": hf.attempt, "assertion_id": hf.assertion_id} for hf in failures
+        ],
+        "captured_argv_list": captured_argv_list,
+        "harness_meta": harness_meta,
+    }
+    path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    print(f"[hepph-playtest] hard-failure transcript evidence: {path}")
+    return path
+
+
 # ---------------------------------------------------------------------------
 # run_with_retry_budget — core dispatch (plan-final T4)
 # ---------------------------------------------------------------------------
@@ -510,6 +551,16 @@ def run_with_retry_budget(
         )
         hard_attempt_history.append(attempt_hard)
         last_hard_failures = attempt_hard
+
+        # Preserve transcript evidence for any failing attempt: without this a
+        # ~20-min live run that fails its hard gate leaves NOTHING to diagnose
+        # (harness_meta was discarded). Written under HEPPH_PLAYTEST_DEBUG_DIR
+        # if set, else the system temp dir; the path is printed so operators
+        # can find it in the pytest -s output.
+        if attempt_hard:
+            _dump_failed_attempt(
+                scenario_id, tier, attempt, attempt_hard, harness_meta, captured_argv_list
+            )
 
         # SOFT assertions: record the earliest attempt each one passed.
         for assertion_id in soft_assertion_ids:

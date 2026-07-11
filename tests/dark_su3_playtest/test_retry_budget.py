@@ -259,6 +259,35 @@ def test_extract_field_equals_form_passes():
     assert fails == []
 
 
+def test_failed_attempt_dumps_transcript_evidence(monkeypatch, tmp_path):
+    """Each failing attempt writes a JSON evidence file to HEPPH_PLAYTEST_DEBUG_DIR."""
+    import json
+
+    monkeypatch.setenv("HEPPH_PLAYTEST_MAX_ATTEMPTS", "2")
+    monkeypatch.setenv("HEPPH_PLAYTEST_DEBUG_DIR", str(tmp_path))
+    failing = _passing_pointA_meta(crosscheck=False)
+    _patch_invoke(monkeypatch, [failing])
+    C.run_with_retry_budget("pointA_configured", "A", "configured", tier="tier2")
+
+    dumps = sorted(tmp_path.glob("hepph_playtest_pointA_configured_tier2_attempt*.json"))
+    assert len(dumps) == 2, f"expected one dump per failing attempt, got {dumps}"
+    payload = json.loads(dumps[0].read_text())
+    assert payload["scenario_id"] == "pointA_configured"
+    assert payload["attempt"] in (1, 2)
+    assert "crosscheck_disagreement_blocker_present" in [
+        f["assertion_id"] for f in payload["hard_failures"]
+    ]
+    assert "result_text" in payload["harness_meta"]
+
+
+def test_passing_attempt_writes_no_dump(monkeypatch, tmp_path):
+    monkeypatch.setenv("HEPPH_PLAYTEST_MAX_ATTEMPTS", "3")
+    monkeypatch.setenv("HEPPH_PLAYTEST_DEBUG_DIR", str(tmp_path))
+    _patch_invoke(monkeypatch, [_passing_pointA_meta()])
+    C.run_with_retry_budget("pointA_configured", "A", "configured", tier="tier2")
+    assert list(tmp_path.glob("hepph_playtest_*.json")) == []
+
+
 def test_extract_field_evidence_from_captured_argv():
     """captured_argv_list is also honoured as an evidence source (Tier-2 real)."""
     meta = {"tool_uses": [], "result_text": "", "raw_answer": {}}

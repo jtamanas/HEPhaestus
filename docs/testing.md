@@ -136,6 +136,12 @@ as a genuine gap, not a flake. Deterministic coverage of all of this lives in
 `tests/dark_su3_playtest/test_retry_budget.py` and runs under a plain
 `python -m pytest` with no live calls.
 
+Every attempt that fails a hard assertion also dumps its transcript evidence
+(`harness_meta`, captured argv, failure list) as JSON to
+`HEPPH_PLAYTEST_DEBUG_DIR` (default: system temp dir), printing the path
+(visible under `pytest -s`). Live attempts cost ~20 min + real API spend, so a
+failed run must leave something to diagnose.
+
 ## Merge-ordering note
 
 The specifics of the marker removal and the `importlib` switch land with the
