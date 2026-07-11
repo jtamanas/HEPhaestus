@@ -66,8 +66,20 @@ _SHARED_CONFIG = (
     _SKILLS_DIR.parent.parent / "shared" / "install-helpers" / "config_helpers.py"
 )
 
-# math namespace for --param expressions (no builtins → safe-ish local eval)
-_MATH_NS = {k: getattr(math, k) for k in dir(math) if not k.startswith("_")}
+# math namespace for --param expressions (no builtins → safe-ish local eval).
+# Deliberately EXCLUDED: `nan`/`inf` (a --param landing on a non-finite value is
+# an error, not an input — see the isfinite guard in eval_params) and the
+# collision-prone short names `e`, `gamma`, `tau` — a typo'd or colliding bare
+# name should raise NameError loudly, not silently resolve to Euler's number /
+# the gamma function and compute garbage. `pi` is kept. Available names:
+# everything else in the `math` module (cos, sin, sqrt, exp, log, pi, ...)
+# plus the scan variable itself.
+_EXCLUDED_EXPR_NAMES = {"nan", "inf", "e", "gamma", "tau"}
+_MATH_NS = {
+    k: getattr(math, k)
+    for k in dir(math)
+    if not k.startswith("_") and k not in _EXCLUDED_EXPR_NAMES
+}
 
 
 def _load(path: Path, name: str):
@@ -93,8 +105,22 @@ def parse_scan_spec(spec: str) -> tuple[str, list[float]]:
     return var.strip(), [start + i * (stop - start) / (n - 1) for i in range(n)]
 
 
+def param_names(param_exprs: list[str]) -> list[str]:
+    """The NAME parts of `NAME=EXPR` entries (no evaluation)."""
+    names = []
+    for pe in param_exprs:
+        if "=" not in pe:
+            raise ValueError(f"--param must be NAME=EXPR, got {pe!r}")
+        names.append(pe.split("=", 1)[0].strip())
+    return names
+
+
 def eval_params(param_exprs: list[str], scan_var: str, value: float) -> dict[str, float]:
-    """Evaluate each `NAME=EXPR` at scan_var=value into a spheno --params dict."""
+    """Evaluate each `NAME=EXPR` at scan_var=value into a spheno --params dict.
+
+    Raises ValueError on a non-finite result (NaN/inf) — a spectrum input that
+    is not a finite number is always a mistake, never physics.
+    """
     out: dict[str, float] = {}
     ns = dict(_MATH_NS)
     ns[scan_var] = value
@@ -102,7 +128,14 @@ def eval_params(param_exprs: list[str], scan_var: str, value: float) -> dict[str
         if "=" not in pe:
             raise ValueError(f"--param must be NAME=EXPR, got {pe!r}")
         name, expr = pe.split("=", 1)
-        out[name.strip()] = float(eval(expr, {"__builtins__": {}}, ns))
+        val = float(eval(expr, {"__builtins__": {}}, ns))
+        if not math.isfinite(val):
+            raise ValueError(
+                f"--param {name.strip()!r}={expr!r} evaluated to non-finite "
+                f"{val!r} at {scan_var}={value!r}; spectrum inputs must be "
+                "finite numbers."
+            )
+        out[name.strip()] = val
     return out
 
 
@@ -136,7 +169,15 @@ def run_point(args, maddm_run, slha_complete, mg5_bin, ufo_path, dm_pdg,
               scan_var, value, tag) -> dict:
     point_dir = Path(args.out_dir) / tag
     point_dir.mkdir(parents=True, exist_ok=True)
-    params = eval_params(args.param, scan_var, value)
+    # A per-value EXPR failure (bad name, domain error as the scan variable
+    # crosses e.g. 0, non-finite result) marks THIS point failed and lets the
+    # scan continue — same discipline as the downstream stage failures.
+    try:
+        params = eval_params(args.param, scan_var, value)
+    except Exception as e:
+        return {"scan_var": scan_var, "value": value, "tag": tag,
+                "status": "failed", "stage": "param_eval",
+                "stderr": f"{type(e).__name__}: {e}"}
     params_arg = ",".join(f"{k}={v!r}" for k, v in params.items())
 
     # ── Step 1: spectrum (analytic, --no-register so the scan never poisons
@@ -250,7 +291,19 @@ def main() -> None:
                     help="keep the full MG5 process dir per point (default: prune)")
     args = ap.parse_args()
 
-    scan_var, values = parse_scan_spec(args.scan)
+    try:
+        scan_var, values = parse_scan_spec(args.scan)
+        names = param_names(args.param)
+    except ValueError as e:
+        ap.error(str(e))
+    # A --param named like the scan variable would be silently shadowed in the
+    # eval namespace (other EXPRs would still see the SCAN value, not the
+    # override). Refuse up front rather than compute something ambiguous.
+    if scan_var in names:
+        ap.error(
+            f"--param {scan_var!r} collides with the --scan variable; the scan "
+            "drives that name. Rename the parameter or scan a different variable."
+        )
     Path(args.out_dir).mkdir(parents=True, exist_ok=True)
 
     config_helpers = _load(_SHARED_CONFIG, "config_helpers")
@@ -276,13 +329,21 @@ def main() -> None:
             ufo_path = cfg_ufo
         else:
             model_dir = state_root / "models" / args.model
-            cand = [p for p in model_dir.iterdir()
-                    if p.is_symlink() and "-" not in p.name] if model_dir.exists() else []
+            cand = sorted(
+                p for p in model_dir.iterdir()
+                if p.is_symlink() and "-" not in p.name
+            ) if model_dir.exists() else []
             if not cand:
                 print(f"ERROR: could not resolve a clean UFO path for {args.model!r}; "
                       f"pass --ufo-path explicitly.", file=sys.stderr)
                 sys.exit(1)
+            if len(cand) > 1:
+                print(f"NOTE: {len(cand)} hyphen-free symlinks under {model_dir}: "
+                      f"{[p.name for p in cand]}; choosing {cand[0].name!r} "
+                      "(first in sorted order). Pass --ufo-path to override.",
+                      file=sys.stderr)
             ufo_path = str(cand[0])
+            print(f"resolved UFO from $STATE_ROOT symlink: {ufo_path}", file=sys.stderr)
     maddm_run.validate_ufo_path(ufo_path)  # final loud check
     dm_pdg = dm_pdg_from_ufo(ufo_path, args.dm_name)
 
@@ -311,7 +372,7 @@ def main() -> None:
     # CSV of the ok points
     ok = [r for r in results if r.get("status") == "ok"]
     if ok:
-        cols = ["scan_var", "value", *sorted(eval_params(args.param, scan_var, values[0]).keys()),
+        cols = ["scan_var", "value", *sorted(names),
                 "m_dm_gev", "sigma_si_proton_cm2", "sigma_si_neutron_cm2",
                 "sigma_sd_proton_cm2", "sigma_sd_neutron_cm2", "p_over_n", "tag"]
         out_csv = Path(args.out_dir) / "scan_results.csv"

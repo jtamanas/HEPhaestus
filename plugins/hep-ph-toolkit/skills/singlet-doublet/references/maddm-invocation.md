@@ -29,7 +29,8 @@ interpreter without the MadDM plugin and `generate relic_density` raises
   mis-tokenizes the hyphen as a CLI flag and fails with `Path
   .../demo_output/singlet is not a valid pathname`. `sarah-build` now writes an
   absolute path, and `generate_maddm_script` emits a loud `WARNING:` if it is
-  ever handed a relative or hyphenated UFO path — but the durable
+  ever handed a hyphenated UFO path, or a relative one that does not resolve
+  from the current working directory — but the durable
   `$STATE_ROOT` symlink is the value to feed it.
 - `dm_candidate` = `"chi1"` (lowercase — MG5 normalises UFO particle names on
   import; see `/maddm` §Gotchas).

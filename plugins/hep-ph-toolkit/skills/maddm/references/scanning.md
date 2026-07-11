@@ -56,6 +56,16 @@ Three ergonomics it bakes in so you don't hand-roll them:
 `EXPR` is a math expression in the scan variable. This is essential for scans
 like the blind-spot θ scan, where one knob sets two Yukawas.
 
+Namespace available to `EXPR`: the Python `math` module (`cos`, `sin`, `sqrt`,
+`exp`, `log`, `pi`, ...) plus the scan variable — EXCEPT `nan`, `inf`, and the
+collision-prone short names `e`, `gamma`, `tau`, which are removed so a typo'd
+bare name raises `NameError` loudly instead of silently resolving to a math
+constant. A non-finite EXPR result (NaN/inf), or any per-value EXPR error,
+marks that POINT failed (`stage: "param_eval"` in `scan_results.json`) and the
+scan continues — the same discipline as the downstream stage failures. A
+`--param` whose NAME equals the scan variable is refused at argument-parse
+time (it would be silently shadowed).
+
 ### Worked example — the blind-spot θ scan
 
 Fixed MS=150, MPsi=500, y=1; scan the mixing angle θ with yh1=cos θ,

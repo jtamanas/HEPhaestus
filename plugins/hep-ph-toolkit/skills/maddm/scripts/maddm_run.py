@@ -52,8 +52,10 @@ def validate_ufo_path(ufo_path: str | Path) -> list[str]:
     *and* mis-parses a hyphen in a path component as the start of a CLI flag, so
     a hyphenated path like ``.../demo_output/singlet-doublet/SingletDoublet``
     fails with ``Path .../demo_output/singlet is not a valid pathname``. A
-    relative path is CWD-dependent and silently resolves against whichever
-    directory the MG5 session started in — a trap across worktrees/sessions.
+    relative path is CWD-dependent; one that no longer resolves from the
+    current working directory was recorded against some other session's CWD —
+    the worktree-relative trap from the θ-scan friction log. A relative path
+    that DOES resolve from here is legitimate and is not warned about.
 
     This is a LOUD-but-non-fatal read-time guard: it prints a ``WARNING:`` line
     to stderr for each problem and returns the list of warning strings (empty
@@ -63,11 +65,12 @@ def validate_ufo_path(ufo_path: str | Path) -> list[str]:
     """
     p = str(ufo_path)
     warnings: list[str] = []
-    if not os.path.isabs(p):
+    if not os.path.isabs(p) and not Path(p).exists():
         warnings.append(
-            f"UFO path {p!r} is RELATIVE — MG5 resolves it against the session "
-            "CWD, which is fragile across sessions/worktrees. Pass an absolute "
-            "path (e.g. $STATE_ROOT/models/<model>/<SarahName>)."
+            f"UFO path {p!r} is RELATIVE and does not resolve from the current "
+            f"working directory ({os.getcwd()}) — it was likely recorded "
+            "against a different session's CWD. Pass an absolute path "
+            "(e.g. $STATE_ROOT/models/<model>/<SarahName>)."
         )
     # Check every component from the model dir down for a hyphen. MG5 chokes on
     # any hyphen in the imported path, but the common offender is a hyphenated
