@@ -222,7 +222,6 @@ Lint warnings appear in the routing report's **main summary** AND in the JSON si
 |-----------|------|-------------|
 | `tests/test_exceptions_registry.py` | unit | Loader: seed parsing, id/model/kind lookup, malformed-banner rejection, status filtering. 6 tests. |
 | `tests/test_detector.py` | unit | Detector: 4 verdicts (CLEAR/ROUTE_TO_ANALYTIC/HALT_FOR_SIGNOFF/HARD_HALT), lint gate, WS1 axis input path, WS1 fallback, multi_component evidence. 8 tests. |
-| `tests/test_no_dmc_scripts_modified.py` | guard | CI guard: `git diff --name-only <base>..HEAD -- dark-matter-constraints/scripts/` is empty. |
 | `plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/test_analytic_exception_disclosure_static.py` | static | Registry-driven placement test (marker: `disclosure_contract`). 5 tests (well-formedness + placements per entry + status filtering). |
 | `plugins/hep-ph-toolkit/skills/dark-matter-constraints/tests/test_analytic_exception_disclosure_emission.py` | runtime | Workflow-skill upstream renderer: dsu3-002 banner verbatim + positionally before `### Results`. 2 tests. |
 

@@ -1,0 +1,10 @@
+# Realistic RUNNER spec — legacy SCALAR non-standard cosmology form
+# (`cosmology: non_standard`, a bare string rather than a `{kind: ...}` dict).
+# should_invoke_class.py:31 treats this scalar as non-standard directly
+# (`cosmology != "standard_thermal"`), so /class WILL be invoked at Step 6.
+# check_prereqs must therefore also treat this as ACTIVE for the class_path
+# condition (spec_field cosmology.kind) — otherwise class_path is silently
+# skipped and Step 6 fails loud-but-late. SYNTHETIC test fixture.
+dm_candidate: {pdg: 9000002, name: chi, mass_gev: 100.0}
+halo: shm
+cosmology: non_standard

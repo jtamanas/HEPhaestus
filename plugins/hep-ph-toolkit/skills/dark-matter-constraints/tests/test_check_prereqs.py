@@ -424,6 +424,55 @@ def test_class_path_satisfied_for_nonstandard_cosmology(tmp_path):
     assert checked.get("config.class_path") is True, checked
 
 
+def test_class_path_enforced_for_scalar_nonstandard_cosmology(tmp_path):
+    """Legacy SCALAR cosmology form (`cosmology: non_standard`, a bare string
+    rather than `{kind: ...}`) must ALSO activate the class_path condition.
+
+    should_invoke_class.py:31 treats a scalar cosmology as non-standard
+    directly (`cosmology != "standard_thermal"`), so /class WILL be invoked
+    at Step 6. Before the scalar-aware fix, `_dig(spec, "cosmology.kind")`
+    returned None for a string `cosmology` value (can't `.get("kind")` on a
+    str), so the condition was silently treated as inactive and class_path
+    was skipped — a loud-but-late failure at Step 6 instead of a prereq
+    blocker here. Pins the fix.
+    """
+    cfg = _build_conditional_config(tmp_path, "spec_scalar_nonstandard_cosmology.yaml")
+    cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
+    assert cp.returncode == 1, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "blocked", result
+    codes = [b["code"] for b in result["blockers"]]
+    assert "CLASS_PATH_MISSING" in codes, codes
+
+
+def test_class_path_satisfied_for_scalar_nonstandard_cosmology(tmp_path):
+    """Same scalar non-standard-cosmology spec WITH class_path set → passes."""
+    cfg = _build_conditional_config(
+        tmp_path, "spec_scalar_nonstandard_cosmology.yaml", extra_paths=["class_path"]
+    )
+    cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
+    assert cp.returncode == 0, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "ok", result
+    checked = {c["key"]: c["exists"] for c in result["checked"]}
+    assert checked.get("config.class_path") is True, checked
+
+
+def test_class_path_skipped_for_scalar_standard_thermal_cosmology(tmp_path):
+    """Legacy SCALAR `cosmology: standard_thermal` (bare string) → the
+    class_path condition must be SKIPPED, same as the dict form
+    `{kind: standard_thermal}`."""
+    cfg = _build_conditional_config(tmp_path, "spec_scalar_standard_thermal.yaml")
+    cp = _run(cfg, model="toyDM", manifest_path=_DEFAULT_MANIFEST)
+    assert cp.returncode == 0, f"stdout={cp.stdout!r} stderr={cp.stderr!r}"
+    result = json.loads(cp.stdout)
+    assert result["status"] == "ok", result
+    codes = [b["code"] for b in result["blockers"]]
+    assert "CLASS_PATH_MISSING" not in codes, codes
+    checked_keys = [c["key"] for c in result["checked"]]
+    assert "config.class_path" not in checked_keys, checked_keys
+
+
 def test_looptools_path_enforced_for_loop_only_candidate(tmp_path):
     """REAL-structured loop-only spec (candidates nested under
     dm_phenomenology.candidates, per every actual v2 ModelSpec) with
