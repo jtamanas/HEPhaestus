@@ -94,8 +94,8 @@ Halo fields (if object): `model`, `v0_km_per_s`, `vesc_km_per_s`,
   "verdict": "excluded" | "allowed" | "marginal",
   "m_dm_gev": 100.0,
   "experiments": {
-    "XENON1T_2018": {"logL": -4.397586, "p_value": 0.4738713, "excluded_90cl": false},
-    "LZ_2022": {"logL": -104.0234, "p_value": 7.08e-45, "excluded_90cl": true},
+    "XENON1T_2018": {"logL": -4.397586, "delta_chi2": 1.493639, "significance": 1.222145, "p_value": 0.2216527, "excluded_90cl": false},
+    "LZ_projected": {"logL": -104.0234, "delta_chi2": 203.3188, "significance": 14.25899, "p_value": 3.94e-46, "excluded_90cl": true},
     "LUX_2016": {...},
     "PandaX_2017": {...},
     "PICO_60_2019": {...},
@@ -112,32 +112,48 @@ Halo fields (if object): `model`, `v0_km_per_s`, `vesc_km_per_s`,
 }
 ```
 
-(The XENON1T_2018 and LZ_2022 rows above are real measured values at
+(The XENON1T_2018 and LZ_projected rows above are real measured values at
 m_DM = 100 GeV, σ_SI = 1e-46 cm², SHM defaults — DDCalc's simplified
 single-bin XENON1T likelihood does *not* exclude that point on its own;
-LZ_2022 does, so the overall verdict is "excluded".)
+LZ_projected does, so the overall verdict is "excluded".)
 
 The result JSON is written to `$STATE_ROOT/runs/ddcalc/<TS>/result.json` and also
 printed to stdout. For a human-readable summary, read `result.json` and render a
 Markdown table from the `experiments` dict (one row per experiment: name, logL,
-p_value, excluded_90cl) inline — no separate `render_report.py` exists.
+delta_chi2, p_value, excluded_90cl) inline — no separate `render_report.py` exists.
 
-**`p_value` statistic (fixed 2026-07-11):** `p_value` is a **likelihood ratio to
-background-only**, `p = exp(lnL_signal - lnL_background)` (clamped to `[0, 1]`),
-with `excluded_90cl = (p_value <= 0.1)`. This reduces to DDCalc's native
-convention in the background-free limit; the ratio normalization follows the
-standard GAMBIT/DarkBit generalization. It is *not* DDCalc's own
-`DDCalc_ScaleToPValue` — that function takes a target log-p and returns a
-sigma-scale factor, and is structurally unusable for high-count xenon TPCs
-(XENON1T/LZ/PandaX/LUX): it guards on the background-only absolute
-log-likelihood being near 0, which only holds for near-background-free
-counting experiments (PICO, DarkSide). Like `ScaleToPValue` itself, the 0.1
-cut carries no χ²/Wilks calibration — "90% CL" is DDCalc's loose convention,
-not a rigorous frequentist CL. Empirical verification covers channel
-behaviour, not statistical calibration: SI monotonicity/verdicts across every
-experiment in the registry, and SD channel **liveness and isospin structure**
-(see below). See `scripts/ddcalc_driver.c` (file header) for the full
-derivation.
+**Exclusion statistic — Wilks likelihood-ratio (calibrated 2026-07-11,
+`ddcalc-pvalue-calibration`):** for each experiment the driver reports
+
+- `delta_chi2 = -2 (lnL_signal - lnL_background)` — the one-parameter
+  profile-likelihood-ratio test statistic, clamped `>= 0` (a signal fitting no
+  worse than background carries no exclusion). `lnL_background` is DDCalc's
+  log-likelihood at zero cross section (a second zero-signal WIMP handle).
+- `significance = sqrt(delta_chi2)` — Gaussian-sigma Z.
+- `p_value = erfc(sqrt(delta_chi2 / 2))` — the χ²₁ survival function, a real
+  p-value in `[0, 1]`, monotone non-increasing in σ.
+- `excluded_90cl = (p_value < 0.1)` ⇔ `(delta_chi2 > 2.706)` — the χ²₁ 90%
+  quantile (equivalently `sqrt(-2 ΔlnL) > 1.645`). This is the asymptotic
+  (Wilks) rule GAMBIT/DarkBit apply to DDCalc log-likelihoods; "90% CL" now
+  carries an actual χ²/Wilks calibration.
+
+This replaced two earlier statistics: DDCalc's own `DDCalc_ScaleToPValue`
+(misused, pinned "p" near 1.0 — structurally unusable for high-count xenon
+TPCs, see `ddcalc-diag/DIAGNOSIS.md`), and the interim `p = exp(lnL_signal -
+lnL_background)` ratio (smooth/monotone but *uncalibrated* — its 0.1 cut is
+Z≈2.15, not 90% CL — and it **underflowed to a hard 0** for large signals,
+turning any bisection-for-p=0.1 into a numerical-underflow contour). **For
+limit scans, bracket/bisect on `delta_chi2 = 2.706`, never on `p_value`**:
+`delta_chi2` stays finite and monotone where `p_value` underflows to 0.
+
+**Validation (SI, SHM defaults):** the `delta_chi2 > 2.706` crossing
+reproduces the *published* per-nucleon SI limits of the analyses DDCalc
+actually ships to within a factor ~2 across 30–200 GeV — LZ vs the LZ
+*projected* design sensitivity (arXiv:1802.06039; see the LZ row below),
+XENON1T_2018 vs the observed 1t·yr result (arXiv:1805.12562, ~1.7× weaker,
+the known single-bin limitation). SD channel **liveness and isospin structure**
+(PICO SD-proton-led, xenon TPCs SD-neutron-led) are covered separately (see
+below). See `scripts/ddcalc_driver.c` (file header) for the full derivation.
 
 **SD channel (fixed 2026-07-11):** the spin-dependent channel is live. DDCalc
 loads its SD nuclear form factors from `DATA_DIR/SDFF/<Z>_<A>.dat`, where
@@ -168,16 +184,27 @@ so never emit these: `HEPPH_ALLOW_REFERENCE`, `DDCALC_REFERENCE_ONLY`
 
 ## Native experiments (v1)
 
-| Experiment | Paper |
-|---|---|
-| XENON1T_2018 | arXiv:1805.12562 |
-| LUX_2016 | arXiv:1602.03489 |
-| PandaX_2017 | arXiv:1708.06917 |
-| PICO_60_2019 | arXiv:1902.04031 |
-| DarkSide_50 | arXiv:1802.06994 |
+| Experiment | Paper | Kind |
+|---|---|---|
+| XENON1T_2018 | arXiv:1805.12562 | observed |
+| LUX_2016 | arXiv:1602.03489 | observed |
+| PandaX_2017 | arXiv:1708.06917 | observed |
+| PICO_60_2019 | arXiv:1902.04031 | observed |
+| DarkSide_50 | arXiv:1802.06994 | observed |
+| LZ_projected | arXiv:1802.06039 | **projected sensitivity** |
 
-Post-2022 experiments (LZ WS2024, XENONnT 2023, PandaX-4T 2021) require the
-overlay bundle, deferred to v1.1.
+**LZ is projected, not observed.** DDCalc 2.2.0's built-in `lz` analysis
+(`C_DDCalc_lz_init`) is the LZ *projected design sensitivity* (arXiv:1802.06039,
+~1000 live-days, min ~1.4e-48 cm²), so it is registered as **`LZ_projected`**.
+It is **not** the observed LZ WS2022 first-results limit (arXiv:2207.03764, min
+~9.2e-48 cm²): comparing the projected contour to the published observed limit
+makes the toolkit look ~6× more stringent than LZ actually is. The `delta_chi2 >
+2.706` crossing reproduces the *projected* SI curve within a factor ~2 across
+30–200 GeV. The observed WS2022 analysis is the deferred `LZ_WS2024` overlay
+(v1.1), absent from the native install.
+
+Post-2022 observed experiments (LZ WS2022/WS2024, XENONnT 2023, PandaX-4T 2021)
+require the overlay bundle, deferred to v1.1.
 
 ## Halo model (v1)
 
@@ -197,18 +224,25 @@ cajohare/NeutrinoFog@0df3d0c; data/neutrino_fog_ohare_2021.csv).
 Playtest-surfaced gotchas from the Dark SU(3) run (2026-04-25). Build-time issues
 are in `_shared/installs/ddcalc/INSTALL.md` sharp edges.
 
-### SE-DD-1 — LZ_2022 must be explicitly registered (FU-wsi-01)
+### SE-DD-1 — the native LZ analysis is projected, and must be registered as `LZ_projected` (FU-wsi-01)
 
-**Symptom:** DDCalc runs without error but LZ_2022 is absent from the
-`experiments` dict in `ddcalc_result/v1` JSON.
+**Symptom:** DDCalc runs without error but LZ is absent from the `experiments`
+dict, OR an "LZ" curve reads ~6× more stringent than the published LZ WS2022
+limit (a projected-sensitivity contour presented as the observed result).
 
 **Root cause:** DDCalc 2.2.0 ships `C_DDCalc_lz_init` in `DDExperiments.hpp` and a
-populated `LZ/` data directory, but the v1 driver omitted the
-`register_exp("LZ_2022", C_DDCalc_lz_init)` call in `ddcalc_driver.c`. Only the 5
-experiments explicitly registered in the driver are available at runtime.
+populated `LZ/` data directory, but (a) the v1 driver first omitted the
+`register_exp(...)` call entirely, and (b) it was then registered under the
+misleading name `LZ_2022`. The analysis is actually the LZ **projected design
+sensitivity** (arXiv:1802.06039, min ~1.4e-48 cm²), *not* the observed WS2022
+limit (arXiv:2207.03764, min ~9.2e-48 cm²). Only experiments explicitly
+registered in the driver are available at runtime.
 
-**Fixed in tier-1** (T1.4, landed on main at `5355461`). LZ_2022 is now
-registered. **DARWIN is currently UNREGISTERED** — `C_DDCalc_darwin_init` exists
+**Fixed** (`ddcalc-pvalue-calibration`, 2026-07-11): registered as
+**`LZ_projected`** with its true identity documented; the `delta_chi2 > 2.706`
+crossing reproduces the published *projected* SI curve within a factor ~2. The
+observed WS2022 limit is the deferred `LZ_WS2024` overlay (v1.1).
+**DARWIN is currently UNREGISTERED** — `C_DDCalc_darwin_init` exists
 in `DDExperiments.hpp` but is absent from `ddcalc_driver.c`. Tier-2 follow-up:
 add `register_exp("DARWIN", C_DDCalc_darwin_init)` and the corresponding data
 symlink (see SE-DD-2 in `_shared/installs/ddcalc/INSTALL.md`).
@@ -259,7 +293,8 @@ to `run`/`exclude`. This is a sibling of the PR #1 SARAH quark-sector bug class
 ## Notes and linkage
 
 - `scripts/_parse_driver_stdout.py` is kept (not shed with the other regex
-  parsers) because its `EXPERIMENT:/LOGL:/PVALUE:/EXCLUDED90:/STATUS:/VERSION:`
+  parsers) because its
+  `EXPERIMENT:/LOGL:/DELTACHI2:/SIGNIFICANCE:/PVALUE:/EXCLUDED90:/STATUS:/VERSION:`
   protocol is co-defined with `scripts/ddcalc_driver.c` in the same directory —
   both sides of the format live here, so format drift is caught in the same repo.
 - Schema: `plugins/shared/schemas/scattering.schema.json`

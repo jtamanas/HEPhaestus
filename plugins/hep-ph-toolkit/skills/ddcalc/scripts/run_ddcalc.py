@@ -394,7 +394,7 @@ def cmd_run(args) -> int:
     ]
     if max(sd_inputs) >= 1e-45:
         sd_sensitive = ("XENON1T_2018", "LUX_2016", "PandaX_2017",
-                        "PICO_60_2019", "LZ_2022")
+                        "PICO_60_2019", "LZ_projected")
         pvals = [
             driver_result["experiments"][name]["p_value"]
             for name in sd_sensitive

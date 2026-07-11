@@ -6,9 +6,11 @@
  *
  * Output format (one block per experiment):
  *   EXPERIMENT: <name>
- *   LOGL: <value>
- *   PVALUE: <value>
- *   EXCLUDED90: <0|1>
+ *   LOGL: <value>            (signal log-likelihood)
+ *   DELTACHI2: <value>       (-2 (lnL_signal - lnL_background), clamped >= 0)
+ *   SIGNIFICANCE: <value>    (sqrt(DELTACHI2), Gaussian-sigma Z)
+ *   PVALUE: <value>          (chi^2_1 survival = erfc(sqrt(DELTACHI2/2)))
+ *   EXCLUDED90: <0|1>        (DELTACHI2 > 2.706 <=> PVALUE < 0.1)
  *   ---
  *
  * Footer:
@@ -29,34 +31,48 @@
  *   DDCalc_LogLikelihood(Detector)
  *   DDCalc_SignalSI(Detector)
  *
- * p-value / exclusion statistic:
- *   PVALUE and EXCLUDED90 below are a **likelihood ratio to background-only**,
- *   NOT DDCalc's own `DDCalc_ScaleToPValue`. See
- *   /Users/yianni/.claude/jobs/c703354a/tmp/ddcalc-diag/DIAGNOSIS.md for the
- *   full root-cause writeup. Summary: `ScaleToPValue(D, lnp)` takes a
- *   *target* log-p and returns a sigma-scale factor; it does not convert a
- *   log-likelihood into a p-value. The prior code fed it the *current* logL
- *   as the target, which just asks "what scale reproduces the logL I already
- *   have at x=1" — the trivial answer x≈1 for every sigma, which is why the
- *   old driver's reported "p_value" pinned near 1.0 for every XENON1T/LZ
- *   point. Additionally, `ScaleToPValue` used correctly (target = ln 0.1) is
- *   structurally unusable for high-count xenon TPCs: it guards on the
- *   background-only *absolute* log-likelihood being close to 0 (valid only
- *   for near-background-free counting experiments like PICO/DarkSide), and
- *   returns a 0/HUGE sentinel for XENON1T/LZ/PandaX/LUX instead of a real
- *   crossing. The likelihood-ratio statistic below —
- *     p = exp(lnL_signal - lnL_background), excluded_90 = (p <= 0.1)
- *   — reduces to DDCalc's native convention in the background-free limit
- *   (matching ScaleToPValue exactly in the regime where the latter is
- *   valid); the ratio normalization follows the standard GAMBIT/DarkBit
- *   generalization. As with DDCalc's own ScaleToPValue, the 0.1 cut carries
- *   no chi^2/Wilks calibration — "90% CL" is DDCalc's loose convention, not
- *   a rigorous frequentist CL; this driver is consistent with the tool it
- *   wraps, not stricter than it. Empirical verification covers channel
- *   behaviour, not statistical calibration: SI monotonicity/verdicts across
- *   every experiment in the registry (PR #17), and SD channel *liveness and
- *   isospin structure* (PICO SD-proton-led, xenon TPCs SD-neutron-led; see
- *   tests/test_integration_pvalue_statistic.py::TestSDChannel).
+ * Exclusion statistic — Wilks / one-parameter profile-likelihood-ratio test:
+ *   For each detector the driver evaluates the DDCalc log-likelihood at the
+ *   physical cross section (lnL_signal) and at zero cross section
+ *   (lnL_background, via a second zero-signal WIMP handle), and reports the
+ *   likelihood-ratio test statistic
+ *
+ *     DELTACHI2   = -2 (lnL_signal - lnL_background)   [clamped >= 0]
+ *     SIGNIFICANCE = sqrt(DELTACHI2)                    [Gaussian-sigma Z]
+ *     PVALUE      = erfc( sqrt(DELTACHI2 / 2) )         [chi^2_1 survival func]
+ *     EXCLUDED90  = (PVALUE < 0.1)  <=>  (DELTACHI2 > 2.70554)
+ *
+ *   This is the standard asymptotic (Wilks) statistic that GAMBIT/DarkBit
+ *   consumers apply to DDCalc log-likelihoods: -2 dln L is chi^2_1-distributed
+ *   under the null, so the 90% CL exclusion threshold is the chi^2_1 90%
+ *   quantile DELTACHI2 = 2.706 (equivalently sqrt(-2 dlnL) > 1.645). It fixes
+ *   three problems with the prior statistics:
+ *     - It is NOT DDCalc's own `DDCalc_ScaleToPValue` (that takes a target
+ *       log-p and returns a sigma-scale factor; it does not convert a
+ *       log-likelihood into a p-value, and it is structurally unusable for
+ *       high-count xenon TPCs whose background-only absolute log-likelihood is
+ *       far from 0 — see ddcalc-diag/DIAGNOSIS.md). That misuse pinned the
+ *       reported "p" near 1.0 for every XENON1T/LZ point.
+ *     - It replaces the interim `p = exp(lnL_signal - lnL_background)` ratio
+ *       (which was smooth and monotone but *uncalibrated* — its 0.1 cut is
+ *       Z~2.15, not 90% CL — and which UNDERFLOWED to a hard 0 for large
+ *       signals, turning any bisection-for-p=0.1 into a numerical-underflow
+ *       contour). DELTACHI2 stays finite and monotone where exp() underflows,
+ *       so limit bisection must bracket on DELTACHI2 = 2.706, never on PVALUE.
+ *     - "90% CL" now carries an actual chi^2/Wilks calibration.
+ *
+ *   Validation (SI, SHM defaults, 2026-07-11): the DELTACHI2 > 2.706 crossing
+ *   reproduces the *published* per-nucleon SI limits of the analyses DDCalc
+ *   actually implements to within a factor ~2 across 30-200 GeV — LZ vs the LZ
+ *   *projected* design sensitivity (arXiv:1802.06039, min ~1.4e-48 cm^2; see
+ *   the LZ_projected note below), XENON1T_2018 vs the observed 1t-yr result
+ *   (arXiv:1805.12562). Covered by tests/test_integration_pvalue_statistic.py
+ *   and tests/test_integration_xenon1t_golden.py.
+ *
+ *   SD channel: the spin-dependent rate flows through the same
+ *   CalcRates/LogLikelihood path as SI, so the same statistic applies; SD
+ *   liveness and isospin structure (PICO SD-proton-led, xenon TPCs
+ *   SD-neutron-led) are covered by TestSDChannel.
  *
  *   SD channel: the spin-dependent rate flows through the same
  *   CalcRates/LogLikelihood path as SI, so the same (uncalibrated) statistic
@@ -174,7 +190,16 @@ int main(int argc, char *argv[]) {
     register_exp("PandaX_2017",   C_DDCalc_pandax_2017_init);
     register_exp("PICO_60_2019",  C_DDCalc_pico_60_2019_init);
     register_exp("DarkSide_50",   C_DDCalc_darkside_50_init);
-    register_exp("LZ_2022",       C_DDCalc_lz_init);
+    /* NOTE: DDCalc 2.2.0's built-in `lz` analysis (C_DDCalc_lz_init) is the LZ
+     * *projected design sensitivity* (arXiv:1802.06039, ~1000 live-days,
+     * min ~1.4e-48 cm^2), NOT the observed LZ WS2022 first-results limit
+     * (arXiv:2207.03764, min ~9.2e-48 cm^2). It is therefore registered as
+     * "LZ_projected", not "LZ_2022": the old "LZ_2022" label caused a headline
+     * artifact — a projected-sensitivity contour was presented and compared as
+     * if it were the published observed WS2022 limit (~6x more stringent, wrong
+     * direction). The observed WS2022 analysis is a v1.1 overlay bundle
+     * (LZ_WS2024), not present in the native install. */
+    register_exp("LZ_projected",  C_DDCalc_lz_init);
 
     /* Initialize WIMP and Halo */
     int WIMP = C_DDWIMP_ddcalc_initwimp();
@@ -213,20 +238,34 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        /* Likelihood-ratio p-value, clamped to [0, 1]. exp() underflow of a
-         * very negative exponent yields +0.0, which is the correct limit. */
-        double pval = exp(logL - logLbg);
-        if (isnan(pval)) {  /* e.g. inf - inf in the exponent */
+        /* Wilks one-parameter likelihood-ratio test statistic. delta_chi2 is
+         * -2 dln L, clamped at 0 (a signal that fits *better* than background,
+         * dln L > 0, is not evidence for exclusion — the upper-limit test
+         * statistic is 0 there). Unlike exp(dln L), delta_chi2 stays finite and
+         * monotone for arbitrarily large signals, so it is the quantity a limit
+         * finder must bracket on (crossing delta_chi2 = 2.706); PVALUE below can
+         * underflow to a hard 0 and must never be bisected on. */
+        double delta_chi2 = -2.0 * (logL - logLbg);
+        if (isnan(delta_chi2) || isinf(delta_chi2)) {  /* e.g. inf - inf */
             fprintf(stderr,
-                "ERROR: non-finite p-value for %s (logL=%f, logL_bg=%f)\n",
+                "ERROR: non-finite delta_chi2 for %s (logL=%f, logL_bg=%f)\n",
                 experiments[i].name, logL, logLbg);
             return 1;
         }
+        if (delta_chi2 <= 0.0) delta_chi2 = 0.0;  /* also normalizes -0.0 */
+        double significance = sqrt(delta_chi2);
+        /* chi^2_1 survival function = erfc(sqrt(chi2/2)); a real p-value in
+         * [0,1], monotone non-increasing in signal. Excluded at 90% CL when
+         * p < 0.1, i.e. delta_chi2 > 2.70554 (chi^2_1 90% quantile). */
+        double pval = erfc(sqrt(delta_chi2 / 2.0));
+        if (pval < 0.0) pval = 0.0;
         if (pval > 1.0) pval = 1.0;
-        int excl90 = (pval <= 0.1) ? 1 : 0;
+        int excl90 = (delta_chi2 > 2.705543) ? 1 : 0;
 
         printf("EXPERIMENT: %s\n", experiments[i].name);
         printf("LOGL: %.6e\n", logL);
+        printf("DELTACHI2: %.6e\n", delta_chi2);
+        printf("SIGNIFICANCE: %.6e\n", significance);
         printf("PVALUE: %.6e\n", pval);
         printf("EXCLUDED90: %d\n", excl90);
         printf("---\n");
