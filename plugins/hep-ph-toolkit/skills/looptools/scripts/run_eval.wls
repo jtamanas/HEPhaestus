@@ -80,41 +80,21 @@ g1val = 0.357; g2val = 0.652; g3val = 1.2;   (* only the negligible EW penguins 
 TEPS = 1.0*^-4;                              (* spacelike t->0 regulator (GeV^2) *)
 
 (* ---------------------------------------------------------------------------
-   PREAMBLE (top level, BEFORE the Module).  FormCalc + LoopTools MUST be loaded
-   before the Module expression below is READ, so that the PV heads (C0i/D0i/B0i)
-   and the FeynArts kinematic symbols (S/T/U/SumOver/IndexSum/Den/Mat) resolve to
-   their package contexts instead of being interned as fresh Global` symbols that
-   then shadow the package versions.
+   PREAMBLE (top level, BEFORE the Module).  The model-AGNOSTIC plumbing —
+   warning suppression, the positional-argv contract, the FormCalc + LoopTools
+   Install/ltini load, the C0i self-test, and the generic evalTermCommon /
+   emitUnboundGuard / writeEvalOutput helpers — lives in run_eval_common.wl.
+   Get[]ing it HERE (before the Module below is read) loads FormCalc + LoopTools
+   so the PV heads (C0i/D0i/B0i) and the FeynArts kinematic symbols
+   (S/T/U/SumOver/IndexSum/Den/Mat) resolve to their package contexts instead of
+   being interned as fresh Global` symbols that then shadow the package versions.
+   After the Get, the globals $ampPath/$pointPath/$ffPreset/$outPath/$ltPrefix are
+   bound and the helpers are available.  See run_eval_common.wl for the contract.
    --------------------------------------------------------------------------- *)
-Off[General::stop]; Off[General::munfl]; Off[General::infy]; Off[Power::infy];
-Off[General::shdw];
-
-If[Length[$ScriptCommandLine] < 6,
-  WriteString["stderr", "run_eval.wls: insufficient arguments\n"]; Exit[1]];
-$ampPath   = $ScriptCommandLine[[2]];
-$pointPath = $ScriptCommandLine[[3]];
-$ffPreset  = $ScriptCommandLine[[4]];
-$outPath   = $ScriptCommandLine[[5]];
-$ltPrefix  = $ScriptCommandLine[[6]];
-
-If[Quiet[Needs["FormCalc`"]] === $Failed,
-  WriteString["stderr", "run_eval: Needs[FormCalc`] failed\n"]; Exit[1]];
-
-$ltBin = FileNameJoin[{$ltPrefix, "bin", "LoopTools"}];
-If[!FileExistsQ[$ltBin],
-  WriteString["stderr", "run_eval: LoopTools MathLink binary not found: " <> $ltBin <> "\n"];
-  Exit[1]];
-If[Quiet[Install[$ltBin]] === $Failed,
-  WriteString["stderr", "run_eval: Install[LoopTools] failed\n"]; Exit[1]];
-Quiet[Check[ltini[], Null]];
-SetOptions[$Output, FormatType -> InputForm];
-
-(* GUARD: a known finite C0i must evaluate to a finite complex number now
-   (catches the FormCalc-symbolic vs LoopTools-numeric head clash / bad install). *)
-$c0test = Quiet[C0i[cc0, 100.^2, -TEPS, 100.^2, 100.^2, 400.^2, 400.^2]];
-If[!NumberQ[$c0test] || !(Abs[$c0test] < Infinity),
-  WriteString["stderr", "run_eval: LoopTools C0i self-test failed (got " <>
-    ToString[$c0test] <> "); PV heads not evaluating numerically.\n"]; Exit[1]];
+$scriptDir = DirectoryName[
+  If[$InputFileName =!= "" && $InputFileName =!= Null, $InputFileName,
+     $ScriptCommandLine[[1]]]];
+Get[FileNameJoin[{$scriptDir, "run_eval_common.wl"}]];
 
 Module[{
     ampPath = $ampPath, pointPath = $pointPath, ffPreset = $ffPreset,
@@ -123,11 +103,11 @@ Module[{
     mchi, mh, mHH, mG0, ma, mA0, mGp, mHp, mW, mZ, mtq, mbq,
     vdv, vuv, lam1v,lam2v,lam3v,lam4v,lam5rv,lam7v,lam8v,lamPv, gchiv,
     ZAm, ZHm, ZPm, ctw, stw,
-    amp, subexpr, terms, mkNum, Fsame, Fdiff, evalTerm,
+    amp, subexpr, terms, mkNum, Fsame, Fdiff,
     triIndex, alphaUpPhi, Uphi,
     Msame, Mdiff, alphaUpFull, alphaUpTri, alphaUpBox,
     nucF, fp, fn, ffP, ffN, uvRes, scaleRes, finiteQ, jsonAssoc,
-    mq, sq, nPV, mDM, pointId, unboundQ, bindGuard, unbound
+    mq, sq, nPV, mDM, pointId, bindGuard, unbound
   },
 
   point = Quiet[Check[Import[pointPath, "RawJSON"], $Failed]];
@@ -166,8 +146,9 @@ Module[{
      before any PV / MathLink call, and name the unbound symbols so the caller
      gets a guided LOOPTOOLS_EVAL_NO_OUTPUT blocker instead of a crash.
      This changes NO binding — generalising the substitution layer off
-     TwoHdmAfix is roadmap step 3. *)
-  unboundQ[v_] := (v === $Failed) || MatchQ[v, _Missing];
+     TwoHdmAfix is roadmap step 3.  unboundQ / emitUnboundGuard (the marker + the
+     Exit[3] mechanism) live in run_eval_common.wl; the bindGuard table and help
+     text below are the 2HDM+a-specific data. *)
   bindGuard = {
     "MassFchi(m_dm)" -> mchi, "Masshh[1](h,25)" -> mh, "Masshh[2](H,35)" -> mHH,
     "MassAh[1](G0,36)" -> mG0, "MassAh[2](a,9931569)" -> ma, "MassAh[3](A0,9949515)" -> mA0,
@@ -182,14 +163,11 @@ Module[{
     If[MemberQ[Flatten[ZAm], $Failed] || ! FreeQ[ZAm, _Missing], {"ZAMIX(ZAMIX:i,j)"}, {}],
     If[MemberQ[Flatten[ZHm], $Failed] || ! FreeQ[ZHm, _Missing], {"ZHMIX(ZHMIX:i,j)"}, {}],
     If[MemberQ[Flatten[ZPm], $Failed] || ! FreeQ[ZPm, _Missing], {"ZPMIX(ZPMIX:i,j)"}, {}]];
-  If[Length[unbound] > 0,
-    WriteString["stderr",
-      "run_eval: UNBOUND-MODEL-PARAMETERS " <> ToString[unbound, InputForm] <> "\n" <>
-      "  The supplied model point does not bind these amplitude symbols. run_eval.wls\n" <>
-      "  is specialised to the 2HDM+a (TwoHdmAfix) model (masses by 2HDM+a PDG codes,\n" <>
-      "  2HDM+a couplings). A different model (e.g. singlet-doublet) needs an\n" <>
-      "  SD-generic substitution/projection/matching layer -- roadmap step 3.\n"];
-    Exit[3]];
+  emitUnboundGuard[unbound,
+    "  The supplied model point does not bind these amplitude symbols. run_eval.wls\n" <>
+    "  is specialised to the 2HDM+a (TwoHdmAfix) model (masses by 2HDM+a PDG codes,\n" <>
+    "  2HDM+a couplings). A different model (e.g. singlet-doublet) needs an\n" <>
+    "  SD-generic substitution/projection/matching layer -- roadmap step 3.\n"];
 
   amp = Quiet[Check[Get[ampPath], $Failed]];
   If[amp === $Failed,
@@ -222,24 +200,19 @@ Module[{
   Fdiff = {F1->mchi,F4->mchi,F2->mq,F3->mq,F7->mchi*mq,F8->mchi*mq,F5->mchi*mq,F6->mchi*mq,
            F9->0,F10->0,F11->0,F12->0,F13->0,F14->0,F15->0,F16->0};
 
-  SetAttributes[evalTerm, HoldFirst];
-  evalTerm[term_, Fp_, nr_, override_:{}] := Module[{iters, s},
-    iters = Cases[term, SumOver[i_,n_] :> {i,1,n}];
-    iters = DeleteCases[iters, {x_,_,_} /; MemberQ[override[[All,1]], x]];
-    s = (term /. SumOver[_,_]->1) //. subexpr;
-    s = s /. IndexSum -> Function[{e,r}, Sum[e, Evaluate[r]]];
-    s = s /. override;
-    Sum[Quiet[(s /. Fp) //. nr], Evaluate[Sequence @@ iters]]];
+  (* evalTermCommon (SumOver/IndexSum engine) is defined in run_eval_common.wl;
+     it takes the amp's subexpr explicitly (run_eval.wls's subexpr is a Module
+     local, so it is passed rather than closed over). *)
 
   (* t-channel mediator TRIANGLE term (the unique Den[T,Masshh^2] term). *)
   triIndex = First[Flatten[Position[terms, _?(!FreeQ[#, Den[_, Masshh[_]^2]] &), {1}, Heads->False]]];
 
   alphaUpPhi[phi_, delta_, mudim_] :=
-    evalTerm[terms[[triIndex]], Fsame, mkNum[delta,mudim], {I2G5->phi}] / (4 mchi mq);
+    evalTermCommon[terms[[triIndex]], subexpr, Fsame, mkNum[delta,mudim], {I2G5->phi}] / (4 mchi mq);
   Uphi[phi_, delta_, mudim_] := alphaUpPhi[phi,delta,mudim] / ((mUlight/vuv) * ZHm[[phi,2]]);
 
-  Msame = Total[Table[evalTerm[terms[[i]], Fsame, mkNum[0,1]], {i, Length[terms]}]];
-  Mdiff = Total[Table[evalTerm[terms[[i]], Fdiff, mkNum[0,1]], {i, Length[terms]}]];
+  Msame = Total[Table[evalTermCommon[terms[[i]], subexpr, Fsame, mkNum[0,1]], {i, Length[terms]}]];
+  Mdiff = Total[Table[evalTermCommon[terms[[i]], subexpr, Fdiff, mkNum[0,1]], {i, Length[terms]}]];
   alphaUpFull = (Msame + Mdiff)/(8 mchi mq);
   alphaUpTri  = alphaUpPhi[1,0,1] + alphaUpPhi[2,0,1];
   alphaUpBox  = alphaUpFull - alphaUpTri;
@@ -308,13 +281,10 @@ Module[{
     |>
   |>;
 
-  Export[outPath, jsonAssoc, "RawJSON"];
-  (* KNOWN ISSUE: ltexi[] (LoopTools MathLink teardown) can throw an uncaught
-     MathLink::MLException at process exit-cleanup. It fires AFTER the JSON is
-     already written above, so it is HARMLESS to the result, but a caller that
-     inspects raw process exit semantics could be misled. We Exit[0] explicitly
-     below precisely so the JSON-on-disk, not the link teardown, defines success. *)
-  Quiet[Check[ltexi[], Null]];
+  (* writeEvalOutput (Export + LoopTools MathLink teardown) lives in
+     run_eval_common.wl; we Print + Exit[0] here so the JSON-on-disk, not the
+     link teardown, defines success. *)
+  writeEvalOutput[outPath, jsonAssoc];
   Print["run_eval: wrote ", outPath, " (finite=", finiteQ, ", f_p=", fp, ", f_n=", fn, ")"];
   Exit[0]
 ]
