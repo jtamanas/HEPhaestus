@@ -12,8 +12,9 @@ independent of the Higgs-portal coupling. See
 ``maddm/SKILL.md`` (section "Frozen-SI DD-rerun staleness") and
 ``singlet-doublet/references/maddm-invocation.md``.
 
-The runner (``maddm_run.generate_maddm_script``) recomputes into a *fresh*
-output dir by default to prevent the bug in our own plumbing. This module is
+The runner (``maddm_run.generate_maddm_script``) emits a run-time cleanup
+into the generated script so each run recomputes into a *fresh* output dir by
+default, preventing the bug in our own plumbing. This module is
 the LOUD GUARD that catches the case where upstream MadDM still serves a stale
 value despite a fresh dir: given a parsed sigma_SI (and optionally the previous
 run's sigma_SI plus a param-card fingerprint), it flags staleness and emits a
@@ -37,13 +38,14 @@ STALE_DD_BLOCKER_CODE = "MADDM_STALE_DD_RESULT"
 
 # Workaround pointer echoed in the blocker's user_instruction.
 _FRESH_DIR_INSTRUCTION = (
-    "Re-run direct_detection into a FRESH output dir: "
-    "`shutil.rmtree(out_dir, ignore_errors=True)` before `output <out_dir>` / "
+    "Re-run direct_detection into a FRESH output dir: clear out_dir (e.g. "
+    "`shutil.rmtree(out_dir, ignore_errors=True)`) before `output <out_dir>` / "
     "`launch -f`, then confirm the sigma_SI value actually moved relative to "
     "the previous coupling point. The runner "
     "(maddm/scripts/maddm_run.py::generate_maddm_script) does this by default "
-    "when fresh=True; if you overrode fresh=False, remove that override. "
-    "See maddm/SKILL.md section 'Frozen-SI DD-rerun staleness'."
+    "when fresh=True, by emitting a `!rm -rf <out_dir>` line into the script "
+    "that runs right before `output`; if you overrode fresh=False, remove "
+    "that override. See maddm/SKILL.md section 'Frozen-SI DD-rerun staleness'."
 )
 
 
