@@ -2,7 +2,98 @@
 
 Systematic exploration of BSM parameter space with MadDM.
 
-## Defining Parameter Grids
+> **Two scan paths — pick by model class.**
+>
+> * **Simplified-model UFOs** (a stock UFO whose couplings are plain
+>   `set BLOCK PID` numbers, e.g. `DMsimp_s_spin0`): use `scan_grid.py` +
+>   `generate_batch` below. Each point is one `set`-patched MadDM script.
+> * **SARAH models** (singlet-doublet and friends, whose DD path is the
+>   two-phase SLHA overlay + `complete_sarah_param_card` + `Block BSMPARAMS`
+>   gate): use `scan_sarah_dd.py` (next section). `generate_batch` does NOT fit
+>   these — `generate_maddm_script` never emits `set BLOCK PID` lines to patch,
+>   and the spectrum has to be recomputed per point (SPheno/analytic), not just
+>   text-substituted.
+
+## SARAH-model DD scans: spectrum → DD per point
+
+`scripts/scan_sarah_dd.py` is the composable driver for a 1-D scan where each
+point recomputes the spectrum and then runs a real MadDM direct-detection.
+It chains the pieces the singlet-doublet DD workflow already documents
+(`singlet-doublet/references/maddm-invocation.md`), one point at a time:
+
+```
+spectrum (spheno-build --skip-compile --no-register)   ~0.3 s
+  → per-point SPheno.spc under $STATE_ROOT
+MadDM DD (generate_maddm_script split_for_param_overlay=True,               ~10 s
+          overlay SLHA, complete_sarah_param_card, Block BSMPARAMS gate,
+          FRESH output dir per point)
+  → MadDM_results.txt
+parse (gamlike parse_maddm_results.py) → σ_SI(p/n), σ_SD(p/n)
+collect → scan_results.json + scan_results.csv
+```
+
+Three ergonomics it bakes in so you don't hand-roll them:
+
+* **`--no-register` on every spectrum run.** A scan otherwise rewrites the
+  global `latest_slha` pointer once per point and leaves it stuck at the last
+  point — a trap for the next DD consumer that trusts `latest_slha`. Each
+  point's SLHA is fed to its own DD run *by path*; the convenience cache is
+  never moved. (Provenance semantics: `latest_slha` should move only on a
+  single canonical-point run you want downstream to auto-pick-up; during a scan
+  "latest" is ambiguous, so it must not move — see `spheno-build`'s
+  `--no-register`.)
+* **Fresh MG5 output dir per point** (`generate_maddm_script` `fresh=True`
+  emits `!rm -rf` at RUN time, PR #15 semantics) — the frozen-SI-staleness
+  discipline. Nothing is deleted at script-generation time.
+* **Absolute, hyphen-free UFO path.** It resolves the UFO from the durable
+  `$STATE_ROOT/models/<model>/<SarahName>` symlink (or a validated config
+  `ufo` key), never a relative/hyphenated `demo_output/...` value that MG5
+  rejects.
+
+### The scan variable can drive derived params
+
+`--param NAME=EXPR` lets the scan variable feed *derived* spectrum inputs:
+`EXPR` is a math expression in the scan variable. This is essential for scans
+like the blind-spot θ scan, where one knob sets two Yukawas.
+
+Namespace available to `EXPR`: the Python `math` module (`cos`, `sin`, `sqrt`,
+`exp`, `log`, `pi`, ...) plus the scan variable — EXCEPT `nan`, `inf`, and the
+collision-prone short names `e`, `gamma`, `tau`, which are removed so a typo'd
+bare name raises `NameError` loudly instead of silently resolving to a math
+constant. A non-finite EXPR result (NaN/inf), or any per-value EXPR error,
+marks that POINT failed (`stage: "param_eval"` in `scan_results.json`) and the
+scan continues — the same discipline as the downstream stage failures. A
+`--param` whose NAME equals the scan variable is refused at argument-parse
+time (it would be silently shadowed).
+
+### Worked example — the blind-spot θ scan
+
+Fixed MS=150, MPsi=500, y=1; scan the mixing angle θ with yh1=cos θ,
+yh2=sin θ (2506.19062 Eq. 6). σ_SI(p) dips ~9 orders at θ ≈ −0.152:
+
+```bash
+python3 plugins/hep-ph-toolkit/skills/maddm/scripts/scan_sarah_dd.py \
+    singlet_doublet \
+    --scan theta=-0.17:-0.135:8 \
+    --param MS=150 --param MPsi=500 \
+    --param 'yh1=cos(theta)' --param 'yh2=sin(theta)' \
+    --dm-candidate chi1 --dm-name Chi1 \
+    --out-dir ./scan_out
+```
+
+Output `scan_out/scan_results.csv` has one row per point:
+`scan_var,value,MPsi,MS,yh1,yh2,m_dm_gev,sigma_si_proton_cm2,...`. Points that
+already have a `result.json` are skipped, so an interrupted scan resumes.
+Per-point MG5 process bloat is pruned after parsing (pass `--no-prune` to keep
+it); kept artifacts are `Cards/param_card.dat`, `MadDM_results.txt`,
+`gamlike.json`, `result.json`, and both MG5 logs. Feed the CSV to
+`/exclusion-contour` or `/hep-plot` for a σ_SI-vs-θ curve.
+
+For a **2-D** scan, run one `scan_sarah_dd.py` invocation per outer-axis value
+into distinct `--out-dir`s and concatenate the CSVs (the driver is deliberately
+1-D; a Cartesian product is a thin outer loop, not a new tool).
+
+## Defining Parameter Grids (simplified-model UFOs)
 
 ### Using scan_grid.py
 
