@@ -139,6 +139,83 @@ if ! grep -q "FormCalc-${FORMCALC_VERSION}" "$INIT_FILE" 2>/dev/null; then
   log "Appended FormCalc path to $INIT_FILE"
 fi
 
+# ── Step 7b: Compile the $SystemID binaries FormCalc.m expects ────────────────
+# FormCalc.m resolves its executables from  $FormCalcDir/$SystemID/ReadForm
+# (FormCalc.m: $FormCalcBin = ToFileName[{$FormCalcDir, $SystemID}]), and also
+# needs ToForm/ToFortran/ToC/reorder there. The 9.10 tarball ships only the FORM
+# binaries + prebuilt ReadForm/ReadData under bin/$SystemID/; the per-arch
+# $FormCalcDir/$SystemID directory is created by FormCalc's own ./compile
+# script, which mcc-compiles ReadForm/ReadData/ToForm/… into it and copies the
+# FORM binaries across. The plain `cp -r` above skips that step, so CalcFeynAmp
+# dies with ReadForm::notcompiled (missing ReadForm) or "ToForm: No such file"
+# (missing converters). Run ./compile here, then verify the layout LOUDLY.
+log "Compiling FormCalc \$SystemID binaries (./compile)..."
+SYSTEM_ID="$(
+  "$WOLFRAM_BIN" -code 'WriteString["stdout", $SystemID]' 2>/dev/null \
+  | tr -d '\r\n' || true
+)"
+WOLFRAM_INSTALL_DIR="$(
+  "$WOLFRAM_BIN" -code 'WriteString["stdout", $InstallationDirectory]' 2>/dev/null \
+  | tr -d '\r\n' || true
+)"
+if [ -z "$SYSTEM_ID" ] || [ -z "$WOLFRAM_INSTALL_DIR" ]; then
+  blocker_json "FORMCALC_SMOKE_TEST_FAILED" "fatal" \
+    "Could not determine Wolfram \$SystemID / \$InstallationDirectory; cannot compile FormCalc binaries" \
+    '"user_instruction":"Check Wolfram Engine activation: run wolframscript --activate"'
+  exit $EXIT_SMOKE
+fi
+log "Wolfram \$SystemID: $SYSTEM_ID"
+
+TARGET_BIN_DIR="$APP_DIR/$SYSTEM_ID"
+if [ ! -x "$TARGET_BIN_DIR/ReadForm" ] || [ ! -x "$TARGET_BIN_DIR/ToForm" ]; then
+  # Primary lookup: the DeveloperKit path relative to $InstallationDirectory.
+  # NB: on some layouts (e.g. WE 14.3, where $InstallationDirectory points
+  # inside "Wolfram Player.app/Contents") this path does NOT exist and the
+  # PATH fallback below is what actually resolves mcc — both are needed.
+  # The ./compile C toolchain (mcc->cc, gfortran) is not pre-flighted; a
+  # missing toolchain surfaces as the loud "./compile failed" blocker below.
+  FC_MCC="$WOLFRAM_INSTALL_DIR/SystemFiles/Links/MathLink/DeveloperKit/$SYSTEM_ID/CompilerAdditions/mcc"
+  FC_MATHKERNEL="$WOLFRAM_INSTALL_DIR/MacOS/MathKernel"
+  if [ ! -x "$FC_MCC" ]; then
+    # Fall back to mcc on PATH (mcc default in ./compile).
+    FC_MCC="$(command -v mcc 2>/dev/null || true)"
+  fi
+  if [ -z "$FC_MCC" ] || [ ! -x "$FC_MCC" ]; then
+    blocker_json "FORMCALC_SMOKE_TEST_FAILED" "fatal" \
+      "MathLink compiler 'mcc' not found under $WOLFRAM_INSTALL_DIR; cannot compile ReadForm" \
+      '"user_instruction":"Install the Wolfram MathLink DeveloperKit (ships with Wolfram Engine), then rerun _shared/installs/formcalc."'
+    exit $EXIT_SMOKE
+  fi
+  # DEST=$SystemID bypasses ./compile's kernel-based $SystemID autodetection
+  # (which cannot see an Engine nested inside Wolfram Player.app).
+  COMPILE_LOG="$INSTALL_ROOT/formcalc_compile.log"
+  if ! (
+        cd "$APP_DIR" &&
+        DEST="$SYSTEM_ID" MCC="$FC_MCC" MATH="$FC_MATHKERNEL" \
+          PATH="$(dirname "$FC_MATHKERNEL"):$PATH" \
+          ./compile
+      ) > "$COMPILE_LOG" 2>&1; then
+    blocker_json "FORMCALC_SMOKE_TEST_FAILED" "fatal" \
+      "FormCalc ./compile failed; see $COMPILE_LOG" \
+      "\"context\":{\"compile_log\":\"$COMPILE_LOG\"}"
+    exit $EXIT_SMOKE
+  fi
+  log "Compiled FormCalc binaries into $TARGET_BIN_DIR"
+fi
+
+# Verification: FormCalc.m's exact lookup paths must resolve to executables.
+# Fail the install loudly otherwise (this is the guard the layout regression
+# would have tripped).
+for _fcbin in ReadForm ToForm; do
+  if [ ! -x "$TARGET_BIN_DIR/$_fcbin" ]; then
+    blocker_json "FORMCALC_SMOKE_TEST_FAILED" "fatal" \
+      "$TARGET_BIN_DIR/$_fcbin does not resolve to an executable (FormCalc.m would emit ReadForm::notcompiled / ToForm not found)" \
+      '"user_instruction":"FormCalc install layout is broken; run FormCalc-9.10/compile manually, then rerun _shared/installs/formcalc."'
+    exit $EXIT_SMOKE
+  fi
+done
+log "Verified $TARGET_BIN_DIR/{ReadForm,ToForm} resolve."
+
 # ── Step 8: Build LoopTools ───────────────────────────────────────────────────
 LT_SRC_DIR=""
 for d in "$FORMCALC_SRC_DIR"/LoopTools \

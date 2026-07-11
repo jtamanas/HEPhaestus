@@ -25,7 +25,15 @@ import time
 from pathlib import Path
 from typing import Optional
 
-SCRIPT_DIR = Path(__file__).parent
+SCRIPT_DIR = Path(__file__).resolve().parent
+# Make sibling helper modules importable whether run_formcalc.py is invoked
+# directly (python scripts/run_formcalc.py) or imported as part of a package.
+# Mirrors run_feynarts.py, which inserts its scripts dir on sys.path and imports
+# the helpers by bare name (from cache_key import ...) rather than
+# `from cache_key import ...` (the latter ModuleNotFoundErrors on direct
+# invocation because there is no top-level `scripts` package on the path).
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 SKILL_DIR = SCRIPT_DIR.parent
 REPO_ROOT = SKILL_DIR.parent.parent.parent.parent
 SCHEMAS_DIR = REPO_ROOT / "plugins" / "shared" / "schemas"
@@ -196,7 +204,7 @@ def compute_cache_key(
     lt_version: str,
 ) -> str:
     """Compute SHA256 cache key per plan §5."""
-    from scripts.cache_key import compute as _compute_cache_key_impl
+    from cache_key import compute as _compute_cache_key_impl
     return _compute_cache_key_impl(
         feynamp_path=feynamp_path,
         processspec_path=processspec_path,
@@ -319,7 +327,7 @@ def main(argv=None):
     run_gamma5_check(feynamp_path, wolfram_bin, args.gamma5)
 
     # Cache key.
-    from scripts.cache_key import compute as _ck_compute
+    from cache_key import compute as _ck_compute
     cache_key = _ck_compute(
         feynamp_path=feynamp_path,
         processspec_path=processspec_path,
@@ -337,7 +345,7 @@ def main(argv=None):
         return 0
 
     # Prepare kinematics.m
-    from scripts.prepare_kinematics import generate_kinematics_m
+    from prepare_kinematics import generate_kinematics_m
     kinematics_content = generate_kinematics_m(processspec_path)
     kinematics_path = output_dir / "kinematics.m"
     kinematics_path.write_text(kinematics_content, encoding="utf-8")
@@ -383,12 +391,50 @@ def main(argv=None):
         )
         sys.exit(1)
 
+    # ── Require the expected artifact ─────────────────────────────────────────
+    # The Wolfram driver can exit 0 without producing amp_reduced.m: FormCalc.m
+    # calls Abort[] (not Exit[1]) when ReadForm cannot Install, and an Abort at
+    # top level of a -script Module ends the run with exit status 0. Trusting
+    # the exit code alone therefore reports a green sidecar for a reduction that
+    # never happened (the "silent success" defect). Make a missing/empty
+    # amp_reduced.m a loud, fatal, recoverable blocker instead, and scan the
+    # driver log to name the underlying cause (ReadForm / MathLink failure).
+    amp_reduced_path = output_dir / "amp_reduced.m"
+    if not amp_reduced_path.exists() or amp_reduced_path.stat().st_size == 0:
+        driver_log = "\n".join(
+            part for part in (result.stdout or "", result.stderr or "") if part
+        )
+        cause = _diagnose_missing_amp_reduced(driver_log)
+        emit_blocker(
+            "FORMCALC_REDUCE_NO_OUTPUT",
+            "recoverable",
+            "FormCalc driver exited 0 but produced no amp_reduced.m "
+            f"({'missing' if not amp_reduced_path.exists() else 'empty'}); "
+            "the reduction did not run.",
+            context={
+                "output_dir": str(output_dir),
+                "cause": cause,
+                "log_tail": driver_log[-2000:],
+                "run_dir": str(run_dir),
+            },
+            user_instruction=(
+                "ReadForm / FORM failed to start, so CalcFeynAmp aborted. "
+                "Verify <formcalc_path>/$SystemID/ReadForm resolves to the "
+                "compiled MathLink executable (FormCalc.m loads it from "
+                "$FormCalcDir/$SystemID, not $FormCalcDir/bin/$SystemID); "
+                "reinstall via _shared/installs/formcalc if it is missing."
+                if cause == "readform_notcompiled"
+                else "Inspect the driver log tail and run/<ts>/ for the failure."
+            ),
+        )
+        sys.exit(1)
+
     # Parse summary + PV heads.
-    from scripts.parse_summary import parse_summary
-    summary = parse_summary(output_dir / "amp_reduced.m")
+    from parse_summary import parse_summary
+    summary = parse_summary(amp_reduced_path)
 
     # Write sidecar.
-    from scripts.write_sidecar import write_sidecar
+    from write_sidecar import write_sidecar
     feynamp_hash = hashlib.sha256(feynamp_path.read_bytes()).hexdigest()
     processspec_hash = hashlib.sha256(
         json.dumps(json.loads(processspec_path.read_text()), sort_keys=True).encode()
@@ -484,6 +530,31 @@ def _atomic_write_via_shell(dest: Path, content: str) -> None:
             f"atomic_write_via_shell failed for {dest}: {result.stderr.strip()}"
         )
 
+
+
+def _diagnose_missing_amp_reduced(driver_log: str) -> str:
+    """Classify why amp_reduced.m is absent by scanning the Wolfram driver log.
+
+    Returns a short cause tag used in the FORMCALC_REDUCE_NO_OUTPUT blocker
+    context. The dominant real-world cause is a broken ReadForm MathLink
+    executable (install-layout regression): FormCalc.m emits
+    ReadForm::notcompiled / LinkOpen::linke and Abort[]s, so no reduction runs.
+    """
+    log = driver_log or ""
+    readform_markers = (
+        "ReadForm::notcompiled",
+        "could not be installed",
+        "LinkOpen::linke",
+        "Could not find MathLink executable",
+        "Could not find installable MathLink",
+    )
+    if any(marker in log for marker in readform_markers):
+        return "readform_notcompiled"
+    if "CalcFeynAmp" in log and "failed" in log.lower():
+        return "calcfeynamp_failed"
+    if "Needs[FormCalc] failed" in log:
+        return "formcalc_load_failed"
+    return "unknown"
 
 
 def _build_caveats(reg: str) -> list:

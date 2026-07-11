@@ -835,3 +835,27 @@ blockers:
     description: "micrOMEGAs v1 multi-component DM unsupported (alias for MICROMEGAS_MULTICOMPONENT_UNSUPPORTED)."
     workaround_codes: []
     owned_by: dark-matter-constraints
+
+  FORMCALC_REDUCE_NO_OUTPUT:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [formcalc]
+    triggered_by_axes: []
+    digest_reference: "formcalc/scripts/run_formcalc.py (require-the-artifact guard)"
+    description: >-
+      The FormCalc reduction driver (run_calcfeynamp.wls) exited 0 but wrote NO
+      amp_reduced.m, so no reduction happened. The dominant cause is a broken
+      ReadForm MathLink executable: FormCalc.m loads ReadForm from
+      $FormCalcDir/$SystemID (NOT $FormCalcDir/bin/$SystemID), and when it
+      cannot Install it emits ReadForm::notcompiled / LinkOpen::linke and
+      Abort[]s — and a top-level Abort in a -script run ends with exit status 0,
+      which previously produced a green {"status":"ok"} sidecar for work that
+      never ran (silent success). run_formcalc.py now requires a non-empty
+      amp_reduced.m before writing the sidecar/.build_key, scans the driver log
+      for the MathLink markers, and reports the named cause in context.cause
+      (readform_notcompiled | calcfeynamp_failed | formcalc_load_failed |
+      unknown). Fix the install layout so $FormCalcDir/$SystemID/ReadForm
+      resolves (see _shared/installs/formcalc), then rerun /formcalc reduce.
+    workaround_codes: []
+    owned_by: formcalc
