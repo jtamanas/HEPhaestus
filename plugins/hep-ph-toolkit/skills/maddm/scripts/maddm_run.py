@@ -26,8 +26,10 @@ still serves one. See ``maddm/SKILL.md`` section 'Frozen-SI DD-rerun staleness'.
 
 from __future__ import annotations
 
-import shutil
+import hashlib
+import sys
 from pathlib import Path
+import shutil
 
 
 _OBSERVABLE_TO_GENERATE = {
@@ -166,3 +168,198 @@ def generate_maddm_script(
 
     setup_lines.append("launch -f")
     return "\n".join(setup_lines) + "\n"
+
+
+# ---------------------------------------------------------------------------
+# SLHA / param-card provenance guard for the direct-detection run path
+# ---------------------------------------------------------------------------
+#
+# The frozen-SI defenses above (fresh recompute + staleness.detect_stale_dd)
+# catch a stale *result*. This guard catches the upstream mistake that most
+# often produces a misleading DD number: feeding MadDM a param card / SLHA
+# spectrum that is NOT the one most recently produced for the model. In our
+# plumbing the DD param card is an overlay of the SPheno SLHA that
+# spheno-build/register_model recorded via
+# ``config_helpers.register_latest_slha`` (path + sha256 + point/params).
+# Before a DD run, ``check_slha_provenance`` fingerprints the SLHA about to be
+# used and compares it against that registered ``latest_slha`` entry, warning
+# loudly (with both paths + hashes and a remediation pointer) on any drift.
+#
+# Design: LOUD WARNING, non-fatal by default — NOT a recoverable blocker.
+# A provenance mismatch is advisory ("you may be feeding the wrong/older
+# spectrum"), and is a legitimate state in multi-point workflows and for
+# pre-guard configs that never recorded provenance; hard-blocking would break
+# backward compatibility. The recoverable blocker MADDM_STALE_DD_RESULT stays
+# reserved for a *detected* stale numeric result (staleness.py). Callers who
+# want a hard stop pass ``fatal=True``.
+
+
+class SlhaProvenanceMismatch(RuntimeError):
+    """Raised by :func:`check_slha_provenance` only when ``fatal=True``."""
+
+
+def _sha256_of(path: str | Path) -> str | None:
+    """Hex sha256 of *path*, or None if it cannot be read."""
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
+
+
+def check_slha_provenance(
+    model: str,
+    slha_path: str | Path,
+    *,
+    expected_point: str | None = None,
+    expected_params: dict | None = None,
+    observables: list[str] | None = None,
+    fatal: bool = False,
+) -> dict:
+    """Verify the SLHA/param card about to feed a MadDM DD run is the registered one.
+
+    Fingerprints the SLHA at *slha_path* (the file the caller is about to overlay
+    onto ``<out_dir>/Cards/param_card.dat``) and compares it against the
+    ``latest_slha`` provenance recorded for *model* in the hephaestus config by
+    ``config_helpers.register_latest_slha`` (written by spheno-build /
+    lagrangian-builder). On any drift — missing registration, unreadable card,
+    pre-guard config without a fingerprint, or a sha256 that differs from the
+    registered spectrum — a loud ``WARNING:`` line is printed to stderr naming
+    both paths and hashes plus remediation ("re-run SPheno / register the
+    spectrum").
+
+    Only meaningful for the direct-detection path. When *observables* is given
+    and does not include ``"direct_detection"`` the check is skipped
+    (``ok=True, skipped=True``) so relic-only / ID-only runs are unaffected.
+
+    Non-fatal by default: returns a result dict and never raises, so existing
+    callers and pre-guard configs keep working. Pass ``fatal=True`` to raise
+    :class:`SlhaProvenanceMismatch` instead when the card does not match.
+
+    Returns a dict::
+
+        {"ok": bool, "skipped": bool, "reason": str | None,
+         "used_path": str, "used_sha": str | None,
+         "registered_path": str | None, "registered_sha": str | None}
+
+    ``ok`` is True when the used card's sha256 matches the registered spectrum's
+    recorded sha256 (the confident, verified case). It is also True — with
+    ``reason="unverifiable"`` — when provenance cannot be checked (config helper
+    or fingerprint unavailable), because absence of evidence is not a mismatch;
+    a warning is still emitted. It is False only on a genuine sha256 mismatch or
+    a missing/unreadable card.
+    """
+    used_path = str(Path(slha_path))
+
+    def _warn(msg: str) -> None:
+        print(f"WARNING: MadDM DD provenance[{model!r}]: {msg}", file=sys.stderr)
+
+    def _result(ok: bool, reason: str | None, *, skipped: bool = False,
+                registered_path=None, registered_sha=None, used_sha=None) -> dict:
+        return {
+            "ok": ok,
+            "skipped": skipped,
+            "reason": reason,
+            "used_path": used_path,
+            "used_sha": used_sha,
+            "registered_path": registered_path,
+            "registered_sha": registered_sha,
+        }
+
+    # Only the DD path is exposed to the frozen-SI / wrong-card hazard.
+    if observables is not None and "direct_detection" not in observables:
+        return _result(True, "not_direct_detection", skipped=True)
+
+    used_sha = _sha256_of(used_path)
+    if used_sha is None:
+        _warn(
+            f"the param card / SLHA to be used at {used_path} cannot be read "
+            "(moved/deleted?); cannot verify it matches the registered "
+            "spectrum. Re-run SPheno or point at the correct SLHA file."
+        )
+        return _mismatch_return(
+            _result(False, "used_card_unreadable"), fatal,
+            "param card unreadable at " + used_path,
+        )
+
+    # Lazy import: keep maddm_run importable without config_helpers on path.
+    try:
+        import config_helpers  # type: ignore
+    except Exception:
+        _warn(
+            "config_helpers is unavailable, so the registered latest_slha "
+            "cannot be read; DD provenance is UNVERIFIED. Run inside the "
+            "plugin environment to enable the check."
+        )
+        return _result(True, "unverifiable", used_sha=used_sha)
+
+    # read_latest_slha emits its own loud warnings for drift / point mismatch.
+    registered_path = config_helpers.read_latest_slha(
+        model, expected_point=expected_point, expected_params=expected_params,
+    )
+    if registered_path is None:
+        _warn(
+            "no latest_slha is registered for this model, so the DD param card "
+            f"({used_path}) cannot be checked against the produced spectrum. "
+            "Re-run SPheno (spheno-build) or register the spectrum "
+            "(lagrangian-builder register_model --latest-slha) first."
+        )
+        return _mismatch_return(
+            _result(False, "no_registration", used_sha=used_sha), fatal,
+            f"no latest_slha registered for model {model!r}",
+        )
+
+    entry = config_helpers.get_model(model) or {}
+    prov = entry.get("latest_slha_provenance") or {}
+    registered_sha = prov.get("sha256")
+    if registered_sha is None:
+        _warn(
+            "the registered latest_slha has no recorded fingerprint "
+            "(pre-guard config); cannot confirm the DD param card matches the "
+            "produced spectrum. Re-run SPheno to record provenance."
+        )
+        return _result(
+            True, "unverifiable", used_sha=used_sha,
+            registered_path=registered_path, registered_sha=None,
+        )
+
+    if used_sha == registered_sha:
+        return _result(
+            True, None, used_sha=used_sha,
+            registered_path=registered_path, registered_sha=registered_sha,
+        )
+
+    _warn(
+        "the SLHA / param card about to feed direct_detection does NOT match "
+        "the registered latest_slha for this model.\n"
+        f"    using:      {used_path}\n"
+        f"                 sha256 {used_sha[:12]}...\n"
+        f"    registered:  {registered_path}\n"
+        f"                 sha256 {registered_sha[:12]}...\n"
+        "  The DD result will describe whichever spectrum you overlay, not "
+        "necessarily the model's latest point. Re-run SPheno (spheno-build) to "
+        "regenerate/register the spectrum, or overlay the registered file "
+        "above, before launching direct_detection."
+    )
+    return _mismatch_return(
+        _result(
+            False, "sha256_mismatch", used_sha=used_sha,
+            registered_path=registered_path, registered_sha=registered_sha,
+        ),
+        fatal,
+        (
+            f"DD param card {used_path} (sha256 {used_sha[:12]}...) does not "
+            f"match registered latest_slha {registered_path} "
+            f"(sha256 {registered_sha[:12]}...) for model {model!r}"
+        ),
+    )
+
+
+def _mismatch_return(result: dict, fatal: bool, exc_msg: str) -> dict:
+    """Return *result*, or raise :class:`SlhaProvenanceMismatch` when *fatal*."""
+    if fatal:
+        raise SlhaProvenanceMismatch(exc_msg)
+    return result
