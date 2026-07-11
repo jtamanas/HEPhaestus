@@ -16,6 +16,13 @@ Two checks that exercise the real compiled DDCalc driver end-to-end:
      SI sensitivity) must remain excluded_90cl=False — matching the physics
      table in DIAGNOSIS.md and probe2.c/probe3.c.
 
+SCOPE: all coverage here is SI-only (sigma_SD = 0 throughout). The driver's
+SD channel currently produces zero signal in every experiment (pre-existing
+driver bug independent of the p-value statistic, tracked separately), so the
+statistic is unverified for SD; the PICO/DarkSide "not excluded" assertions
+below reflect their genuinely weak SI sensitivity at these points, but would
+also (vacuously) hold for an SD-only WIMP until the SD wiring is fixed.
+
 Like the golden tests, these require a real DDCalc install + C compiler to
 build the driver (the wrapper compiles+caches it on first use), gated behind
 HEPPH_RUN_NETWORK_TESTS=1 for consistency with the other integration tests

@@ -46,9 +46,14 @@
  *   returns a 0/HUGE sentinel for XENON1T/LZ/PandaX/LUX instead of a real
  *   crossing. The likelihood-ratio statistic below —
  *     p = exp(lnL_signal - lnL_background), excluded_90 = (p <= 0.1)
- *   — is DDCalc's own underlying convention (matches ScaleToPValue exactly
- *   in the regime where the latter is valid) and generalizes correctly to
- *   every experiment in the registry.
+ *   — reduces to DDCalc's native convention in the background-free limit
+ *   (matching ScaleToPValue exactly in the regime where the latter is
+ *   valid); the ratio normalization follows the standard GAMBIT/DarkBit
+ *   generalization. Empirically verified for the SI channel across every
+ *   experiment in the registry. NOTE: the driver's SD channel currently
+ *   produces zero signal in every experiment (pre-existing bug independent
+ *   of this statistic, tracked separately), so the statistic is unverified
+ *   for SD and SD-driven verdicts are not yet meaningful.
  */
 
 #include <stdio.h>
@@ -183,10 +188,28 @@ int main(int argc, char *argv[]) {
         C_DDRates_ddcalc_calcrates(&D, &WIMP0, &Halo);
         double logLbg = C_DDStats_ddcalc_loglikelihood(&D);    /* background only */
 
-        /* Likelihood-ratio p-value, clamped to [0, 1]. */
+        /* A non-finite log-likelihood means DDCalc itself failed for this
+         * detector; error out loudly (the Python wrapper converts a nonzero
+         * exit into a DDCALC_DRIVER_FAILED blocker with stderr attached)
+         * rather than silently mapping NaN to p=0, which would bias the
+         * verdict toward "excluded". */
+        if (isnan(logL) || isnan(logLbg)) {
+            fprintf(stderr,
+                "ERROR: non-finite log-likelihood for %s (logL=%f, logL_bg=%f)\n",
+                experiments[i].name, logL, logLbg);
+            return 1;
+        }
+
+        /* Likelihood-ratio p-value, clamped to [0, 1]. exp() underflow of a
+         * very negative exponent yields +0.0, which is the correct limit. */
         double pval = exp(logL - logLbg);
+        if (isnan(pval)) {  /* e.g. inf - inf in the exponent */
+            fprintf(stderr,
+                "ERROR: non-finite p-value for %s (logL=%f, logL_bg=%f)\n",
+                experiments[i].name, logL, logLbg);
+            return 1;
+        }
         if (pval > 1.0) pval = 1.0;
-        if (pval < 0.0 || !(pval == pval)) pval = 0.0;  /* guard against NaN/negative */
         int excl90 = (pval <= 0.1) ? 1 : 0;
 
         printf("EXPERIMENT: %s\n", experiments[i].name);
