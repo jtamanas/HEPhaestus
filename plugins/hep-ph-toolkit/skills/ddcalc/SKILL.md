@@ -132,10 +132,17 @@ sigma-scale factor, and is structurally unusable for high-count xenon TPCs
 (XENON1T/LZ/PandaX/LUX): it guards on the background-only absolute
 log-likelihood being near 0, which only holds for near-background-free
 counting experiments (PICO, DarkSide). Behaviour is empirically verified for
-the **SI channel**; the driver's SD channel currently produces zero signal in
-every experiment (pre-existing driver bug, tracked separately), so SD verdicts
-are not yet meaningful. See `scripts/ddcalc_driver.c` (file header) for the
-full derivation.
+**both the SI and SD channels** across every experiment in the registry. See
+`scripts/ddcalc_driver.c` (file header) for the full derivation.
+
+**SD channel (fixed 2026-07-11):** the spin-dependent channel is live. DDCalc
+loads its SD nuclear form factors from `DATA_DIR/SDFF/<Z>_<A>.dat`, where
+`DATA_DIR` is a compile-time path; `run_ddcalc._ensure_ddcalc_data_symlinks`
+heals that path for the `SDFF/` and `Wbar/` data dirs (previously only the
+experiment dirs were healed, so DDCalc silently zeroed every SD rate — the
+historical "dead SD channel" bug). PICO-60 (C3F8) is SD-proton-led and the
+xenon TPCs are SD-neutron-led, as expected. Covered by
+`tests/test_integration_pvalue_statistic.py::TestSDChannel`.
 
 ## Blockers table
 

@@ -64,15 +64,26 @@ def _ensure_ddcalc_data_symlinks(ddcalc_path: str) -> None:
     """
     DDCalc 2.2.0 compiles DDInput.f90 with a hardcoded DATA_DIR pointing to the
     build-time temp directory (e.g. /private/var/folders/.../tmp.XXXX/src/data/).
-    Experiments with external data files (LZ, DARWIN, etc.) will fail to load if
-    that path no longer exists — which is always the case after the build temp dir
-    is cleaned up.
+    Everything that DDCalc loads from a file — experiment data (LZ, DARWIN, ...)
+    AND the nuclear structure-function tables (SDFF/, Wbar/) — is opened as
+    ``DATA_DIR/<subdir>/<file>`` (see DDInput.f90:261-265, DDNuclear.f90:509-551).
+    If that path no longer exists (always the case after the build temp dir is
+    cleaned up) the OPEN fails silently and the table is left as all-zeros.
+
+    Consequences:
+    - Missing experiment dirs => that experiment's init fails loudly.
+    - Missing SDFF/ (and Wbar/) => LoadSDFFFile sets the spin-dependent form
+      factor WTilde(9,...) to zero (DDNuclear.f90:542-544), so **every**
+      spin-dependent rate silently collapses to zero.  Spin-independent rates
+      are unaffected because the Helm form factor is computed analytically
+      (CalcF2, no file).  This is exactly the "dead SD channel" bug: SI works,
+      SD produces zero signal in every experiment.
 
     This function:
     1. Reads libDDCalc.a strings to find the compile-time data path.
     2. Creates the directory tree at that path (if needed).
-    3. Symlinks each experiment data subdirectory from ddcalc_path into the
-       compile-time path.
+    3. Symlinks each experiment data subdirectory AND each nuclear-data
+       subdirectory (SDFF, Wbar) from ddcalc_path into the compile-time path.
 
     Called once per run; the stat() checks are fast (no-op on re-runs).
     """
@@ -106,7 +117,11 @@ def _ensure_ddcalc_data_symlinks(ddcalc_path: str) -> None:
     compile_data_path = Path(compile_data_dir)
     ddcalc = Path(ddcalc_path)
 
-    # Find experiment subdirs in the install tree (any subdir that contains energies.dat):
+    # Find data subdirs in the install tree that DDCalc opens at runtime:
+    #   * experiment dirs — any subdir that contains energies.dat
+    #   * nuclear structure-function tables — SDFF/ and Wbar/ (no energies.dat,
+    #     so they must be named explicitly).  SDFF/ is what makes the SD channel
+    #     live; omitting it silently zeroes every spin-dependent rate.
     try:
         exp_dirs = [
             d for d in ddcalc.iterdir()
@@ -115,26 +130,32 @@ def _ensure_ddcalc_data_symlinks(ddcalc_path: str) -> None:
     except Exception:
         return
 
-    if not exp_dirs:
+    nuclear_dirs = [
+        ddcalc / name for name in ("SDFF", "Wbar")
+        if (ddcalc / name).is_dir()
+    ]
+    data_dirs = exp_dirs + nuclear_dirs
+
+    if not data_dirs:
         return
 
     # Check if all symlinks already exist and are valid:
     if all(
         (compile_data_path / d.name).is_symlink()
         and (compile_data_path / d.name).exists()
-        for d in exp_dirs
+        for d in data_dirs
     ):
         return  # already set up
 
     # Create directory and symlinks:
     try:
         compile_data_path.mkdir(parents=True, exist_ok=True)
-        for d in exp_dirs:
+        for d in data_dirs:
             link = compile_data_path / d.name
             if not link.exists() and not link.is_symlink():
                 link.symlink_to(d.resolve())
     except Exception:
-        pass  # best-effort; if it fails, LZ init will report the error anyway
+        pass  # best-effort; if it fails, experiment/SD init will report the error
 
 
 # ── Driver compilation + caching ───────────────────────────────────────────────
