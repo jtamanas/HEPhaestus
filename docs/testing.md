@@ -73,6 +73,28 @@ in whichever mode is active.
   imports (`from tests.oracle...`). If a skill genuinely needs intra-`tests`
   package imports, use **relative** imports (`from .conftest import ...`).
 
+## Live playtests (opt-in, not run by default)
+
+`tests/dark_su3_playtest/test_playtest_tier2.py` (Tier-2 scenarios, marked
+`pytest.mark.integration`) shells out to the real `claude -p --model sonnet`
+CLI once per scenario. These are **live LLM calls**: non-deterministic, ~20
+minutes and real API spend per scenario (5 scenarios in the matrix). A bare
+`python -m pytest` from the repo root must never trigger this spend, so the
+module is gated behind an env var and skips by default — regardless of
+whether the `claude` CLI is on `PATH` — with a skip reason that states the
+opt-in:
+
+```
+HEPPH_RUN_LIVE_PLAYTESTS=1 pytest tests/dark_su3_playtest/test_playtest_tier2.py
+```
+
+Tier-1 (`test_playtest_tier1.py`, stubbed LLM output) and Tier-3 smoke
+(`test_playtest_tier3_smoke.py`, gated separately on a real `maddm-launcher`
+binary being on `PATH`) are unaffected by this gate. Follow-up (not done
+here): the Tier-2 hard assertions can flake on tool-invocation checks even
+when the underlying behavior is correct; retry-budget hardening for hard
+assertions is out of scope for the opt-in gate and tracked separately.
+
 ## Merge-ordering note
 
 The specifics of the marker removal and the `importlib` switch land with the
