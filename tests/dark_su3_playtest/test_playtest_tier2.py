@@ -1,14 +1,22 @@
 """Tier-2 hybrid tests — Dark SU(3) playtest.
 
 Real helpers (invoked via SKILL.md subprocess strings) + canned fixture files.
-Run with: pytest -m integration tests/dark_su3_playtest/test_playtest_tier2.py
+Run with: HEPPH_RUN_LIVE_PLAYTESTS=1 pytest -m integration tests/dark_su3_playtest/test_playtest_tier2.py
 
 Same scenario matrix and pass criterion as Tier-1. Difference: helpers are
 invoked for real; only physics tool outputs (MadDM stdout, etc.) are stubbed
 via the canned fixture directory.
+
+These tests invoke the real `claude` CLI (live LLM calls against the Sonnet
+model) once per scenario — non-deterministic, ~20 minutes and real API spend
+PER scenario. They are gated behind HEPPH_RUN_LIVE_PLAYTESTS=1 (see the
+skipif below) so a bare `python -m pytest` from the repo root never triggers
+live LLM calls or API spend.
 """
 
 from __future__ import annotations
+
+import os
 
 import pytest
 
@@ -17,7 +25,17 @@ from tests.dark_su3_playtest.conftest import (
     run_with_retry_budget,
 )
 
-pytestmark = pytest.mark.integration
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        os.environ.get("HEPPH_RUN_LIVE_PLAYTESTS") != "1",
+        reason=(
+            "Tier-2 playtest scenarios invoke the real `claude` CLI (live LLM "
+            "calls, ~20 min and real API spend PER scenario). Opt in with "
+            "HEPPH_RUN_LIVE_PLAYTESTS=1 pytest tests/dark_su3_playtest/test_playtest_tier2.py"
+        ),
+    ),
+]
 
 TIER2_SCENARIOS = [
     ("pointA_configured", "A", "configured"),
