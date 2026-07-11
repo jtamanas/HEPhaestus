@@ -330,3 +330,62 @@ class TestCalibrationAndRelabel:
         ds = _run_ddcalc(132.692285, 7.69e-45)["experiments"]["DarkSide_50"]
         assert ds["delta_chi2"] > 2.705543
         assert ds["excluded_90cl"] is True
+
+
+@pytest.mark.skipif(not NETWORK_TESTS, reason="HEPPH_RUN_NETWORK_TESTS=1 required")
+class TestLoudInputGuard:
+    """
+    Driver-level loud input guard (2026-07-11, PR #24 review F4). Before this,
+    malformed sigma JSON fed directly to the compiled driver silently ran as
+    m=100 GeV / sigma=0 -> delta_chi2=0, p=1, "not excluded", exit 0 — a
+    silent false-negative. The driver must now exit nonzero (which the Python
+    wrapper turns into a DDCALC_DRIVER_FAILED blocker) on missing required
+    fields, non-JSON input, or unphysical (negative sigma / non-positive mass)
+    values. These tests invoke the compiled driver binary directly, bypassing
+    the wrapper's jsonschema validation, which would otherwise shield it.
+    """
+
+    def _driver_bin(self):
+        ddcalc_path = _get_ddcalc_path()
+        from run_ddcalc import _ensure_driver, _ensure_ddcalc_data_symlinks
+        _ensure_ddcalc_data_symlinks(ddcalc_path)
+        return str(_ensure_driver(ddcalc_path))
+
+    def _run_raw(self, payload: str):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
+            tf.write(payload)
+            tf_path = tf.name
+        try:
+            return subprocess.run(
+                [self._driver_bin(), tf_path], capture_output=True, text=True,
+            )
+        finally:
+            Path(tf_path).unlink(missing_ok=True)
+
+    def test_non_json_input_fails_loud(self):
+        result = self._run_raw("NOT_JSON_AT_ALL")
+        assert result.returncode != 0, (
+            "driver must exit nonzero on non-JSON input, not run sigma=0 "
+            f"silently (stdout: {result.stdout[:200]!r})"
+        )
+        assert "ERROR" in result.stderr
+
+    def test_missing_sigma_key_fails_loud(self):
+        result = self._run_raw('{"m_dm_gev": 100.0}')
+        assert result.returncode != 0
+        assert "sigma_si_proton_cm2" in result.stderr
+
+    def test_negative_sigma_fails_loud(self):
+        result = self._run_raw(
+            '{"m_dm_gev": 100.0, "sigma_si_proton_cm2": -1e-46}'
+        )
+        assert result.returncode != 0
+        assert "unphysical" in result.stderr
+
+    def test_good_input_still_exits_zero(self):
+        result = self._run_raw(
+            '{"m_dm_gev": 100.0, "sigma_si_proton_cm2": 1e-46, '
+            '"sigma_si_neutron_cm2": 1e-46}'
+        )
+        assert result.returncode == 0
+        assert "STATUS: ok" in result.stdout

@@ -135,7 +135,11 @@ delta_chi2, p_value, excluded_90cl) inline — no separate `render_report.py` ex
 - `excluded_90cl = (p_value < 0.1)` ⇔ `(delta_chi2 > 2.706)` — the χ²₁ 90%
   quantile (equivalently `sqrt(-2 ΔlnL) > 1.645`). This is the asymptotic
   (Wilks) rule GAMBIT/DarkBit apply to DDCalc log-likelihoods; "90% CL" now
-  carries an actual χ²/Wilks calibration.
+  carries an actual χ²/Wilks calibration. Convention note: Δχ² > 2.706 is the
+  **two-sided** χ²₁ 90% quantile (equivalent to a one-sided 95% CL); a textbook
+  one-sided 90% upper limit on σ ≥ 0 would cut at Δχ² ≈ 1.64. The conservative
+  GAMBIT-style convention is deliberate — do not read `excluded_90cl` as a
+  claimed exact one-sided frequentist 90% CL.
 
 This replaced two earlier statistics: DDCalc's own `DDCalc_ScaleToPValue`
 (misused, pinned "p" near 1.0 — structurally unusable for high-count xenon
@@ -146,10 +150,16 @@ turning any bisection-for-p=0.1 into a numerical-underflow contour). **For
 limit scans, bracket/bisect on `delta_chi2 = 2.706`, never on `p_value`**:
 `delta_chi2` stays finite and monotone where `p_value` underflows to 0.
 
+The compiled driver also fails loud on bad *input*: missing `m_dm_gev` /
+`sigma_si_proton_cm2` keys (or non-JSON input) and unphysical values (negative
+σ, non-positive mass) exit nonzero (→ `DDCALC_DRIVER_FAILED`) instead of
+silently running as σ=0 → "not excluded".
+
 **Validation (SI, SHM defaults):** the `delta_chi2 > 2.706` crossing
 reproduces the *published* per-nucleon SI limits of the analyses DDCalc
 actually ships to within a factor ~2 across 30–200 GeV — LZ vs the LZ
-*projected* design sensitivity (arXiv:1802.06039; see the LZ row below),
+*projected* design sensitivity (per `LZ.f90`: arXiv:1509.02910 CDR +
+1712.04793 TDR binning; curve as in arXiv:1802.06039 — see the LZ row below),
 XENON1T_2018 vs the observed 1t·yr result (arXiv:1805.12562, ~1.7× weaker,
 the known single-bin limitation). SD channel **liveness and isospin structure**
 (PICO SD-proton-led, xenon TPCs SD-neutron-led) are covered separately (see
@@ -191,11 +201,14 @@ so never emit these: `HEPPH_ALLOW_REFERENCE`, `DDCALC_REFERENCE_ONLY`
 | PandaX_2017 | arXiv:1708.06917 | observed |
 | PICO_60_2019 | arXiv:1902.04031 | observed |
 | DarkSide_50 | arXiv:1802.06994 | observed |
-| LZ_projected | arXiv:1802.06039 | **projected sensitivity** |
+| LZ_projected | arXiv:1509.02910 (CDR) + 1712.04793 (TDR binning); cf. 1802.06039 | **projected sensitivity** |
 
 **LZ is projected, not observed.** DDCalc 2.2.0's built-in `lz` analysis
-(`C_DDCalc_lz_init`) is the LZ *projected design sensitivity* (arXiv:1802.06039,
-~1000 live-days, min ~1.4e-48 cm²), so it is registered as **`LZ_projected`**.
+(`C_DDCalc_lz_init`) is the LZ *projected design sensitivity* — its `LZ.f90`
+header cites the LZ CDR (arXiv:1509.02910) with binning from the TDR
+(arXiv:1712.04793); zero observed events, 5.6e6 kg-day design exposure, and a
+90%-CL floor ~1.4e-48 cm² consistent with the projected-sensitivity paper
+arXiv:1802.06039 — so it is registered as **`LZ_projected`**.
 It is **not** the observed LZ WS2022 first-results limit (arXiv:2207.03764, min
 ~9.2e-48 cm²): comparing the projected contour to the published observed limit
 makes the toolkit look ~6× more stringent than LZ actually is. The `delta_chi2 >
@@ -234,8 +247,10 @@ limit (a projected-sensitivity contour presented as the observed result).
 populated `LZ/` data directory, but (a) the v1 driver first omitted the
 `register_exp(...)` call entirely, and (b) it was then registered under the
 misleading name `LZ_2022`. The analysis is actually the LZ **projected design
-sensitivity** (arXiv:1802.06039, min ~1.4e-48 cm²), *not* the observed WS2022
-limit (arXiv:2207.03764, min ~9.2e-48 cm²). Only experiments explicitly
+sensitivity** (`LZ.f90` cites arXiv:1509.02910 + 1712.04793; zero observed
+events, 5.6e6 kg-day design exposure, floor ~1.4e-48 cm² as in arXiv:1802.06039),
+*not* the observed WS2022 limit (arXiv:2207.03764, min ~9.2e-48 cm²). Only
+experiments explicitly
 registered in the driver are available at runtime.
 
 **Fixed** (`ddcalc-pvalue-calibration`, 2026-07-11): registered as

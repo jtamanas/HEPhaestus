@@ -64,7 +64,8 @@
  *   Validation (SI, SHM defaults, 2026-07-11): the DELTACHI2 > 2.706 crossing
  *   reproduces the *published* per-nucleon SI limits of the analyses DDCalc
  *   actually implements to within a factor ~2 across 30-200 GeV — LZ vs the LZ
- *   *projected* design sensitivity (arXiv:1802.06039, min ~1.4e-48 cm^2; see
+ *   *projected* design sensitivity (LZ.f90 cites arXiv:1509.02910 +
+ *   1712.04793; floor ~1.4e-48 cm^2 as in arXiv:1802.06039; see
  *   the LZ_projected note below), XENON1T_2018 vs the observed 1t-yr result
  *   (arXiv:1805.12562). Covered by tests/test_integration_pvalue_statistic.py
  *   and tests/test_integration_xenon1t_golden.py.
@@ -164,12 +165,37 @@ int main(int argc, char *argv[]) {
         fread(sigma_json, 1, sizeof(sigma_json)-1, stdin);
     }
 
-    /* Extract physics parameters */
-    double m_dm     = json_get_double(sigma_json, "m_dm_gev", 100.0);
-    double sig_si_p = json_get_double(sigma_json, "sigma_si_proton_cm2", 0.0);
+    /* Extract physics parameters.
+     *
+     * Loud input guard: json_get_double returns its default when a key is
+     * missing, so garbage input used to run silently as m=100 GeV / sigma=0
+     * -> delta_chi2=0, p=1, "not excluded", exit 0 — a silent false-negative.
+     * Require the two load-bearing keys (m_dm_gev, sigma_si_proton_cm2) to be
+     * present and finite, and reject negative cross sections, erroring out
+     * with nonzero exit (the Python wrapper turns that into a
+     * DDCALC_DRIVER_FAILED blocker). The wrapper's jsonschema validation
+     * normally catches this first; this guard covers direct driver invocation. */
+    double m_dm     = json_get_double(sigma_json, "m_dm_gev", NAN);
+    double sig_si_p = json_get_double(sigma_json, "sigma_si_proton_cm2", NAN);
+    if (isnan(m_dm) || isnan(sig_si_p)) {
+        fprintf(stderr,
+            "ERROR: input JSON missing required field(s) m_dm_gev and/or "
+            "sigma_si_proton_cm2 (or not valid JSON). Refusing to run with "
+            "silent defaults (m=100 GeV, sigma=0 would fake a 'not excluded' "
+            "verdict).\n");
+        return 1;
+    }
     double sig_si_n = json_get_double(sigma_json, "sigma_si_neutron_cm2", sig_si_p);
     double sig_sd_p = json_get_double(sigma_json, "sigma_sd_proton_cm2", 0.0);
     double sig_sd_n = json_get_double(sigma_json, "sigma_sd_neutron_cm2", 0.0);
+    if (m_dm <= 0.0 || sig_si_p < 0.0 || sig_si_n < 0.0 ||
+        sig_sd_p < 0.0 || sig_sd_n < 0.0) {
+        fprintf(stderr,
+            "ERROR: unphysical input (m_dm_gev=%g must be > 0; cross sections "
+            "sigma_si_p=%g sigma_si_n=%g sigma_sd_p=%g sigma_sd_n=%g must be "
+            ">= 0).\n", m_dm, sig_si_p, sig_si_n, sig_sd_p, sig_sd_n);
+        return 1;
+    }
 
     /* Halo parameters (SHM defaults per skill spec) */
     double rho0  = json_get_double(sigma_json, "rho0_gev_per_cm3", 0.3);
@@ -191,8 +217,11 @@ int main(int argc, char *argv[]) {
     register_exp("PICO_60_2019",  C_DDCalc_pico_60_2019_init);
     register_exp("DarkSide_50",   C_DDCalc_darkside_50_init);
     /* NOTE: DDCalc 2.2.0's built-in `lz` analysis (C_DDCalc_lz_init) is the LZ
-     * *projected design sensitivity* (arXiv:1802.06039, ~1000 live-days,
-     * min ~1.4e-48 cm^2), NOT the observed LZ WS2022 first-results limit
+     * *projected design sensitivity* — LZ.f90 cites the LZ CDR
+     * (arXiv:1509.02910) with TDR binning (arXiv:1712.04793): zero observed
+     * events (Nev_bin all 0), 5.6e6 kg-day design exposure, 90%-CL floor
+     * ~1.4e-48 cm^2 (as in the projected-sensitivity paper arXiv:1802.06039).
+     * It is NOT the observed LZ WS2022 first-results limit
      * (arXiv:2207.03764, min ~9.2e-48 cm^2). It is therefore registered as
      * "LZ_projected", not "LZ_2022": the old "LZ_2022" label caused a headline
      * artifact — a projected-sensitivity contour was presented and compared as
