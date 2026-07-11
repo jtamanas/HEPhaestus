@@ -42,8 +42,15 @@ is now registered at
 (+ `PROVENANCE.txt`, `ParticleNamesFeynArts.dat`, substitutions). Fields:
 χ (FChi)=`F[5]`, down-quark (Fd)=`F[4]`, CP-even scalars=`S[1]`. A toolkit
 smoke (`run_feynarts.run` → same driver + WE 13.3 kernel) of the tree process
-`F[5] F[4] -> F[5] F[4]` generated **1 diagram** — the t-channel scalar
-(S[Generic]) exchange — with real `FeynAmpList.m` / `diagrams.pdf`.
+`F[5] F[4] -> F[5] F[4]` generated **1 topology** with real `FeynAmpList.m` /
+`diagrams.pdf`. **Correction to the earlier shorthand:** that single t-channel
+topology is *not* purely scalar. At Classes level it carries **two** generic
+insertions — scalar (h `S[1]`, A `S[2]`) **and** Z (`V[2]`) exchange (confirmed
+by the step-1 census, `loopset-step1/STEP1.md`). Only the **scalar-h** piece is
+the coherent-SI coupling that vanishes at the blind spot; the Z (axial/vector)
+and pseudoscalar-A insertions survive there. "Tree is blind-spot suppressed" is
+therefore shorthand for "the tree *scalar-h* coupling is suppressed", not the
+whole tree amplitude.
 
   - **Known blocker (do not "fix" blind):** the `--sarah-model` bootstrap is
     broken. In `run_feynarts.py:189` `resolve_model()` raises
@@ -82,7 +89,8 @@ smoke (`run_feynarts.run` → same driver + WE 13.3 kernel) of the tree process
 ## (iii) Four-step plan
 
 1. **Amplitude definition.** Fix the SD process set for the SI floor: tree
-   `F[5] F[4] -> F[5] F[4]` (blind-spot suppressed) plus the one-loop set
+   `F[5] F[4] -> F[5] F[4]` (scalar-h insertion blind-spot suppressed; Z + A
+   insertions survive — see §(ii) correction) plus the one-loop set
    (triangle: χ_j in loop + h mediator; box: χ/scalar box; W/Z EW loops).
    Generate via the wired model (`--model-file` today; `--sarah-model` once the
    bootstrap blocker above is fixed). Loop order 1, real `FeynAmpList.m`.
@@ -103,6 +111,35 @@ smoke (`run_feynarts.run` → same driver + WE 13.3 kernel) of the tree process
    pattern: match the LoopTools number to an independent analytic anchor within
    its stated band before trusting a scan. **Validation anchor = Fig. 1 of
    arXiv:2506.19062 (SD one-loop σ_SI floor) + Hisano box/triangle analytic.**
+
+## (iii-b) Step-2 pending decisions
+
+Open choices that gate the FormCalc reduction leg (step (iii).2), surfaced by
+the step-1 diagram census (`loopset-step1/STEP1.md`) and the FormCalc-leg
+repair (`formcalc-fix/`). Decide these before committing a floor number:
+
+1. **γ₅ scheme sign-off.** The W-box chiral structure (W + up-quark internal
+   lines, χ± = `F[6]`) is renormalisation-scheme-sensitive. `naive` γ₅ is
+   smoke-only (anticommuting, ignores the reading-point ambiguity); the
+   physical floor should be argued in **`hv`/`bmhv`** (’t Hooft–Veltman /
+   Breitenlohner–Maison–’t Hooft–Veltman) for the chiral traces. Pending:
+   pick the scheme and justify the box's reading-point convention. The step-1
+   1PI-core reduction that seeded `formcalc-fix/` used `--gamma5 naive` and is
+   evidence-only, not a physics claim.
+2. **Reduction scope.** The census gives three nested sets: the **4-diagram
+   1PI core** (2 triangles + 2 boxes; what step-1 reduced), vs the **15-topology
+   SD-surviving set** (adds self-energies, WF corrections, tadpoles), vs the 99
+   bare topologies. The SI floor minimally needs IRR-2 (loop hχχ triangle) +
+   IRR-3/IRR-4 (EW boxes); IRR-1 (quark-side triangle) is mostly
+   blind-spot-vanishing except its gluon content (feeds the f_TG operator in
+   step-3 transport). Pending: reduce the 4-diagram core first, then decide
+   whether self-energy/WF/tadpole renormalisation pieces are needed for a
+   UV-finite, gauge-stable floor.
+3. **External-state pinning.** Step-1 counts use **class-level** `F[5]`/`F[4]`
+   (summed over 3 neutralino eigenstates + down generations). The physical χ₁
+   floor should pin **`F[5,{1}]`** (lightest neutralino) and a definite quark
+   generation, not the class-level sum. Pending: pin externals to `F[5,{1}]`
+   and a down-type generation before extracting a per-point σ_SI.
 
 ## (iv) Norms (non-negotiable)
 

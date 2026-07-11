@@ -261,6 +261,47 @@ check_macos_sdk
         assert "oneOf" in schema or "properties" in schema or "$defs" in schema or "type" in schema
 
 
+class TestSystemIDLayout:
+    """
+    Regression guard for the $SystemID binary-compile step.
+
+    FormCalc.m resolves executables from $FormCalcDir/$SystemID/{ReadForm,ToForm,
+    …} (FormCalc.m: $FormCalcBin = ToFileName[{$FormCalcDir, $SystemID}]), but
+    the 9.10 tarball ships only the FORM binaries + prebuilt ReadForm/ReadData
+    under bin/$SystemID/. The per-arch $FormCalcDir/$SystemID directory — which
+    also needs ToForm/ToFortran/ToC/reorder — is produced by FormCalc's own
+    ./compile script. A plain `cp -r` install (no ./compile) therefore dies with
+    ReadForm::notcompiled or "ToForm: No such file". install_formcalc_full.sh
+    must run ./compile and verify the layout loudly.
+    """
+
+    FULL_INSTALL = SKILL_DIR / "install_formcalc_full.sh"
+
+    def test_install_script_compiles_and_verifies_layout(self):
+        """The full-install script must query $SystemID + $InstallationDirectory,
+        run FormCalc's ./compile with DEST set, and verify
+        $FormCalcDir/$SystemID/{ReadForm,ToForm} resolve (loud fail)."""
+        text = self.FULL_INSTALL.read_text()
+        assert "$SystemID" in text
+        assert "$InstallationDirectory" in text
+        # DEST bypasses ./compile's kernel autodetection (Engine nested in
+        # Wolfram Player.app is invisible to it).
+        assert 'DEST="$SYSTEM_ID"' in text
+        assert "./compile" in text
+        # Verifies BOTH the MathLink exe and a converter that only ./compile
+        # produces (the symlink-to-bin approach lacks ToForm).
+        assert "ReadForm ToForm" in text or "{ReadForm,ToForm}" in text
+        # Must fail loudly (blocker) if the layout does not resolve.
+        assert "does not resolve to an executable" in text
+
+    def test_install_script_locates_mcc(self):
+        """The compile step needs the MathLink compiler; the script must look it
+        up under the Wolfram DeveloperKit (and fall back to PATH)."""
+        text = self.FULL_INSTALL.read_text()
+        assert "CompilerAdditions/mcc" in text
+        assert "command -v mcc" in text
+
+
 # ---------------------------------------------------------------------------
 # Tests: config_merge
 # ---------------------------------------------------------------------------

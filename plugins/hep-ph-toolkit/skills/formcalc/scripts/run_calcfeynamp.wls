@@ -31,13 +31,24 @@ Module[{
   dimensionStr   = $ScriptCommandLine[[8]];
   runDir         = $ScriptCommandLine[[9]];
 
-  (* Load FormCalc *)
+  (* Load FormCalc.
+     NB: this script references the symbol FeynAmpList below (nDiags test), so
+     the kernel creates Global`FeynAmpList at parse time. When FormCalc pulls in
+     FeynArts`, which also exports FeynAmpList, the kernel emits the *benign*
+     General::shdw ("appears in multiple contexts") warning. A bare
+     Check[Needs[...], fail] fires its error branch on ANY message and so used
+     to report a false "Needs[FormCalc] failed" for a package that loaded fine.
+     Quiet the shadow warning so Check only trips on genuine load errors, then
+     confirm the package is actually present via $Packages. *)
   If[fcPath =!= "",
     AppendTo[$Path, fcPath]
   ];
   Check[
-    Needs["FormCalc`"],
+    Quiet[Needs["FormCalc`"], {General::shdw}],
     Print["run_calcfeynamp: Needs[FormCalc] failed"]; Exit[1]
+  ];
+  If[!MemberQ[$Packages, "FormCalc`"],
+    Print["run_calcfeynamp: FormCalc package did not load"]; Exit[1]
   ];
 
   (* Set FORM binary *)
@@ -49,13 +60,48 @@ Module[{
   fermionChainsOpt = If[fermionChainsStr === "weyl", Weyl, Dirac];
   dimensionOpt = If[dimensionStr === "4", 4, D];
 
-  (* Read amplitude list *)
+  (* Read amplitude list.
+     /feynarts generate writes a self-describing metadata wrapper:
+       {"schema_version"->1, ..., "amp" -> FeynAmpList[proc][FeynAmp...]}
+     (real generate output; see feynarts postprocess). Older/fixture inputs are
+     a bare FeynAmpList[proc][FeynAmp...]. Get either, then extract the actual
+     FeynAmpList object — feeding the whole metadata List to CalcFeynAmp trips
+     DeclareProcess::syntax. Match the "amp" rule (string or symbol key), else
+     fall back to any FeynAmpList[__][__] subexpression. *)
   Check[
-    amps = Get[feynampPath],
+    rawAmps = Get[feynampPath],
     Print["run_calcfeynamp: Get[FeynAmpList.m] failed"]; Exit[1]
   ];
-  If[amps === $Failed || amps === {},
+  If[rawAmps === $Failed,
+    Print["run_calcfeynamp: FeynAmpList failed to load"]; Exit[1]
+  ];
+  (* A FeynAmpList object appears in two shapes:
+       curried  FeynAmpList[Process->..,..][FeynAmp..]  (real FeynArts output;
+                Head is FeynAmpList[opts], Head[Head] is the FeynAmpList symbol)
+       flat     FeynAmpList[GraphID[..], FeynAmp..]      (Head is the symbol). *)
+  isFeynAmpList[x_] :=
+    Head[x] === FeynArts`FeynAmpList || Head[Head[x]] === FeynArts`FeynAmpList;
+  If[isFeynAmpList[rawAmps],
+    amps = rawAmps,
+    (* wrapped metadata: pull the "amp" value, or the first FeynAmpList found *)
+    Module[{ampRule, faObj},
+      ampRule = Cases[rawAmps,
+        (Rule | RuleDelayed)[k_, v_] /;
+          (k === "amp" || (Head[k] === Symbol && SymbolName[k] === "amp")) :> v,
+        {0, Infinity}];
+      faObj = If[ampRule =!= {},
+        First[ampRule],
+        First[Cases[rawAmps, x_ /; isFeynAmpList[x] :> x, {0, Infinity}], rawAmps]
+      ];
+      amps = faObj
+    ]
+  ];
+  If[amps === $Failed || amps === {} || amps === Null,
     Print["run_calcfeynamp: FeynAmpList is empty or failed to load"]; Exit[1]
+  ];
+  If[!isFeynAmpList[amps],
+    Print["run_calcfeynamp: could not extract a FeynAmpList object from input ",
+      "(head: ", Head[amps], ")"]; Exit[1]
   ];
 
   (* Load kinematics *)
@@ -63,11 +109,10 @@ Module[{
     Quiet[Check[Get[kinematicsPath], Null]]
   ];
 
-  (* Count diagrams *)
-  nDiags = If[Head[amps] === FeynAmpList,
-    Length[amps],
-    Length[Flatten[{amps}, 1]]
-  ];
+  (* Count diagrams by counting FeynAmp entries — robust across both the curried
+     and flat FeynAmpList shapes. Context-qualify FeynArts`FeynAmp so the bare
+     token here does not create Global`FeynAmp at parse time. *)
+  nDiags = Length[Cases[amps, x_ /; Head[x] === FeynArts`FeynAmp, {0, Infinity}]];
 
   (* Reduce *)
   t0 = AbsoluteTime[];

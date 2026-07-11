@@ -583,3 +583,122 @@ class TestCacheCorruption:
         (output_dir / ".build_key").write_text("different_key\n")
 
         assert mod._cache_hit(output_dir, cache_key) is False
+
+
+# ── Regression: direct-invocation import + require-the-artifact guard ──────────
+
+class TestDirectInvocationAndArtifactGuard:
+    """
+    Red-first regression tests for two run_formcalc.py defects:
+
+    (a) `from scripts.cache_key import ...` raised ModuleNotFoundError when
+        run_formcalc.py was invoked DIRECTLY (python scripts/run_formcalc.py),
+        because there is no top-level `scripts` package on sys.path in that
+        mode. Fixed by inserting SCRIPT_DIR on sys.path and importing helpers
+        by bare name (mirrors run_feynarts.py).
+
+    (b) The Wolfram driver can exit 0 without producing amp_reduced.m (FormCalc.m
+        Abort[]s on a broken ReadForm, and a top-level Abort in a -script run
+        exits 0). The runner previously wrote a green {"status":"ok"} sidecar +
+        .build_key anyway. Fixed by requiring a non-empty amp_reduced.m and
+        emitting FORMCALC_REDUCE_NO_OUTPUT (fatal, recoverable) otherwise.
+    """
+
+    def _fake_wolfram(self, tmp_path):
+        """A wolframscript stub: exits 0, writes nothing (mimics an aborted
+        reduction that leaves no amp_reduced.m)."""
+        stub = tmp_path / "wolframscript_stub.sh"
+        stub.write_text("#!/usr/bin/env bash\necho '13.3'\nexit 0\n")
+        stub.chmod(0o755)
+        return stub
+
+    def _fake_formcalc_dir(self, tmp_path):
+        fc = tmp_path / "FormCalc-9.10"
+        fc.mkdir()
+        (fc / "FormCalc.m").write_text("(* stub FormCalc.m *)\n")
+        return fc
+
+    def _run(self, tmp_path):
+        wolf = self._fake_wolfram(tmp_path)
+        fc = self._fake_formcalc_dir(tmp_path)
+        config = {
+            "wolfram_engine_path": str(wolf),
+            "formcalc_path": str(fc),
+            "formcalc_version": "9.10",
+            "form_version": "4.3.1",
+            "looptools_version": "2.16",
+        }
+        cfg_dir = tmp_path / "hephaestus"
+        cfg_dir.mkdir(parents=True, exist_ok=True)
+        (cfg_dir / "config.json").write_text(json.dumps(config))
+
+        output_dir = tmp_path / "out"
+        env = os.environ.copy()
+        env["XDG_CONFIG_HOME"] = str(tmp_path)
+        env["HOME"] = str(tmp_path)
+        # Ensure the parent skill dir is NOT leaked onto the child's path — the
+        # (a) bug only reproduces under genuine direct invocation.
+        env.pop("PYTHONPATH", None)
+        result = subprocess.run(
+            [
+                sys.executable, str(SCRIPTS_DIR / "run_formcalc.py"), "reduce",
+                "--feynamp", str(EE_MUMU_DIR / "FeynAmpList.m"),
+                "--process", str(EE_MUMU_DIR / "ProcessSpec.json"),
+                "--output-dir", str(output_dir),
+            ],
+            capture_output=True, text=True, env=env,
+        )
+        return result, output_dir
+
+    def test_direct_invocation_no_module_not_found(self, tmp_path):
+        """(a) Direct invocation must not raise ModuleNotFoundError: scripts.*."""
+        result, _ = self._run(tmp_path)
+        assert "ModuleNotFoundError" not in result.stderr, result.stderr
+        assert "No module named 'scripts'" not in result.stderr, result.stderr
+
+    def test_missing_amp_reduced_is_fatal_blocker(self, tmp_path):
+        """(b) Driver exits 0 with no amp_reduced.m → FORMCALC_REDUCE_NO_OUTPUT,
+        nonzero exit, and NO green sidecar/.build_key written."""
+        result, output_dir = self._run(tmp_path)
+        assert result.returncode != 0, (result.stdout, result.stderr)
+        assert "FORMCALC_REDUCE_NO_OUTPUT" in result.stderr, result.stderr
+        # Silent-success artifacts must be absent.
+        assert not (output_dir / ".build_key").exists()
+        assert not (output_dir / "amp_reduced.meta.json").exists()
+        # And it must NOT have reported ok on stdout.
+        assert '"status": "ok"' not in result.stdout
+        assert '"status":"ok"' not in result.stdout
+
+
+class TestDiagnoseMissingAmpReduced:
+    """The driver-log scanner names the ReadForm/MathLink cause."""
+
+    def _load_module(self):
+        import importlib.util
+        spec_obj = importlib.util.spec_from_file_location(
+            "run_formcalc_diag", str(SCRIPTS_DIR / "run_formcalc.py"),
+        )
+        mod = importlib.util.module_from_spec(spec_obj)
+        spec_obj.loader.exec_module(mod)
+        return mod
+
+    def test_readform_notcompiled_detected(self):
+        mod = self._load_module()
+        log = (
+            "FormCalc 9.10\n"
+            "ReadForm::notcompiled: The ReadForm executable "
+            "/x/MacOSX-ARM64/ReadForm could not be installed.\n"
+            "LinkOpen::linke: Could not find MathLink executable.\n"
+        )
+        assert mod._diagnose_missing_amp_reduced(log) == "readform_notcompiled"
+
+    def test_unknown_when_no_markers(self):
+        mod = self._load_module()
+        assert mod._diagnose_missing_amp_reduced("nothing useful here") == "unknown"
+
+    def test_load_failure_detected(self):
+        mod = self._load_module()
+        assert (
+            mod._diagnose_missing_amp_reduced("run_calcfeynamp: Needs[FormCalc] failed")
+            == "formcalc_load_failed"
+        )
