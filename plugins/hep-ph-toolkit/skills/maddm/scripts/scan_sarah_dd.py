@@ -128,6 +128,38 @@ def param_names(param_exprs: list[str]) -> list[str]:
     return names
 
 
+def scan_var_is_referenced(scan_var: str, param_exprs: list[str]) -> bool:
+    """True if any `NAME=EXPR` entry references *scan_var* as a free name.
+
+    Used by the --scan-drives-only parse-time guard: a driver variable that no
+    EXPR references would affect no spectrum input, and every point would run
+    the identical base card with status:ok — the silent-wrong-physics path this
+    driver exists to kill (SPheno's SPHENO_BAD_OVERRIDE guard cannot fire on an
+    empty overrides dict). An unparseable EXPR counts as "no reference" here;
+    the per-point eval reports it loudly as a param_eval failure.
+    """
+    import ast
+    for pe in param_exprs:
+        if "=" not in pe:
+            continue
+        _, expr = pe.split("=", 1)
+        try:
+            tree = ast.parse(expr, mode="eval")
+        except SyntaxError:
+            continue
+        if any(isinstance(n, ast.Name) and n.id == scan_var
+               for n in ast.walk(tree)):
+            return True
+    return False
+
+
+def exit_code_for(results: list[dict]) -> int:
+    """0 if at least one point succeeded, else 1. A fully-failed (or empty)
+    scan must not exit 0 — an agent gating on the exit code alone would read
+    success."""
+    return 0 if any(r.get("status") == "ok" for r in results) else 1
+
+
 def eval_params(param_exprs: list[str], scan_var: str, value: float,
                 feed_scan_var: bool = True) -> dict[str, float]:
     """Evaluate each `NAME=EXPR` at scan_var=value into a spheno --params dict.
@@ -323,9 +355,13 @@ def main() -> None:
                     help="treat the --scan variable as a pure DRIVER: it feeds "
                          "--param EXPRs but is NOT itself written as a spectrum "
                          "override. Use for a knob like the mixing angle theta "
-                         "that is not a spectrum input. DEFAULT (flag absent): "
-                         "the scan variable IS fed to spheno under its own name, "
-                         "so `--scan MS=...` varies MS directly per point.")
+                         "that is not a spectrum input. Requires the scan "
+                         "variable to appear in at least one --param EXPR "
+                         "(refused at parse time otherwise — a driver that "
+                         "drives nothing would scan the identical base card). "
+                         "DEFAULT (flag absent): the scan variable IS fed to "
+                         "spheno under its own name, so `--scan MS=...` varies "
+                         "MS directly per point.")
     ap.add_argument("--out-dir", required=True, help="scratch dir for per-point artifacts")
     ap.add_argument("--dm-candidate", default="chi1",
                     help="MadDM DM candidate token (lowercased; default chi1)")
@@ -353,6 +389,19 @@ def main() -> None:
             f"axis already sets {scan_var!r} per point (fed to spheno directly "
             "unless --scan-drives-only). Rename the --param, or scan a "
             "different variable."
+        )
+    # F1 guard: under --scan-drives-only the scan variable is NOT fed to
+    # spheno, so if no --param EXPR references it either, it drives NOTHING —
+    # every point would run the identical base card with status:ok, silently.
+    # (SPheno's SPHENO_BAD_OVERRIDE backstop cannot fire on an empty overrides
+    # dict.) Refuse at parse time.
+    if args.scan_drives_only and not scan_var_is_referenced(scan_var, args.param):
+        ap.error(
+            f"--scan-drives-only: scan variable {scan_var!r} does not appear "
+            "in any --param EXPR, so it would drive nothing — every point "
+            "would run the identical base card. Reference it in a --param "
+            f"(e.g. --param 'yh1=cos({scan_var})'), or drop --scan-drives-only "
+            "to feed it to spheno directly."
         )
     Path(args.out_dir).mkdir(parents=True, exist_ok=True)
 
@@ -432,6 +481,13 @@ def main() -> None:
             w.writerows(ok)
         print(f"wrote {out_csv}")
     print(f"wrote {out_json}  ({len(ok)}/{len(results)} ok, {time.time()-t0:.1f}s total)")
+    # F2: a scan where EVERY point failed is a failed scan — exit nonzero so
+    # an agent gating on the exit code cannot read it as success.
+    code = exit_code_for(results)
+    if code != 0:
+        print(f"ERROR: 0/{len(results)} points succeeded; exiting nonzero.",
+              file=sys.stderr)
+        sys.exit(code)
 
 
 if __name__ == "__main__":

@@ -76,7 +76,25 @@ itself a spectrum input (e.g. the mixing angle θ, which only appears inside
 `yh1=cos(θ)`, `yh2=sin(θ)`) must be marked `--scan-drives-only`, which keeps it
 out of the spectrum overrides while leaving it available to `--param` EXPRs.
 Without the flag, feeding θ to SPheno trips the loud `SPHENO_BAD_OVERRIDE`
-guard (θ has no BSMPARAMS index) — again, loud, never silent.
+guard (θ has no BSMPARAMS index) — again, loud, never silent. And under the
+flag, the driver refuses at argument-parse time if the scan variable does not
+appear in at least one `--param` EXPR — a driver that drives nothing would
+otherwise run every point on the identical base card with `status: ok`
+(SPheno's backstop cannot fire on an empty overrides set), so it is rejected
+before any point runs.
+
+**Migration — the old alias workaround is dead (loudly).** Before the scan
+variable was fed directly, the documented workaround was to scan under an alias
+and re-declare the real parameter: `--scan msval=20:900:12 --param MS=msval`.
+That pattern now DOUBLE-feeds — `msval` itself is also sent as an override, is
+not a placeable spectrum input, and every point fails with
+`SPHENO_BAD_OVERRIDE` ("msval ... no les_houches index"). If you see that
+message from an old script, use one of the two current forms:
+
+* scanning a real spectrum parameter → the natural form, `--scan MS=20:900:12`
+  (no alias, no `--param MS=...`);
+* scanning a pure driver → `--scan theta=... --scan-drives-only` plus the
+  `--param` EXPRs that consume it.
 
 **Ordered chaining (a limitation, now lifted).** `--param` EXPRs are evaluated
 in declaration order; each EXPR can reference the scan variable and any
