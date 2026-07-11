@@ -45,8 +45,19 @@ AMP_REDUCED_SCHEMA = SCHEMAS_DIR / "amp_reduced.meta.schema.json"
 # Supported FeynArts versions for v1
 SUPPORTED_FEYNARTS_VERSIONS = {"3.11"}
 
-# Supported gamma5 schemes
+# Supported gamma5 schemes (accepted by the parser + valid in the sidecar enum).
 GAMMA5_SCHEMES = {"naive", "hv", "bmhv", "larin"}
+
+# γ₅ schemes actually wired through to CalcFeynAmp. FormCalc 9.10 computes with
+# native anticommuting γ₅ (NDR) and exposes no CalcFeynAmp option that selects a
+# complete HV/BMHV/Larin scheme (only Gamma5Test — a consistency *diagnostic* —
+# and Gamma5ToEps — an ε-tensor substitution inside *closed fermion traces*
+# only, which does not implement a full scheme and is inert on trace-free
+# amplitudes). `run_calcfeynamp.wls` therefore forwards no γ₅ option, so every
+# reduction is genuine NDR. Accepting hv/bmhv/larin here and stamping the sidecar
+# with them would be a validated-looking lie (STEP3-DESIGN.md Decision 1 / R1);
+# the refuse-to-lie guard below hard-errors on any non-implemented scheme.
+GAMMA5_IMPLEMENTED = {"naive"}
 
 # Supported regulators
 REGULATORS = {"dimreg", "cdr", "thv"}
@@ -74,6 +85,46 @@ def emit_blocker(code: str, mode: str, message: str, **extra):
     obj = {"code": code, "mode": mode, "message": message}
     obj.update(extra)
     print(json.dumps(obj), file=sys.stderr)
+
+
+# ── γ₅ refuse-to-lie guard ──────────────────────────────────────────────────────
+
+def check_gamma5_implemented(scheme: Optional[str]) -> None:
+    """Refuse to run for any γ₅ scheme not genuinely wired to CalcFeynAmp.
+
+    STEP3-DESIGN.md Decision 1 (G1a) / Risk R1: the toolkit historically accepted
+    --gamma5 {naive,hv,bmhv,larin} and recorded the value in the cache key and the
+    sidecar, but run_calcfeynamp.wls only ever passed FermionChains + Dimension to
+    CalcFeynAmp — the scheme was never forwarded, so every reduction was FormCalc's
+    native anticommuting-γ₅ (NDR) regardless of the flag. A sidecar stamped "hv"
+    was therefore a validated-looking lie.
+
+    Only ``naive`` is honest (== FormCalc 9.10 NDR default). Any other scheme
+    hard-errors with FORMCALC_G5_SCHEME_UNIMPLEMENTED (silent-failures-loud norm)
+    instead of being silently stamped. ``None`` is allowed here — the separate
+    static-check gate (FORMCALC_G5_SCHEME_REQUIRED) decides whether a scheme is
+    mandatory for a given amplitude, and the sidecar records the effective naive.
+    """
+    if scheme is None or scheme in GAMMA5_IMPLEMENTED:
+        return
+    emit_blocker(
+        "FORMCALC_G5_SCHEME_UNIMPLEMENTED",
+        "fatal",
+        f"γ₅ scheme '{scheme}' is not implemented: it is not forwarded to "
+        "CalcFeynAmp, so requesting it would silently produce a naive-γ₅ (NDR) "
+        "result stamped as a different scheme. Refusing rather than lying.",
+        context={
+            "requested": scheme,
+            "implemented": sorted(GAMMA5_IMPLEMENTED),
+        },
+        user_instruction=(
+            "FormCalc 9.10 computes with native anticommuting γ₅ (NDR). Use "
+            "--gamma5 naive. HV/BMHV/Larin are not wired through CalcFeynAmp "
+            "(see STEP3-DESIGN.md Decision 1); no complete implementation exists "
+            "in this toolkit yet."
+        ),
+    )
+    sys.exit(1)
 
 
 # ── Argument parsing ───────────────────────────────────────────────────────────
@@ -268,6 +319,11 @@ def _make_input_symlinks(output_dir: Path, feynamp_path: Path, processspec_path:
 
 def main(argv=None):
     args = parse_args(argv)
+
+    # Refuse-to-lie (R1): reject any γ₅ scheme not wired to CalcFeynAmp before
+    # doing any work, so an unimplemented scheme can never reach the sidecar.
+    check_gamma5_implemented(args.gamma5)
+
     config = read_config()
 
     feynamp_path = Path(args.feynamp).resolve()
@@ -460,6 +516,10 @@ def main(argv=None):
         "formcalc_version": fc_version,
         "form_version": form_version,
         "looptools_version": lt_version,
+        # Honest by construction: check_gamma5_implemented() has already rejected
+        # anything but naive/None, and CalcFeynAmp was invoked with FormCalc's NDR
+        # default. So the effective scheme is always naive; the caveat below records
+        # the naive == FormCalc-9.10-NDR-default equivalence (STEP3-DESIGN.md Dec. 1).
         "gamma5_scheme": args.gamma5 or "naive",
         "pv_heads": "formcalc-native",
         "abbreviations_manifest": "",
@@ -472,7 +532,7 @@ def main(argv=None):
             "ir_divergent": summary.get("ir_divergent", False),
             "uv_regularized": summary.get("uv_regularized", False),
         },
-        "caveats": _build_caveats(args.reg),
+        "caveats": _build_caveats(args.reg, args.gamma5 or "naive"),
         "produced_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "wolfram_version_major_minor": wolfram_ver or "0.0",
     }
@@ -557,10 +617,22 @@ def _diagnose_missing_amp_reduced(driver_log: str) -> str:
     return "unknown"
 
 
-def _build_caveats(reg: str) -> list:
+def _build_caveats(reg: str, gamma5: str = "naive") -> list:
     caveats = []
     if reg in ("cdr", "thv"):
         caveats.append("FORMCALC_REG_UNVALIDATED")
+    # Record what the γ₅ stamp actually means (STEP3-DESIGN.md Decision 1): naive
+    # is not a scheme option forwarded to CalcFeynAmp — it names FormCalc 9.10's
+    # native anticommuting-γ₅ (NDR) default, which is the only reduction ever run.
+    # Making the equivalence explicit keeps the sidecar honest rather than implying
+    # a scheme choice was made and applied.
+    if gamma5 == "naive":
+        caveats.append(
+            "GAMMA5_NDR_FORMCALC_DEFAULT: gamma5_scheme=naive denotes FormCalc "
+            "9.10 native anticommuting-gamma5 (NDR); CalcFeynAmp is invoked with "
+            "no gamma5 scheme option, so this stamp reflects the actual reduction. "
+            "hv/bmhv/larin are not implemented (see STEP3-DESIGN.md Decision 1)."
+        )
     return caveats
 
 

@@ -59,7 +59,7 @@ Before any other action, run:
   --process  <path/to/ProcessSpec.json> \
   --output-dir <dir> \
   [--reg     {dimreg|cdr|thv}]          default: dimreg \
-  [--gamma5  {naive|hv|bmhv|larin}]     required if amplitude contains γ₅ \
+  [--gamma5  {naive}]                   required if amplitude contains γ₅; only naive implemented \
   [--fermion-chains {weyl|dirac}]        default: weyl \
   [--dimension {4|D}]                    default: D \
   [--force]
@@ -75,6 +75,19 @@ If chirality projectors or γ₅ are found **and** `--gamma5` is absent,
 the skill emits `FORMCALC_G5_SCHEME_REQUIRED` and exits non-zero.
 
 The check uses exact Wolfram `Cases[...]` pattern matching — no regex on text.
+
+### Only `naive` is implemented (refuse-to-lie, R1)
+
+`--gamma5` accepts the scheme *names* `{naive|hv|bmhv|larin}` for
+back-compatibility, but only **`naive`** is genuinely wired through.
+FormCalc 9.10 computes with its native anticommuting γ₅ (NDR) and exposes no
+`CalcFeynAmp` option that selects a complete HV/BMHV/Larin scheme — the driver
+forwards no γ₅ option, so every reduction is NDR. Passing
+`--gamma5 hv|bmhv|larin` therefore hard-errors with
+`FORMCALC_G5_SCHEME_UNIMPLEMENTED` rather than silently producing a naive-γ₅
+result stamped as another scheme. The sidecar records the
+`naive == FormCalc-9.10-NDR-default` equivalence in `caveats`
+(`GAMMA5_NDR_FORMCALC_DEFAULT`). See `STEP3-DESIGN.md` Decision 1.
 
 ---
 
@@ -147,6 +160,7 @@ all present and `.build_key` matching.  Deleting `amp_reduced.m` with
 | Code | Mode | Trigger | Context fields |
 |---|---|---|---|
 | `FORMCALC_G5_SCHEME_REQUIRED` | `fatal` | γ₅ found in FeynAmpList but `--gamma5` absent | `hint` |
+| `FORMCALC_G5_SCHEME_UNIMPLEMENTED` | `fatal` | `--gamma5 hv\|bmhv\|larin` requested but only `naive` (FormCalc NDR default) is wired to CalcFeynAmp | `requested`, `implemented` |
 | `FORMCALC_FEYNARTS_VERSION_INCOMPATIBLE` | `fatal` | `feynarts_version` not in `{"3.11"}` | `found`, `supported` |
 | `FORMCALC_PATH_INVALID` | `fatal` | `formcalc_path` not set or `FormCalc.m` missing | `path` |
 | `FORMCALC_SMOKE_TEST_FAILED` | `fatal` | `form_binary` not executable | `form_binary` |
