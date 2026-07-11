@@ -49,12 +49,18 @@
  *   — reduces to DDCalc's native convention in the background-free limit
  *   (matching ScaleToPValue exactly in the regime where the latter is
  *   valid); the ratio normalization follows the standard GAMBIT/DarkBit
- *   generalization. Empirically verified for both the SI and SD channels
- *   across every experiment in the registry.
+ *   generalization. As with DDCalc's own ScaleToPValue, the 0.1 cut carries
+ *   no chi^2/Wilks calibration — "90% CL" is DDCalc's loose convention, not
+ *   a rigorous frequentist CL; this driver is consistent with the tool it
+ *   wraps, not stricter than it. Empirical verification covers channel
+ *   behaviour, not statistical calibration: SI monotonicity/verdicts across
+ *   every experiment in the registry (PR #17), and SD channel *liveness and
+ *   isospin structure* (PICO SD-proton-led, xenon TPCs SD-neutron-led; see
+ *   tests/test_integration_pvalue_statistic.py::TestSDChannel).
  *
  *   SD channel: the spin-dependent rate flows through the same
- *   CalcRates/LogLikelihood path as SI, so this statistic is verified for SD
- *   too. DDCalc loads the SD nuclear form factors from a data directory
+ *   CalcRates/LogLikelihood path as SI, so the same (uncalibrated) statistic
+ *   applies. DDCalc loads the SD nuclear form factors from a data directory
  *   (DATA_DIR/SDFF/<Z>_<A>.dat); the /ddcalc wrapper
  *   (run_ddcalc._ensure_ddcalc_data_symlinks) heals DDCalc's compile-time
  *   DATA_DIR so those tables resolve. If SDFF/ is missing DDCalc silently

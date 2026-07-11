@@ -131,9 +131,13 @@ standard GAMBIT/DarkBit generalization. It is *not* DDCalc's own
 sigma-scale factor, and is structurally unusable for high-count xenon TPCs
 (XENON1T/LZ/PandaX/LUX): it guards on the background-only absolute
 log-likelihood being near 0, which only holds for near-background-free
-counting experiments (PICO, DarkSide). Behaviour is empirically verified for
-**both the SI and SD channels** across every experiment in the registry. See
-`scripts/ddcalc_driver.c` (file header) for the full derivation.
+counting experiments (PICO, DarkSide). Like `ScaleToPValue` itself, the 0.1
+cut carries no χ²/Wilks calibration — "90% CL" is DDCalc's loose convention,
+not a rigorous frequentist CL. Empirical verification covers channel
+behaviour, not statistical calibration: SI monotonicity/verdicts across every
+experiment in the registry, and SD channel **liveness and isospin structure**
+(see below). See `scripts/ddcalc_driver.c` (file header) for the full
+derivation.
 
 **SD channel (fixed 2026-07-11):** the spin-dependent channel is live. DDCalc
 loads its SD nuclear form factors from `DATA_DIR/SDFF/<Z>_<A>.dat`, where
@@ -142,7 +146,11 @@ heals that path for the `SDFF/` and `Wbar/` data dirs (previously only the
 experiment dirs were healed, so DDCalc silently zeroed every SD rate — the
 historical "dead SD channel" bug). PICO-60 (C3F8) is SD-proton-led and the
 xenon TPCs are SD-neutron-led, as expected. Covered by
-`tests/test_integration_pvalue_statistic.py::TestSDChannel`.
+`tests/test_integration_pvalue_statistic.py::TestSDChannel`. A loud runtime
+guard (`run_ddcalc._verify_sd_data_dirs`) refuses to run — emitting a
+`DDCALC_DRIVER_FAILED` blocker — if the SD tables do not resolve, since a
+zeroed SD form factor yields a finite background-equal lnL that would
+otherwise pass silently; covered by `tests/test_sd_data_guard.py`.
 
 ## Blockers table
 
