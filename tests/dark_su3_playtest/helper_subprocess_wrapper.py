@@ -181,10 +181,16 @@ class HelperSubprocessWrapper:
         self._patcher: typing.Any = None
 
     def install(self) -> None:
-        """Monkey-patch subprocess.run for the four helper paths."""
+        """Monkey-patch subprocess.run for the four helper paths.
+
+        Each install() starts a fresh capture: the retry loop reuses one
+        wrapper across attempts (install/restore per attempt), and evidence
+        captured on attempt N-1 must not let attempt N pass a matcher.
+        """
         if self._patcher is not None:
             return  # already installed
 
+        self._invocations = []
         wrapper = self
 
         def _patched_run(args, **kwargs):  # noqa: ANN001
