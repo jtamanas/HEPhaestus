@@ -64,6 +64,14 @@
    binding table + bindGuard, the numeric substitution rules (mkNum), the external
    Dirac/Majorana chain projection (Fsame/Fdiff), the nucleon matching, and the
    assembly of the looptools_eval_output/v1 jsonAssoc.
+
+   DUPLICATED BY DESIGN (for now): a few genuinely model-agnostic steps remain in
+   the driver and will be duplicated verbatim by run_eval_sd.wls — the point
+   Import[..,"RawJSON"] + "could not read point.json" guard, the amp read
+   (Get[ampPath] + subexpr/terms extraction), and the looptools_eval_output/v1
+   jsonAssoc envelope.  Deliberate minimal-first extraction (zero behaviour
+   change on the validated 2HDM+a chain); the SD stage should consolidate these
+   here rather than copy a third time.
 *)
 
 (* ---- warning suppression (MUST precede Needs so shadow msgs are quiet) ------ *)

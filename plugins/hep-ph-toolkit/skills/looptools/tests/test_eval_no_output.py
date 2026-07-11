@@ -64,6 +64,23 @@ def test_extract_unbound_none_when_absent():
     assert run_looptools._extract_unbound("nothing to see here") == []
 
 
+# ── Plain-env asset pins: the shared include must ship with the driver ──────
+# (test_smoke.py::test_driver_script_present is Wolfram-gated; these run in the
+# plain suite so a rename/move of run_eval_common.wl fails loudly here instead
+# of silently breaking the validated chain until a gated run notices.)
+
+def test_run_eval_common_include_present():
+    assert (SCRIPTS_DIR / "run_eval_common.wl").exists()
+
+
+def test_run_eval_references_common_include():
+    src = (SCRIPTS_DIR / "run_eval.wls").read_text()
+    assert "run_eval_common.wl" in src, (
+        "run_eval.wls no longer Get[]s run_eval_common.wl — the model driver "
+        "and the shared plumbing include have drifted apart"
+    )
+
+
 # ── Unit: run_driver against a fake driver binary ───────────────────────────
 
 def _fake_bin(tmp_path: Path, mode: str) -> Path:
