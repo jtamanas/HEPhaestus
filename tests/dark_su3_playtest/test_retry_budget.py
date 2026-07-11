@@ -288,6 +288,37 @@ def test_passing_attempt_writes_no_dump(monkeypatch, tmp_path):
     assert list(tmp_path.glob("hepph_playtest_*.json")) == []
 
 
+def test_config_tempfile_is_json_check_prereqs_can_parse():
+    """Tier-2 config temp file must be JSON: check_prereqs.py is JSON-only.
+
+    Root cause of the deterministic live Tier-2 failures: the harness wrote
+    the scenario config verbatim as YAML, so check_prereqs returned
+    PREREQ_HELPER_INTERNAL on every live run and the agent bailed at step 1.
+    """
+    import json
+    import pathlib
+
+    config_yaml = C.scenario_config_path("pointA_configured").read_text(encoding="utf-8")
+    path = pathlib.Path(C._write_config_tempfile(config_yaml))
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))  # must be valid JSON
+        assert "models" in data and "darksu3" in data["models"]
+        assert data.get("maddm_path"), "tool paths must survive the conversion"
+    finally:
+        path.unlink()
+
+
+def test_config_tempfile_empty_yaml_yields_empty_object():
+    import json
+    import pathlib
+
+    path = pathlib.Path(C._write_config_tempfile(""))
+    try:
+        assert json.loads(path.read_text(encoding="utf-8")) == {}
+    finally:
+        path.unlink()
+
+
 def test_extract_field_evidence_from_captured_argv():
     """captured_argv_list is also honoured as an evidence source (Tier-2 real)."""
     meta = {"tool_uses": [], "result_text": "", "raw_answer": {}}

@@ -38,12 +38,20 @@ from tests.dark_su3_playtest.conftest import (
 _SMOKE_ARTIFACT_DIR = FIXTURES / "smoke_runs"
 
 
-def write_smoke_artifact(result: RetryResult) -> pathlib.Path:
-    """Write Tier-3 smoke run result to fixtures/smoke_runs/ (informational)."""
+def write_smoke_artifact(
+    result: RetryResult, out_dir: pathlib.Path | None = None
+) -> pathlib.Path:
+    """Write Tier-3 smoke run result to out_dir (informational).
+
+    Defaults to fixtures/smoke_runs/ for operator-driven Tier-3 smoke runs.
+    CI-run tests MUST pass out_dir (e.g. tmp_path): writing into the committed
+    fixtures tree dirties `git status` on every plain pytest run.
+    """
     import json
 
-    _SMOKE_ARTIFACT_DIR.mkdir(exist_ok=True)
-    artifact = _SMOKE_ARTIFACT_DIR / f"smoke_{result.scenario_id}.json"
+    artifact_dir = out_dir if out_dir is not None else _SMOKE_ARTIFACT_DIR
+    artifact_dir.mkdir(exist_ok=True)
+    artifact = artifact_dir / f"smoke_{result.scenario_id}.json"
     artifact.write_text(
         json.dumps(
             {
@@ -134,9 +142,12 @@ def test_tier3_scaffolding_runs(tmp_path, monkeypatch):
         assert result.tier == "tier3", f"Expected tier='tier3', got: {result.tier}"
         assert result.scenario_id == "pointA_configured"
 
-        # Verify write_smoke_artifact runs without raising
-        artifact = write_smoke_artifact(result)
-        assert artifact.exists() or True  # impl writes to known path; assert non-crash
+        # Verify write_smoke_artifact runs without raising. Redirected to
+        # tmp_path: this test runs in CI and must not dirty the committed
+        # fixtures tree (fixtures/smoke_runs/ was rewritten on every run).
+        artifact = write_smoke_artifact(result, out_dir=tmp_path)
+        assert artifact.exists()
+        assert artifact.parent == tmp_path
 
     finally:
         # Clean up fake UFO (must not leave stray files in sentinel dir)

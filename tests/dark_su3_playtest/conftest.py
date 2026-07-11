@@ -582,6 +582,34 @@ def run_with_retry_budget(
     )
 
 
+def _write_config_tempfile(config_yaml: str) -> str:
+    """Write the scenario config to a temp file in JSON form; return its path.
+
+    check_prereqs.py is JSON-only by design (WS-4 helpers reject YAML pipeline
+    configs). The Tier-2 harness previously wrote the scenario config verbatim
+    as a ``.yaml`` temp file, so the live agent's very first step returned
+    ``{"error": ..., "code": "PREREQ_HELPER_INTERNAL"}`` on EVERY plain Tier-2
+    run — a deterministic early bail that failed all four hard assertions
+    (misdiagnosed as live-LLM flake). Converting the fixture YAML to JSON here
+    hands check_prereqs a config it can actually parse.
+    """
+    import json as _json
+    import tempfile as _tempfile
+
+    import yaml as _yaml
+
+    config_obj = _yaml.safe_load(config_yaml) if config_yaml.strip() else {}
+    if config_obj is None:
+        config_obj = {}
+    tmp = _tempfile.NamedTemporaryFile(
+        suffix=".json", delete=False, prefix="ws3_config_", mode="w"
+    )
+    _json.dump(config_obj, tmp, indent=2)
+    tmp.flush()
+    tmp.close()
+    return tmp.name
+
+
 def _run_real_claude(envelope: dict, wrapper: typing.Any) -> tuple[dict, list]:
     """Invoke the real claude CLI and return (harness_meta, captured_invocations).
 
@@ -627,14 +655,8 @@ def _run_real_claude(envelope: dict, wrapper: typing.Any) -> tuple[dict, list]:
             f"(bell-ring JSON config with stub tool paths — check_prereqs will return ok)."
         )
     else:
-        _tmp_cfg = _tempfile.NamedTemporaryFile(
-            suffix=".yaml", delete=False, prefix="ws3_config_", mode="w"
-        )
-        _tmp_cfg.write(config_yaml)
-        _tmp_cfg.flush()
-        _tmp_cfg.close()
-        _config_path = _tmp_cfg.name
-        _config_note = f"Config file path: `{_config_path}`"
+        _config_path = _write_config_tempfile(config_yaml)
+        _config_note = f"Config file path: `{_config_path}` (JSON)"
 
     _tmp_spec = _tempfile.NamedTemporaryFile(
         suffix=".yaml", delete=False, prefix="ws3_spec_", mode="w"
