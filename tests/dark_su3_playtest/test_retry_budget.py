@@ -194,11 +194,21 @@ def test_soft_earliest_pass_semantics(monkeypatch):
 @pytest.mark.parametrize(
     "text,should_match",
     [
+        # positives: the structured token with benign presentation variance
+        # (casing; a single space/_/- internal separator)
         ("CROSSCHECK_DISAGREEMENT here", True),
         ("CrossCheck Disagreement detected", True),
-        ("cross-check disagreement on Ωh²", True),
         ("blocker: CROSSCHECK-DISAGREEMENT", True),
-        # non-vacuous: the two words far apart in unrelated prose must NOT match
+        ("crosscheck disagreement: Ωh² MadDM vs micrOMEGAs", True),
+        # adversarial negatives (PR #14 review finding 1): negated /
+        # punctuation-adjacent prose must NOT match — the old normalisation
+        # stripped ALL punctuation and passed every one of these
+        ("I ran a cross-check. Disagreement was not found.", False),
+        ("The cross-check. Disagreement is minor and ignorable.", False),
+        ("agreement within cross-check; disagreement absent", False),
+        # prose narration is not the emitted token: CROSSCHECK must be one word
+        ("cross-check disagreement on Ωh²", False),
+        # far-apart mentions in unrelated prose must NOT match
         ("the cross-check found no material disagreement anywhere", False),
         ("everything agreed; no blocker raised", False),
     ],
@@ -214,10 +224,18 @@ def test_crosscheck_matcher_robust_but_not_vacuous(text, should_match):
         ("python check_prereqs.py --model darksu3 --config /tmp/c.json", True),
         ("python check_prereqs.py --model=darksu3 --config=/tmp/c.json", True),  # equals form
         ("check_prereqs.py --config /tmp/c.json --model darksu3", True),  # reordered
+        ("python3 /abs/path/scripts/check_prereqs.py --model darksu3 --config c.json", True),
         # non-vacuous: wrong model must still fail
         ("python check_prereqs.py --model othermodel --config /tmp/c.json", False),
         # non-vacuous: never invoked must fail
         ("python extract_field.py --key omega_h2", False),
+        # adversarial negatives (PR #14 review finding 2): mere MENTIONS of the
+        # script are not execution evidence and must NOT pass
+        ("grep darksu3 check_prereqs.py", False),
+        ("cat check_prereqs.py  # look for darksu3 handling", False),
+        ("cat check_prereqs.py && echo --model darksu3", False),  # flags in another segment
+        ("echo darksu3 && cat check_prereqs.py", False),
+        ("ls scripts/ | grep check_prereqs && echo darksu3 --model", False),
     ],
 )
 def test_check_prereqs_matcher_robust_but_not_vacuous(cmd, should_pass):
@@ -317,6 +335,41 @@ def test_config_tempfile_empty_yaml_yields_empty_object():
         assert json.loads(path.read_text(encoding="utf-8")) == {}
     finally:
         path.unlink()
+
+
+def test_wrapper_invocations_reset_on_reinstall(tmp_path):
+    """install() must start a fresh capture (PR #14 review finding 3).
+
+    The retry loop reuses ONE wrapper across attempts (install/restore per
+    attempt); without the reset, attempt N's captured_argv_list includes
+    attempts 1..N-1's helper invocations, so a later attempt could pass a
+    matcher on an earlier attempt's evidence.
+    """
+    import subprocess
+
+    from tests.dark_su3_playtest.helper_subprocess_wrapper import (
+        HelperSubprocessWrapper,
+    )
+
+    wrapper = HelperSubprocessWrapper(mode="stub", canned_dir=tmp_path)
+
+    # Attempt 1: capture one helper invocation.
+    wrapper.install()
+    try:
+        subprocess.run(
+            ["python", "scripts/check_prereqs.py", "--model", "darksu3", "--config", "c.json"],
+            capture_output=True,
+        )
+    finally:
+        wrapper.restore()
+    assert len(wrapper.invocations) == 1
+
+    # Attempt 2: fresh install must NOT carry attempt 1's evidence.
+    wrapper.install()
+    try:
+        assert wrapper.invocations == [], "install() must reset captured invocations"
+    finally:
+        wrapper.restore()
 
 
 def test_extract_field_evidence_from_captured_argv():

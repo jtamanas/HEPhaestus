@@ -122,14 +122,20 @@ HEPPH_PLAYTEST_MAX_ATTEMPTS=1 HEPPH_RUN_LIVE_PLAYTESTS=1 \
 `HEPPH_PLAYTEST_MAX_ATTEMPTS=1` reproduces the old single-shot behavior (useful
 for a cheap one-call live sanity check). Values below 1 or non-integers fall
 back to the default. Worst-case live spend per scenario is
-`HEPPH_PLAYTEST_MAX_ATTEMPTS` × (~20 min + one call).
+`HEPPH_PLAYTEST_MAX_ATTEMPTS` × (~20 min + one call); across the full 5-scenario
+matrix at the default budget of 3 that is **up to 15 live LLM calls** (~5 hours
++ 15 × per-call API spend) in the everything-flakes worst case.
 
 Some matchers were also made robust to live formatting variance while staying
 non-vacuous (they still fail when the behavior is genuinely absent): the
 `check_prereqs` check matches on running the check for the `darksu3` model
 rather than exact `--model`/`--config` flag spelling; the
-`CROSSCHECK_DISAGREEMENT` blocker check tolerates casing/separator variants but
-still requires the two words adjacent. The `extract_field` schema-version and
+`CROSSCHECK_DISAGREEMENT` blocker check matches the structured token with
+tolerance only for casing and a single space/`_`/`-` internal separator —
+prose narration ("cross-check disagreement"), punctuation-separated, or negated
+mentions never match, and the check_prereqs matcher requires execution shape
+(flags after the script token in the same shell segment), not a mere mention
+of the script. The `extract_field` schema-version and
 `sigma_v_zero` checks deliberately still require the *guarded* extractor —
 reading the JSON via `jq`/`Read` bypasses the schema-drift guard and is treated
 as a genuine gap, not a flake. Deterministic coverage of all of this lives in

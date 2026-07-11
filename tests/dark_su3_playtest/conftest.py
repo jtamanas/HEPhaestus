@@ -14,6 +14,7 @@ from __future__ import annotations
 import dataclasses
 import os
 import pathlib
+import re
 import shutil
 import typing
 
@@ -181,23 +182,48 @@ def assert_no_claude_md_leakage(harness_meta: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
+def _is_check_prereqs_execution(cmd: str) -> bool:
+    """True iff cmd shows an actual check_prereqs EXECUTION for darksu3.
+
+    Execution evidence, not co-occurrence: after the ``check_prereqs``/
+    ``check_prereqs.py`` script token, *within the same shell segment*
+    (i.e. before any ``|``, ``;``, ``&``), there must be a ``--model`` or
+    ``--config`` flag (either ``--flag value`` or ``--flag=value`` spelling)
+    AND the ``darksu3`` model reference. This accepts live-LLM presentation
+    variance (flag order, ``=`` form, ``python``/``python3``/direct
+    invocation) while rejecting mere mentions of the script:
+
+      grep darksu3 check_prereqs.py          -> no flags after the token: NO
+      cat check_prereqs.py   # darksu3        -> no flags after the token: NO
+      cat check_prereqs.py && echo --model darksu3
+                                              -> flags in a different segment: NO
+      python check_prereqs.py --model othermodel --config c.json
+                                              -> no darksu3 in the args: NO
+    """
+    m = re.search(r"\bcheck_prereqs(?:\.py)?\b", cmd)
+    if not m:
+        return False
+    # Arguments to the script live in the same shell segment only.
+    segment = re.split(r"[|;&]", cmd[m.end():])[0]
+    if not re.search(r"--(?:model|config)\b", segment):
+        return False
+    return "darksu3" in segment
+
+
 def _check_prereqs_invoked(
     captured_argv_list: list[list[str]],
     scenario_id: str,
     harness_meta: dict | None = None,
     attempt: int = 1,
 ) -> list[HardFailure]:
-    """HARD: check_prereqs must be run for the darksu3 model.
+    """HARD: check_prereqs must actually be EXECUTED for the darksu3 model.
 
     Semantic intent: the agent ran the prerequisite check for the darksu3
-    model. We match on the *behaviour* (invoking check_prereqs and naming the
-    darksu3 model) rather than the exact ``--model``/``--config`` flag spelling,
-    which is presentation the live LLM legitimately varies (``--model=darksu3``,
-    model name sourced from the config file, flag ordering, etc.).
-
-    Non-vacuity: still requires BOTH the check_prereqs invocation AND the
-    darksu3 model reference in the same command; a run that never invokes
-    check_prereqs, or invokes it for a different model, still fails.
+    model. Matching requires execution shape (see _is_check_prereqs_execution),
+    not substring co-occurrence — reading/grepping the script, or naming
+    darksu3 elsewhere in a compound command, does not pass. Flag *spelling*
+    (``--model darksu3`` vs ``--model=darksu3``, ordering, python vs direct
+    invocation) is tolerated as live-LLM presentation variance.
 
     In Tier-1 stub mode the check runs against harness_meta["tool_uses"] (the
     synthetic LLM output includes the check_prereqs Bash command); in Tier-2
@@ -205,50 +231,17 @@ def _check_prereqs_invoked(
     """
     # Check captured helper invocations (Tier-2 real mode)
     for argv in captured_argv_list:
-        joined = " ".join(argv)
-        if "check_prereqs" in joined and "darksu3" in joined:
+        if _is_check_prereqs_execution(" ".join(argv)):
             return []
 
     # Check harness_meta tool_uses (Tier-1 synthetic / live tool_uses)
     if harness_meta:
         for tu in harness_meta.get("tool_uses", []):
             cmd = tu.get("input", {}).get("command", "")
-            if "check_prereqs" in cmd and "darksu3" in cmd:
+            if _is_check_prereqs_execution(cmd):
                 return []
 
     return [HardFailure(attempt=attempt, assertion_id="check_prereqs_invocation")]
-
-
-def _extract_field_schema_version_arg(captured_argv_list: list[list[str]]) -> list[HardFailure]:
-    """HARD: at least one extract_field call must include --schema-version."""
-    for argv in captured_argv_list:
-        if any("extract_field" in a for a in argv):
-            if "--schema-version" in argv:
-                return []
-    # No extract_field calls at all -> SOFT (only fail if extract_field was expected)
-    return []
-
-
-def _extract_field_schema_version_arg_required(captured_argv_list: list[list[str]]) -> list[HardFailure]:
-    """HARD (strict): extract_field must be called with --schema-version."""
-    extract_field_calls = [argv for argv in captured_argv_list if any("extract_field" in a for a in argv)]
-    if not extract_field_calls:
-        return [HardFailure(attempt=1, assertion_id="extract_field_schema_version_arg")]
-    for argv in extract_field_calls:
-        if "--schema-version" not in argv:
-            return [HardFailure(attempt=1, assertion_id="extract_field_schema_version_arg")]
-    return []
-
-
-def _extract_field_sigma_v_zero_invocation(captured_argv_list: list[list[str]]) -> list[HardFailure]:
-    """HARD: extract_field must be called for sigma_v_zero."""
-    for argv in captured_argv_list:
-        if any("extract_field" in a for a in argv):
-            if "--key" in argv:
-                idx = argv.index("--key")
-                if idx + 1 < len(argv) and "sigma_v_zero" in argv[idx + 1]:
-                    return []
-    return [HardFailure(attempt=1, assertion_id="extract_field_sigma_v_zero_invocation")]
 
 
 def _eval_extract_field_hard_assertions(
@@ -307,36 +300,40 @@ def _eval_extract_field_hard_assertions(
     return failures
 
 
-def _normalize_blocker_token(text: str) -> str:
-    """Uppercase and strip all non-alphanumerics for tolerant token matching.
+# Structured blocker token, tolerating only benign presentation variance:
+# case-insensitive, and AT MOST ONE of space/underscore/hyphen as the internal
+# separator between CROSSCHECK and DISAGREEMENT. CROSSCHECK itself must be one
+# word — "cross-check disagreement" is prose narration, not the emitted token,
+# and punctuation (".", ";", ": ") between the words never matches, so negated
+# or sentence-boundary-adjacent prose ("...cross-check. Disagreement was not
+# found.") FAILS. This is the reviewer-tightened replacement for the old
+# strip-all-punctuation normalisation, which collapsed across sentence
+# boundaries and matched negated prose.
+_CROSSCHECK_TOKEN_RE = re.compile(r"\bcrosscheck[ _-]?disagreement\b", re.IGNORECASE)
 
-    ``CROSSCHECK_DISAGREEMENT``, ``CrossCheck Disagreement`` and
-    ``cross-check disagreement`` all normalise to a string that CONTAINS the
-    contiguous token ``CROSSCHECKDISAGREEMENT``. Because every separator is
-    removed, only genuinely adjacent occurrences collapse to the token — the
-    two words appearing far apart in unrelated prose do NOT produce a match, so
-    the check stays non-vacuous.
-    """
-    import re as _re
 
-    return _re.sub(r"[^A-Za-z0-9]+", "", text).upper()
+def _crosscheck_token_present(text: str) -> bool:
+    """True iff the structured CROSSCHECK_DISAGREEMENT token appears in text."""
+    return bool(_CROSSCHECK_TOKEN_RE.search(text))
 
 
 def _crosscheck_disagreement_blocker_present(
     result_text: str, raw_answer: dict, attempt: int = 1
 ) -> list[HardFailure]:
-    """HARD: CROSSCHECK_DISAGREEMENT must appear in LLM output for Point A.
+    """HARD: the CROSSCHECK_DISAGREEMENT blocker token must appear for Point A.
 
-    Matching is tolerant of casing and separator variance (underscore, space,
-    hyphen) that the live LLM introduces, but still requires the two words to
-    be adjacent, so a transcript that never raises the blocker still fails
+    Matches the structured token with tolerance ONLY for casing and a single
+    space/underscore/hyphen internal separator (``CROSSCHECK_DISAGREEMENT``,
+    ``CrossCheck Disagreement``, ``CROSSCHECK-DISAGREEMENT``). Prose narration
+    ("cross-check disagreement"), punctuation-separated words ("...the
+    cross-check. Disagreement is minor..."), and negated mentions do NOT match
+    — a transcript that never raises the structured blocker still fails
     (preserves the NC-3 negative-control signal).
     """
-    target = "CROSSCHECKDISAGREEMENT"
-    if target in _normalize_blocker_token(result_text):
+    if _crosscheck_token_present(result_text):
         return []
     # Also check raw_answer for blocker codes
-    if target in _normalize_blocker_token(str(raw_answer)):
+    if _crosscheck_token_present(str(raw_answer)):
         return []
     return [HardFailure(attempt=attempt, assertion_id="crosscheck_disagreement_blocker_present")]
 
