@@ -12,7 +12,7 @@ Module[{
     feynampPath, kinematicsPath, outputDir, fcPath, formBinary,
     fermionChainsStr, dimensionStr, runDir,
     fermionChainsOpt, dimensionOpt,
-    amps, reduced, summary, nDiags,
+    amps, reduced, abbrTable, subexprTable, ampOutput, summary, nDiags,
     t0, t1, wallClock
   },
 
@@ -137,10 +137,40 @@ Module[{
   (* Abbreviate *)
   Quiet[Check[Abbreviate[], Null]];
 
+  (* Capture FormCalc's abbreviation tables so the artifact is SELF-CONTAINED.
+     CalcFeynAmp does not return a closed expression: the reduced Amp[...]
+     references
+       F##    — Dirac/Weyl fermion chains, defined in Abbr[]
+       Sub### — coefficient subexpressions (plain and index-patterned,
+                e.g. Sub7[i_]), defined in Subexpr[]
+     Both tables are FormCalc *session state*. The old writer did
+     `Put[reduced]` (bare Amp[...]) and dropped them, so the instant any OTHER
+     kernel Get[]s the file every F##/Sub### head is undefined — the reduction
+     is unusable across the reduce->eval session boundary (the
+     SD-AMP-ABBREVIATIONS-UNRESOLVED defect; the hand-curated 2HDM+a golden
+     fixture is a wrapped association and so masked it).
+
+     Persist a wrapped association carrying the amplitude together with BOTH
+     tables. Key names ("amp"/"abbr"/"subexpr") match the run_eval.wls consumer
+     contract (`subexpr = "subexpr" /. amp; terms = List @@ ("amp" /. amp)`) and
+     the golden fixture, so a fresh kernel resolves the whole tree via
+       amp //. Join[subexpr, abbr]
+     with nothing dangling. `mom`/`ext_masses` are intentionally omitted: no
+     current driver reads them and both are derivable from the Amp[...] process
+     head (see amp_reduced.meta.json abbreviations_manifest). *)
+  abbrTable    = Abbr[];
+  subexprTable = Subexpr[];
+  ampOutput = {
+    "schema"  -> "amp_reduced/v2",
+    "amp"     -> reduced,
+    "abbr"    -> abbrTable,
+    "subexpr" -> subexprTable
+  };
+
   (* Write output *)
   CreateDirectory[outputDir];
   Check[
-    Put[reduced, FileNameJoin[{outputDir, "amp_reduced.m"}]],
+    Put[ampOutput, FileNameJoin[{outputDir, "amp_reduced.m"}]],
     Print["run_calcfeynamp: Put[amp_reduced.m] failed"]; Exit[1]
   ];
 
