@@ -147,3 +147,52 @@ class TestZSelfEnergyGolden:
             force=True,
         )
         assert summary["n_diagrams"] > 0, "Z self-energy should have at least 1 diagram"
+
+
+@skip_unless_wolfram
+class TestSarahModelBootstrapEndToEnd:
+    """--sarah-model singlet_doublet bootstraps from a fresh (scratch) state root.
+
+    Exercises the full bootstrap: SARAH MakeFeynArts[] -> register
+    feynarts_state/singlet_doublet.mod -> resolve -> generate the tree
+    χ q -> χ q amplitude ({{F[5],F[4]},{F[5],F[4]}}). Expected: 1 diagram
+    (t-channel scalar exchange).
+
+    Uses a scratch state_root under tmp_path so the already-registered
+    production state at ~/.local/share/hephaestus is never touched.
+    """
+
+    PROCESS = "{{F[5], F[4]}, {F[5], F[4]}}"
+
+    def test_bootstrap_isolated_state_root(self, run_feynarts_module, tmp_path):
+        scratch_root = tmp_path / "scratch_state"
+        prod_mod = Path(
+            os.path.expanduser("~/.local/share/hephaestus")
+        ) / "models" / "singlet_doublet" / "feynarts_state" / "singlet_doublet.mod"
+
+        # Guard: verify the override genuinely isolates before running.
+        assert not scratch_root.exists(), "scratch state root must start empty"
+        prod_before = prod_mod.stat().st_mtime if prod_mod.exists() else None
+
+        summary = run_feynarts_module.run(
+            process=self.PROCESS,
+            sarah_model="singlet_doublet",
+            loop_order=0,
+            output_dir=str(tmp_path / "out"),
+            state_root=str(scratch_root),
+            force=True,
+        )
+
+        # State was bootstrapped INTO the scratch root ...
+        scratch_mod = (
+            scratch_root / "models" / "singlet_doublet" / "feynarts_state" / "singlet_doublet.mod"
+        )
+        assert scratch_mod.exists(), "bootstrap did not register .mod under scratch root"
+
+        # ... and the production state was left untouched.
+        if prod_before is not None:
+            assert prod_mod.stat().st_mtime == prod_before, "production state was modified"
+
+        assert summary["n_diagrams"] == 1, (
+            f"Expected exactly 1 diagram for χ q → χ q tree, got {summary['n_diagrams']}"
+        )

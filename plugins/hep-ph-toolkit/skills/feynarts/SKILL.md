@@ -98,16 +98,43 @@ specified.  Providing more than one is a fatal error (`FEYNARTS_MODEL_SOURCE_CON
 | `--sarah-model <name>` | Post-hoc SARAH `MakeFeynArts[]` | `$STATE_ROOT/models/<name>/feynarts_state/` |
 | `--model-file <path>` | User-supplied `.mod`/`.gen` pair | User-supplied path |
 
-### Post-hoc SARAH `MakeFeynArts[]`
+### SARAH bootstrap (`--sarah-model`)
 
-When `--sarah-model <name>` is used, `/feynarts` invokes a separate
-`make_feynarts_driver.m.tpl` script that:
-1. Runs `SARAH`'s `MakeFeynArts[]` in an isolated `feynarts_state/` directory
-   under `$STATE_ROOT/models/<name>/`.
-2. Writes `<model_name>.mod` and `<model_name>.gen` there.
+When `--sarah-model <slug>` is used and
+`$STATE_ROOT/models/<slug>/feynarts_state/<slug>.mod` does not yet exist,
+`/feynarts` bootstraps it **before** model resolution:
 
-This is a post-hoc step that runs in a separate Wolfram session from
-`/sarah-build`.  It does NOT modify the SARAH state created by `/sarah-build`.
+1. Maps the toolkit slug to the SARAH model name via the shared
+   `_shared/sarah_name.py:modelspec_name_to_sarah` (e.g. `singlet_doublet` →
+   `SingletDoublet`).
+2. Runs SARAH `MakeFeynArts[]` (`make_feynarts_driver.m.tpl`,
+   `Start["<SarahName>"]`) in a separate Wolfram session.  SARAH writes into
+   its own `$sarah_path/Output/<SarahName>/<state>/FeynArts/` tree.
+3. Registers that output: copies the `.mod` to `feynarts_state/<slug>.mod`
+   (renamed so `InsertFields[Model->"<slug>"]` resolves it), plus
+   `ParticleNamesFeynArts.dat`, `Substitutions-*.m`, and a `PROVENANCE.txt`.
+   No `.gen` is produced — SARAH models use the generic `Lorentz.gen`.
+
+The bootstrap is idempotent — once `<slug>.mod` is registered it is a no-op,
+so re-runs and manually registered states are never overwritten.  It does NOT
+modify the SARAH state created by `/sarah-build`.
+
+#### Bootstrap caveats
+
+- **No freshness check on pre-existing SARAH output.**  If
+  `$sarah_path/Output/<SarahName>/*/FeynArts/*.mod` already exists (e.g. from
+  an earlier run), registration picks it up as-is even if the SARAH model file
+  has since changed.  Delete `$sarah_path/Output/<SarahName>/` to force
+  `MakeFeynArts[]` to regenerate.
+- **Multi-eigenstate models.**  Registration picks the alphabetically-first
+  `Output/<SarahName>/*/FeynArts/` directory containing a `.mod`.  For all
+  current models only `EWSB` exists, so this is unambiguous; a model exposing
+  several eigenstate FeynArts outputs may need manual registration via
+  `--model-file` instead.
+- **Concurrency.**  `MakeFeynArts[]` writes into the shared SARAH `Output/`
+  tree, so two concurrent first-time bootstraps of the *same* model race.
+  Do not parallelize the first bootstrap of a given model; once registered,
+  concurrent runs only read the state and are fine.
 
 ---
 
@@ -140,7 +167,7 @@ All outputs are written to `--output-dir` (default: `$PWD/feynarts_output/`).
 | `FEYNARTS_TIMEOUT` | `fatal` | wall-clock > 600 s (SIGKILL) | `timeout_s`, `wall_clock_s` |
 | `FEYNARTS_EMPTY_RESULT` | **recoverable** | `Length[ins] == 0` | `message` |
 | `FEYNARTS_MODEL_SOURCE_CONFLICT` | `fatal` | >1 of `--model`/`--sarah-model`/`--model-file` | `flags_provided` |
-| `FEYNARTS_SARAH_STATE_MISSING` | `fatal` | `--sarah-model` but state dir absent | `model_name`, `state_dir` |
+| `FEYNARTS_SARAH_STATE_MISSING` | `fatal` | `--sarah-model` but no registered state AND bootstrap cannot proceed (invalid slug, `sarah_path` unset, or `MakeFeynArts[]` produced no `.mod`) | `model_name`, `state_dir` (+ `sarah_name` when derivable) |
 | `FEYNARTS_MODEL_FILE_INVALID` | `fatal` | `--model-file` path has no `.mod` file | `path` |
 | `FEYNARTS_ABSENT` | `fatal` | `feynarts_path` not in config / FeynArts.m missing | — |
 | `WOLFRAM_KERNEL_ABSENT` | `fatal` | `wolfram_engine_path` not set | — |
