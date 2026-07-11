@@ -201,24 +201,38 @@ def _parse_coupling_block(
                 couplings[row_num] = existing
 
                 # Populate named coupling fields from PDG vertex information
-                # using standard HB-5 PDG codes for WW/ZZ/gg/bb/tt/tautau
-                vertex_set = frozenset(abs(p) for p in pdg_codes)
+                # using standard HB-5 PDG codes for WW/ZZ/gg/bb/tt/tautau.
+                #
+                # Match on the MULTISET of partner PDGs (the codes after the
+                # leading Higgs), not a frozenset of the whole vertex: a
+                # frozenset collapses repeated PDGs, so the h1-h1-Z vertex
+                # [25, 25, 23] used to reduce to {25, 23}, satisfy the ZZ
+                # branch, and CLOBBER the true h-Z-Z coupling with the hhZ
+                # value (observed: hZZ 1.0 overwritten by 0.0 on the real
+                # singlet-doublet SPheno output, where ZZ is the most
+                # sensitive HiggsBounds channel). Requiring the partner
+                # multiset to be exactly [23, 23] (etc.) makes repeated-PDG
+                # vertices unable to shadow distinct couplings; hhZ and other
+                # unrecognised vertices remain available in
+                # couplings_by_vertex but set no named key.
                 entry_for_named = existing
-                if vertex_set == {25, 24} or vertex_set == {35, 24} or vertex_set == {36, 24}:
-                    # H-W-W vertex: single boson coupling (no separate pseudoscalar)
-                    entry_for_named["ww"] = coupling_val
-                elif vertex_set == {25, 23} or vertex_set == {35, 23} or vertex_set == {36, 23}:
-                    entry_for_named["zz"] = coupling_val
-                elif vertex_set == {25, 21} or vertex_set == {35, 21} or vertex_set == {36, 21}:
-                    entry_for_named["gg"] = coupling_val
-                elif vertex_set == {25, 22} or vertex_set == {35, 22} or vertex_set == {36, 22}:
-                    entry_for_named["aa"] = coupling_val
-                elif 5 in vertex_set and len(vertex_set) <= 3:
-                    entry_for_named.setdefault("bb", coupling_val)
-                elif 6 in vertex_set and len(vertex_set) <= 3:
-                    entry_for_named.setdefault("tt", coupling_val)
-                elif 15 in vertex_set and len(vertex_set) <= 3:
-                    entry_for_named.setdefault("tautau", coupling_val)
+                partners = sorted(abs(p) for p in pdg_codes[1:])
+                if higgs_pdg in (25, 35, 36):
+                    if partners == [24, 24]:
+                        # H-W-W vertex: single boson coupling
+                        entry_for_named["ww"] = coupling_val
+                    elif partners == [23, 23]:
+                        entry_for_named["zz"] = coupling_val
+                    elif partners == [21, 21]:
+                        entry_for_named["gg"] = coupling_val
+                    elif partners == [22, 22]:
+                        entry_for_named["aa"] = coupling_val
+                    elif partners == [5, 5]:
+                        entry_for_named.setdefault("bb", coupling_val)
+                    elif partners == [6, 6]:
+                        entry_for_named.setdefault("tt", coupling_val)
+                    elif partners == [15, 15]:
+                        entry_for_named.setdefault("tautau", coupling_val)
                 continue
 
             row_index += 1

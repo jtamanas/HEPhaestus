@@ -145,5 +145,9 @@ def test_coupling_blocks_parse_for_higgstools(spheno_run):
     res = adapter.parse_slha(slha)  # must NOT raise SlhaMissingBlocksError
     bc = res["boson_couplings"][25]
     assert abs(bc["ww"] - 1.0) < 1e-6
+    assert abs(bc["zz"] - 1.0) < 1e-6, (
+        f"hZZ={bc.get('zz')} — most sensitive HB channel is h1->ZZ->4l; "
+        "the hhZ [25,25,23] vertex must not clobber it"
+    )
     assert abs(bc["aa"] - 1.043) < 0.01, bc["aa"]
     assert abs(bc["gg"] - 1.022) < 0.01, bc["gg"]

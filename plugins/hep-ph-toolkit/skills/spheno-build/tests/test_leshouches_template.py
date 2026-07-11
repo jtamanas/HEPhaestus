@@ -416,6 +416,26 @@ class TestLesHouchesIndexHonoured:
         with pytest.raises(ValueError, match="collision"):
             lht.build(bad)
 
+    def test_zero_input_rows_warns_loudly(self, lht, capsys):
+        """A spec with parameters but no list-form les_houches (the ssm.yaml
+        shape) yields a card with NO MINPAR — build() must warn to stderr so a
+        spheno-backed run of the input-less card is not silent."""
+        ssm_like = {"name": "ssm", "parameters": [
+            {"name": "g1", "real": True},
+            {"name": "Yu", "real": False},
+            {"name": "ZN", "les_houches": "ZNMIX"},  # string form: output block
+        ]}
+        card = lht.build(ssm_like)
+        assert not re.search(r"^Block\s+MINPAR", card, re.IGNORECASE | re.MULTILINE)
+        err = capsys.readouterr().err
+        assert "NO MINPAR" in err and "'ssm'" in err, (
+            f"missing zero-input-rows warning; stderr was: {err!r}"
+        )
+
+    def test_populated_spec_does_not_warn(self, lht, capsys):
+        lht.build(SINGLET_DOUBLET_LIKE_SPEC)
+        assert "NO MINPAR" not in capsys.readouterr().err
+
 
 # ---------------------------------------------------------------------------
 # Test: build() with empty parameters

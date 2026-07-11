@@ -86,6 +86,85 @@ def _find_binary(build_dir: str, name: str) -> str:
     )
 
 
+def _parse_hb_slha_results(slha_text: str) -> HBResult | None:
+    """Parse the ``Block HiggsBoundsResults`` HB-5 writes back into the SLHA.
+
+    In SLHA mode HiggsBounds-5 does NOT print per-channel results to stdout —
+    it appends a ``HiggsBoundsResults`` block to the input file. Rows are
+    ``<rank> <key> <value>`` with keys 1=channel id, 2=HBresult, 3=obsratio,
+    4=ncombined, 5=||text description||. Rank 0 is the GLOBAL result (HB-5's
+    verdict = the most statistically sensitive channel); ranks >= 1 are the
+    sensitivity-ordered channel list. Note the global obsratio is that of the
+    most SENSITIVE channel, not the numeric max across channels — a less
+    sensitive channel may carry a higher raw obsratio.
+
+    Returns None when the block is absent (e.g. HB never ran on this file),
+    so callers can fall back to stdout parsing.
+    """
+    in_block = False
+    ranked: dict[int, dict[str, Any]] = {}
+    for line in slha_text.splitlines():
+        stripped = line.strip()
+        if re.match(r"^Block\s+HiggsBoundsResults\b", stripped, re.IGNORECASE):
+            in_block = True
+            continue
+        if re.match(r"^(Block|DECAY)\s+", stripped, re.IGNORECASE):
+            in_block = False
+            continue
+        if not in_block or not stripped or stripped.startswith("#"):
+            continue
+        m = re.match(r"^(\d+)\s+(\d+)\s+(\S.*?)(?:\s*#.*)?$", stripped)
+        if not m:
+            continue
+        rank, key, value = int(m.group(1)), int(m.group(2)), m.group(3).strip()
+        entry = ranked.setdefault(rank, {})
+        try:
+            if key == 1:
+                entry["id"] = int(value)
+            elif key == 2:
+                entry["hb_result"] = int(value)
+            elif key == 3:
+                entry["obsratio"] = float(value)
+            elif key == 4:
+                entry["ncombined"] = int(value)
+            elif key == 5:
+                entry["description"] = value.strip("|").strip()
+        except ValueError:
+            continue
+
+    if not ranked:
+        return None
+
+    def _to_channel(e: dict[str, Any]) -> ChannelResult:
+        return ChannelResult(
+            id=e.get("id", 0),
+            expref=e.get("description", ""),
+            obsratio=e.get("obsratio", 0.0),
+            hb_result=e.get("hb_result", 0),
+            reference=e.get("description", ""),
+        )
+
+    channels = [
+        _to_channel(ranked[r]) for r in sorted(ranked) if r >= 1 and "id" in ranked[r]
+    ]
+    global_entry = ranked.get(0)
+    if global_entry and "obsratio" in global_entry:
+        most_sensitive = _to_channel(global_entry)
+        obsratio = global_entry["obsratio"]
+    elif channels:
+        # No rank-0 row: fall back to the top-sensitivity channel (rank 1).
+        most_sensitive = channels[0]
+        obsratio = channels[0].obsratio
+    else:
+        return None
+
+    return HBResult(
+        channels=channels,
+        obsratio_max=obsratio,
+        most_sensitive_channel=most_sensitive,
+    )
+
+
 def _parse_hb_output(stdout: str) -> list[ChannelResult]:
     """
     Parse HiggsBounds-5 per-channel output.
@@ -225,6 +304,21 @@ def run_higgsbounds(
                 "stderr_tail": proc.stderr[-500:] if proc.stderr else "",
             },
         )
+
+    # HB-5 in SLHA mode writes its results INTO the SLHA file (Block
+    # HiggsBoundsResults); stdout carries only BR diagnostics and no
+    # obsratios. Parsing stdout here used to yield a vacuous
+    # obsratio_max = 0.0 / most_sensitive_channel = None while the
+    # allow/exclude verdict looked fine. Read the block back from the file;
+    # fall back to the legacy stdout table parse only if HB somehow wrote no
+    # block (older HB builds / non-SLHA whichinput).
+    try:
+        slha_after = open(slha_abs).read()
+    except OSError:
+        slha_after = ""
+    slha_result = _parse_hb_slha_results(slha_after)
+    if slha_result is not None:
+        return slha_result
 
     channel_results = _parse_hb_output(proc.stdout)
 

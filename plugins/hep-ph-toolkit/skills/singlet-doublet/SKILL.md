@@ -262,7 +262,10 @@ canonical benchmark — `MS=150, MPsi=500, yh1=1, θ=0` gives
 `SPhenoInput` flags 11/16 on and 13/57 off, now **emits the HiggsBounds-
 consumable effective-coupling blocks** (`HiggsCouplingsBosons`/`Fermions` +
 `EFFHIGGSCOUPLINGS`; `h→γγ ≈ 1.043`, `h→gg ≈ 1.022`) that the `/higgstools`
-adapter consumes. SPheno additionally provides RGE running, 1-loop mass
+adapter consumes. The full gate has been run on this output with the real
+HiggsBounds-5.10.2 + HiggsSignals-2.6.2 binaries: **HBresult = 1 (allowed)**,
+obsratio 0.606, most sensitive channel `(pp)→h1→ZZ→4l` (CMS 1312.5353),
+HS χ² ≈ 0. SPheno additionally provides RGE running, 1-loop mass
 corrections, and decay widths; reach for it when those matter.
 
 | MS  | MPsi | y   | θ | (yh1, yh2)     | Position            |

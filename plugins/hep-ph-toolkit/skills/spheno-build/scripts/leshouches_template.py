@@ -200,6 +200,27 @@ def build(spec: dict, overrides: dict[str, float] | None = None) -> str:
         latex = param.get("latex", name)
         rows[idx] = (name, value, latex)
 
+    if params and not rows:
+        # Loud tripwire: the spec declares parameters but NONE carries a
+        # list-form les_houches:[MINPAR/BSMPARAMS, N] index, so the card gets
+        # no MINPAR/BSMPARAMSIN blocks at all. For the analytic backend this
+        # is harmless (it never reads MINPAR), but a spheno-backed run of such
+        # a card would feed SPheno zero BSM inputs — the same silent-SM-only
+        # spectrum failure class the index fix killed. ssm.yaml is the known
+        # example (no list-form les_houches anywhere). Warn rather than raise:
+        # build() cannot know which backend will consume the card, and the
+        # analytic path legitimately builds cards for such specs.
+        print(
+            f"leshouches_template: spec {spec.get('name', '?')!r} declares "
+            f"{len(params)} parameters but NONE has a "
+            "les_houches:[MINPAR/BSMPARAMS, N] index — emitting a card with "
+            "NO MINPAR/BSMPARAMSIN rows. A SPheno run of this card would "
+            "receive zero BSM inputs (silent SM-only spectrum). Add "
+            "les_houches metadata to the spec's input parameters before "
+            "using the spheno backend.",
+            file=sys.stderr,
+        )
+
     if rows:
         minpar_lines = ["Block MINPAR"]
         bsm_lines = ["Block BSMPARAMSIN"]

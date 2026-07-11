@@ -244,6 +244,24 @@ class TestSingletDoubletSphenoAlias:
         assert abs(h["aa"] - 1.0426) < 1e-3, h.get("aa")   # loop-induced gamma gamma
         assert abs(h["gg"] - 1.0218) < 1e-3, h.get("gg")   # loop-induced g g
 
+    def test_hzz_not_clobbered_by_hhz_vertex(self, slha_adapter):
+        """Regression: the h1-h1-Z vertex [25,25,23] (value 0.0 in this real
+        output) must NOT overwrite the true h-Z-Z coupling. The old frozenset
+        vertex matching collapsed [25,25,23] to {25,23} and clobbered zz=1.0
+        with 0.0 — while ZZ is the MOST SENSITIVE HiggsBounds channel for this
+        point (h1->ZZ->4l, CMS 1312.5353)."""
+        result = slha_adapter.parse_slha(FIXTURE_SD_SPHENO.read_text())
+        h = result["boson_couplings"][25]
+        assert abs(h["zz"] - 1.0) < 1e-6, (
+            f"hZZ={h.get('zz')} — [25,25,23] clobbered the true h-Z-Z coupling"
+        )
+        # The hhZ vertex itself is still recorded (raw), just not as 'zz'.
+        vertex_pdgs = [tuple(v["pdg"]) for v in h["couplings_by_vertex"]]
+        assert (25, 25, 23) in vertex_pdgs
+        # The repeated-PDG guard generalises: ggZ [25,21,21,23] sets no named
+        # key either, leaving gg at the true digluon value.
+        assert abs(h["gg"] - 1.0218) < 1e-3
+
     def test_fermion_two_value_rows_parsed(self, slha_adapter):
         """The 2-value fermion rows (scalar + pseudoscalar before ncomb) must
         parse — pre-fix they were silently dropped (int(pseudoscalar) fails)."""
