@@ -13,6 +13,7 @@ fresh recompute when mg5_aMC executes it.
 """
 from __future__ import annotations
 
+import shlex
 from pathlib import Path
 
 import pytest
@@ -145,3 +146,78 @@ def test_split_path_cleanup_lives_in_setup_script(tmp_path):
     assert f"output {out}" in setup
     assert f"launch {out} -f" in launch
     assert "!rm -rf" not in launch
+
+
+# ---------------------------------------------------------------------------
+# Shell-quoting of the emitted `!rm -rf` line.
+#
+# MG5's `!` escape hands the whole line to `subprocess.call(..., shell=True)`,
+# so an unquoted interpolated path is subject to word-splitting, tilde
+# expansion, and globbing — catastrophic on an `rm -rf` (a path with a space
+# would delete two unrelated directories). The emitted rm path must therefore
+# be a single shlex-quoted token that round-trips to the exact directory
+# string, while the `output` line (parsed by MG5's own tokenizer, which does
+# NOT strip shell quotes) keeps the verbatim unquoted path.
+# ---------------------------------------------------------------------------
+
+
+def _rm_line(script: str) -> str:
+    lines = [l for l in script.splitlines() if l.startswith("!rm -rf ")]
+    assert len(lines) == 1, f"expected exactly one rm line, got {lines!r}"
+    return lines[0]
+
+
+@pytest.mark.parametrize(
+    "raw_dir",
+    [
+        pytest.param("/tmp/my results/out", id="space"),
+        pytest.param("~/maddm_state/out", id="tilde"),
+        pytest.param("/tmp/out*", id="glob"),
+        pytest.param("/tmp/a;b/out", id="semicolon"),
+    ],
+)
+def test_rm_line_path_is_single_safely_quoted_token(raw_dir):
+    """The rm path must survive shell parsing as ONE literal token.
+
+    shlex.split-ing the shell command (the text after `!`) must yield exactly
+    ``["rm", "-rf", <raw_dir>]`` — no word-splitting, and quoting that
+    suppresses tilde/glob/metachar expansion. And the `output` line must name
+    the identical raw directory string, so rm and output target the same dir.
+    """
+    script = maddm_run.generate_maddm_script(
+        ufo_path="/fake/ufo/SingletDoublet",
+        dm_candidate="chi1",
+        out_dir=raw_dir,
+        observables=["direct_detection"],
+    )
+
+    rm_line = _rm_line(script)
+    shell_cmd = rm_line[1:]  # strip the MG5 `!` escape prefix
+    tokens = shlex.split(shell_cmd)
+    assert tokens == ["rm", "-rf", raw_dir], (
+        "rm path must parse back to the exact directory as a single token; "
+        f"got {tokens!r}"
+    )
+    # These inputs all contain shell metacharacters, so shlex.quote must have
+    # actually wrapped the path in quotes (quoted tilde/glob/`;` are literal
+    # to the shell — no expansion, no command-splitting).
+    assert rm_line == f"!rm -rf {shlex.quote(raw_dir)}"
+    assert shlex.quote(raw_dir) != raw_dir, "test input must require quoting"
+
+    # output line: verbatim, unquoted (MG5's tokenizer would treat quotes as
+    # literal filename characters, desyncing rm and output).
+    assert f"output {raw_dir}" in script.splitlines()
+
+
+def test_rm_line_plain_path_stays_unquoted(tmp_path):
+    """For a clean path shlex.quote is the identity: rm and output lines name
+    the byte-identical string (no spurious quotes)."""
+    out = tmp_path / "maddm_out"
+    script = maddm_run.generate_maddm_script(
+        ufo_path="/fake/ufo/SingletDoublet",
+        dm_candidate="chi1",
+        out_dir=out,
+        observables=["direct_detection"],
+    )
+    assert f"!rm -rf {out}" in script.splitlines()
+    assert f"output {out}" in script.splitlines()

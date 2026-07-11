@@ -31,6 +31,7 @@ still serves one. See ``maddm/SKILL.md`` section 'Frozen-SI DD-rerun staleness'.
 from __future__ import annotations
 
 import hashlib
+import shlex
 import sys
 from pathlib import Path
 import shutil
@@ -189,8 +190,21 @@ def generate_maddm_script(
     # script to mg5_aMC. Only actually running the script deletes anything,
     # and only right where MG5 is about to need a clean directory. Prevents
     # the frozen-SI DD-rerun staleness. Omitted entirely when fresh=False.
+    #
+    # The path is shlex-quoted because MG5's `!` escape hands the whole line
+    # to `subprocess.call(..., shell=True)`: an unquoted path with a space
+    # would word-split (`rm -rf /tmp/my results/out` deletes /tmp/my AND
+    # results/out), and `~` / glob chars / `;` would expand or split —
+    # catastrophic on an `rm -rf`. Quoting makes the path one literal token,
+    # matching the old shutil.rmtree semantics. The `output {out_dir}` line
+    # below is deliberately NOT quoted: MG5 parses it with its own
+    # whitespace tokenizer, which does not strip shell quotes — quotes there
+    # would become literal characters in the directory name, making rm and
+    # output target different dirs. For paths without shell metacharacters
+    # (every documented $STATE_ROOT layout) shlex.quote is the identity, so
+    # both lines name the identical string.
     if fresh:
-        setup_lines.append(f"!rm -rf {out_dir}")
+        setup_lines.append(f"!rm -rf {shlex.quote(str(out_dir))}")
     setup_lines.append(f"output {out_dir}")
 
     if split_for_param_overlay:
