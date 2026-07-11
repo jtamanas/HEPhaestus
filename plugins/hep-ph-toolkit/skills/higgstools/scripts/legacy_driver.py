@@ -71,6 +71,23 @@ class HiggsToolsNumericCrash(Exception):
         self.context = context or {}
 
 
+class HiggsBoundsNoResultError(HiggsToolsNumericCrash):
+    """HB ran (exit 0/1) but produced ZERO parsable results.
+
+    Distinct from a crash: HiggsBounds-5 is known to exit 0 while doing no
+    work (e.g. its Fortran buffer truncates file prefixes at ~100 chars, it
+    prints "problem opening the SLHA file", and writes no HiggsBoundsResults
+    block). Returning an empty result would make compute_hb_allowed([])
+    vacuously True — a silent false "allowed". Subclasses
+    HiggsToolsNumericCrash so existing recoverable-blocker handling applies,
+    but with its own code so the failure is diagnosable.
+    """
+
+    def __init__(self, message: str, context: dict | None = None):
+        super().__init__(message, context)
+        self.code = "HIGGSTOOLS_HB_NO_RESULT"
+
+
 def _find_binary(build_dir: str, name: str) -> str:
     """Find HB or HS binary in build dir. Raises FileNotFoundError if absent."""
     candidates = [
@@ -83,6 +100,85 @@ def _find_binary(build_dir: str, name: str) -> str:
     raise FileNotFoundError(
         f"{name} binary not found in {build_dir}. "
         f"Checked: {candidates}. Re-run bash _shared/installs/higgstools/install.sh install."
+    )
+
+
+def _parse_hb_slha_results(slha_text: str) -> HBResult | None:
+    """Parse the ``Block HiggsBoundsResults`` HB-5 writes back into the SLHA.
+
+    In SLHA mode HiggsBounds-5 does NOT print per-channel results to stdout —
+    it appends a ``HiggsBoundsResults`` block to the input file. Rows are
+    ``<rank> <key> <value>`` with keys 1=channel id, 2=HBresult, 3=obsratio,
+    4=ncombined, 5=||text description||. Rank 0 is the GLOBAL result (HB-5's
+    verdict = the most statistically sensitive channel); ranks >= 1 are the
+    sensitivity-ordered channel list. Note the global obsratio is that of the
+    most SENSITIVE channel, not the numeric max across channels — a less
+    sensitive channel may carry a higher raw obsratio.
+
+    Returns None when the block is absent (e.g. HB never ran on this file),
+    so callers can fall back to stdout parsing.
+    """
+    in_block = False
+    ranked: dict[int, dict[str, Any]] = {}
+    for line in slha_text.splitlines():
+        stripped = line.strip()
+        if re.match(r"^Block\s+HiggsBoundsResults\b", stripped, re.IGNORECASE):
+            in_block = True
+            continue
+        if re.match(r"^(Block|DECAY)\s+", stripped, re.IGNORECASE):
+            in_block = False
+            continue
+        if not in_block or not stripped or stripped.startswith("#"):
+            continue
+        m = re.match(r"^(\d+)\s+(\d+)\s+(\S.*?)(?:\s*#.*)?$", stripped)
+        if not m:
+            continue
+        rank, key, value = int(m.group(1)), int(m.group(2)), m.group(3).strip()
+        entry = ranked.setdefault(rank, {})
+        try:
+            if key == 1:
+                entry["id"] = int(value)
+            elif key == 2:
+                entry["hb_result"] = int(value)
+            elif key == 3:
+                entry["obsratio"] = float(value)
+            elif key == 4:
+                entry["ncombined"] = int(value)
+            elif key == 5:
+                entry["description"] = value.strip("|").strip()
+        except ValueError:
+            continue
+
+    if not ranked:
+        return None
+
+    def _to_channel(e: dict[str, Any]) -> ChannelResult:
+        return ChannelResult(
+            id=e.get("id", 0),
+            expref=e.get("description", ""),
+            obsratio=e.get("obsratio", 0.0),
+            hb_result=e.get("hb_result", 0),
+            reference=e.get("description", ""),
+        )
+
+    channels = [
+        _to_channel(ranked[r]) for r in sorted(ranked) if r >= 1 and "id" in ranked[r]
+    ]
+    global_entry = ranked.get(0)
+    if global_entry and "obsratio" in global_entry:
+        most_sensitive = _to_channel(global_entry)
+        obsratio = global_entry["obsratio"]
+    elif channels:
+        # No rank-0 row: fall back to the top-sensitivity channel (rank 1).
+        most_sensitive = channels[0]
+        obsratio = channels[0].obsratio
+    else:
+        return None
+
+    return HBResult(
+        channels=channels,
+        obsratio_max=obsratio,
+        most_sensitive_channel=most_sensitive,
     )
 
 
@@ -190,12 +286,25 @@ def run_higgsbounds(
     hb_bin = _find_binary(hb_build, "HiggsBounds")
 
     # HB-5 SLHA invocation: HiggsBounds <whichanalyses> <whichinput> <nHneut> <nHplus> <prefix>
-    # whichinput must be "SLHA"; prefix is the full path to the .slha file (including extension).
-    # HB writes results back into the SLHA file, so CWD must contain the file or an absolute path
-    # must be used.  We use the absolute path directly as prefix.
+    # whichinput must be "SLHA"; prefix is the path to the .slha file (including
+    # extension). HB writes results back into the SLHA file.
+    #
+    # CRITICAL: pass the BASENAME as the prefix and run with cwd=slha_dir.
+    # HB-5's Fortran command-line buffer truncates the prefix at ~100 chars;
+    # with an absolute path over that limit HB prints "problem opening the
+    # SLHA file", runs on garbage input, EXITS 0, and writes no
+    # HiggsBoundsResults block — the vacuous obsratio_max=0.0 silent pass.
+    # Real state-root run paths (~/.local/share/hephaestus/models/<m>/runs/
+    # <ts>/SPheno.spc, 102 chars) exceed the limit, so absolute-path
+    # invocation is broken in production, not just in pathological cases.
+    #
+    # Note: with cwd=slha_dir, HB also sees SPheno's own datafiles
+    # (effC.dat, BR_*.dat, MH_GammaTot.dat) in the run dir; with
+    # whichinput=SLHA these are inert (HB reads only the SLHA blocks).
     slha_abs = os.path.abspath(slha_file)
     slha_dir = os.path.dirname(slha_abs)
-    cmd = [hb_bin, "LandH", "SLHA", str(n_neutral), str(n_charged), slha_abs]
+    slha_base = os.path.basename(slha_abs)
+    cmd = [hb_bin, "LandH", "SLHA", str(n_neutral), str(n_charged), slha_base]
 
     try:
         proc = subprocess.run(
@@ -226,7 +335,43 @@ def run_higgsbounds(
             },
         )
 
+    # HB-5 in SLHA mode writes its results INTO the SLHA file (Block
+    # HiggsBoundsResults); stdout carries only BR diagnostics and no
+    # obsratios. Parsing stdout here used to yield a vacuous
+    # obsratio_max = 0.0 / most_sensitive_channel = None while the
+    # allow/exclude verdict looked fine. Read the block back from the file;
+    # fall back to the legacy stdout table parse only if HB somehow wrote no
+    # block (older HB builds / non-SLHA whichinput).
+    try:
+        slha_after = open(slha_abs).read()
+    except OSError:
+        slha_after = ""
+    slha_result = _parse_hb_slha_results(slha_after)
+    if slha_result is not None:
+        return slha_result
+
     channel_results = _parse_hb_output(proc.stdout)
+
+    if not channel_results:
+        # ZERO results from both the SLHA block and stdout. Do NOT return an
+        # empty HBResult: compute_hb_allowed([]) is vacuously True, i.e. a
+        # silent "allowed" verdict from a run that produced nothing — the
+        # exact silent-failure class this toolkit exists to kill. Raise a
+        # blocker instead (HB is known to exit 0 even when it could not open
+        # its input, e.g. the >100-char prefix truncation).
+        raise HiggsBoundsNoResultError(
+            "HiggsBounds produced no parsable results: no HiggsBoundsResults "
+            "block was written into the SLHA file and stdout contained no "
+            "per-channel table. HB is known to exit 0 even on unusable input "
+            "(e.g. a truncated file prefix), so an empty result must not be "
+            "reported as 'allowed'.",
+            context={
+                "slha_file": slha_file,
+                "returncode": proc.returncode,
+                "stdout_tail": proc.stdout[-500:] if proc.stdout else "",
+                "stderr_tail": proc.stderr[-500:] if proc.stderr else "",
+            },
+        )
 
     # Determine most sensitive channel and obsratio_max
     obsratio_max = 0.0
@@ -267,7 +412,12 @@ def run_higgssignals(
     """
     hs_bin = _find_binary(hs_build, "HiggsSignals")
 
-    cmd = [hs_bin, "latestresults", "peak", "SLHA", "SLHA", slha_file]
+    # Basename + cwd, same as run_higgsbounds: the HB/HS Fortran command-line
+    # buffer truncates file prefixes at ~100 chars (real state-root run paths
+    # exceed that), silently running on unopenable input.
+    slha_abs = os.path.abspath(slha_file)
+    cmd = [hs_bin, "latestresults", "peak", "SLHA", "SLHA",
+           os.path.basename(slha_abs)]
 
     try:
         proc = subprocess.run(
@@ -275,6 +425,7 @@ def run_higgssignals(
             capture_output=True,
             text=True,
             timeout=120,
+            cwd=os.path.dirname(slha_abs),
         )
     except subprocess.TimeoutExpired:
         raise HiggsToolsNumericCrash(

@@ -145,11 +145,25 @@ def _parse_coupling_block(
                 except (ValueError, IndexError):
                     continue
             else:
-                # Try PDG-triplet format: coupling_val nPDG PDG1 PDG2 [PDG3 ...]
+                # Try PDG-triplet format. Two SPheno row shapes occur:
+                #   Bosons:   <coupling> <ncomb> PDG1 PDG2 [...]
+                #   Fermions: <scalar> <pseudoscalar> <ncomb> PDG1 PDG2 [...]
+                # The fermion row carries TWO leading coupling values (scalar +
+                # pseudoscalar) before the integer ``ncomb``. Distinguish by
+                # whether parts[1] parses as an integer (ncomb → boson shape)
+                # or a float (pseudoscalar coupling → fermion shape). We key
+                # named couplings off the scalar (parts[0]) value.
                 try:
                     coupling_val = float(parts[0])
-                    n_pdg = int(parts[1])
-                    pdg_codes = [int(p) for p in parts[2:2 + n_pdg]]
+                    try:
+                        n_pdg = int(parts[1])
+                        pdg_start = 2
+                    except ValueError:
+                        # Fermion 2-value row: parts[1] is the pseudoscalar
+                        # coupling, parts[2] is ncomb.
+                        n_pdg = int(parts[2])
+                        pdg_start = 3
+                    pdg_codes = [int(p) for p in parts[pdg_start:pdg_start + n_pdg]]
                 except (ValueError, IndexError):
                     continue
 
@@ -187,24 +201,43 @@ def _parse_coupling_block(
                 couplings[row_num] = existing
 
                 # Populate named coupling fields from PDG vertex information
-                # using standard HB-5 PDG codes for WW/ZZ/gg/bb/tt/tautau
-                vertex_set = frozenset(abs(p) for p in pdg_codes)
+                # using standard HB-5 PDG codes for WW/ZZ/gg/bb/tt/tautau.
+                #
+                # Match on the MULTISET of partner PDGs (the codes after the
+                # leading Higgs), not a frozenset of the whole vertex: a
+                # frozenset collapses repeated PDGs, so the h1-h1-Z vertex
+                # [25, 25, 23] used to reduce to {25, 23}, satisfy the ZZ
+                # branch, and CLOBBER the true h-Z-Z coupling with the hhZ
+                # value (observed: hZZ 1.0 overwritten by 0.0 on the real
+                # singlet-doublet SPheno output, where ZZ is the most
+                # sensitive HiggsBounds channel). Requiring the partner
+                # multiset to be exactly [23, 23] (etc.) makes repeated-PDG
+                # vertices unable to shadow distinct couplings; hhZ and other
+                # unrecognised vertices remain available in
+                # couplings_by_vertex but set no named key.
                 entry_for_named = existing
-                if vertex_set == {25, 24} or vertex_set == {35, 24} or vertex_set == {36, 24}:
-                    # H-W-W vertex: single boson coupling (no separate pseudoscalar)
-                    entry_for_named["ww"] = coupling_val
-                elif vertex_set == {25, 23} or vertex_set == {35, 23} or vertex_set == {36, 23}:
-                    entry_for_named["zz"] = coupling_val
-                elif vertex_set == {25, 21} or vertex_set == {35, 21} or vertex_set == {36, 21}:
-                    entry_for_named["gg"] = coupling_val
-                elif vertex_set == {25, 22} or vertex_set == {35, 22} or vertex_set == {36, 22}:
-                    entry_for_named["aa"] = coupling_val
-                elif 5 in vertex_set and len(vertex_set) <= 3:
-                    entry_for_named.setdefault("bb", coupling_val)
-                elif 6 in vertex_set and len(vertex_set) <= 3:
-                    entry_for_named.setdefault("tt", coupling_val)
-                elif 15 in vertex_set and len(vertex_set) <= 3:
-                    entry_for_named.setdefault("tautau", coupling_val)
+                partners = sorted(abs(p) for p in pdg_codes[1:])
+                if higgs_pdg in (25, 35, 36):
+                    if partners == [24, 24]:
+                        # H-W-W vertex: single boson coupling
+                        entry_for_named["ww"] = coupling_val
+                    elif partners == [23, 23]:
+                        entry_for_named["zz"] = coupling_val
+                    elif partners == [21, 21]:
+                        entry_for_named["gg"] = coupling_val
+                    elif partners == [22, 22]:
+                        entry_for_named["aa"] = coupling_val
+                    elif partners == [5, 5]:
+                        # Plain assignment (last-wins), matching the boson
+                        # branches above — uniform duplicate-row precedence.
+                        # Real SPheno output never repeats a vertex; if a
+                        # block ever does, the later row wins for ALL named
+                        # couplings consistently.
+                        entry_for_named["bb"] = coupling_val
+                    elif partners == [6, 6]:
+                        entry_for_named["tt"] = coupling_val
+                    elif partners == [15, 15]:
+                        entry_for_named["tautau"] = coupling_val
                 continue
 
             row_index += 1
@@ -317,9 +350,20 @@ def parse_slha(
 
     widths = _parse_decay_blocks(text)
 
-    # Try new-style coupling blocks first
-    boson_rows = _parse_coupling_block(text, "HiggsBoundsInputHiggsCouplingsBosons")
-    fermion_rows = _parse_coupling_block(text, "HiggsBoundsInputHiggsCouplingsFermions")
+    # Try new-style coupling blocks first. HiggsBounds5 canonical block names
+    # are ``HiggsBoundsInputHiggsCouplings{Bosons,Fermions}``, but this SARAH/
+    # SPheno build (WriteHiggsBoundsBlocks via SPhenoInput 520/76) emits the
+    # shorter ``HiggsCouplings{Bosons,Fermions}`` names (plus EFFHIGGSCOUPLINGS).
+    # Accept either spelling — the binary does not contain the HiggsBoundsInput*
+    # strings at all, so aliasing is the correct fix (no rewrite needed).
+    boson_rows = (
+        _parse_coupling_block(text, "HiggsBoundsInputHiggsCouplingsBosons")
+        or _parse_coupling_block(text, "HiggsCouplingsBosons")
+    )
+    fermion_rows = (
+        _parse_coupling_block(text, "HiggsBoundsInputHiggsCouplingsFermions")
+        or _parse_coupling_block(text, "HiggsCouplingsFermions")
+    )
 
     used_legacy = False
 

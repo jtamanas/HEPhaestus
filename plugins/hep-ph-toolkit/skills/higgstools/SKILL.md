@@ -17,6 +17,20 @@ Before any other action, run:
   before proceeding. If it still fails, halt with the blocker code from
   the install reference.
 
+> **Where the install actually lives — do not eyeball the wrong places.**
+> The source of truth is `$XDG_CONFIG_HOME/hephaestus/config.json`
+> (default `~/.config/hephaestus/config.json`), keys `higgsbounds_path`
+> / `higgsbounds_version` / `higgssignals_path` / `higgssignals_version`
+> / `higgstools_backend`. With `higgstools_backend = "legacy"` the
+> Fortran binaries live at `<higgsbounds_path>/HiggsBounds` and
+> `<higgssignals_path>/HiggsSignals` — user-chosen build dirs (e.g.
+> `~/HiggsBounds-5.10.2/build`), **not** under `$STATE_ROOT/tools/`
+> (which holds other tools like DDCalc). A Python `Higgs` module exists
+> only for the `unified` pybind backend; its absence says nothing about
+> a `legacy` install. Checking only `$STATE_ROOT/tools/` or
+> `import Higgs` has already led one agent to wrongly conclude
+> HiggsBounds was not installed.
+
 ---
 
 ## When to invoke
@@ -81,6 +95,14 @@ are deferred to v1.1 (tracked as follow-up issue).
 ## Outputs
 
 Per point, under `$STATE_ROOT/models/<name>/runs/<TS>/higgstools/`:
+
+> **Legacy-backend provenance:** HB-5 in SLHA mode writes its results into
+> `Block HiggsBoundsResults` inside the SLHA file (stdout carries only BR
+> diagnostics); the driver parses that block. `obsratio_max` follows HB-5
+> semantics: it is the obsratio of the **most statistically sensitive**
+> channel (the block's rank-0 global result) — the value that decides the
+> verdict — not the numeric max across all channels, which can be larger
+> in a less sensitive channel.
 
 ### `result.json`
 
@@ -228,6 +250,7 @@ checks is the job of `run --scan-dir <dir>`.
 | `HIGGSTOOLS_DATASET_MISMATCH` | `fatal` | (unified) dataset SHA ≠ config pin |
 | `HIGGSTOOLS_BACKEND_UNAVAILABLE` | `recoverable` | unified Python module import failed |
 | `HIGGSTOOLS_NUMERIC_CRASH` | `recoverable` | backend segfault on one scan row; row marked bad, scan continues |
+| `HIGGSTOOLS_HB_NO_RESULT` | `recoverable` | HB exited 0/1 but produced zero parsable results (no `HiggsBoundsResults` block, no stdout table); never reported as vacuously allowed |
 
 No `reference_only` exits. No `--native` path (dropped per manager decision).
 

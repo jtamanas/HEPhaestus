@@ -1,0 +1,34 @@
+# Verbatim 'Block HiggsBoundsResults' written back by HiggsBounds-5.10.2 (LandH, SLHA mode)
+# into the singlet_doublet SPheno.spc at MS=150, MPsi=500, yh1=1, theta=0.
+# Produced by: HiggsBounds LandH SLHA 1 0 <SPheno.spc> on 2026-07-11.
+Block HiggsBoundsResults      # results from HiggsBounds http://projects.hepforge.org/higgsbounds
+# HBresult   : scenario allowed flag (1: allowed, 0: excluded, -1: unphysical)
+# chan id number: most sensitive channel (see below). chan=0 if no channel applies
+# obsratio   : ratio [sig x BR]_model/[sig x BR]_limit (<1: allowed, >1: excluded)
+# ncomb      : number of Higgs bosons combined in most sensitive channel
+# The HB channel id number varies depending on the HB version and setting "whichanalyses"
+#
+    0    5.10.2     ||LandH||            # version of HB used to produce these results,the HB setting "whichanalyses"
+#
+#CHANNEL info: ranked from highest statistical sensitivity (rank = 0: global result)
+               0           1          85                  # channel id number
+               0           2           1                  # HBresult      
+               0           3  0.60629644976076968         # obsratio  
+               0           4           1                  # ncombined
+               0           5 ||(p p)->h1 ->Z Z-> l l l l (low mass) where h1  is SM-like ([hep-ex] 1312.5353 (CMS))|| # text description of channel
+               1           1          85                  # channel id number
+               1           2           1                  # HBresult      
+               1           3  0.60629644976076968         # obsratio  
+               1           4           1                  # ncombined
+               1           5 ||(p p)->h1 ->Z Z-> l l l l (low mass) where h1  is SM-like ([hep-ex] 1312.5353 (CMS))|| # text description of channel
+               2           1          59                  # channel id number
+               2           2           1                  # HBresult      
+               2           3  0.95644486565298792         # obsratio  
+               2           4           1                  # ncombined
+               2           5 ||(p p)->h1 +...->W W +... where h1  is SM-like (CMS-PAS-HIG-13-003)|| # text description of channel
+               3           1         197                  # channel id number
+               3           2           1                  # HBresult      
+               3           3  0.95055545704898103         # obsratio  
+               3           4           1                  # ncombined
+               3           5 ||(p p)->h1 +...->gamma gamma+... where h1  is SM-like ([hep-ex] 1407.0558 (CMS))|| # text description of channel
+#

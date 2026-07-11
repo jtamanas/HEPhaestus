@@ -242,12 +242,31 @@ SARAH UFO + SPheno source emitted; model registered.
 
 #### 4b. SPheno spectrum generation
 
-SARAH emission and the initial SPheno compile were handled in 4a. Here, run
-SPheno once at the canonical benchmark to produce
+SARAH emission and the initial SPheno compile were handled in 4a. Here, produce
 `SPheno.spc.singlet_doublet`, encoding the physical mass spectrum (m_chi1,
-m_chi2, m_chi3, mixing angles) MadDM requires. SPheno is the default spectrum
-backend for this model — the SARAH → SPheno path is verified end-to-end (commit
-`1fb8ad8`) and gives RGE running, 1-loop mass corrections, and decay widths.
+m_chi2, m_chi3, mixing angles) MadDM requires.
+
+**Backend reality (do not mis-state):** the **analytic** backend is the default
+spectrum source for this model — the dispatcher resolves `singlet_doublet` to
+analytic because its spec carries neither a top-level `backends.spectrum` nor
+`"spheno"` in a top-level `outputs` list (see `spheno-build/SKILL.md` selection
+rule). Analytic gives the closed-form χ spectrum in microseconds, which is all
+the MadDM relic path needs, and is what the demo runs.
+
+**SPheno is a verified opt-in**, not the default. To generate a real SPheno
+spectrum for this model, run `run_spheno.py singlet_doublet --backend spheno`
+(the `--backend` flag overrides the spec's analytic default for that run only;
+no spec edit required). The SARAH → SPheno path is verified end-to-end at the
+canonical benchmark — `MS=150, MPsi=500, yh1=1, θ=0` gives
+`FChi1/2/3 = 132.69 / 523.03 / 540.33`, `FChiM = 500`, zero `NaN` — and, with
+`SPhenoInput` flags 11/16 on and 13/57 off, now **emits the HiggsBounds-
+consumable effective-coupling blocks** (`HiggsCouplingsBosons`/`Fermions` +
+`EFFHIGGSCOUPLINGS`; `h→γγ ≈ 1.043`, `h→gg ≈ 1.022`) that the `/higgstools`
+adapter consumes. The full gate has been run on this output with the real
+HiggsBounds-5.10.2 + HiggsSignals-2.6.2 binaries: **HBresult = 1 (allowed)**,
+obsratio 0.606, most sensitive channel `(pp)→h1→ZZ→4l` (CMS 1312.5353),
+HS χ² ≈ 0. SPheno additionally provides RGE running, 1-loop mass
+corrections, and decay widths; reach for it when those matter.
 
 | MS  | MPsi | y   | θ | (yh1, yh2)     | Position            |
 |-----|------|-----|---|----------------|---------------------|

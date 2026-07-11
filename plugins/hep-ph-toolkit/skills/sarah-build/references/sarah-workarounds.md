@@ -310,12 +310,23 @@ items; they're not repeated here.
   `Zf<…>` rewrite only runs when the rank-3 `(1,1,1)` shape is
   actually present. Idempotent: the regexes target the broken shape,
   not the fixed shape, so a second call is a no-op. The run-time
-  `/spheno-build` wrapper also flips SPhenoInput flags ``16`` /
-  ``13`` / ``57`` to 0 in the staged `LesHouches.in` — the one-loop
-  decay counterterm path, 3-body decays, and low-energy constraints
-  all evaluate NaN or hang inside `CalculateBR` for this Dirac shape;
-  the tree-level + 2-body-BR spectrum is enough for the Profumo
-  benchmark.
+  `/spheno-build` wrapper also flips SPhenoInput flags ``13`` /
+  ``57`` to 0 in the staged `LesHouches.in`. **Updated split (was
+  11/13/16/57 → now only 13/57):** the genuine NaN/hang is in the
+  3-body / U-factor loop-decay machinery — flag ``13`` (3-body decays)
+  stops with "negative mass squared" and ``57`` (low-energy
+  constraints) hangs inside `CalculateBR` for this rank-1 Dirac shape.
+  Flags ``11`` (branching ratios) and ``16`` (one-loop decays) are
+  **left enabled** (SARAH default = 1): a full-chain diagnosis proved
+  `11=1, 16=1, 13=0, 57=0` runs clean (`FChi1/2/3 = 132.69/523.03/540.33`,
+  zero NaN) **and** emits the effective Higgs-coupling blocks
+  (`HiggsCouplingsBosons`/`Fermions` + `EFFHIGGSCOUPLINGS`) that
+  `/higgstools` consumes. The earlier belief that ``16`` itself NaNs was
+  a red herring — the counterterm crash (`CT_CouplingcFdFdAh`) is only
+  reached down the 13/57 decay path, which stays off. Leaving 11/16 on
+  is what makes the SPheno backend HiggsBounds-capable; the tree-level +
+  2-body-BR + coupling-block spectrum is enough for the Profumo benchmark
+  and the HiggsTools chain.
 - **Where:** `plugins/hep-ph-toolkit/skills/spheno-build/scripts/compile_model.py`
   — `_patch_rank1_dirac_mass` (the main hook) and `_module_scalar_mass_names`
   (safety filter); wired into `compile_model.compile_model` after the

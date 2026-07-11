@@ -18,6 +18,63 @@ from pathlib import Path
 
 
 # ---------------------------------------------------------------------------
+# SPheno scalar-input blocks.
+#
+# A ModelSpec parameter is a *card input* iff it declares a list-form
+# ``les_houches: [BLOCK, N]`` metadata whose BLOCK names one of these
+# scalar-input blocks. Its value is then written at index N (honouring the
+# spec's declared index) into both ``Block MINPAR`` and ``Block BSMPARAMSIN``
+# (SPheno's Read_MINPAR seed + SARAH's Read_BSMPARAMSIN LOW-branch input).
+#
+# Everything else in ``spec.parameters`` is NOT a card input and is excluded
+# by design (documented fallback): SM couplings/Yukawas (no ``les_houches``
+# key, computed internally from SMINPUTS), mixing matrices (string-form
+# ``les_houches`` like ``ZNMIX`` — OUTPUT blocks), and any list-form
+# ``les_houches`` pointing at a block this template does not emit (e.g.
+# ``PHASES`` — phase inputs default to zero and are not required for the mass
+# spectrum). Excluding is not the same as *misplacing*: the pre-fix code
+# enumerated ALL parameters into MINPAR by declaration order, silently landing
+# the BSM inputs (MS/MPsi/yh1/yh2) at indices 24-27 where SARAH never reads
+# them → zero-mass spectrum, FChi1 = -0.0, no error. Honouring the declared
+# index and excluding non-inputs kills that silent-misplacement class.
+# ---------------------------------------------------------------------------
+_INPUT_SCALAR_BLOCKS = frozenset({"MINPAR", "BSMPARAMS", "BSMPARAMSIN"})
+
+
+def input_scalar_params(spec: dict) -> dict[str, int]:
+    """Return ``{param_name: minpar_index}`` for the card's scalar inputs.
+
+    A parameter qualifies iff it carries a list-form
+    ``les_houches: [BLOCK, N]`` whose BLOCK is one of ``_INPUT_SCALAR_BLOCKS``.
+    Callers (e.g. run_spheno) use this to loudly reject user overrides that
+    name a parameter which would never reach the generated card.
+
+    Raises:
+        ValueError: if two placed parameters collide on the same index.
+    """
+    placed: dict[int, str] = {}
+    out: dict[str, int] = {}
+    for param in spec.get("parameters", []):
+        name = param["name"]
+        lh = param.get("les_houches")
+        if (
+            isinstance(lh, (list, tuple))
+            and len(lh) == 2
+            and str(lh[0]).upper() in _INPUT_SCALAR_BLOCKS
+        ):
+            idx = int(lh[1])
+            if idx in placed and placed[idx] != name:
+                raise ValueError(
+                    f"les_houches index collision at MINPAR[{idx}]: "
+                    f"{placed[idx]!r} and {name!r} both declare it. "
+                    "Fix the spec's les_houches keys."
+                )
+            placed[idx] = name
+            out[name] = idx
+    return out
+
+
+# ---------------------------------------------------------------------------
 # SM Input values (PDG 2020 defaults — hardcoded per spec §5)
 # ---------------------------------------------------------------------------
 _SMINPUTS_LINES = """\
@@ -100,8 +157,13 @@ def build(spec: dict, overrides: dict[str, float] | None = None) -> str:
                              OneLoopMasses into the Higgs / neutralino tree-
                              level spectrum; m2SMIN is a consistent seed that
                              the tadpole solver overwrites.
-        Block MINPAR       — one entry per spec.parameters in declaration order,
-                             using default values patched by overrides.
+        Block MINPAR       — one entry per *card-input* parameter, placed at
+                             the index N declared in that parameter's
+                             ``les_houches: [BLOCK, N]`` metadata (BLOCK in
+                             ``_INPUT_SCALAR_BLOCKS``). Parameters without such
+                             metadata are excluded (see module docstring) —
+                             NOT enumerated by declaration order (the pre-fix
+                             bug that misplaced BSM inputs to indices 24-27).
         Block BSMPARAMSIN  — same entries as MINPAR; SARAH's Boundaries branch
                              reads these through ``Read_BSMPARAMSIN`` into the
                              per-parameter ``<name>IN`` variables.
@@ -127,13 +189,43 @@ def build(spec: dict, overrides: dict[str, float] | None = None) -> str:
     ]
 
     params = spec.get("parameters", [])
-    if params:
+    indices = input_scalar_params(spec)  # {name: index}, honours les_houches
+    # Build rows keyed by declared index so MINPAR/BSMPARAMSIN come out sorted
+    # (1..N) regardless of the parameter's position in spec.parameters.
+    by_name = {p["name"]: p for p in params}
+    rows: dict[int, tuple[str, float, str]] = {}
+    for name, idx in indices.items():
+        param = by_name[name]
+        value = overrides.get(name, param.get("default", 0.0))
+        latex = param.get("latex", name)
+        rows[idx] = (name, value, latex)
+
+    if params and not rows:
+        # Loud tripwire: the spec declares parameters but NONE carries a
+        # list-form les_houches:[MINPAR/BSMPARAMS, N] index, so the card gets
+        # no MINPAR/BSMPARAMSIN blocks at all. For the analytic backend this
+        # is harmless (it never reads MINPAR), but a spheno-backed run of such
+        # a card would feed SPheno zero BSM inputs — the same silent-SM-only
+        # spectrum failure class the index fix killed. ssm.yaml is the known
+        # example (no list-form les_houches anywhere). Warn rather than raise:
+        # build() cannot know which backend will consume the card, and the
+        # analytic path legitimately builds cards for such specs.
+        print(
+            f"leshouches_template: spec {spec.get('name', '?')!r} declares "
+            f"{len(params)} parameters but NONE has a "
+            "les_houches:[MINPAR/BSMPARAMS, N] index — emitting a card with "
+            "NO MINPAR/BSMPARAMSIN rows. A SPheno run of this card would "
+            "receive zero BSM inputs (silent SM-only spectrum). Add "
+            "les_houches metadata to the spec's input parameters before "
+            "using the spheno backend.",
+            file=sys.stderr,
+        )
+
+    if rows:
         minpar_lines = ["Block MINPAR"]
         bsm_lines = ["Block BSMPARAMSIN"]
-        for idx, param in enumerate(params, start=1):
-            name = param["name"]
-            value = overrides.get(name, param.get("default", 0.0))
-            latex = param.get("latex", name)
+        for idx in sorted(rows):
+            name, value, latex = rows[idx]
             minpar_lines.append(
                 f"   {idx}   {value:E}   # {name} ({latex})"
             )

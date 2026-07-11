@@ -55,17 +55,39 @@ def isolate_env(tmp_path, monkeypatch):
 DARK_SU3_SPEC = {
     "name": "dark_su3",
     "parameters": [
-        {"name": "MpsiD", "latex": "M_{\\psi_D}", "real": True, "positive": True, "default": 500.0},
-        {"name": "gD",    "latex": "g_D",         "real": True, "positive": True, "default": 1.0},
+        {"name": "MpsiD", "latex": "M_{\\psi_D}", "real": True, "positive": True,
+         "default": 500.0, "les_houches": ["BSMPARAMS", 1]},
+        {"name": "gD",    "latex": "g_D",         "real": True, "positive": True,
+         "default": 1.0, "les_houches": ["BSMPARAMS", 2]},
     ],
 }
 
 TWO_PARAM_SPEC = {
     "name": "test_model",
     "parameters": [
-        {"name": "A", "default": 100.0},
-        {"name": "B", "default": 200.0},
-        {"name": "C", "default": 300.0},
+        {"name": "A", "default": 100.0, "les_houches": ["BSMPARAMS", 1]},
+        {"name": "B", "default": 200.0, "les_houches": ["BSMPARAMS", 2]},
+        {"name": "C", "default": 300.0, "les_houches": ["BSMPARAMS", 3]},
+    ],
+}
+
+# The real singlet_doublet spec places 4 BSM inputs at BSMPARAMS 1-4 and mixes
+# in many SM/matrix params that carry NO scalar les_houches index. Used to pin
+# that build() honours the declared index and excludes non-input params.
+SINGLET_DOUBLET_LIKE_SPEC = {
+    "name": "singlet_doublet",
+    "parameters": [
+        # SM couplings / Yukawas / matrices: NOT card inputs (no les_houches,
+        # string les_houches, or a non-input block). Must never reach MINPAR.
+        {"name": "g1", "real": True},
+        {"name": "Yu", "real": False},
+        {"name": "ZN", "les_houches": "ZNMIX"},        # output mixing matrix
+        {"name": "PhaseFS", "les_houches": ["PHASES", 1]},  # non-input block
+        # The 4 real BSM scalar inputs, declared out of MINPAR order on purpose.
+        {"name": "yh2", "latex": "y_{h2}", "default": 0.0, "les_houches": ["BSMPARAMS", 4]},
+        {"name": "MS",  "latex": "M_S",    "default": 150.0, "les_houches": ["BSMPARAMS", 1]},
+        {"name": "MPsi", "latex": "M_\\Psi", "default": 500.0, "les_houches": ["BSMPARAMS", 2]},
+        {"name": "yh1", "latex": "y_{h1}", "default": 1.0, "les_houches": ["BSMPARAMS", 3]},
     ],
 }
 
@@ -314,6 +336,105 @@ class TestPatchMinpar:
         assert re.search(r"2[.\d]*[Ee][+]?00", patched), (
             f"Expected 2.0 in patched MINPAR, card:\n{patched}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Test: build() honours les_houches indices (the layer-2 fix)
+# ---------------------------------------------------------------------------
+def _minpar_rows(card: str) -> list[tuple[int, str]]:
+    """Return [(index, name)] for the MINPAR block, parsed from comments."""
+    m = re.search(
+        r"^Block\s+MINPAR\s*\n((?:.*\n)*?)(?=^Block|\Z)",
+        card, re.IGNORECASE | re.MULTILINE,
+    )
+    if not m:
+        return []
+    rows = []
+    for line in m.group(1).splitlines():
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#"):
+            mm = re.match(r"^(\d+)\s+\S+\s+#\s*(\S+)", stripped)
+            if mm:
+                rows.append((int(mm.group(1)), mm.group(2)))
+    return rows
+
+
+class TestLesHouchesIndexHonoured:
+    def test_singlet_doublet_four_params_at_1_to_4(self, lht):
+        """The 4-param singlet-doublet card yields MINPAR 1-4 exactly, mapped
+        to MS/MPsi/yh1/yh2 regardless of declaration order."""
+        card = lht.build(SINGLET_DOUBLET_LIKE_SPEC)
+        rows = _minpar_rows(card)
+        assert rows == [(1, "MS"), (2, "MPsi"), (3, "yh1"), (4, "yh2")], rows
+
+    def test_bsmparamsin_matches_by_index(self, lht):
+        card = lht.build(SINGLET_DOUBLET_LIKE_SPEC)
+        m = re.search(
+            r"^Block\s+BSMPARAMSIN\s*\n((?:.*\n)*?)(?=^Block|\Z)",
+            card, re.IGNORECASE | re.MULTILINE,
+        )
+        rows = []
+        for line in m.group(1).splitlines():
+            s = line.strip()
+            mm = re.match(r"^(\d+)\s+\S+\s+#\s*(\S+)", s)
+            if mm:
+                rows.append((int(mm.group(1)), mm.group(2)))
+        assert rows == [(1, "MS"), (2, "MPsi"), (3, "yh1"), (4, "yh2")], rows
+
+    def test_non_input_params_excluded(self, lht):
+        """Params with no les_houches (g1, Yu), string les_houches (ZN), or a
+        non-input block (PhaseFS) never appear in MINPAR — the documented
+        fallback that replaces silent misplacement."""
+        card = lht.build(SINGLET_DOUBLET_LIKE_SPEC)
+        # Only the 4 BSM inputs appear as MINPAR rows (parsed from the row
+        # comments) — g1/Yu/ZN/PhaseFS never become card inputs. (Substring
+        # checks on the whole card would false-positive on the fixed GAUGEIN
+        # seed comment "# g1(M_Z)", which is an SM seed block, not this param.)
+        names = {n for _, n in _minpar_rows(card)}
+        assert names == {"MS", "MPsi", "yh1", "yh2"}
+        bsm = re.search(
+            r"^Block\s+BSMPARAMSIN\s*\n((?:.*\n)*?)(?=^Block|\Z)",
+            card, re.IGNORECASE | re.MULTILINE,
+        ).group(1)
+        for excluded in ("g1", "Yu", "ZN", "PhaseFS"):
+            assert excluded not in bsm, f"{excluded} leaked into BSMPARAMSIN"
+
+    def test_input_scalar_params_mapping(self, lht):
+        mapping = lht.input_scalar_params(SINGLET_DOUBLET_LIKE_SPEC)
+        assert mapping == {"MS": 1, "MPsi": 2, "yh1": 3, "yh2": 4}
+
+    def test_override_applied_at_declared_index(self, lht):
+        card = lht.build(SINGLET_DOUBLET_LIKE_SPEC, overrides={"MS": 150.0})
+        m = re.search(r"^\s+1\s+(\S+)\s+#\s*MS", card, re.MULTILINE)
+        assert m and abs(float(m.group(1)) - 150.0) < 1e-9
+
+    def test_index_collision_raises(self, lht):
+        bad = {"name": "x", "parameters": [
+            {"name": "P", "les_houches": ["BSMPARAMS", 1]},
+            {"name": "Q", "les_houches": ["BSMPARAMS", 1]},
+        ]}
+        with pytest.raises(ValueError, match="collision"):
+            lht.build(bad)
+
+    def test_zero_input_rows_warns_loudly(self, lht, capsys):
+        """A spec with parameters but no list-form les_houches (the ssm.yaml
+        shape) yields a card with NO MINPAR — build() must warn to stderr so a
+        spheno-backed run of the input-less card is not silent."""
+        ssm_like = {"name": "ssm", "parameters": [
+            {"name": "g1", "real": True},
+            {"name": "Yu", "real": False},
+            {"name": "ZN", "les_houches": "ZNMIX"},  # string form: output block
+        ]}
+        card = lht.build(ssm_like)
+        assert not re.search(r"^Block\s+MINPAR", card, re.IGNORECASE | re.MULTILINE)
+        err = capsys.readouterr().err
+        assert "NO MINPAR" in err and "'ssm'" in err, (
+            f"missing zero-input-rows warning; stderr was: {err!r}"
+        )
+
+    def test_populated_spec_does_not_warn(self, lht, capsys):
+        lht.build(SINGLET_DOUBLET_LIKE_SPEC)
+        assert "NO MINPAR" not in capsys.readouterr().err
 
 
 # ---------------------------------------------------------------------------

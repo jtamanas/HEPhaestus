@@ -146,7 +146,13 @@ def _run_point(
             except HiggsToolsNumericCrash as exc:
                 _emit_blocker(exc.code, exc.mode, exc.message, "")
 
-        hb_allowed = compute_hb_allowed(hb_result.channels if hb_result else [])
+        # No HB result (blocker emitted above, or --mode hs) → hb_allowed is
+        # None ("no verdict"), NOT vacuously True: compute_hb_allowed([]) is
+        # True by AND-semantics, which silently reported failed runs as
+        # allowed (see HIGGSTOOLS_HB_NO_RESULT).
+        hb_allowed = (
+            compute_hb_allowed(hb_result.channels) if hb_result is not None else None
+        )
         delta_chi2 = getattr(args, "delta_chi2", 6.18) or 6.18
         hs_consistent = compute_hs_consistent(
             hs_result.chi2_total if hs_result else 0.0,
