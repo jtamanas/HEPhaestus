@@ -409,3 +409,91 @@ def _mismatch_return(result: dict, fatal: bool, exc_msg: str) -> dict:
     if fatal:
         raise SlhaProvenanceMismatch(exc_msg)
     return result
+
+
+# ---------------------------------------------------------------------------
+# Launch-produced-no-output guard
+# ---------------------------------------------------------------------------
+#
+# ``mg5_aMC --mode=maddm launch.mg5`` can EXIT 0 while writing no results at
+# all. The canonical trigger is an unparseable param-card block (SPheno's
+# DECAY1L — see slha_complete.strip_maddm_indigestible_blocks): the reader
+# crashes INSIDE ``launch -f`` but the enclosing process still exits 0 and
+# stdout still prints ``INFO: Omega h^2 = 1.2000e-01 +- 1.2000e-03`` — that
+# line is MadDM ECHOING the Planck reference constant it loaded before the
+# crash, NOT a computed relic density, and no ``output/run_01/`` is created.
+# An agent that greps stdout for "Omega h^2 = ..." would silently report the
+# Planck fiducial (0.1200) as the model's relic density — a nasty trap because
+# 0.1200 looks exactly like a "landed on the relic band" success.
+#
+# This guard is the loud complement to the DECAY1L strip: it protects the whole
+# class (any launch that produced no output), not just DECAY1L. Call it right
+# after the launch subprocess returns, before parsing stdout.
+
+MADDM_NO_OUTPUT_BLOCKER_CODE = "MADDM_LAUNCH_NO_OUTPUT"
+
+
+class MadDMNoOutputError(RuntimeError):
+    """MadDM ``launch`` exited but wrote no results file.
+
+    Recoverable blocker (code ``MADDM_LAUNCH_NO_OUTPUT``): the expected
+    ``<out_dir>/output/run_*/MadDM_results.txt`` is absent, so any Omega h^2 /
+    sigma printed to stdout is an echoed reference constant, not a computed
+    result. Do NOT parse stdout for observables when this fires.
+    """
+
+    def __init__(self, message: str, context: dict | None = None):
+        super().__init__(message)
+        self.code = MADDM_NO_OUTPUT_BLOCKER_CODE
+        self.mode = "recoverable"
+        self.message = message
+        self.context = context or {}
+
+
+def find_maddm_results(out_dir: str | Path) -> Path | None:
+    """Return the newest ``output/run_*/MadDM_results.txt`` under *out_dir*, or None.
+
+    MadDM writes each launch's observables to
+    ``<out_dir>/output/run_<NN>/MadDM_results.txt``. Returns the most recently
+    modified such file (the just-completed run) or None when none exists.
+    """
+    base = Path(out_dir) / "output"
+    if not base.is_dir():
+        return None
+    hits = sorted(base.glob("run_*/MadDM_results.txt"), key=lambda p: p.stat().st_mtime)
+    return hits[-1] if hits else None
+
+
+def assert_launch_produced_output(
+    out_dir: str | Path,
+    *,
+    returncode: int | None = None,
+    stdout_tail: str = "",
+) -> Path:
+    """Verify a MadDM launch actually wrote a results file; else raise loudly.
+
+    Call immediately after ``mg5_aMC --mode=maddm launch.mg5`` returns. When no
+    ``output/run_*/MadDM_results.txt`` exists under *out_dir*, raises
+    :class:`MadDMNoOutputError` (recoverable ``MADDM_LAUNCH_NO_OUTPUT``) rather
+    than letting a stdout-echoed Planck constant masquerade as a computed
+    result. A returncode of 0 is NOT sufficient evidence of success here — the
+    DECAY1L crash exits 0. Returns the results-file path on success.
+    """
+    results = find_maddm_results(out_dir)
+    if results is not None:
+        return results
+    raise MadDMNoOutputError(
+        "MadDM launch produced no results file: no "
+        f"output/run_*/MadDM_results.txt exists under {out_dir}. The launch "
+        "may have crashed inside `launch -f` while the mg5_aMC process still "
+        "exited 0 (e.g. an unparseable param-card block such as SPheno's "
+        "DECAY1L — strip it with "
+        "slha_complete.strip_maddm_indigestible_blocks). Any 'Omega h^2 = "
+        "1.2000e-01' on stdout is MadDM echoing the Planck reference constant, "
+        "not a computed relic density — do NOT parse it as a result.",
+        context={
+            "out_dir": str(out_dir),
+            "returncode": returncode,
+            "stdout_tail": stdout_tail[-500:] if stdout_tail else "",
+        },
+    )

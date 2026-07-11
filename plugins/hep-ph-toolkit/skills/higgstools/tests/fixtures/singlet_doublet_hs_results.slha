@@ -1,0 +1,25 @@
+Block MASS  # trailing block before the HS results, to exercise the parser boundary
+        25     1.25090000E+02   # hh
+BLOCK HiggsSignalsResults
+    0                 ||2.6.2||               # HiggsSignals version
+    1         ||latestresults||               # experimental data set
+    2                         1               # Chi-squared method ("peak"(1) or "mass"(2)-centered or "both"(3))
+    3                         2               # Parametrization of Higgs mass uncertainty (1:box, 2:gaussian, 3:box+gaussian)
+    4                        34               # Number of signal strength peak observables
+    5                        56               # Number of simplified template cross section (STXS) signal rate observables
+    6                        20               # Number of LHC Run-1 signal rate observables
+    7                         1               # Number of Higgs mass observables
+    8                       111               # Number of observables (total)
+    9               25.02189721               # chi^2 (signal strength) from peak observables
+   10               61.45437205               # chi^2 (signal strength) from STXS observables
+   11               31.94066976               # chi^2 (signal strength) from LHC Run-1 observables
+   12                0.00000000               # chi^2 (Higgs mass) from peak observables
+   13                0.00000000               # chi^2 (Higgs mass) from STXS observables
+   14                0.42060089               # chi^2 (Higgs mass) from LHC Run-1 observables
+   15              118.41693901               # chi^2 (signal strength) (total)
+   16                0.42060089               # chi^2 (Higgs mass) (total)
+   17              118.83753990               # chi^2 (total)
+   18                0.86861414               # Probability for peak observables
+   19                0.05379718               # Probability for LHC-Run1 observables
+   20                0.28702383               # Probability for STXS observables
+   21                0.28820622               # Probability (total chi^2, total number observables)

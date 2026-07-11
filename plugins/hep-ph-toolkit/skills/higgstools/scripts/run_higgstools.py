@@ -142,7 +142,13 @@ def _run_point(
             try:
                 dMh_val = getattr(args, "dMh", None)
                 dMh = _parse_dMh(dMh_val) if dMh_val else None
-                hs_result = run_higgssignals(hs_build, slha_file, dMh=dMh)
+                hs_result = run_higgssignals(
+                    hs_build,
+                    slha_file,
+                    slha_data["n_neutral"],
+                    slha_data["n_charged"],
+                    dMh=dMh,
+                )
             except HiggsToolsNumericCrash as exc:
                 _emit_blocker(exc.code, exc.mode, exc.message, "")
 
@@ -154,10 +160,16 @@ def _run_point(
             compute_hb_allowed(hb_result.channels) if hb_result is not None else None
         )
         delta_chi2 = getattr(args, "delta_chi2", 6.18) or 6.18
-        hs_consistent = compute_hs_consistent(
-            hs_result.chi2_total if hs_result else 0.0,
-            chi2_sm_ref,
-            delta_chi2,
+        # No HS result (blocker emitted above, or --mode hb) → hs_consistent is
+        # None ("no verdict"), NOT vacuously True. compute_hs_consistent(0.0,
+        # chi2_sm_ref, delta) = (0.0 - chi2_sm_ref) < delta is trivially True,
+        # which silently reported a run HS never completed as "consistent" —
+        # the exact silent-no-op this HS-side guard (HIGGSTOOLS_HS_NO_RESULT)
+        # exists to kill, mirroring the HB-side hb_allowed=None fix.
+        hs_consistent = (
+            compute_hs_consistent(hs_result.chi2_total, chi2_sm_ref, delta_chi2)
+            if hs_result is not None
+            else None
         )
 
         return write_outputs(
