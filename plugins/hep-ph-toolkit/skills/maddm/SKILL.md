@@ -150,9 +150,15 @@ use the realpath under `sarah_output/UFO/<sarah_name>/`.
 
 If `<dir>` already exists, MG5 aborts Phase 1 rather than clobbering it,
 so a rerun of the two-phase overlay pattern fails on the second invocation
-unless the caller clears the directory first. Before Phase 1, do
-`shutil.rmtree(out_dir, ignore_errors=True)` (or equivalent). Applies to
-every `generate_maddm_script` caller, not just the split-for-overlay path.
+unless the directory is cleared first. `generate_maddm_script` (fresh=True,
+the default) emits the cleanup as a `!rm -rf <out_dir>` shell-escape line
+*inside* the returned script, immediately before `output <out_dir>` — MG5's
+cmd interpreter runs a `!`-prefixed line as a raw shell command. The
+deletion therefore happens when the script is **run** by `mg5_aMC`, not when
+it is generated; generating a script never touches the filesystem. Applies
+to every `generate_maddm_script` caller, not just the split-for-overlay path
+(the cleanup line lives in the setup half there, since that's the half
+ending in `output`).
 
 ### Frozen-SI DD-rerun staleness — recompute fresh, then gate on the value
 
@@ -168,11 +174,18 @@ gotcha below, which *is* a card problem).
 Two defenses, both live in the `maddm` skill:
 
 1. **Fresh recompute by default (prevention).**
-   `scripts/maddm_run.py::generate_maddm_script` now clears the output dir
-   (`prepare_output_dir(out_dir, fresh=True)`, a `shutil.rmtree`) before
-   emitting the session script, so every run recompiles from the current param
-   card. Pass `fresh=False` only when you deliberately want to reuse an
-   existing dir and accept the staleness risk.
+   `scripts/maddm_run.py::generate_maddm_script` emits a `!rm -rf <out_dir>`
+   shell-escape line into the session script itself, right before
+   `output <out_dir>`, so the output dir is cleared when the script **runs**
+   (via `mg5_aMC`) — not when it is generated. Generating the script is a
+   pure, side-effect-free operation on the filesystem; only executing it
+   deletes anything, and only immediately before the `output` step that needs
+   a clean directory. Every run recompiles from the current param card. Pass
+   `fresh=False` only when you deliberately want to reuse an existing dir and
+   accept the staleness risk — no cleanup line is emitted in that case. The
+   standalone `prepare_output_dir(out_dir, fresh=True)` helper (a plain
+   `shutil.rmtree`) still exists for callers driving their own imperative MG5
+   session instead of handing a generated script to `mg5_aMC`.
 
 2. **Loud staleness guard (detection).**
    `scripts/staleness.py::detect_stale_dd(si_value, previous_si=…,

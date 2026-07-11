@@ -17,9 +17,13 @@ Frozen-SI DD-rerun hazard: MadDM ``direct_detection``-only reruns can serve
 a STALE spin-independent cross-section (bit-identical across genuinely
 different coupling points) because the DD-assembly path does not always
 re-read the param card, and a reused output dir keeps the previously compiled
-matrix elements. ``generate_maddm_script`` therefore clears the output dir by
-default (``fresh=True``) so every run recompiles from the current param card.
-The loud complement is ``staleness.detect_stale_dd`` /
+matrix elements. ``generate_maddm_script`` therefore emits a cleanup line into
+the generated script by default (``fresh=True``) so the output dir is removed
+right before ``output <out_dir>`` runs -- i.e. at RUN time, not at
+script-generation time -- so every run recompiles from the current param
+card. Generating a script is a pure, side-effect-free operation on the
+filesystem; only *executing* the emitted script (via ``mg5_aMC``) deletes
+anything. The loud complement is ``staleness.detect_stale_dd`` /
 ``staleness.MADDM_STALE_DD_RESULT``, which flags a stale sigma_SI if upstream
 still serves one. See ``maddm/SKILL.md`` section 'Frozen-SI DD-rerun staleness'.
 """
@@ -52,6 +56,18 @@ def prepare_output_dir(out_dir: str | Path, fresh: bool = True) -> None:
     caller is responsible for any reuse hazards.
 
     Safe to call whether or not *out_dir* exists.
+
+    NOTE: ``generate_maddm_script`` does NOT call this function. Script
+    *generation* must never touch the filesystem -- a preview/dry-run or a
+    script that is never executed must not delete a live results directory
+    as a side effect. Instead ``generate_maddm_script`` emits the equivalent
+    cleanup as a shell-escape line inside the returned MG5 script, so the
+    deletion happens only when that script is actually run (via
+    ``mg5_aMC``), immediately before ``output <out_dir>``. This function is
+    kept as a standalone utility for callers who drive their own MG5
+    sessions imperatively (e.g. from Python via the MG5 API) rather than by
+    handing a generated script to ``mg5_aMC`` -- such a caller should invoke
+    it right before its own ``output`` step, not at script-build time.
     """
     if not fresh:
         return
@@ -86,14 +102,21 @@ def generate_maddm_script(
     first with ``mg5_aMC --mode=maddm``, overlay the SLHA, then run the
     second with ``mg5_aMC --mode=maddm``.
 
-    Fresh recompute (``fresh``, default True): before returning the script,
-    the target ``out_dir`` is cleared via :func:`prepare_output_dir` so a
-    direct-detection rerun can never reuse stale compiled/cached DD state.
-    This is the primary defense against the frozen-SI DD-rerun hazard (a
-    sigma_SI that stays bit-identical across genuinely different couplings);
-    the loud complement is ``staleness.detect_stale_dd``. Pass ``fresh=False``
-    only when you intentionally want to reuse an existing output directory and
-    accept the staleness risk.
+    Fresh recompute (``fresh``, default True): the returned script contains a
+    shell-escape line (``!rm -rf <out_dir>``) immediately before
+    ``output <out_dir>`` that removes any pre-existing ``out_dir`` when the
+    script is *executed* by ``mg5_aMC``. This is emitted into the script text,
+    not run by this function -- generating a script never touches the
+    filesystem, so a preview, a dry run, or a script that errors out before
+    launch can never delete a live results directory as a side effect. Only
+    running the emitted script (or the setup half, for
+    ``split_for_param_overlay``) deletes anything, and only right before the
+    ``output`` step that needs a clean directory. This is the primary defense
+    against the frozen-SI DD-rerun hazard (a sigma_SI that stays bit-identical
+    across genuinely different couplings); the loud complement is
+    ``staleness.detect_stale_dd``. Pass ``fresh=False`` only when you
+    intentionally want to reuse an existing output directory and accept the
+    staleness risk -- no cleanup line is emitted in that case.
 
     Args:
         ufo_path: Absolute path to the UFO model directory. Must be the
@@ -125,7 +148,8 @@ def generate_maddm_script(
             ``output <out_dir>``; the second is just
             ``launch <out_dir> -f``. The caller is expected to overlay
             ``Cards/param_card.dat`` between the two MG5 invocations.
-        fresh: When True (default) clear ``out_dir`` before returning so the
+        fresh: When True (default) emit a cleanup line into the script that
+            clears ``out_dir`` at RUN time (right before ``output``), so the
             run recompiles from the current param card. See above.
 
     Returns:
@@ -142,11 +166,6 @@ def generate_maddm_script(
             f"expected any of {sorted(_OBSERVABLE_TO_GENERATE)}"
         )
 
-    # Fresh-recompute discipline: clear any prior output dir so MG5's
-    # ``output`` recreates it and MadDM recompiles DD matrix elements from the
-    # current param card. Prevents the frozen-SI DD-rerun staleness.
-    prepare_output_dir(out_dir, fresh=fresh)
-
     candidate_token = (
         dm_candidate.lower() if isinstance(dm_candidate, str) else dm_candidate
     )
@@ -159,6 +178,19 @@ def generate_maddm_script(
     # multiple `generate` calls in sequence.
     for obs in observables:
         setup_lines.append(f"generate {_OBSERVABLE_TO_GENERATE[obs]}")
+
+    # Fresh-recompute discipline: emit a shell-escape line that clears any
+    # prior output dir when the script is RUN (mg5_aMC's cmd interpreter
+    # executes a `!`-prefixed line as a raw shell command), immediately
+    # before `output <out_dir>` recreates it. This is deliberately NOT done
+    # here at generation time -- building script text must be a pure,
+    # side-effect-free operation on the filesystem, since the caller may be
+    # previewing, dry-running, or erroring out before ever handing the
+    # script to mg5_aMC. Only actually running the script deletes anything,
+    # and only right where MG5 is about to need a clean directory. Prevents
+    # the frozen-SI DD-rerun staleness. Omitted entirely when fresh=False.
+    if fresh:
+        setup_lines.append(f"!rm -rf {out_dir}")
     setup_lines.append(f"output {out_dir}")
 
     if split_for_param_overlay:
