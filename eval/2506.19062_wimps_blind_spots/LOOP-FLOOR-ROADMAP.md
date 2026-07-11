@@ -177,6 +177,12 @@ yet, so any σ would be untraceable). Summary:
   `run_eval.wls` exits 3 with the `UNBOUND-MODEL-PARAMETERS` marker → the wrapper
   emits `LOOPTOOLS_EVAL_NO_OUTPUT` cause `unbound_model_parameters`).
 
+**Step-3 design — settled, see [`STEP3-DESIGN.md`](STEP3-DESIGN.md)** (reviewed;
+γ₅ = naive signed off with the refuse-to-lie guard, 4-diagram 1PI-core scope,
+chain-level projection, parallel `run_eval_sd.wls`, three-anchor validation).
+The build order and per-decision rationale live there; the list below is the
+capability checklist it elaborates.
+
 **What step 3 needs** (from `STEP2.md` "What step 3 needs" — the SD eval layer
 that generalises `run_eval.wls` off `TwoHdmAfix`):
 
@@ -194,7 +200,11 @@ that generalises `run_eval.wls` off `TwoHdmAfix`):
 4. **`SumOver` handling.** Handle the internal generation/eigenstate sums
    properly rather than pinning gen-1 (gen-1 pinning was used only for the
    finiteness scan).
-5. **γ₅ scheme sign-off.** naive vs `hv`/`bmhv` (step-(iii-b).1).
+5. **γ₅ scheme sign-off.** Settled → **naive (NDR)**, see `STEP3-DESIGN.md`
+   Decision 1. `/formcalc` now hard-errors on `hv`/`bmhv`/`larin`
+   (`FORMCALC_G5_SCHEME_UNIMPLEMENTED`) since no scheme is forwarded to
+   CalcFeynAmp; the naive == FormCalc-9.10-NDR-default equivalence is recorded in
+   the sidecar caveats (refuse-to-lie guard, R1).
 
 ## (iv) Norms (non-negotiable)
 

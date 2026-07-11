@@ -497,6 +497,94 @@ class TestGamma5Dispatcher:
                 pytest.fail("Should not exit when --gamma5 is provided with chiral amp")
 
 
+# ── γ₅ refuse-to-lie guard (R1) ───────────────────────────────────────────────
+
+def _load_run_formcalc():
+    """Import run_formcalc.py in isolation for direct-function tests."""
+    import importlib.util
+    spec_obj = importlib.util.spec_from_file_location(
+        "run_formcalc_g5guard", str(SCRIPTS_DIR / "run_formcalc.py"),
+    )
+    mod = importlib.util.module_from_spec(spec_obj)
+    spec_obj.loader.exec_module(mod)
+    return mod
+
+
+class TestGamma5RefuseToLie:
+    """R1 / STEP3-DESIGN.md Decision 1 (G1a): unimplemented γ₅ schemes must
+    hard-error, never be silently stamped. run_calcfeynamp.wls forwards NO γ₅
+    option to CalcFeynAmp, so every reduction is FormCalc's native NDR; only
+    ``naive`` is honest. hv/bmhv/larin must be refused loudly.
+    """
+
+    def _run_cli(self, args, tmp_path):
+        env = os.environ.copy()
+        env["XDG_CONFIG_HOME"] = str(tmp_path)
+        env["HOME"] = str(tmp_path)
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / "run_formcalc.py")] + list(args),
+            capture_output=True, text=True, env=env,
+        )
+        return result.returncode, result.stdout, result.stderr
+
+    @pytest.mark.parametrize("scheme", ["hv", "bmhv", "larin"])
+    def test_unimplemented_scheme_hard_errors_cli(self, scheme, tmp_path):
+        """End-to-end: --gamma5 {hv,bmhv,larin} → FORMCALC_G5_SCHEME_UNIMPLEMENTED,
+        nonzero exit, before any Wolfram/FormCalc work — so the flag can never
+        reach the sidecar. Fires ahead of the FORMCALC_PATH_INVALID config gate."""
+        rc, out, err = self._run_cli(
+            [
+                "reduce",
+                "--feynamp", str(EE_MUMU_DIR / "FeynAmpList.m"),
+                "--process", str(EE_MUMU_DIR / "ProcessSpec.json"),
+                "--gamma5", scheme,
+                "--output-dir", str(tmp_path / "out"),
+            ],
+            tmp_path,
+        )
+        assert rc != 0
+        assert "FORMCALC_G5_SCHEME_UNIMPLEMENTED" in err, err
+        # It must refuse *before* the reduction — no green artifacts anywhere.
+        assert '"status": "ok"' not in out and '"status":"ok"' not in out
+
+    @pytest.mark.parametrize("scheme", ["hv", "bmhv", "larin"])
+    def test_guard_function_exits(self, scheme):
+        mod = _load_run_formcalc()
+        with pytest.raises(SystemExit) as e:
+            mod.check_gamma5_implemented(scheme)
+        assert e.value.code == 1
+
+    def test_guard_allows_naive_and_none(self):
+        mod = _load_run_formcalc()
+        # Neither must raise: naive is the honest default, None defers to the
+        # separate FORMCALC_G5_SCHEME_REQUIRED static gate.
+        mod.check_gamma5_implemented("naive")
+        mod.check_gamma5_implemented(None)
+
+    def test_only_naive_is_implemented(self):
+        mod = _load_run_formcalc()
+        assert mod.GAMMA5_IMPLEMENTED == {"naive"}
+
+    def test_sidecar_naive_records_scheme_and_equivalence(self):
+        """Sidecar honesty: for naive the caveats must document that the stamp is
+        FormCalc's NDR default, not an applied scheme choice."""
+        mod = _load_run_formcalc()
+        caveats = mod._build_caveats("dimreg", "naive")
+        assert any(c.startswith("GAMMA5_NDR_FORMCALC_DEFAULT") for c in caveats), caveats
+        note = next(c for c in caveats if c.startswith("GAMMA5_NDR_FORMCALC_DEFAULT"))
+        assert "naive" in note
+        assert "NDR" in note
+        assert "FormCalc" in note
+        # And it names the no-forwarding fact explicitly.
+        assert "no gamma5 scheme option" in note
+
+    def test_reg_and_gamma5_caveats_coexist(self):
+        mod = _load_run_formcalc()
+        caveats = mod._build_caveats("thv", "naive")
+        assert "FORMCALC_REG_UNVALIDATED" in caveats
+        assert any(c.startswith("GAMMA5_NDR_FORMCALC_DEFAULT") for c in caveats)
+
+
 # ── FeynArts version gate ─────────────────────────────────────────────────────
 
 class TestFeynArtsVersionGate:

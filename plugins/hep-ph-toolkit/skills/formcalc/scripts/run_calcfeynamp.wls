@@ -114,7 +114,15 @@ Module[{
      token here does not create Global`FeynAmp at parse time. *)
   nDiags = Length[Cases[amps, x_ /; Head[x] === FeynArts`FeynAmp, {0, Infinity}]];
 
-  (* Reduce *)
+  (* Reduce.
+     NB (γ₅): no γ₅-scheme option is forwarded to CalcFeynAmp. FormCalc 9.10
+     computes with its native anticommuting γ₅ (NDR); it exposes no CalcFeynAmp
+     option selecting a complete HV/BMHV/Larin scheme (only Gamma5Test, a
+     consistency diagnostic, and Gamma5ToEps, an ε-tensor substitution inside
+     closed fermion traces). run_formcalc.py therefore hard-errors on any
+     --gamma5 other than naive (FORMCALC_G5_SCHEME_UNIMPLEMENTED) so the reduction
+     here always genuinely is NDR — matching the sidecar's naive stamp.
+     See STEP3-DESIGN.md Decision 1. *)
   t0 = AbsoluteTime[];
   Check[
     reduced = CalcFeynAmp[amps,
