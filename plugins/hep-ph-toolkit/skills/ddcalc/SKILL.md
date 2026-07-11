@@ -94,7 +94,7 @@ Halo fields (if object): `model`, `v0_km_per_s`, `vesc_km_per_s`,
   "verdict": "excluded" | "allowed" | "marginal",
   "m_dm_gev": 100.0,
   "experiments": {
-    "XENON1T_2018": {"logL": -17.3, "p_value": 3e-8, "excluded_90cl": true},
+    "XENON1T_2018": {"logL": -104.0, "p_value": 7.1e-45, "excluded_90cl": true},
     "LUX_2016": {...},
     "PandaX_2017": {...},
     "PICO_60_2019": {...},
@@ -115,6 +115,16 @@ The result JSON is written to `$STATE_ROOT/runs/ddcalc/<TS>/result.json` and als
 printed to stdout. For a human-readable summary, read `result.json` and render a
 Markdown table from the `experiments` dict (one row per experiment: name, logL,
 p_value, excluded_90cl) inline — no separate `render_report.py` exists.
+
+**`p_value` statistic (fixed 2026-07-11):** `p_value` is a **likelihood ratio to
+background-only**, `p = exp(lnL_signal - lnL_background)` (clamped to `[0, 1]`),
+with `excluded_90cl = (p_value <= 0.1)`. It is *not* DDCalc's own
+`DDCalc_ScaleToPValue` — that function takes a target log-p and returns a
+sigma-scale factor, and is structurally unusable for high-count xenon TPCs
+(XENON1T/LZ/PandaX/LUX): it guards on the background-only absolute
+log-likelihood being near 0, which only holds for near-background-free
+counting experiments (PICO, DarkSide). See
+`scripts/ddcalc_driver.c` (file header) for the full derivation.
 
 ## Blockers table
 
