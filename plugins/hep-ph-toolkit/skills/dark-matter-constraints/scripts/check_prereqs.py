@@ -144,11 +144,28 @@ def _is_analytic_only_branch(model: str, model_cfg: dict) -> tuple[bool, str | N
 
 
 def _dig(obj: object, dotted: str) -> object:
-    """Navigate a dotted path into nested dicts; return None if any level absent."""
+    """Navigate a dotted path into nested dicts; return None if any level absent.
+
+    Special case mirroring ``should_invoke_class.py``'s legacy scalar-cosmology
+    handling: a runner spec may carry ``cosmology`` as a bare string (e.g.
+    ``cosmology: non_standard``) instead of a dict with a ``kind`` sub-key.
+    ``should_invoke_class`` treats that scalar itself as the kind value
+    (``cosmology != "standard_thermal"``); a non-string, non-dict cosmology
+    is "malformed" and treated as standard (``should_invoke_class`` returns
+    False). If dotted-path navigation reaches a *string* value with exactly
+    one remaining segment named ``kind``, treat that string as the resolved
+    ``kind`` — same semantics, so ``check_prereqs`` and ``should_invoke_class``
+    agree on what counts as non-standard cosmology.
+    """
     cur = obj
-    for part in dotted.split("."):
+    parts = dotted.split(".")
+    for i, part in enumerate(parts):
         if isinstance(cur, dict):
             cur = cur.get(part)
+        elif isinstance(cur, str) and part == "kind" and i == len(parts) - 1:
+            # Legacy scalar form (e.g. cosmology: non_standard): the string
+            # itself stands in for `.kind`.
+            return cur
         else:
             return None
     return cur

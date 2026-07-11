@@ -1,0 +1,9 @@
+# Realistic RUNNER spec — legacy SCALAR standard-thermal cosmology form
+# (`cosmology: standard_thermal`, a bare string), mirroring
+# tests/fixtures/class/spec_cosmology_standard.yaml. should_invoke_class.py:31
+# treats this scalar as standard ⇒ /class is NOT invoked at Step 6, so
+# check_prereqs must SKIP the class_path condition for this spec too.
+# SYNTHETIC test fixture.
+dm_candidate: {pdg: 9000003, name: chi, mass_gev: 100.0}
+halo: shm
+cosmology: standard_thermal
