@@ -22,10 +22,13 @@ Design notes (why this and not maddm's simplified-model scan_grid.py):
     `complete_sarah_param_card` + BSMPARAMS gate. `scan_grid.py`/`generate_batch`
     patch `set BLOCK PID` lines into a single-phase template that
     `generate_maddm_script` never emits — it does not fit this model class.
-  * The scan variable can drive DERIVED spectrum params via `--param NAME=EXPR`
-    (EXPR is a math expression in the scan variable). The θ scan needs exactly
-    this: yh1 = cos(θ), yh2 = sin(θ). A "scan one BLOCK:PID linearly" API cannot
-    express it.
+  * By default the scan variable IS fed to spheno as a spectrum override under
+    its own name, so the natural `--scan MS=...` varies MS directly per point.
+    It can ALSO drive DERIVED spectrum params via `--param NAME=EXPR` (EXPR is a
+    math expression in the scan variable and any earlier `--param`). A pure
+    driver that is not itself a spectrum input — the mixing angle θ, with
+    yh1 = cos(θ), yh2 = sin(θ) — is marked `--scan-drives-only` so θ is not fed
+    to spheno. A "scan one BLOCK:PID linearly" API cannot express either shape.
   * `--no-register` on every spectrum run keeps the scan from poisoning the
     global `latest_slha` pointer; each point's SLHA is fed to its own DD run by
     path, never via the convenience cache.
@@ -33,10 +36,20 @@ Design notes (why this and not maddm's simplified-model scan_grid.py):
     at RUN time) is the frozen-SI-staleness discipline; nothing is deleted at
     script-generation time.
 
-Worked example (the blind-spot θ scan shape, MS=150, MPsi=500, y=1):
+Worked example A — direct spectrum-parameter scan (the MS mass scan; MS is a
+real BSMPARAMS input, fed automatically per point):
 
     python3 scan_sarah_dd.py singlet_doublet \\
-        --scan theta=-0.17:-0.135:8 \\
+        --scan MS=20:900:12 \\
+        --param MPsi=500 --param yh1=1 --param yh2=0 \\
+        --dm-candidate chi1 --dm-name Chi1 \\
+        --out-dir /tmp/ms_scan
+
+Worked example B — the blind-spot θ scan (θ is a pure DRIVER, NOT a spectrum
+input, so `--scan-drives-only`; MS=150, MPsi=500, y=1):
+
+    python3 scan_sarah_dd.py singlet_doublet \\
+        --scan theta=-0.17:-0.135:8 --scan-drives-only \\
         --param MS=150 --param MPsi=500 \\
         --param 'yh1=cos(theta)' --param 'yh2=sin(theta)' \\
         --dm-candidate chi1 --dm-name Chi1 \\
@@ -115,8 +128,59 @@ def param_names(param_exprs: list[str]) -> list[str]:
     return names
 
 
-def eval_params(param_exprs: list[str], scan_var: str, value: float) -> dict[str, float]:
+def scan_var_is_referenced(scan_var: str, param_exprs: list[str]) -> bool:
+    """True if any `NAME=EXPR` entry references *scan_var* as a free name.
+
+    Used by the --scan-drives-only parse-time guard: a driver variable that no
+    EXPR references would affect no spectrum input, and every point would run
+    the identical base card with status:ok — the silent-wrong-physics path this
+    driver exists to kill (SPheno's SPHENO_BAD_OVERRIDE guard cannot fire on an
+    empty overrides dict). An unparseable EXPR counts as "no reference" here;
+    the per-point eval reports it loudly as a param_eval failure.
+    """
+    import ast
+    for pe in param_exprs:
+        if "=" not in pe:
+            continue
+        _, expr = pe.split("=", 1)
+        try:
+            tree = ast.parse(expr, mode="eval")
+        except SyntaxError:
+            continue
+        if any(isinstance(n, ast.Name) and n.id == scan_var
+               for n in ast.walk(tree)):
+            return True
+    return False
+
+
+def exit_code_for(results: list[dict]) -> int:
+    """0 if at least one point succeeded, else 1. A fully-failed (or empty)
+    scan must not exit 0 — an agent gating on the exit code alone would read
+    success."""
+    return 0 if any(r.get("status") == "ok" for r in results) else 1
+
+
+def eval_params(param_exprs: list[str], scan_var: str, value: float,
+                feed_scan_var: bool = True) -> dict[str, float]:
     """Evaluate each `NAME=EXPR` at scan_var=value into a spheno --params dict.
+
+    The scan variable itself:
+      * ``feed_scan_var=True`` (default): the scan variable is emitted as a
+        spectrum override keyed by its OWN name, so the natural invocation
+        ``--scan MS=...`` feeds MS to SPheno directly per point. (Before this
+        was fixed the scan variable was bound into the eval namespace but never
+        written to the output dict, so ``--scan MS=...`` silently ran every
+        point at the base card's default MS.) If the scan variable does NOT name
+        a real spectrum input, SPheno's own ``SPHENO_BAD_OVERRIDE`` guard
+        rejects the point loudly — there is no silent-wrong path.
+      * ``feed_scan_var=False``: the scan variable is a pure DRIVER (e.g. the
+        mixing angle ``theta``). It is available inside `--param` EXPRs but is
+        NOT itself fed to SPheno. Selected by ``--scan-drives-only``.
+
+    Ordered chaining: `--param` EXPRs are evaluated in declaration order and each
+    can reference the scan variable AND any EARLIER `--param` output. A forward
+    reference to a name defined by a LATER `--param` raises ``NameError`` loudly
+    (evaluation is strictly ordered, so no cycle is possible).
 
     Raises ValueError on a non-finite result (NaN/inf) — a spectrum input that
     is not a finite number is always a mistake, never physics.
@@ -124,18 +188,22 @@ def eval_params(param_exprs: list[str], scan_var: str, value: float) -> dict[str
     out: dict[str, float] = {}
     ns = dict(_MATH_NS)
     ns[scan_var] = value
+    if feed_scan_var:
+        out[scan_var] = value
     for pe in param_exprs:
         if "=" not in pe:
             raise ValueError(f"--param must be NAME=EXPR, got {pe!r}")
         name, expr = pe.split("=", 1)
+        name = name.strip()
         val = float(eval(expr, {"__builtins__": {}}, ns))
         if not math.isfinite(val):
             raise ValueError(
-                f"--param {name.strip()!r}={expr!r} evaluated to non-finite "
+                f"--param {name!r}={expr!r} evaluated to non-finite "
                 f"{val!r} at {scan_var}={value!r}; spectrum inputs must be "
                 "finite numbers."
             )
-        out[name.strip()] = val
+        out[name] = val
+        ns[name] = val  # ordered chaining: later EXPRs can reference this one
     return out
 
 
@@ -173,7 +241,8 @@ def run_point(args, maddm_run, slha_complete, mg5_bin, ufo_path, dm_pdg,
     # crosses e.g. 0, non-finite result) marks THIS point failed and lets the
     # scan continue — same discipline as the downstream stage failures.
     try:
-        params = eval_params(args.param, scan_var, value)
+        params = eval_params(args.param, scan_var, value,
+                             feed_scan_var=not args.scan_drives_only)
     except Exception as e:
         return {"scan_var": scan_var, "value": value, "tag": tag,
                 "status": "failed", "stage": "param_eval",
@@ -278,7 +347,21 @@ def main() -> None:
                     help="scan axis, e.g. theta=-0.17:-0.135:8")
     ap.add_argument("--param", action="append", default=[], metavar="NAME=EXPR",
                     help="spheno --params entry; EXPR is a math expression in the "
-                         "scan var (repeatable). e.g. --param 'yh1=cos(theta)'")
+                         "scan var AND any EARLIER --param output (ordered "
+                         "chaining; a forward reference raises NameError). "
+                         "Repeatable. e.g. --param 'yh1=cos(theta)'")
+    ap.add_argument("--scan-drives-only", dest="scan_drives_only",
+                    action="store_true",
+                    help="treat the --scan variable as a pure DRIVER: it feeds "
+                         "--param EXPRs but is NOT itself written as a spectrum "
+                         "override. Use for a knob like the mixing angle theta "
+                         "that is not a spectrum input. Requires the scan "
+                         "variable to appear in at least one --param EXPR "
+                         "(refused at parse time otherwise — a driver that "
+                         "drives nothing would scan the identical base card). "
+                         "DEFAULT (flag absent): the scan variable IS fed to "
+                         "spheno under its own name, so `--scan MS=...` varies "
+                         "MS directly per point.")
     ap.add_argument("--out-dir", required=True, help="scratch dir for per-point artifacts")
     ap.add_argument("--dm-candidate", default="chi1",
                     help="MadDM DM candidate token (lowercased; default chi1)")
@@ -296,13 +379,29 @@ def main() -> None:
         names = param_names(args.param)
     except ValueError as e:
         ap.error(str(e))
-    # A --param named like the scan variable would be silently shadowed in the
-    # eval namespace (other EXPRs would still see the SCAN value, not the
-    # override). Refuse up front rather than compute something ambiguous.
+    # A --param named like the scan variable is two sources for one name: the
+    # scan axis already sets it (fed directly by default, or as a driver in the
+    # eval namespace under --scan-drives-only), and a --param NAME=EXPR would
+    # override/shadow it ambiguously. Refuse up front.
     if scan_var in names:
         ap.error(
-            f"--param {scan_var!r} collides with the --scan variable; the scan "
-            "drives that name. Rename the parameter or scan a different variable."
+            f"--param {scan_var!r} collides with the --scan variable: the scan "
+            f"axis already sets {scan_var!r} per point (fed to spheno directly "
+            "unless --scan-drives-only). Rename the --param, or scan a "
+            "different variable."
+        )
+    # F1 guard: under --scan-drives-only the scan variable is NOT fed to
+    # spheno, so if no --param EXPR references it either, it drives NOTHING —
+    # every point would run the identical base card with status:ok, silently.
+    # (SPheno's SPHENO_BAD_OVERRIDE backstop cannot fire on an empty overrides
+    # dict.) Refuse at parse time.
+    if args.scan_drives_only and not scan_var_is_referenced(scan_var, args.param):
+        ap.error(
+            f"--scan-drives-only: scan variable {scan_var!r} does not appear "
+            "in any --param EXPR, so it would drive nothing — every point "
+            "would run the identical base card. Reference it in a --param "
+            f"(e.g. --param 'yh1=cos({scan_var})'), or drop --scan-drives-only "
+            "to feed it to spheno directly."
         )
     Path(args.out_dir).mkdir(parents=True, exist_ok=True)
 
@@ -382,6 +481,13 @@ def main() -> None:
             w.writerows(ok)
         print(f"wrote {out_csv}")
     print(f"wrote {out_json}  ({len(ok)}/{len(results)} ok, {time.time()-t0:.1f}s total)")
+    # F2: a scan where EVERY point failed is a failed scan — exit nonzero so
+    # an agent gating on the exit code cannot read it as success.
+    code = exit_code_for(results)
+    if code != 0:
+        print(f"ERROR: 0/{len(results)} points succeeded; exiting nonzero.",
+              file=sys.stderr)
+        sys.exit(code)
 
 
 if __name__ == "__main__":

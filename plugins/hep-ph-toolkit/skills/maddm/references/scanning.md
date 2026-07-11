@@ -50,31 +50,97 @@ Three ergonomics it bakes in so you don't hand-roll them:
   `ufo` key), never a relative/hyphenated `demo_output/...` value that MG5
   rejects.
 
-### The scan variable can drive derived params
+### How the scan variable reaches the spectrum
 
-`--param NAME=EXPR` lets the scan variable feed *derived* spectrum inputs:
-`EXPR` is a math expression in the scan variable. This is essential for scans
-like the blind-spot θ scan, where one knob sets two Yukawas.
+**By default the scan variable is fed to SPheno as a spectrum override under
+its own name.** So the natural invocation `--scan MS=...` (with no matching
+`--param`) varies `MS` directly, point by point — `MS` is a real BSMPARAMS
+input, so each point's card carries that point's `MS`. If the scan variable
+does *not* name a real spectrum input, SPheno's own `SPHENO_BAD_OVERRIDE` guard
+rejects the point loudly (naming the valid inputs) — there is no silent-wrong
+path where the value is dropped and every point runs the base card's default.
+
+> **History:** an earlier version of this driver bound the scan variable into
+> the `--param` eval namespace but never wrote it to the spectrum overrides, so
+> `--scan MS=...` alone silently ran every point at the base card's default
+> `MS` while still reporting `status: ok`. That is fixed — the scan variable is
+> now fed directly. See test `test_natural_scan_var_reaches_spheno_and_varies`.
+
+**`--param NAME=EXPR` — derived params.** `EXPR` is a math expression in the
+scan variable *and any earlier `--param` output* (ordered chaining, next
+paragraph). This is how one knob sets several spectrum inputs — the blind-spot
+θ scan sets both Yukawas from θ.
+
+**`--scan-drives-only` — pure-driver variables.** A scan variable that is *not*
+itself a spectrum input (e.g. the mixing angle θ, which only appears inside
+`yh1=cos(θ)`, `yh2=sin(θ)`) must be marked `--scan-drives-only`, which keeps it
+out of the spectrum overrides while leaving it available to `--param` EXPRs.
+Without the flag, feeding θ to SPheno trips the loud `SPHENO_BAD_OVERRIDE`
+guard (θ has no BSMPARAMS index) — again, loud, never silent. And under the
+flag, the driver refuses at argument-parse time if the scan variable does not
+appear in at least one `--param` EXPR — a driver that drives nothing would
+otherwise run every point on the identical base card with `status: ok`
+(SPheno's backstop cannot fire on an empty overrides set), so it is rejected
+before any point runs.
+
+**Migration — the old alias workaround is dead (loudly).** Before the scan
+variable was fed directly, the documented workaround was to scan under an alias
+and re-declare the real parameter: `--scan msval=20:900:12 --param MS=msval`.
+That pattern now DOUBLE-feeds — `msval` itself is also sent as an override, is
+not a placeable spectrum input, and every point fails with
+`SPHENO_BAD_OVERRIDE` ("msval ... no les_houches index"). If you see that
+message from an old script, use one of the two current forms:
+
+* scanning a real spectrum parameter → the natural form, `--scan MS=20:900:12`
+  (no alias, no `--param MS=...`);
+* scanning a pure driver → `--scan theta=... --scan-drives-only` plus the
+  `--param` EXPRs that consume it.
+
+**Ordered chaining (a limitation, now lifted).** `--param` EXPRs are evaluated
+in declaration order; each EXPR can reference the scan variable and any
+*earlier* `--param` output. A forward reference to a name defined by a *later*
+`--param` raises `NameError` loudly (evaluation is strictly ordered, so no cycle
+is possible). Example: `--param a=MS*2 --param b=a+1` gives `b = 2*MS + 1`.
 
 Namespace available to `EXPR`: the Python `math` module (`cos`, `sin`, `sqrt`,
-`exp`, `log`, `pi`, ...) plus the scan variable — EXCEPT `nan`, `inf`, and the
-collision-prone short names `e`, `gamma`, `tau`, which are removed so a typo'd
-bare name raises `NameError` loudly instead of silently resolving to a math
-constant. A non-finite EXPR result (NaN/inf), or any per-value EXPR error,
-marks that POINT failed (`stage: "param_eval"` in `scan_results.json`) and the
-scan continues — the same discipline as the downstream stage failures. A
-`--param` whose NAME equals the scan variable is refused at argument-parse
-time (it would be silently shadowed).
+`exp`, `log`, `pi`, ...) plus the scan variable and earlier `--param` outputs —
+EXCEPT `nan`, `inf`, and the collision-prone short names `e`, `gamma`, `tau`,
+which are removed so a typo'd bare name raises `NameError` loudly instead of
+silently resolving to a math constant. A non-finite EXPR result (NaN/inf), or
+any per-value EXPR error, marks that POINT failed (`stage: "param_eval"` in
+`scan_results.json`) and the scan continues — the same discipline as the
+downstream stage failures. A `--param` whose NAME equals the scan variable is
+refused at argument-parse time (the scan axis already sets that name).
 
-### Worked example — the blind-spot θ scan
+### Worked example A — a direct spectrum-parameter scan (MS mass scan)
 
-Fixed MS=150, MPsi=500, y=1; scan the mixing angle θ with yh1=cos θ,
-yh2=sin θ (2506.19062 Eq. 6). σ_SI(p) dips ~9 orders at θ ≈ −0.152:
+Scan the singlet mass `MS` directly (a real BSMPARAMS input) at fixed
+MPsi=500, single-Yukawa limit yh1=1, yh2=0 (θ=0) — the "bulk" branch shape of
+2506.19062 Fig. 1. `MS` is fed automatically; no `--param MS=...` is needed (in
+fact one would be refused as colliding with the scan axis):
 
 ```bash
 python3 plugins/hep-ph-toolkit/skills/maddm/scripts/scan_sarah_dd.py \
     singlet_doublet \
-    --scan theta=-0.17:-0.135:8 \
+    --scan MS=20:900:12 \
+    --param MPsi=500 --param yh1=1 --param yh2=0 \
+    --dm-candidate chi1 --dm-name Chi1 \
+    --out-dir ./ms_scan
+```
+
+Each point's `m_dm_gev` (the χ1 mass) tracks the scanned `MS`, so σ_SI(p) traces
+the bulk curve rising with mass — the points that sit above the LZ exclusion.
+
+### Worked example B — the blind-spot θ scan (driver variable)
+
+Fixed MS=150, MPsi=500, y=1; scan the mixing angle θ with yh1=cos θ,
+yh2=sin θ (2506.19062 Eq. 6). θ is a pure driver (not a spectrum input), so
+`--scan-drives-only`. σ_SI(p) dips ~9 orders at θ ≈ −0.152:
+
+```bash
+python3 plugins/hep-ph-toolkit/skills/maddm/scripts/scan_sarah_dd.py \
+    singlet_doublet \
+    --scan theta=-0.17:-0.135:8 --scan-drives-only \
     --param MS=150 --param MPsi=500 \
     --param 'yh1=cos(theta)' --param 'yh2=sin(theta)' \
     --dm-candidate chi1 --dm-name Chi1 \
@@ -265,15 +331,34 @@ with open("scan_results.csv", "w", newline="") as f:
 
 ## Comparing Against Experimental Limits
 
-### Loading limit data
+### No exclusion CSV ships — two ways to get a limit curve
 
-Use `scripts/limits.py`:
+**`assets/limit_data/` is empty by design** — it ships only a `README.md`
+pointing at the public data releases; no `LZ_SI.csv` (or any other curve) is
+bundled. So `load_limit("LZ", "SI", data_dir="assets/limit_data/")` raises a
+missing-file error out of the box. You have two options:
+
+1. **Preferred — drive `/ddcalc`'s registered `LZ_2022` likelihood** (real
+   compiled DDCalc data, not a digitization). To draw an LZ 90%-CL σ_SI(m)
+   curve, bisect `sigma_si_proton_cm2` against `/ddcalc`'s own `p_value` output
+   (crossing 0.1) on a mass grid — this is the same registered likelihood
+   `/ddcalc` dispatches to for every DD verdict in this toolkit. See
+   `ddcalc/SKILL.md`'s experiment registry and `run_ddcalc.py run`. (This is how
+   the Fig. 1 reproduction built its LZ curve.)
+2. **Digitized CSV** — download a curve from the public sources in
+   `assets/limit_data/README.md`, drop it in a directory as `LZ_SI.csv`
+   (columns `mass_GeV, limit_value`, no header), and point `load_limit` at that
+   directory. Only then does the snippet below work.
+
+### Loading a (user-provided) digitized limit CSV
+
+Use `scripts/limits.py` — this requires you to have placed a CSV per option 2:
 
 ```python
 from scripts.limits import load_limit, is_excluded, overlay_on_limit
 
-# Load the LZ SI limit
-lz_limit = load_limit("LZ", "SI", data_dir="assets/limit_data/")
+# Load the LZ SI limit (from a CSV you downloaded and placed yourself)
+lz_limit = load_limit("LZ", "SI", data_dir="path/to/your/limit_csvs/")
 ```
 
 Limit files are CSV with columns: `mass_GeV, limit_value`. See `assets/limit_data/README.md` for where to obtain them.
