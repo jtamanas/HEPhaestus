@@ -338,17 +338,27 @@ pointing at the public data releases; no `LZ_SI.csv` (or any other curve) is
 bundled. So `load_limit("LZ", "SI", data_dir="assets/limit_data/")` raises a
 missing-file error out of the box. You have two options:
 
-1. **Preferred — drive `/ddcalc`'s registered `LZ_2022` likelihood** (real
-   compiled DDCalc data, not a digitization). To draw an LZ 90%-CL σ_SI(m)
-   curve, bisect `sigma_si_proton_cm2` against `/ddcalc`'s own `p_value` output
-   (crossing 0.1) on a mass grid — this is the same registered likelihood
-   `/ddcalc` dispatches to for every DD verdict in this toolkit. See
-   `ddcalc/SKILL.md`'s experiment registry and `run_ddcalc.py run`. (This is how
-   the Fig. 1 reproduction built its LZ curve.)
-2. **Digitized CSV** — download a curve from the public sources in
-   `assets/limit_data/README.md`, drop it in a directory as `LZ_SI.csv`
-   (columns `mass_GeV, limit_value`, no header), and point `load_limit` at that
-   directory. Only then does the snippet below work.
+1. **Drive `/ddcalc`'s registered `LZ_projected` likelihood** (real compiled
+   DDCalc data, not a digitization) — **with two hard caveats**:
+   - **It is PROJECTED sensitivity, not the observed limit.** DDCalc 2.2.0's
+     native LZ analysis is the LZ *projected design sensitivity* (zero observed
+     events, ~5.6e6 kg-day design exposure; min ~1.4e-48 cm²), NOT the observed
+     LZ WS2022 first-results limit (arXiv:2207.03764, min ~9.2e-48 cm²) — the
+     curve you get is ~6–10× more stringent than what LZ actually published.
+     Never present it as "the LZ-2022 limit"; label it projected. (The observed
+     WS2022 analysis is the deferred `LZ_WS2024` overlay, v1.1.)
+   - **Bisect on `delta_chi2 = 2.706`, never on `p_value`.** To draw the 90%-CL
+     σ_SI(m) curve, bracket `sigma_si_proton_cm2` on the experiment's
+     `delta_chi2` output crossing 2.706 (the χ²₁ 90% quantile) on a mass grid.
+     `p_value` underflows to a hard 0.0 for large signals, so bisecting p=0.1
+     can converge on a numerical-underflow contour (the historical Fig. 1
+     LZ-curve defect). See `ddcalc/SKILL.md` "Exclusion statistic" and
+     `run_ddcalc.py run`.
+2. **Digitized CSV of the *observed* limit** — download a curve from the public
+   sources in `assets/limit_data/README.md`, drop it in a directory as
+   `LZ_SI.csv` (columns `mass_GeV, limit_value`, no header), and point
+   `load_limit` at that directory. Only then does the snippet below work. This
+   is the route to compare against the *published observed* LZ result.
 
 ### Loading a (user-provided) digitized limit CSV
 
