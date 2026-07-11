@@ -1,0 +1,7 @@
+# Realistic RUNNER spec — explicit standard-thermal cosmology (object form),
+# mirroring tests/fixtures/class/spec_cosmology_standard_object.yaml. No
+# loop-only candidate. Conditional config keys (class_path / looptools_path)
+# must be SKIPPED for this spec. SYNTHETIC test fixture.
+dm_candidate: {pdg: 5000005, name: chi}
+halo: shm
+cosmology: {kind: standard_thermal}

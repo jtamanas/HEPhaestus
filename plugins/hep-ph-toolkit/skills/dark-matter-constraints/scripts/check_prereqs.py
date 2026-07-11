@@ -38,6 +38,37 @@ def _load_json(path: str | Path) -> dict:
         return json.load(fh)
 
 
+def _load_config_file(path: str | Path) -> dict:
+    """Load a config file, accepting either JSON or YAML.
+
+    The SKILL.md documents configs under a "## Config (YAML)" heading, and the
+    live playtest fixtures ship `.yaml` configs, yet historically this helper
+    only accepted JSON. We try JSON first (a strict superset-friendly fast path
+    that also keeps existing `.json` fixtures byte-identical) and fall back to
+    `yaml.safe_load` on a JSON parse error.
+
+    Raises:
+        OSError            — file unreadable (propagated to the exit-2 path).
+        json.JSONDecodeError — content is neither valid JSON nor a YAML mapping
+                               (normalised so the caller's existing except clause
+                               reports PREREQ_HELPER_INTERNAL / exit 2).
+    """
+    with open(path) as fh:
+        text = fh.read()
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        if yaml is None:  # pragma: no cover — pyyaml is part of the dev env
+            raise
+        try:
+            data = yaml.safe_load(text)
+        except yaml.YAMLError as exc:
+            raise json.JSONDecodeError(f"config is neither JSON nor YAML: {exc}", text, 0)
+    if not isinstance(data, dict):
+        raise json.JSONDecodeError("config did not parse to a mapping/object", text, 0)
+    return data
+
+
 def _blocker(code: str, message: str, fixit_skill: str | None = None) -> dict:
     return {"code": code, "message": message, "fixit_skill": fixit_skill}
 
@@ -112,6 +143,79 @@ def _is_analytic_only_branch(model: str, model_cfg: dict) -> tuple[bool, str | N
     return (multi and spectrum == "analytic"), str(spec_yaml)
 
 
+def _dig(obj: object, dotted: str) -> object:
+    """Navigate a dotted path into nested dicts; return None if any level absent."""
+    cur = obj
+    for part in dotted.split("."):
+        if isinstance(cur, dict):
+            cur = cur.get(part)
+        else:
+            return None
+    return cur
+
+
+def _spec_field_values(spec: dict, field: str) -> list:
+    """Resolve a manifest condition ``spec_field`` to a list of concrete values.
+
+    Supports exactly the two shapes the manifest uses:
+      * a dotted path — ``cosmology.kind`` → the value at that path
+      * a single ``[?]`` wildcard — ``dm_phenomenology.candidates[?].mediator_regime``
+        → the sub-value for *every* element of the list at the dotted prefix.
+
+    An absent field (or absent container) resolves to an empty list, so a
+    conditional key guarded by it is treated as inactive (not required). This
+    is the DOCUMENTED default (see the manifest condition ``_doc`` notes):
+      * ``cosmology.kind`` — runner specs carry ``cosmology`` at TOP LEVEL
+        (SKILL.md Step 6 / design §4.1 / should_invoke_class). An absent
+        ``cosmology`` field means standard_thermal, so class_path is skipped —
+        mirroring ``should_invoke_class`` returning False for absent cosmology.
+      * ``dm_phenomenology.candidates[?].mediator_regime`` — v2 ModelSpecs nest
+        candidates under ``dm_phenomenology`` (never top-level). A spec with no
+        candidates block has no loop-only mediator, so looptools_path is skipped.
+    """
+    if "[?]" in field:
+        before, after = field.split("[?]", 1)
+        before = before.rstrip(".")
+        container = _dig(spec, before) if before else spec
+        if not isinstance(container, list):
+            return []
+        rest = after.lstrip(".")
+        out = []
+        for item in container:
+            val = _dig(item, rest) if rest else item
+            if val is not None:
+                out.append(val)
+        return out
+    val = _dig(spec, field)
+    return [] if val is None else [val]
+
+
+def _condition_active(spec: dict, condition: dict) -> bool:
+    """Decide whether a conditional config key must be enforced for ``spec``.
+
+    Implements only the operators the manifest declares (``in`` / ``not_in``):
+      * ``{"spec_field": F, "in": [...]}``     → active if any value ∈ list
+      * ``{"spec_field": F, "not_in": [...]}`` → active if any value ∉ list
+
+    An absent field yields no values, so both operators evaluate to inactive —
+    the key is skipped. Malformed/opaque conditions fall through to "active"
+    (enforced) rather than silently dropping a real gate.
+    """
+    if not isinstance(condition, dict):
+        return True
+    field = condition.get("spec_field")
+    if not field:
+        return True
+    values = _spec_field_values(spec, field)
+    if "in" in condition:
+        allowed = condition["in"]
+        return any(v in allowed for v in values)
+    if "not_in" in condition:
+        excluded = condition["not_in"]
+        return any(v not in excluded for v in values)
+    return True
+
+
 def check_prereqs(
     config_path: str | Path,
     model: str,
@@ -132,9 +236,9 @@ def check_prereqs(
         err = {"error": str(exc), "code": "PREREQ_HELPER_INTERNAL"}
         return err, 2
 
-    # --- load config ---
+    # --- load config (JSON, or YAML fallback) ---
     try:
-        config = _load_json(config_path)
+        config = _load_config_file(config_path)
     except (OSError, json.JSONDecodeError) as exc:
         err = {"error": str(exc), "code": "PREREQ_HELPER_INTERNAL"}
         return err, 2
@@ -142,6 +246,16 @@ def check_prereqs(
     config_keys = manifest.get("config_keys", [])
     blockers: list[dict] = []
     checked: list[dict] = []
+
+    # Resolve the model's ModelSpec once, up front, so config-key `condition`
+    # fields can be evaluated against it. Absent/unreadable spec → {} → every
+    # conditional key is treated as inactive (skipped), which is the safe
+    # non-blocking behaviour for the two recoverable conditional keys
+    # (class_path / looptools_path).
+    models_section = config.get("models", {})
+    model_cfg = models_section.get(model, {}) if isinstance(models_section, dict) else {}
+    _spec_yaml = model_cfg.get("spec_yaml")
+    model_spec = _load_model_spec(_spec_yaml) if _spec_yaml else {}
 
     # Map well-known config key → blocker code + fixit skill
     _KEY_META = {
@@ -152,6 +266,12 @@ def check_prereqs(
 
     for entry in config_keys:
         key = entry.get("key", "")
+        # Conditional keys (class_path / looptools_path) carry a `condition`.
+        # Skip the key entirely when its condition does not match this spec —
+        # a standard-thermal, non-loop spec must NOT require these paths.
+        condition = entry.get("condition")
+        if condition is not None and not _condition_active(model_spec, condition):
+            continue
         # Strip "config." prefix to get the field name in config dict
         field = key.removeprefix("config.")
         value = config.get(field)
@@ -184,8 +304,7 @@ def check_prereqs(
             ))
 
     # --- UFO path check (model-specific, but always required) ---
-    models_section = config.get("models", {})
-    model_cfg = models_section.get(model, {}) if isinstance(models_section, dict) else {}
+    # (models_section / model_cfg resolved up front for condition evaluation.)
 
     # Detect analytic-only branch (multi_component + backends.spectrum=analytic).
     # When it fires we demote UFO_MISSING from fatal to a recoverable

@@ -1,0 +1,31 @@
+# Realistic v2-axis ModelSpec with a loop-only-DD candidate. Mirrors the REAL
+# nesting used by every actual ModelSpec — candidates live under
+# `dm_phenomenology.candidates`, never at top level (ground truth:
+# _shared/router_specs/dark_su3.yaml, model-router tests/fixtures/specs/*.yaml).
+# This genuinely triggers the looptools_path condition
+# (dm_phenomenology.candidates[?].mediator_regime in the loop-only set), so
+# check_prereqs MUST enforce config.looptools_path. SYNTHETIC test fixture
+# (2HDM+a-like: CP-odd mediator, tree SI ~ 0, DD is loop-only).
+_schema_version: 2
+name: toy-loop-dd
+display: "Toy 2HDM+a-like loop-only-DD model (synthetic)"
+version: "1.0"
+authoring_status: active
+
+fermions: []
+
+dm_phenomenology:
+  candidates:
+    - name: chi
+      field_type: "Majorana fermion"
+      mediator_regime: "loop-only-CP-forbidden"
+      uv_provenance: "tree-level portal"
+      mass_parameter: m_chi
+      cp: null
+      mediator_field: a
+      stabilisation_mechanism: Z2
+      blind_spot_reference: null
+      multi_component_partner: null
+      coupled: null
+  stabilizing_symmetry: Z2
+  coannihilation: false

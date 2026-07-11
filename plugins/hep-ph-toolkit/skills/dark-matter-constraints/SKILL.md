@@ -97,7 +97,7 @@ spectrum can still go through MadDM per-component).
 
 **Branch — loop-only DD (CP-forbidden / anomaly-induced mediator).**
 When `direct` is requested AND the model spec's
-`candidates[?].mediator_regime ∈ {loop-only-CP-forbidden, loop-only-anomaly-induced}`,
+`dm_phenomenology.candidates[?].mediator_regime ∈ {loop-only-CP-forbidden, loop-only-anomaly-induced}`,
 tree-level DD is ≈0 and physically meaningless (e.g. 2HDM+a: the mediator `a` is
 CP-odd, so `σ_SI_tree ≈ 0`). For **direct detection only**, route DD through the
 loop chain instead of `/maddm generate direct_detection`:
@@ -492,7 +492,7 @@ the tool was run for that observable. If a FLAG row is present, the word
 |------|------|---------|-----------------|
 | `MADDM_MISSING` | fatal | MadDM not found in MG5 or `config.maddm_path` absent (default pipeline only — not raised on the analytic-only branch) | Run `_shared/installs/maddm` |
 | `ANALYTIC_BACKEND_PATH` | recoverable (informational) | Step 2 analytic-only branch fired: `multi_component: true` AND `backends.spectrum == "analytic"`. MadDM skipped; relic numbers consumed directly from `<spheno_run>/diagnostics.json` + `summary.json` (`mixing.MHHMIX`). Steps 3-5 also skipped. | None — informational. Verify analytic-module assumptions in caveats. |
-| `LOOP_DD_PATH` | recoverable (informational) | Step 2 loop-only DD sub-branch fired: `direct` requested AND `candidates[?].mediator_regime ∈ {loop-only-CP-forbidden, loop-only-anomaly-induced}`. DD routed through `/feynarts → /formcalc → /looptools eval → /ddcalc` instead of tree-level MadDM (tree SI ≈ 0). | None — informational. σ_SI is real + EW-anchor-validated (~40% vs the independent EW box+triangle anchor) at the 2HDM+a benchmark, 2026-06-28 (single point; box not folded into f_N); the Tier-3 smoke is gated off by default but green on a tooled box; relic/indirect still run via MadDM. |
+| `LOOP_DD_PATH` | recoverable (informational) | Step 2 loop-only DD sub-branch fired: `direct` requested AND `dm_phenomenology.candidates[?].mediator_regime ∈ {loop-only-CP-forbidden, loop-only-anomaly-induced}`. DD routed through `/feynarts → /formcalc → /looptools eval → /ddcalc` instead of tree-level MadDM (tree SI ≈ 0). | None — informational. σ_SI is real + EW-anchor-validated (~40% vs the independent EW box+triangle anchor) at the 2HDM+a benchmark, 2026-06-28 (single point; box not folded into f_N); the Tier-3 smoke is gated off by default but green on a tooled box; relic/indirect still run via MadDM. |
 | `UFO_MISSING` | fatal | `config.models[<model>].ufo_path` absent | Run `/sarah-build` |
 | `SLHA_MISSING` | fatal | `/maddm` runtime fails with a spectrum-related error and `latest_slha` is absent | Run `/spheno-build` |
 | `MICROMEGAS_MISSING` | recoverable | micrOMEGAs not installed; cross-check triggered but skipped | Run `_shared/installs/micromegas`; cross-check results unavailable |
@@ -536,7 +536,7 @@ This skill writes no config keys — it is a router. It reads:
 | `config.maddm_path` | `_shared/installs/maddm` |
 | `config.drake_path` | `_shared/installs/drake` |
 | `config.class_path` | `_shared/installs/class` (Step 6; only read when `cosmology.kind != 'standard_thermal'`) |
-| `config.looptools_path` | `_shared/installs/looptools` (Step 2 loop-only DD sub-branch; only read when `candidates[?].mediator_regime ∈ {loop-only-CP-forbidden, loop-only-anomaly-induced}`) |
+| `config.looptools_path` | `_shared/installs/looptools` (Step 2 loop-only DD sub-branch; only read when `dm_phenomenology.candidates[?].mediator_regime ∈ {loop-only-CP-forbidden, loop-only-anomaly-induced}`) |
 
 ---
 

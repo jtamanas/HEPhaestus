@@ -1,0 +1,27 @@
+# Realistic v2-axis ModelSpec with NESTED candidates whose mediator_regime is
+# NOT loop-only (off-resonance). Mirrors _shared/router_specs/dark_su3.yaml.
+# The looptools_path condition must evaluate the nested candidates and come
+# back INACTIVE — key skipped. SYNTHETIC test fixture.
+_schema_version: 2
+name: toy-offres
+display: "Toy off-resonance model (synthetic)"
+version: "1.0"
+authoring_status: active
+
+fermions: []
+
+dm_phenomenology:
+  candidates:
+    - name: V
+      field_type: "vector"
+      mediator_regime: "off-resonance"
+      uv_provenance: "analytic-only"
+      mass_parameter: m_V
+      cp: even
+      mediator_field: null
+      stabilisation_mechanism: gauge-residual
+      blind_spot_reference: null
+      multi_component_partner: null
+      coupled: false
+  stabilizing_symmetry: gauge-residual
+  coannihilation: false

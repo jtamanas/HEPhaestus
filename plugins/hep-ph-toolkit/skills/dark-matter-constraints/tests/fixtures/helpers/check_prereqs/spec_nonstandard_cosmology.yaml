@@ -1,0 +1,14 @@
+# Realistic RUNNER spec — non-standard cosmology. `cosmology` genuinely lives
+# at TOP LEVEL in runner specs (SKILL.md Step 6 / should_invoke_class design
+# §4.1); this fixture mirrors the real class-fixture shape at
+# tests/fixtures/class/spec_cosmology_non_standard.yaml. This genuinely
+# triggers the class_path condition (cosmology.kind not_in [standard_thermal]),
+# so check_prereqs MUST enforce config.class_path. SYNTHETIC test fixture.
+dm_candidate: {pdg: 9000001, name: chi, mass_gev: 100.0}
+halo: shm
+cosmology:
+  kind: non_standard
+  class_preset: custom
+  class_config: ./fake_class_config.ini
+  bsm_extension: ./fake_bsm.yaml
+  invoke: [background]

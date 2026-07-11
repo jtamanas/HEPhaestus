@@ -1,0 +1,12 @@
+{
+  "_doc": "All unconditional tool paths present; NO class_path/looptools_path. Whether status is ok depends ENTIRELY on condition evaluation for the model's spec_yaml (__SPEC_YAML__). SYNTHETIC test fixture.",
+  "maddm_path": "__TMPDIR__/fake_maddm",
+  "micromegas_path": "__TMPDIR__/fake_micromegas",
+  "drake_path": "__TMPDIR__/fake_drake",
+  "models": {
+    "toyDM": {
+      "ufo_path": "__TMPDIR__/toyDM_UFO",
+      "spec_yaml": "__SPEC_YAML__"
+    }
+  }
+}
