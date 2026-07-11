@@ -145,11 +145,25 @@ def _parse_coupling_block(
                 except (ValueError, IndexError):
                     continue
             else:
-                # Try PDG-triplet format: coupling_val nPDG PDG1 PDG2 [PDG3 ...]
+                # Try PDG-triplet format. Two SPheno row shapes occur:
+                #   Bosons:   <coupling> <ncomb> PDG1 PDG2 [...]
+                #   Fermions: <scalar> <pseudoscalar> <ncomb> PDG1 PDG2 [...]
+                # The fermion row carries TWO leading coupling values (scalar +
+                # pseudoscalar) before the integer ``ncomb``. Distinguish by
+                # whether parts[1] parses as an integer (ncomb → boson shape)
+                # or a float (pseudoscalar coupling → fermion shape). We key
+                # named couplings off the scalar (parts[0]) value.
                 try:
                     coupling_val = float(parts[0])
-                    n_pdg = int(parts[1])
-                    pdg_codes = [int(p) for p in parts[2:2 + n_pdg]]
+                    try:
+                        n_pdg = int(parts[1])
+                        pdg_start = 2
+                    except ValueError:
+                        # Fermion 2-value row: parts[1] is the pseudoscalar
+                        # coupling, parts[2] is ncomb.
+                        n_pdg = int(parts[2])
+                        pdg_start = 3
+                    pdg_codes = [int(p) for p in parts[pdg_start:pdg_start + n_pdg]]
                 except (ValueError, IndexError):
                     continue
 
@@ -317,9 +331,20 @@ def parse_slha(
 
     widths = _parse_decay_blocks(text)
 
-    # Try new-style coupling blocks first
-    boson_rows = _parse_coupling_block(text, "HiggsBoundsInputHiggsCouplingsBosons")
-    fermion_rows = _parse_coupling_block(text, "HiggsBoundsInputHiggsCouplingsFermions")
+    # Try new-style coupling blocks first. HiggsBounds5 canonical block names
+    # are ``HiggsBoundsInputHiggsCouplings{Bosons,Fermions}``, but this SARAH/
+    # SPheno build (WriteHiggsBoundsBlocks via SPhenoInput 520/76) emits the
+    # shorter ``HiggsCouplings{Bosons,Fermions}`` names (plus EFFHIGGSCOUPLINGS).
+    # Accept either spelling — the binary does not contain the HiggsBoundsInput*
+    # strings at all, so aliasing is the correct fix (no rewrite needed).
+    boson_rows = (
+        _parse_coupling_block(text, "HiggsBoundsInputHiggsCouplingsBosons")
+        or _parse_coupling_block(text, "HiggsCouplingsBosons")
+    )
+    fermion_rows = (
+        _parse_coupling_block(text, "HiggsBoundsInputHiggsCouplingsFermions")
+        or _parse_coupling_block(text, "HiggsCouplingsFermions")
+    )
 
     used_legacy = False
 

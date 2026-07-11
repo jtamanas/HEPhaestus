@@ -96,6 +96,14 @@ def main() -> None:
         "--skip-compile", action="store_true",
         help="Skip the compile stage (binary must already exist)."
     )
+    parser.add_argument(
+        "--backend", choices=["spheno", "analytic"], default=None,
+        help="Override the spectrum backend for this run. Without this flag "
+             "the spec's backends.spectrum (or the analytic fallback) decides. "
+             "Use --backend spheno to opt a model into a real SPheno spectrum "
+             "with HiggsBounds coupling blocks (e.g. singlet_doublet, whose "
+             "default stays analytic)."
+    )
     args = parser.parse_args()
 
     config_helpers = _load_module("config_helpers", _CONFIG_HELPERS)
@@ -197,6 +205,29 @@ def main() -> None:
             print("error: pyyaml required", file=sys.stderr)
             sys.exit(1)
 
+        # Loud guard: a user --params override that names a parameter with no
+        # MINPAR/BSMPARAMS les_houches index would be silently dropped from the
+        # card (the value would never reach SPheno). Refuse rather than run a
+        # point that does not mean what the user asked for.
+        if overrides:
+            placeable = lht_mod.input_scalar_params(spec)
+            stray = sorted(set(overrides) - set(placeable))
+            if stray:
+                print(
+                    json.dumps({
+                        "code": "SPHENO_BAD_OVERRIDE",
+                        "mode": "fatal",
+                        "message": (
+                            f"--params override(s) {stray} name parameters with "
+                            "no les_houches:[BSMPARAMS/MINPAR, N] index; they "
+                            "would not reach the LesHouches card. Valid inputs: "
+                            f"{sorted(placeable)}."
+                        ),
+                    }),
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+
         card_text = lht_mod.build(spec, overrides=overrides)
 
         # Append SPHENOINPUT block if available
@@ -214,19 +245,23 @@ def main() -> None:
         if sphenoinput_file.exists():
             block = _extract_sphenoinput_block(sphenoinput_file.read_text())
             if block:
-                # Disable SPheno passes whose SARAH emissions trip on the
-                # rank-1 single-eigenstate Dirac sub-block: the one-loop
-                # decay counterterm path (``16``) evaluates NaN in
-                # ``CT_CouplingcFdFdAh`` and friends, and the low-energy
-                # constraints pass (``57``) and 3-body decays (``13``) hang
-                # indefinitely inside ``CalculateBR`` for the singlet-
-                # doublet shape. The tree-level + 2-body-BR output is all
-                # the Profumo benchmark needs; callers that explicitly
-                # want any of these on can flip them back in a custom
-                # LesHouches.in. See sarah-workarounds.md §16.
+                # Disable ONLY the SPheno passes that genuinely NaN/hang for
+                # the singlet-doublet rank-1 Dirac sub-block: 3-body decays
+                # (``13`` → "negative mass squared", stop) and the low-energy
+                # constraints pass (``57`` → hangs in ``CalculateBR``). These
+                # live in the 3-body / U-factor loop-decay machinery, which is
+                # NOT on the path that produces the effective Higgs-coupling
+                # blocks HiggsTools needs.
+                #
+                # Flags ``11`` (branching ratios) and ``16`` (one-loop decays)
+                # are LEFT ENABLED (SARAH default = 1): the diagnosis proved
+                # 11=1,16=1,13=0,57=0 runs clean and emits
+                # HiggsCouplingsFermions/HiggsCouplingsBosons + EFFHIGGSCOUPLINGS
+                # with FChi1/2/3 = 132.69/523.03/540.33 and zero NaN. The
+                # earlier belief that ``16`` itself NaNs was a red herring —
+                # the crash is reached only down the 13/57 decay path.
+                # See sarah-workarounds.md §16.
                 for flag_num, flag_label in [
-                    ("11", "calculate branching ratios"),
-                    ("16", "One-loop decays"),
                     ("13", "3-Body decays"),
                     ("57", "Calculate low energy"),
                 ]:
@@ -242,6 +277,12 @@ def main() -> None:
         lh_in.write_text(card_text)
 
     # Dispatch to the selected spectrum backend (spheno or analytic).
+    # An explicit --backend overrides the spec's backends.spectrum for this run
+    # only (in-memory), so a model whose spec defaults to analytic — e.g.
+    # singlet_doublet — can opt into a real SPheno spectrum without editing the
+    # spec on disk. Injected into the local spec dict the dispatcher reads.
+    if args.backend and 'spec' in locals() and isinstance(spec, dict):
+        spec.setdefault("backends", {})["spectrum"] = args.backend
     dispatcher_mod = _load_module("dispatcher", _SCRIPT_DIR / "dispatcher.py")
     params_for_dispatch: dict[str, float] = {}
     if 'spec' in locals():

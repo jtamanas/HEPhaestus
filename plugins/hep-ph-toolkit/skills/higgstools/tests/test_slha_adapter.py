@@ -210,3 +210,46 @@ Block HiggsBoundsInputHiggsCouplingsFermions
         h_bc = result["boson_couplings"].get(25, {})
         assert "ww" in h_bc, f"h boson couplings missing 'ww'; got keys: {list(h_bc.keys())}"
         assert abs(h_bc["ww"] - 1.01) < 0.05, f"h ww={h_bc.get('ww')}"
+
+
+# ---------------------------------------------------------------------------
+# A3: real SPheno/SARAH build emits HiggsCouplings{Bosons,Fermions} (no
+# "HiggsBoundsInput" prefix) + two-value fermion rows. The adapter must accept
+# the aliased block names and parse the 2-value fermion format. Fixture is the
+# verbatim SPheno.spc from the diagnosis FIXED_template run (real blocks).
+# ---------------------------------------------------------------------------
+FIXTURE_SD_SPHENO = FIXTURE_DIR / "singlet_doublet_spheno.slha"
+
+
+class TestSingletDoubletSphenoAlias:
+    def test_fixture_uses_unprefixed_block_names(self):
+        text = FIXTURE_SD_SPHENO.read_text()
+        assert "Block HiggsCouplingsBosons" in text
+        assert "Block HiggsCouplingsFermions" in text
+        # The HiggsBounds5 canonical prefix is intentionally ABSENT here — this
+        # is exactly what the alias fix exists to handle.
+        assert "HiggsBoundsInputHiggsCouplings" not in text
+
+    def test_parse_does_not_raise_missing_blocks(self, slha_adapter):
+        text = FIXTURE_SD_SPHENO.read_text()
+        # Must NOT raise SlhaMissingBlocksError (the prereq
+        # HIGGSTOOLS_SLHA_MISSING_BLOCKS gate passes).
+        result = slha_adapter.parse_slha(text)
+        assert result["boson_couplings"], "boson couplings not parsed via alias"
+
+    def test_boson_couplings_extracted(self, slha_adapter):
+        result = slha_adapter.parse_slha(FIXTURE_SD_SPHENO.read_text())
+        h = result["boson_couplings"][25]
+        assert abs(h["ww"] - 1.0) < 1e-6, h.get("ww")
+        assert abs(h["aa"] - 1.0426) < 1e-3, h.get("aa")   # loop-induced gamma gamma
+        assert abs(h["gg"] - 1.0218) < 1e-3, h.get("gg")   # loop-induced g g
+
+    def test_fermion_two_value_rows_parsed(self, slha_adapter):
+        """The 2-value fermion rows (scalar + pseudoscalar before ncomb) must
+        parse — pre-fix they were silently dropped (int(pseudoscalar) fails)."""
+        result = slha_adapter.parse_slha(FIXTURE_SD_SPHENO.read_text())
+        f = result["fermion_couplings"].get(25, {})
+        assert f, "fermion couplings empty — 2-value rows not parsed"
+        # All tree-level fermion couplings are SM-like (1.0) in this benchmark.
+        assert abs(f.get("bb", 0.0) - 1.0) < 1e-6, f
+        assert abs(f.get("tt", 0.0) - 1.0) < 1e-6, f

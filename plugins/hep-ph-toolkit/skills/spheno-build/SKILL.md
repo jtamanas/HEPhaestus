@@ -243,7 +243,11 @@ Spec-level coherence between `outputs` and `backends.spectrum` is enforced by
 > claim below that `singlet_doublet` is "spheno-backed by default" describes the
 > intended end state, not what the dispatcher does today: to actually exercise
 > the SPheno binary you must add `backends: {spectrum: spheno}` (or a top-level
-> `outputs: [ufo, spheno]`) to the spec, or pass the backend explicitly.
+> `outputs: [ufo, spheno]`) to the spec, or pass the backend explicitly with
+> `run_spheno.py <model> --backend spheno` — that flag injects
+> `backends.spectrum` into the in-memory spec for that run only, so a model
+> whose spec defaults to analytic (e.g. `singlet_doublet`) can opt into a real
+> SPheno spectrum without editing the spec on disk.
 
 ### Choosing a backend
 
