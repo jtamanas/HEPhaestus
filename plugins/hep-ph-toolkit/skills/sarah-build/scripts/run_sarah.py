@@ -163,10 +163,19 @@ def _register_model_safe(spec: dict, model_dir: Path, sarah_name: str) -> Path:
                 f"match sarah_name {sarah_name!r}; heal state dir first"
             )
     spec_dest = model_dir / "spec.yaml"
+    # Persist ABSOLUTE paths. A relative model_dir (e.g. a demo replay run with
+    # ``--model-dir ./demo_output/singlet-doublet/``) would otherwise register a
+    # CWD-relative, worktree-scoped pointer that (a) breaks the moment the next
+    # session runs from a different directory and (b) makes MG5's ``import
+    # model`` choke — a hyphenated relative path like
+    # ``demo_output/singlet-doublet/SingletDoublet`` is mis-tokenized as a flag.
+    # abspath (not resolve) keeps the canonical <sarah_name> symlink basename
+    # intact while anchoring it, so both the "relative" and "worktree-relative"
+    # frictions from the θ-scan are closed at the write site.
     config_helpers.register_model(
         _config_slug(spec),
-        spec=str(spec_dest),
-        ufo=str(ufo_link),
+        spec=os.path.abspath(spec_dest),
+        ufo=os.path.abspath(ufo_link),
         sarah_built_at=_utc_now(),
     )
     return ufo_link
