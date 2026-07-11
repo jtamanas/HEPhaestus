@@ -27,8 +27,33 @@
  *   DDCalc_SetSHM(Halo, rho, vrot, v0, vesc)
  *   DDCalc_CalcRates(Detector, WIMP, Halo)
  *   DDCalc_LogLikelihood(Detector)
- *   DDCalc_ScaleToPValue(logL)
  *   DDCalc_SignalSI(Detector)
+ *
+ * p-value / exclusion statistic:
+ *   PVALUE and EXCLUDED90 below are a **likelihood ratio to background-only**,
+ *   NOT DDCalc's own `DDCalc_ScaleToPValue`. See
+ *   /Users/yianni/.claude/jobs/c703354a/tmp/ddcalc-diag/DIAGNOSIS.md for the
+ *   full root-cause writeup. Summary: `ScaleToPValue(D, lnp)` takes a
+ *   *target* log-p and returns a sigma-scale factor; it does not convert a
+ *   log-likelihood into a p-value. The prior code fed it the *current* logL
+ *   as the target, which just asks "what scale reproduces the logL I already
+ *   have at x=1" — the trivial answer x≈1 for every sigma, which is why the
+ *   old driver's reported "p_value" pinned near 1.0 for every XENON1T/LZ
+ *   point. Additionally, `ScaleToPValue` used correctly (target = ln 0.1) is
+ *   structurally unusable for high-count xenon TPCs: it guards on the
+ *   background-only *absolute* log-likelihood being close to 0 (valid only
+ *   for near-background-free counting experiments like PICO/DarkSide), and
+ *   returns a 0/HUGE sentinel for XENON1T/LZ/PandaX/LUX instead of a real
+ *   crossing. The likelihood-ratio statistic below —
+ *     p = exp(lnL_signal - lnL_background), excluded_90 = (p <= 0.1)
+ *   — reduces to DDCalc's native convention in the background-free limit
+ *   (matching ScaleToPValue exactly in the regime where the latter is
+ *   valid); the ratio normalization follows the standard GAMBIT/DarkBit
+ *   generalization. Empirically verified for the SI channel across every
+ *   experiment in the registry. NOTE: the driver's SD channel currently
+ *   produces zero signal in every experiment (pre-existing bug independent
+ *   of this statistic, tracked separately), so the statistic is unverified
+ *   for SD and SD-driven verdicts are not yet meaningful.
  */
 
 #include <stdio.h>
@@ -46,7 +71,6 @@
  *   SetSHM         → _C_DDCalc_ddcalc_setshm
  *   CalcRates      → _C_DDRates_ddcalc_calcrates
  *   LogLikelihood  → _C_DDStats_ddcalc_loglikelihood
- *   ScaleToPValue  → _C_DDStats_ddcalc_scaletopvalue
  * Experiment init functions keep the _C_DDCalc_<exp>_init pattern.
  * (Verified via `nm libDDCalc.a` on 2026-04-25, DDCalc commit 9364c02d.)
  */
@@ -70,8 +94,6 @@ extern void C_DDCalc_ddcalc_setshm(
     const double *v0, const double *vesc);
 extern void C_DDRates_ddcalc_calcrates(const int *D, const int *W, const int *H);
 extern double C_DDStats_ddcalc_loglikelihood(const int *D);
-/* ScaleToPValue: (DetectorIndex, logL) → p-value */
-extern double C_DDStats_ddcalc_scaletopvalue(const int *D, const double *logL);
 
 /* Experiment registry */
 #define MAX_EXP 32
@@ -149,13 +171,46 @@ int main(int argc, char *argv[]) {
         &sig_si_p, &sig_si_n, &sig_sd_p, &sig_sd_n);
     C_DDCalc_ddcalc_setshm(&Halo, &rho0, &vrot, &v0, &vesc);
 
+    /* Second, zero-signal WIMP handle used to evaluate the background-only
+     * log-likelihood per detector (see file-header comment for why this
+     * replaces DDCalc_ScaleToPValue). */
+    int WIMP0 = C_DDWIMP_ddcalc_initwimp();
+    double zero = 0.0;
+    C_DDCalc_ddcalc_setwimp_msigma(&WIMP0, &m_dm, &zero, &zero, &zero, &zero);
+
     /* Loop over experiments */
     for (int i = 0; i < n_exps; i++) {
         int D = experiments[i].init_fn();
+
         C_DDRates_ddcalc_calcrates(&D, &WIMP, &Halo);
-        double logL = C_DDStats_ddcalc_loglikelihood(&D);
-        double pval = C_DDStats_ddcalc_scaletopvalue(&D, &logL);
-        int excl90  = (pval < 0.1) ? 1 : 0;
+        double logL = C_DDStats_ddcalc_loglikelihood(&D);      /* signal + background */
+
+        C_DDRates_ddcalc_calcrates(&D, &WIMP0, &Halo);
+        double logLbg = C_DDStats_ddcalc_loglikelihood(&D);    /* background only */
+
+        /* A non-finite log-likelihood means DDCalc itself failed for this
+         * detector; error out loudly (the Python wrapper converts a nonzero
+         * exit into a DDCALC_DRIVER_FAILED blocker with stderr attached)
+         * rather than silently mapping NaN to p=0, which would bias the
+         * verdict toward "excluded". */
+        if (isnan(logL) || isnan(logLbg)) {
+            fprintf(stderr,
+                "ERROR: non-finite log-likelihood for %s (logL=%f, logL_bg=%f)\n",
+                experiments[i].name, logL, logLbg);
+            return 1;
+        }
+
+        /* Likelihood-ratio p-value, clamped to [0, 1]. exp() underflow of a
+         * very negative exponent yields +0.0, which is the correct limit. */
+        double pval = exp(logL - logLbg);
+        if (isnan(pval)) {  /* e.g. inf - inf in the exponent */
+            fprintf(stderr,
+                "ERROR: non-finite p-value for %s (logL=%f, logL_bg=%f)\n",
+                experiments[i].name, logL, logLbg);
+            return 1;
+        }
+        if (pval > 1.0) pval = 1.0;
+        int excl90 = (pval <= 0.1) ? 1 : 0;
 
         printf("EXPERIMENT: %s\n", experiments[i].name);
         printf("LOGL: %.6e\n", logL);

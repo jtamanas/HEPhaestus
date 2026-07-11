@@ -94,7 +94,8 @@ Halo fields (if object): `model`, `v0_km_per_s`, `vesc_km_per_s`,
   "verdict": "excluded" | "allowed" | "marginal",
   "m_dm_gev": 100.0,
   "experiments": {
-    "XENON1T_2018": {"logL": -17.3, "p_value": 3e-8, "excluded_90cl": true},
+    "XENON1T_2018": {"logL": -4.397586, "p_value": 0.4738713, "excluded_90cl": false},
+    "LZ_2022": {"logL": -104.0234, "p_value": 7.08e-45, "excluded_90cl": true},
     "LUX_2016": {...},
     "PandaX_2017": {...},
     "PICO_60_2019": {...},
@@ -111,10 +112,30 @@ Halo fields (if object): `model`, `v0_km_per_s`, `vesc_km_per_s`,
 }
 ```
 
+(The XENON1T_2018 and LZ_2022 rows above are real measured values at
+m_DM = 100 GeV, σ_SI = 1e-46 cm², SHM defaults — DDCalc's simplified
+single-bin XENON1T likelihood does *not* exclude that point on its own;
+LZ_2022 does, so the overall verdict is "excluded".)
+
 The result JSON is written to `$STATE_ROOT/runs/ddcalc/<TS>/result.json` and also
 printed to stdout. For a human-readable summary, read `result.json` and render a
 Markdown table from the `experiments` dict (one row per experiment: name, logL,
 p_value, excluded_90cl) inline — no separate `render_report.py` exists.
+
+**`p_value` statistic (fixed 2026-07-11):** `p_value` is a **likelihood ratio to
+background-only**, `p = exp(lnL_signal - lnL_background)` (clamped to `[0, 1]`),
+with `excluded_90cl = (p_value <= 0.1)`. This reduces to DDCalc's native
+convention in the background-free limit; the ratio normalization follows the
+standard GAMBIT/DarkBit generalization. It is *not* DDCalc's own
+`DDCalc_ScaleToPValue` — that function takes a target log-p and returns a
+sigma-scale factor, and is structurally unusable for high-count xenon TPCs
+(XENON1T/LZ/PandaX/LUX): it guards on the background-only absolute
+log-likelihood being near 0, which only holds for near-background-free
+counting experiments (PICO, DarkSide). Behaviour is empirically verified for
+the **SI channel**; the driver's SD channel currently produces zero signal in
+every experiment (pre-existing driver bug, tracked separately), so SD verdicts
+are not yet meaningful. See `scripts/ddcalc_driver.c` (file header) for the
+full derivation.
 
 ## Blockers table
 
