@@ -41,16 +41,25 @@ pytestmark = [
     ),
 ]
 
-# STEP2 artifact (outside the repo) + canonical SD SLHA.
-STEP2_AMP = Path(
-    "/Users/yianni/.claude/jobs/c703354a/tmp/loopset-step2/reduce_chi1/amp_reduced.m")
+# SD artifact (outside the repo) + canonical SD SLHA.  The SELF-CONTAINED reduce
+# (PR #32: Subexpr[] + Abbr[] persisted) is the real projectable artifact; fall
+# back to the older location if the fresh reduce is not present locally.
+STEP2_AMP_CANDIDATES = [
+    Path("/Users/yianni/.claude/jobs/c703354a/tmp/subexpr-fix/reduce_chi1/amp_reduced.m"),
+    Path("/Users/yianni/.claude/jobs/c703354a/tmp/loopset-step2/reduce_chi1/amp_reduced.m"),
+]
+STEP2_AMP = next((p for p in STEP2_AMP_CANDIDATES if p.exists()), STEP2_AMP_CANDIDATES[0])
 SD_SLHA = Path(
     "/Users/yianni/.local/share/hephaestus/models/singlet_doublet/runs/"
     "2026-07-11T1554Z-aee644cc/SPheno.spc")
 
-# The named guards that constitute an ACCEPTABLE loud failure (outcome B).
+# The named guards that constitute an ACCEPTABLE loud failure (outcome B).  F5 fix:
+# the outcome-B assertion below pins the SPECIFIC guard for the current known
+# state, not merely membership in this set.
 NAMED_GUARDS = (
     "SD-AMP-ABBREVIATIONS-UNRESOLVED",
+    "SD-PROJECTION-FAILED",
+    "SD-PROJECTION-INCOMPLETE",
     "UNBOUND-MODEL-PARAMETERS",
     "LOOPTOOLS_AMPLITUDE_NONFINITE",
 )
@@ -95,10 +104,12 @@ def test_sd_eval_finite_coeffs_or_named_guard(tmp_path):
         assert doc["schema"] == "looptools_sd_coefficients/v1"
         assert doc["model"] == "singlet_doublet"
         wc = doc["wilson_coefficients"]
-        for k in ("C_scalar", "C_twist2_1", "C_twist2_2"):
+        for k in ("C_scalar", "C_twist2", "C_chi_vector"):
             v = wc[k]
             assert v == v and v not in (float("inf"), float("-inf")), f"{k} non-finite"
         assert doc["amplitude"]["finite"] is True
+        # completeness residual must be present and below tolerance (F2).
+        assert doc["amplitude"]["completeness_rel_residual"] < 1e-3
         # No sigma_SI at this stage (nucleon matching is item 4).
         assert doc.get("nucleon_matching") == "deferred_item4"
     else:
@@ -106,3 +117,20 @@ def test_sd_eval_finite_coeffs_or_named_guard(tmp_path):
         assert res.returncode != 0, "empty output but exit 0 — silent failure"
         assert any(g in log for g in NAMED_GUARDS), (
             f"no named guard in driver log (rc={res.returncode}):\n{log[-2000:]}")
+        # F5 fix: pin the SPECIFIC guard for the current known state, per artifact.
+        # Self-contained artifact (PR #32, abbr+subexpr persisted): the projection
+        # path runs and fails at the COMPLETENESS guard.  The out-of-span content is
+        # NOT YET IDENTIFIED (PR #33 review: a direct axial-axial add-back moves the
+        # residual only 0.995->0.992; no Fierz-complete operator set spans it;
+        # ||M||~1e28 scale anomaly + unphysical-lambda PV warnings point to a
+        # static-coefficient / off-axis-chain kinematic inconsistency).  Resolving
+        # that is the mandatory next work item before item 4.  Old artifact: the
+        # abbreviation guard.  A different guard firing = regression, must fail.
+        if "subexpr-fix" in str(STEP2_AMP):
+            assert "SD-PROJECTION-INCOMPLETE" in log, (
+                f"expected the completeness guard on the self-contained artifact "
+                f"(rc={res.returncode}):\n{log[-2000:]}")
+        else:
+            assert "SD-AMP-ABBREVIATIONS-UNRESOLVED" in log, (
+                f"expected the abbreviations guard on the pre-PR#32 artifact "
+                f"(rc={res.returncode}):\n{log[-2000:]}")

@@ -219,26 +219,66 @@ Landed (`scripts/run_eval_sd.wls`, `sd_projection.wl`, `run_projection_sd.wls`;
   `IMZNMIX` row is not); **yh1/yh2 from `BSMPARAMS`(3,4)** (running values at Q,
   consistent with Yu/Yd/GAUGE), MINPAR(3,4) documented fallback. Goldstones
   `MassAh→m_Z`, `MassHp→m_W` (Feynman gauge).
-- **Majorana-χ + down-quark projection — DONE at fixture level, chain-coefficient
-  (Decision 3), NOT the static spin-summed collapse.** Scalar `{F1..F4}` vs
-  twist-2 `{F5..F8}` separated; proven on the R2 fixtures (clean recovery,
-  zero cross-talk). Per-coefficient setdelta/setmudim UV-residue guard wired
-  (Decision 2, load-bearing).
-- **R2 cross-talk fixture — DONE** (Decision 6 R2): pure-scalar / pure-twist-2 /
-  mixed pre-reduced fixtures + tests; hermetic block-disjointness invariant.
-- **Gated real SD eval — runs, fails LOUDLY at a named guard** (acceptable
-  item-3 outcome). Blocked upstream: the STEP2 `reduce_chi1/amp_reduced.m` was
-  written by `Put[reduced]` **without** its FormCalc `Subexpr[]` table, so the
-  `Sub####` abbreviations (which hide the external Weyl chains + couplings) are
-  undefined → `SD-AMP-ABBREVIATIONS-UNRESOLVED` (exit 3). **This is a
-  `/formcalc reduce` writer gap**, not an SD-driver defect: `run_calcfeynamp.wls`
-  must persist `Subexpr[]` into a wrapped `{"amp"->..,"subexpr"->..}` association
-  (as the 2HDM+a test fixture already is) and the SD reduction re-run. Until
-  then the real-amp projection + UV residue path cannot execute on live data.
+- **Majorana-χ + down-quark projection — REWORKED (PR #31 review F1/F2 resolved,
+  branch `sd-projection-solve`).** The PR #31 hard-coded block map
+  (`{F1..F4}`=scalar, `{F5..F8}`=twist-2) was proven **wrong** against the real
+  Abbr[] table (the PR #32 self-contained artifact): the real SD chains are
+  F1,F4=χ-scalar; F2,F3=quark-scalar; F13,F14=χ-vector; F15,F16=quark-vector
+  (twist-2); F5–F12,F17,F18=mixed Fierz — 18 chains, not 16. Moreover the real
+  amplitude is **bilinear** in the chains (F_a·F_b products), so PR #31's linear
+  `Coefficient[]` extraction was structurally invalid (silently non-numeric on
+  live data). Replaced by the Decision-3.2 **numerical spinor-basis solve**:
+  every chain is read from its actual WeylChain definition, evaluated on an
+  explicit off-axis spinor basis (80 configs), and least-squares-solved against
+  reference operator matrix elements {scalar, quark-twist-2, χ-vector
+  (Majorana diagnostic)}. **Completeness guard** (F2): the fit residual
+  ‖M − Σ c_op·O_op‖/‖M‖ must be < 1e-4 or the projection fails loudly
+  (`SD-PROJECTION-INCOMPLETE`); structurally unrecognized chains fail-fast
+  (`UNRECOGNIZED-CHAIN-STRUCTURE`, named). Per-coefficient setdelta/setmudim
+  UV-residue guard re-projects the full amplitude (Decision 2, load-bearing).
+- **R2 cross-talk fixture — REBUILT non-circularly** (Decision 6 R2): fixtures
+  now carry REAL FormCalc WeylChain definitions (verbatim from the SD artifact),
+  bilinear amplitudes, and known content — pure-scalar (C_scalar=19),
+  pure-twist-2 via F15/F16 (C_twist2=60; this fixture FAILS under the old block
+  map by construction), mixed, and a red-first **adversarial** fixture with a
+  deliberately unrecognizable rank-2 chain that must TRIP the loud guard.
+- **Gated real SD eval on the self-contained artifact — first real execution of
+  the projection path.** Exposed and fixed 3 root causes PR #31 could never
+  reach (its guard fired earlier): (1) `evalTermCommon` left `Sum[body]`
+  unevaluated for terms with no internal SumOver (held-rule leak, shared-include
+  fix, 2HDM+a path unchanged); (2) external-generation `SumOver[i,3,External]`
+  factors unhandled — now pinned to gen 1 (down) via the `override` seam,
+  internal sums still exact; (3) `g3` (QCD coupling, used by the real amp's
+  Subexpr) was never bound — now bound from `GAUGE:3`.
+  **Outcome (real leg, canonical point): loud failure at the NEW completeness
+  guard** — `SD-PROJECTION-INCOMPLETE completeness_rel_residual=0.995` (exit 3,
+  no JSON). The projection path executed end-to-end on live data for the first
+  time and the guard worked as designed: nothing ships. The residual is an
+  **UNIDENTIFIED projection/kinematics artifact, not identified physics** (PR
+  #33 adversarial review, falsifying this PR's earlier σ_SD interpretation):
+  adding the exact axial-axial operator to the span moves the residual only
+  0.99506 → 0.99154, and the full Fierz-complete parity-odd/tensor contraction
+  set reaches only 0.98780 — no bilinear-squared operator set spans it, and the
+  SI-diagonal content ALONE is un-spanned (0.980). Corroborating anomalies:
+  ‖M‖ ≈ 1.4e28 vs a physically-normalised ~1e-7 expectation, with 105
+  `lambda(p1,p2,p3) < 0, unphysical configuration` LoopTools warnings at the
+  static point. Review hypothesis: a **kinematic inconsistency** — the PV
+  coefficients c_i are frozen at the static point (S=(mχ+mq)², T=−1e-4 inside
+  `mkNum`) while the chains are evaluated at v~0.3 off-axis configs, so
+  M(config)=Σ c_static·F_offaxis is not a faithful matrix element at any single
+  kinematic point (Decision 3.2 intends a leading static expansion; the
+  implementation mixes v=0 coefficients with finite-v chains). The same solve
+  recovers the clean R2 fixtures exactly (~1e-16), so the failure is specific
+  to the real Mnum's construction, not the projector algebra.
 
-WIP / next (item 4): fix the reduce writer + re-reduce SD (unblocks the real
-projection), per-flavor (u,d,s) runs, driver-side twist-2 + 2/27-gluon nucleon
-matching through the SD Higgs sector, internal checks (e).
+**MANDATORY NEXT (before item 4 proceeds):** resolve the ‖M‖ scale anomaly and
+the static-coefficient / off-axis-chain kinematic inconsistency (make the
+projection kinematics self-consistent), then re-run the real leg. Item 4 must
+NOT build on any interpretation of the current residual.
+
+WIP / next (item 4, blocked on the above): per-flavor (u,d,s) external runs,
+C^(1)/C^(2) twist-2 moment split, driver-side twist-2 + 2/27-gluon nucleon
+matching through the SD Higgs sector → σ_SI, anchors (a)–(e), Rξ variation.
 
 ## (iv) Norms (non-negotiable)
 

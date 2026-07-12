@@ -1,19 +1,27 @@
 (* R2 fixture — MIXED scalar + twist-2 content (STEP3-DESIGN.md Decision 6 R2).
-   Both operator blocks present with known coefficients; the projector must
-   recover EACH independently (no cross-contamination):
-     C_scalar = 4 + 3 + 5 + 7 = 19   (chains F1,F4,F2,F3)
-     C_twist2 = 11 + 13 + 17 + 19 = 60 (chains F5,F6,F7,F8)
-   A spin-summed collapse cannot separate these; the coefficient-level
-   projector must. *)
+
+   NON-CIRCULAR (PR #32 fix): real FormCalc WeylChains (F1,F4 chi-scalar; F2,F3
+   quark-scalar; F15,F16 quark-vector/twist-2), copied VERBATIM from the SD
+   artifact.  Both operator blocks present; the numerical basis-vector projector
+   must recover EACH independently (no cross-contamination):
+     scalar:  O_S  = (F1+F4)(F2+F3)   -> C_scalar = 19
+     twist-2: O_Tq = (F1+F4)(F15+F16) -> C_twist2 = 60
+   A static spin-summed collapse cannot separate these (both -> c-numbers ~ m_chi
+   m_q at rest); the coefficient-level solve must. *)
 {
-  "schema" -> "amp_reduced/v1",
-  "process" -> "R2-fixture mixed",
-  "subexpr" -> {Sub1 -> 4.0, Sub2 -> 11.0},
+  "schema" -> "amp_reduced/v2",
+  "process" -> "R2-fixture mixed (real chain defs)",
+  "abbr" -> {
+    F1 -> WeylChain[Spinor[k[3], MassFChi[1], 1, 2, 0], 6, Spinor[k[1], MassFChi[1], 1, 1, 0]],
+    F4 -> WeylChain[Spinor[k[3], MassFChi[1], 1, 2, 0], 7, Spinor[k[1], MassFChi[1], 1, 1, 0]],
+    F2 -> WeylChain[Spinor[k[4], MassFd[I3G4], 1, 2, 0], 6, Spinor[k[2], MassFd[I3G2], 1, 1, 0]],
+    F3 -> WeylChain[Spinor[k[4], MassFd[I3G4], 1, 2, 0], 7, Spinor[k[2], MassFd[I3G2], 1, 1, 0]],
+    F15 -> WeylChain[Spinor[k[4], MassFd[I3G4], 1, 2, 0], 6, k[1], Spinor[k[2], MassFd[I3G2], 1, 1, 0]],
+    F16 -> WeylChain[Spinor[k[4], MassFd[I3G4], 1, 2, 0], 7, k[1], Spinor[k[2], MassFd[I3G2], 1, 1, 0]]},
+  "subexpr" -> {},
   "amp" -> Amp[{{F[5, {1}], k[1], MassFChi[1], {}},
                 {F[4, {I3G2}], k[2], MassFd[I3G2], {}}} ->
                {{F[5, {1}], k[3], MassFChi[1], {}},
                 {F[4, {I3G4}], k[4], MassFd[I3G4], {}}}][
-    Mat[SUN1]*SumOver[I3G5, 1]*(
-      Sub1*F1 + 3.0*F4 + 5.0*F2 + 7.0*F3 +
-      Sub2*F5 + 13.0*F6 + 17.0*F7 + 19.0*F8)]
+    Mat[SUN1]*(19.0*(F1 + F4)*(F2 + F3) + 60.0*(F1 + F4)*(F15 + F16))]
 }

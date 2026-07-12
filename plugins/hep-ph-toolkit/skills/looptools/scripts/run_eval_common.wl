@@ -142,7 +142,16 @@ evalTermCommon[term_, subexpr_, Fp_, nr_, override_:{}] := Module[{iters, s},
   s = (term /. SumOver[_, _] -> 1) //. subexpr;
   s = s /. IndexSum -> Function[{e, r}, Sum[e, Evaluate[r]]];
   s = s /. override;
-  Sum[Quiet[(s /. Fp) //. nr], Evaluate[Sequence @@ iters]]];
+  (* iters can be EMPTY (a term with no un-overridden 2-arg SumOver — e.g. SD amp
+     terms whose only sums are external-index SumOver[i,n,External] factors,
+     handled via `override`).  Sum[body] with NO iterator does not evaluate: it
+     stays held (Sum::argmu), leaking the UNEVALUATED substitution-rule list `nr`
+     into the result — which downstream reads as a spurious "every binding symbol
+     residual" failure.  Evaluate the body directly in that case; behaviour for
+     iters =!= {} is unchanged. *)
+  If[iters === {},
+    Quiet[(s /. Fp) //. nr],
+    Sum[Quiet[(s /. Fp) //. nr], Evaluate[Sequence @@ iters]]]];
 
 (* Write the result assoc, then tear the LoopTools MathLink link down.
    KNOWN ISSUE: ltexi[] can throw an uncaught MathLink::MLException at
