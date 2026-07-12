@@ -227,8 +227,11 @@ sampleConfigs[mchi_, mq_] := Module[{spins, cfgs},
 (* Completeness tolerance: max per-config ||resid||/||M|| for a clean fit.  Set at
    1e-4 (documented): the recognized parity-even set {S, Tq, Tchi} spans the
    leading SI structure at the sample velocities (~0.3); a residual above this
-   flags genuine non-SI content (parity-odd / tensor / higher-moment twist-2) that
-   the SI-floor projection does not handle and must not silently drop.  This is a
+   flags content the SI set does not span, which must not be silently dropped.
+   CAUTION (PR #33 review): a large residual is NOT evidence for any particular
+   missing operator — on the real amp no Fierz-complete bilinear set spans it,
+   and the ||M|| scale anomaly + unphysical-lambda PV warnings point to a
+   static-coefficient / off-axis-chain kinematic inconsistency.  This is a
    LEADING-ORDER guard — the full velocity expansion (C^(1)/C^(2) twist-2 split,
    sub-leading operators) is build-order item 4. *)
 $completenessTol = 1.0*^-4;

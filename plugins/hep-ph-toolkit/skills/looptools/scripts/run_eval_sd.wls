@@ -270,18 +270,22 @@ Module[{
 
   (* ---- COMPLETENESS GUARD (F2, Decision) -------------------------------------
      M - Sum_op c_op O_op must be ~0 (relative, to $completenessTol); a larger
-     residual means non-SI structure (parity-odd / tensor / higher-moment twist-2)
-     that the SI-floor projection does not handle -> fail loud, do not emit a
-     floor built on a partial fit. *)
+     residual means content the recognized SI set does not span -> fail loud, do
+     not emit a floor built on a partial fit.  Do NOT assume the residual is a
+     particular physics operator: on the real amp the PR #33 review showed no
+     Fierz-complete bilinear set spans it (projection/kinematics artifact
+     suspected — see the guard message). *)
   If[! TrueQ[proj["completeness_ok"]],
     WriteString["stderr",
       "run_eval_sd: SD-PROJECTION-INCOMPLETE completeness_rel_residual=" <>
       ToString[complResidual] <> " (tol=" <> ToString[$completenessTol] <> ")\n" <>
       "  The recognized operator set {scalar, twist-2, chi-vector} does NOT span\n" <>
       "  the amplitude at the sampled kinematics: M - Sum c_op O_op is non-zero.\n" <>
-      "  The amplitude carries non-SI structure (parity-odd / tensor / higher-\n" <>
-      "  moment twist-2) that the leading-order SI projection drops.  Resolving it\n" <>
-      "  (full velocity expansion, C^(1)/C^(2) split) is build-order item 4.\n"];
+      "  The out-of-span content is NOT identified (PR #33 review: no Fierz-\n" <>
+      "  complete bilinear operator set spans it either; ||M|| scale anomaly +\n" <>
+      "  unphysical-lambda PV warnings suggest a static-coefficient / off-axis-\n" <>
+      "  chain kinematic inconsistency).  Do NOT interpret the residual as\n" <>
+      "  physics; resolving it is the mandatory next work item before item 4.\n"];
     Exit[3]];
 
   (* ---- PER-COEFFICIENT UV-residue check (Decision 2, load-bearing) -----------

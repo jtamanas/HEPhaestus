@@ -119,9 +119,12 @@ def test_sd_eval_finite_coeffs_or_named_guard(tmp_path):
             f"no named guard in driver log (rc={res.returncode}):\n{log[-2000:]}")
         # F5 fix: pin the SPECIFIC guard for the current known state, per artifact.
         # Self-contained artifact (PR #32, abbr+subexpr persisted): the projection
-        # path runs and fails at the COMPLETENESS guard — the real amp carries O(1)
-        # spin-dependent (axial-axial) content outside the SI operator set; the
-        # consistent SD/SI separation is build-order item 4.  Old artifact: the
+        # path runs and fails at the COMPLETENESS guard.  The out-of-span content is
+        # NOT YET IDENTIFIED (PR #33 review: a direct axial-axial add-back moves the
+        # residual only 0.995->0.992; no Fierz-complete operator set spans it;
+        # ||M||~1e28 scale anomaly + unphysical-lambda PV warnings point to a
+        # static-coefficient / off-axis-chain kinematic inconsistency).  Resolving
+        # that is the mandatory next work item before item 4.  Old artifact: the
         # abbreviation guard.  A different guard firing = regression, must fail.
         if "subexpr-fix" in str(STEP2_AMP):
             assert "SD-PROJECTION-INCOMPLETE" in log, (

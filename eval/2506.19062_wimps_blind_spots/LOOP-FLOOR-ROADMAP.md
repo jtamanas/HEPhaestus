@@ -253,19 +253,32 @@ Landed (`scripts/run_eval_sd.wls`, `sd_projection.wl`, `run_projection_sd.wls`;
   **Outcome (real leg, canonical point): loud failure at the NEW completeness
   guard** — `SD-PROJECTION-INCOMPLETE completeness_rel_residual=0.995` (exit 3,
   no JSON). The projection path executed end-to-end on live data for the first
-  time; the residual is the F2 guard working as designed: the real amplitude
-  carries **O(1) spin-dependent axial-axial content** ((χ̄γμγ₅χ)(q̄γᵘγ₅q) — a
-  Majorana χ has no vector current but does have an axial current, and
-  spin-spin coupling survives the static limit; this is σ_SD, "null in v1")
-  which the SI-floor operator set deliberately does not span. Under the PR #31
-  code this would have been silently folded/dropped. Extending the reference
-  set for a consistent SI/SD separation (+ O(v)-consistent kinematics and the
-  C^(1)/C^(2) split) is item 4; the live UV-residue check runs as soon as the
-  fit spans (it sits immediately after the completeness guard).
+  time and the guard worked as designed: nothing ships. The residual is an
+  **UNIDENTIFIED projection/kinematics artifact, not identified physics** (PR
+  #33 adversarial review, falsifying this PR's earlier σ_SD interpretation):
+  adding the exact axial-axial operator to the span moves the residual only
+  0.99506 → 0.99154, and the full Fierz-complete parity-odd/tensor contraction
+  set reaches only 0.98780 — no bilinear-squared operator set spans it, and the
+  SI-diagonal content ALONE is un-spanned (0.980). Corroborating anomalies:
+  ‖M‖ ≈ 1.4e28 vs a physically-normalised ~1e-7 expectation, with 105
+  `lambda(p1,p2,p3) < 0, unphysical configuration` LoopTools warnings at the
+  static point. Review hypothesis: a **kinematic inconsistency** — the PV
+  coefficients c_i are frozen at the static point (S=(mχ+mq)², T=−1e-4 inside
+  `mkNum`) while the chains are evaluated at v~0.3 off-axis configs, so
+  M(config)=Σ c_static·F_offaxis is not a faithful matrix element at any single
+  kinematic point (Decision 3.2 intends a leading static expansion; the
+  implementation mixes v=0 coefficients with finite-v chains). The same solve
+  recovers the clean R2 fixtures exactly (~1e-16), so the failure is specific
+  to the real Mnum's construction, not the projector algebra.
 
-WIP / next (item 4): per-flavor (u,d,s) external runs, C^(1)/C^(2) twist-2
-moment split, driver-side twist-2 + 2/27-gluon nucleon matching through the SD
-Higgs sector → σ_SI, anchors (a)–(e), Rξ variation.
+**MANDATORY NEXT (before item 4 proceeds):** resolve the ‖M‖ scale anomaly and
+the static-coefficient / off-axis-chain kinematic inconsistency (make the
+projection kinematics self-consistent), then re-run the real leg. Item 4 must
+NOT build on any interpretation of the current residual.
+
+WIP / next (item 4, blocked on the above): per-flavor (u,d,s) external runs,
+C^(1)/C^(2) twist-2 moment split, driver-side twist-2 + 2/27-gluon nucleon
+matching through the SD Higgs sector → σ_SI, anchors (a)–(e), Rξ variation.
 
 ## (iv) Norms (non-negotiable)
 
