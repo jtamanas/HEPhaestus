@@ -262,19 +262,56 @@ Landed (`scripts/run_eval_sd.wls`, `sd_projection.wl`, `run_projection_sd.wls`;
   SI-diagonal content ALONE is un-spanned (0.980). Corroborating anomalies:
   ‖M‖ ≈ 1.4e28 vs a physically-normalised ~1e-7 expectation, with 105
   `lambda(p1,p2,p3) < 0, unphysical configuration` LoopTools warnings at the
-  static point. Review hypothesis: a **kinematic inconsistency** — the PV
-  coefficients c_i are frozen at the static point (S=(mχ+mq)², T=−1e-4 inside
-  `mkNum`) while the chains are evaluated at v~0.3 off-axis configs, so
-  M(config)=Σ c_static·F_offaxis is not a faithful matrix element at any single
-  kinematic point (Decision 3.2 intends a leading static expansion; the
-  implementation mixes v=0 coefficients with finite-v chains). The same solve
-  recovers the clean R2 fixtures exactly (~1e-16), so the failure is specific
-  to the real Mnum's construction, not the projector algebra.
+  static point. The same solve recovers the clean R2 fixtures exactly (~1e-16),
+  so the failure is specific to the real Mnum's construction, not the projector
+  algebra.
 
-**MANDATORY NEXT (before item 4 proceeds):** resolve the ‖M‖ scale anomaly and
-the static-coefficient / off-axis-chain kinematic inconsistency (make the
-projection kinematics self-consistent), then re-run the real leg. Item 4 must
-NOT build on any interpretation of the current residual.
+  **ROOT CAUSE — DIAGNOSED + ADVERSARIALLY VERIFIED (Jul 2026).** The ~1.4e28
+  scale is a **Gram-determinant spurious pole in the Passarino–Veltman TENSOR
+  reduction of the all-massive-line boxes**, evaluated AT the degenerate
+  (forward, on-threshold, v=0) DD point — a numerical reduction instability, NOT
+  identified physics and NOT a units/binding/shipping bug (the guard correctly
+  refuses; nothing ships). Evidence trail: `kinematics-invest/FINDINGS.md`
+  (verdict + experiments) and `kinvest-verify/VERIFY.md` (adversarial
+  confirmation + the decisive Gram test), both under the c703354a job scratch.
+  Key facts: the ‖M‖ is localized 100 % in the four box (D0i) terms {1,4,8,10}
+  (dropping them collapses ‖M‖ to O(1) and the triangle-only projection gives a
+  physically plausible C_scalar ≈ −1.28e-7); a per-head box sweep in T shows the
+  **scalar** box integral dd0 finite and flat (6.13e-10 across T=−1e-4..−100)
+  while the **tensor** coefficients dd11/dd22/dd33 diverge ∝1/Gram(∝T); the boxes
+  carry **zero** massless internal lines (checked over all 286 distinct box D0i),
+  so this is NOT an IR/collinear divergence. Chain velocity is irrelevant to the
+  scale (coefficient-side), refuting the earlier static-coeff/off-axis-chain
+  hypothesis as the cause. Separately, the single `Den[T,0]` (a genuine χ±/W/W
+  triangle **photon penguin**) is real but lives in a **sub-dominant triangle**
+  (term 5, max|c| ≈ 1.8), feeds the **SD/anapole** channel (a neutral Majorana χ
+  has vanishing charge/charge-radius form factors; only the anapole ∝q² survives),
+  and does NOT block the SI-scalar projection — so it is not the item-4 blocker.
+
+**MANDATORY NEXT (item-4 preconditions — mechanism now VERIFIED, see ROOT CAUSE
+above):** cure the box **Gram-determinant / degenerate-kinematics tensor-reduction
+pole**, then re-run the real leg. Item 4 must NOT build on any interpretation of
+the current residual (it is a reduction artifact carrying no operator information;
+PR #33 already showed no bilinear operator set spans it).
+
+- **Do NOT** extend the operator set to chase the residual; **do NOT** add IR
+  regulators/subtractions or do photon-penguin `Den[T,0]` surgery (the boxes have
+  no massless lines — an IR remedy is the wrong disease); **do NOT** treat the
+  photon penguin's analytic 1/t cancellation as a prerequisite (it is real but
+  separate and lands in the SD/anapole channel, not the SI floor).
+- **PREFERRED remedy:** adopt the **Hisano–Ishiwata–Nagata** analytic
+  small-momentum (twist / heavy-mediator) expansion that reorganises the box into
+  finite loop functions **before** the Gram-zero — already the design's cited
+  lineage (STEP3-DESIGN.md Decision 1). It structurally avoids both the Gram pole
+  and the spurious photon 1/T and needs no fragile extrapolation toward the very
+  degeneracy that is numerically unstable.
+- **Numeric alternative (only if staying fully numeric):** use a Gram-safe
+  reduction (COLLIER / PJFry, or LoopTools' expansion modes) and **monitor the
+  box Gram determinant**. If evaluating off the degenerate point and extrapolating,
+  approach t,v→0 from a **non-zero-Gram** direction — **never extrapolate toward
+  the degenerate point**.
+- Evidence trail for the fixer: `kinematics-invest/FINDINGS.md` +
+  `kinvest-verify/VERIFY.md` (c703354a job scratch).
 
 WIP / next (item 4, blocked on the above): per-flavor (u,d,s) external runs,
 C^(1)/C^(2) twist-2 moment split, driver-side twist-2 + 2/27-gluon nucleon
