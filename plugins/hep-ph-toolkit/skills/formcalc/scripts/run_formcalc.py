@@ -522,7 +522,22 @@ def main(argv=None):
         # the naive == FormCalc-9.10-NDR-default equivalence (STEP3-DESIGN.md Dec. 1).
         "gamma5_scheme": args.gamma5 or "naive",
         "pv_heads": "formcalc-native",
-        "abbreviations_manifest": "",
+        # amp_reduced.m is a self-contained wrapped association (writer format
+        # amp_reduced/v2): the reduced Amp[...] is shipped WITH the FormCalc
+        # abbreviation tables it references, so a fresh kernel Get[] resolves
+        # every F##/Sub### head with no reduction rerun.
+        "abbreviations_manifest": (
+            "amp_reduced.m is a self-contained Get[]-able association with string "
+            "keys {'schema'->'amp_reduced/v2', 'amp', 'abbr', 'subexpr'}: 'amp' = "
+            "FormCalc Amp[proc][...] = sum of Mat[F##]*coupling*Den*B0i/C0i/D0i over "
+            "SumOver indices, referencing F## (Dirac/Weyl chains) and Sub### "
+            "(coefficient subexpressions, plain and index-patterned Sub###[i_,...]); "
+            "'abbr' = Abbr[] (F## definitions -> WeylChain/SUNT); 'subexpr' = "
+            "Subexpr[] (Sub### definitions -> model couplings + masses). Resolve via "
+            "amp //. Join[subexpr, abbr] to reach pure B0i/C0i/D0i+Den+couplings+"
+            "masses. mom/ext_masses are not persisted (no driver reads them; both "
+            "are derivable from the Amp[...] process head)."
+        ),
         "input_hashes": {
             "feynamplist_m": feynamp_hash,
             "processspec_json": processspec_hash,

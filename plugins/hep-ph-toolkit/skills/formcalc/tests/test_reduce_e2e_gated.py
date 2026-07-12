@@ -52,6 +52,31 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+def _read_hephaestus_config() -> dict:
+    cfg_home = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+    p = Path(cfg_home) / "hephaestus" / "config.json"
+    if p.exists():
+        try:
+            return json.loads(p.read_text())
+        except Exception:
+            return {}
+    return {}
+
+
+def _formcalc_path() -> str:
+    return _read_hephaestus_config().get("formcalc_path", "") or ""
+
+
+def _wolfram_bin() -> str:
+    cfg = _read_hephaestus_config()
+    wb = cfg.get("wolfram_engine_path", "") or ""
+    if wb and Path(wb).exists():
+        return wb
+    return subprocess.run(
+        ["which", "wolframscript"], capture_output=True, text=True
+    ).stdout.strip() or "wolframscript"
+
+
 @pytest.fixture
 def run_feynarts_module():
     """Import run_feynarts lazily so collection works without Wolfram.
@@ -136,6 +161,45 @@ class TestReduceEndToEnd:
         assert len(content) > 0, "amp_reduced.m is empty"
         assert re.search(r"\bAmp\[", content), (
             "amp_reduced.m lacks an Amp[...] head — not a CalcFeynAmp result"
+        )
+
+        # ── Self-contained writer format (amp_reduced/v2): the artifact is a
+        # wrapped association carrying the reduced Amp[...] together with its
+        # FormCalc abbreviation tables. Without the tables, any F##/Sub### the
+        # amplitude references is undefined the instant another kernel Get[]s the
+        # file (the SD-AMP-ABBREVIATIONS-UNRESOLVED bug). Assert the keys are
+        # present at the structure level here; the fresh-kernel resolution is the
+        # authoritative check below. ──
+        assert re.search(r'"schema"\s*->\s*"amp_reduced/v2"', content), (
+            "amp_reduced.m is not the self-contained amp_reduced/v2 wrapped "
+            "association — writer did not persist the abbreviation tables."
+        )
+        for key in ('"amp"', '"abbr"', '"subexpr"'):
+            assert key in content, f"amp_reduced.m missing wrapped key {key}"
+
+        # ── AUTHORITATIVE self-containment: a FRESH kernel (FormCalc loaded, NO
+        # reduction run) Get[]s the artifact and resolves amp //. Join[subexpr,
+        # abbr]; ZERO Sub###/F## may remain dangling. This is the exact
+        # reduce->eval session boundary the SD build tripped on. ──
+        checker = SCRIPTS_DIR / "check_self_contained.wls"
+        fc_path = _formcalc_path()
+        wolfram_bin = _wolfram_bin()
+        check = subprocess.run(
+            [wolfram_bin, "-script", str(checker), str(amp_reduced), fc_path],
+            capture_output=True, text=True, timeout=600,
+        )
+        assert check.returncode == 0, (
+            "fresh-kernel self-containment check FAILED "
+            f"(exit {check.returncode}); amp_reduced.m is not Get[]-able "
+            f"standalone:\n{check.stdout}\n{check.stderr}"
+        )
+        result_line = next(
+            (ln for ln in check.stdout.splitlines()
+             if ln.startswith("SELF_CONTAINED_RESULT")),
+            "",
+        )
+        assert "sub_unresolved=0" in result_line and "f_unresolved=0" in result_line, (
+            f"fresh-kernel Get left dangling abbreviation heads: {result_line}"
         )
         # Tree-level must NOT be UV-regularized noise: either no loop-PV heads
         # at all (expected) or, if FormCalc emits any, they must be symbolic.
