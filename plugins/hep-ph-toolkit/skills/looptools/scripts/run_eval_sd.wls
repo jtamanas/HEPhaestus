@@ -46,6 +46,15 @@ mUlight = 2.16*^-3; mDlight = 4.67*^-3; mSlight = 0.093;
 mClight = 1.27;     mBlight = 4.18;     mTlight = 173.4;
 TEPS = 1.0*^-4;  (* spacelike t->0 regulator (GeV^2), per run_eval.wls:24-28 *)
 
+(* Box small-momentum (DD-limit) expansion (DESIGN-ITEM4.md A1): rewrite the box
+   tensor D0i[dd1..dd33] heads onto the rank-1 collinear {g,uu} basis -> scalar
+   D0/C0/B0, curing the Gram-determinant spurious pole that put ||M||~1e28 (the
+   verified item-4 blocker).  ON by default for the SD path (the SD box sector was
+   un-evaluable without it); env HEPPH_SD_DD_EXPANSION=0 disables it to reproduce
+   the pre-item-4 (Gram-poled) behaviour for A/B comparison.  sd_dd_expansion.wl
+   is Get[]-loaded below, AFTER run_eval_common.wl has Install[]ed LoopTools. *)
+$ddExpansion = (Environment["HEPPH_SD_DD_EXPANSION"] =!= "0");
+
 (* ---- model-agnostic plumbing (argv, FormCalc+LoopTools load, self-test,
         evalTermCommon / emitUnboundGuard / writeEvalOutput). ------------------- *)
 $scriptDir = DirectoryName[
@@ -53,6 +62,7 @@ $scriptDir = DirectoryName[
      $ScriptCommandLine[[1]]]];
 Get[FileNameJoin[{$scriptDir, "run_eval_common.wl"}]];
 Get[FileNameJoin[{$scriptDir, "sd_projection.wl"}]];
+Get[FileNameJoin[{$scriptDir, "sd_dd_expansion.wl"}]];
 
 Module[{
     ampPath = $ampPath, pointPath = $pointPath, ffPreset = $ffPreset,
@@ -62,6 +72,7 @@ Module[{
     ZNm, IMZNm, UMm, UPm, ZDLm, ZDRm, ZULm, ZURm, Yum, Ydm,
     yh1v, yh2v, g1v, g2v, g3v, Lamv, PhaseFSv, vvSMv, ctw, stw,
     amp, subexpr, ampBody, abbr, abbrF, terms, mkNum, extIdx, extPins,
+    boxCensusBefore, ddTerms, ddSubexpr, ddMon,
     evalAmp, Mnum, resid, proj, projAt, coeffNames,
     cScalar, cTw, cChiV, uvResidue, scaleResidue, finiteQ, complResidual,
     nPV, jsonAssoc, bindGuard, unbound, matrixUnbound
@@ -219,15 +230,60 @@ Module[{
   extIdx = DeleteDuplicates[Cases[terms, SumOver[i_, _, External] :> i, Infinity]];
   extPins = Join[{SumOver[_, _, External] -> 1}, (# -> 1) & /@ extIdx];
 
+  (* ---- BOX SMALL-MOMENTUM (DD) EXPANSION (DESIGN-ITEM4.md A1) ----------------
+     Rewrite the box tensor D0i heads onto the rank-1 collinear scalar basis by
+     substituting the head symbol D0i -> ddBoxHead on BOTH the term bodies and the
+     Subexpr[] table (box heads hide inside Sub#### too).  ddBoxHead stays inert on
+     symbolic kinematics and fires the scalar reduction only once mkNum makes the
+     arguments numeric — so LoopTools never evaluates a Gram-poled tensor D0i at
+     the degenerate point.  Scalar boxes (dd0) and all triangles/bubbles (C0i/B0i)
+     pass through untouched. *)
+  boxCensusBefore = ddBoxHeadCensus[terms];
+  ddTerms   = If[$ddExpansion, terms   /. ddExpandRule, terms];
+  ddSubexpr = If[$ddExpansion, subexpr /. ddExpandRule, subexpr];
+
   (* Evaluate the full amplitude to an F-LINEAR numeric form.  Fp = {} keeps the
      external chains symbolic (that IS the coefficient-level projection); the
      SumOver internal-eigenstate/generation sums are expanded exactly by
      evalTermCommon (R3: no gen pinning). *)
   evalAmp[delta_, mudim_] := Total[Table[
-    evalTermCommon[terms[[k]], subexpr, {}, mkNum[delta, mudim], extPins],
-    {k, Length[terms]}]];
+    evalTermCommon[ddTerms[[k]], ddSubexpr, {}, mkNum[delta, mudim], extPins],
+    {k, Length[ddTerms]}]];
 
   Mnum = evalAmp[0, 1];
+
+  (* ---- STRUCTURAL GUARD: SD-DD-EXPANSION-INCOMPLETE (Decision A1 step 4) ------
+     After expansion the box sector must carry ZERO tensor-reduction heads (any
+     D0i[id,..] with id =!= dd0, or an un-reduced ddBoxHead[id,..] whose args never
+     went numeric).  A survivor means the expansion did not fully cure the box
+     sector -> loud recoverable blocker (blocker_catalog.yaml), exit 3, NOTHING
+     ships.  Also emits the Gram/degeneracy monitor line here. *)
+  If[$ddExpansion,
+    Module[{survivors = ddTensorSurvivors[Mnum], mon = ddMonitorSummary[]},
+      WriteString["stderr",
+        "run_eval_sd: GRAM-MONITOR n_box_signatures=" <>
+        ToString[Lookup[mon, "n_box_signatures", 0]] <>
+        " max_rank1_residual=" <> ToString[Lookup[mon, "max_rank1_residual", "NA"]] <>
+        " min_abs_gram_det_over_scale3=" <>
+        ToString[Lookup[mon, "min_abs_gram_det_over_scale3", "NA"]] <> "\n"];
+      If[survivors =!= {},
+        WriteString["stderr",
+          "run_eval_sd: SD-DD-EXPANSION-INCOMPLETE " <>
+          ToString[survivors, InputForm] <> "\n" <>
+          "  The box small-momentum expansion left tensor-reduction heads in the\n" <>
+          "  evaluated amplitude: these D0i tensor coefficients were NOT rewritten\n" <>
+          "  onto the rank-1 collinear scalar basis, so LoopTools would evaluate\n" <>
+          "  them AT the degenerate DD point and re-introduce the Gram-determinant\n" <>
+          "  spurious pole (the verified item-4 blocker).  Nothing ships.  Fix:\n" <>
+          "  extend sd_dd_expansion.wl ddBoxHead to cover the named tensor id(s).\n"];
+        Exit[3]]]];
+
+  (* ---- amp_dd.m SIDECAR (Decision A3) ---------------------------------------- *)
+  If[$ddExpansion,
+    writeAmpDdSidecar[
+      FileNameJoin[{DirectoryName[outPath], "amp_dd.m"}], Mnum, boxCensusBefore,
+      "leading-DD (v=0 coefficients; O(v) twist-2 refinement = round 2)",
+      <|"point_id" -> mchi, "external_quark" -> "d"|>]];
 
   (* ---- LOUD GUARD: unresolved abbreviations / non-numeric coefficients -------
      If the reduced amp was Put[] WITHOUT its FormCalc Subexpr[] table (the STEP2
@@ -333,6 +389,14 @@ Module[{
       "ir_pole_residue" -> 0.0,
       "completeness_rel_residual" -> complResidual,
       "gauge_parameter_dependence" -> Null (* Rxi variation deferred (Decision 2) *)
+    |>,
+    "dd_expansion" -> <|
+      "enabled" -> $ddExpansion,
+      "method" -> "box small-momentum DD (rank-1 collinear {g,uu} basis) -> " <>
+                  "scalar D0/C0/B0; DESIGN-ITEM4.md Decision A1",
+      "ov_order" -> "leading-DD (v=0); O(v) twist-2 = round 2",
+      "box_head_census_before" -> boxCensusBefore,
+      "gram_monitor" -> If[$ddExpansion, ddMonitorSummary[], <||>]
     |>,
     "wilson_coefficients" -> <|
       "C_scalar"    -> Re[cScalar],

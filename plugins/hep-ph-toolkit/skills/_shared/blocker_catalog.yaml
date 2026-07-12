@@ -887,3 +887,54 @@ blockers:
       context.log_tail and run/<ts>/.
     workaround_codes: []
     owned_by: looptools
+
+  SD_DD_EXPANSION_INCOMPLETE:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/sd_dd_expansion.wl + run_eval_sd.wls (box DD-expansion structural guard); eval/2506.19062_wimps_blind_spots/DESIGN-ITEM4.md Decision A1 step 4"
+    description: >-
+      The singlet-doublet box small-momentum (DD-limit) expansion left one or more
+      tensor-reduction heads in the evaluated amplitude — a D0i[id,..] with
+      id =!= dd0 (or an un-reduced ddBoxHead[id,..] whose arguments never became
+      numeric). Those box tensor coefficients were NOT rewritten onto the rank-1
+      collinear {g,uu} scalar basis, so LoopTools would evaluate them AT the
+      degenerate DD point and re-introduce the Gram-determinant spurious pole that
+      inflates ||M|| to ~1e28 (the verified item-4 blocker; kinematics-invest
+      FINDINGS.md + kinvest-verify VERIFY.md). Emitted verbatim as
+      "SD-DD-EXPANSION-INCOMPLETE <ids>", exit 3 — NOTHING ships. Fix: extend
+      sd_dd_expansion.wl ddBoxHead to cover the named tensor id(s); the census of
+      box heads present in amp_reduced/v2 is dd0,dd1..dd3,dd00,dd11..dd33 (no
+      rank>=3). This is a stronger, by-construction form of the Gram monitor: the
+      production path never computes near a Gram zero, so it monitors by
+      construction, not by value (DESIGN-ITEM4.md A5 guard placement).
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_DD_DERIVATIVE_NONCONVERGENT:
+    class: missing-tool-feature
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/sd_dd_expansion.wl ddCentralDeriv (mass-derivative FD convergence guard); DESIGN-ITEM4.md Decision A1 step 3"
+    description: >-
+      A mass-derivative in the box DD-expansion (a d/dM^2 of a LoopTools scalar
+      loop function, needed when two box propagator offsets coincide at the DD
+      point so a doubled propagator appears) was evaluated by central finite
+      differences with step-halving, and the step-halving did NOT converge to the
+      relative tolerance (1e-6 default) within the halving budget. Emitted as
+      "SD-DD-DERIVATIVE-NONCONVERGENT (rel=.. after N halvings, tol=..)". The DD
+      expansion delegates every integral EVALUATION to LoopTools (Decision A2: no
+      hand-coded loop-function values); a non-convergent finite difference means
+      the scalar loop function is too ill-conditioned at the requested masses for
+      a stable numerical derivative. Fix: check the mass scales feeding the box
+      signature, widen the initial FD step, or supply the derivative analytically
+      from a LoopTools-provided lower-point scalar. In the SD box census this
+      branch is not reached at leading order (prop 0 has offset b_0=0, distinct
+      from the massive-line offsets); it guards higher subsets and future
+      signatures.
+    workaround_codes: []
+    owned_by: looptools
