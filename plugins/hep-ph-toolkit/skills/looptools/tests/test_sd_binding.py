@@ -28,7 +28,7 @@ REQUIRED_SD_SYMBOLS = [
     "MassVWp", "MassVZ", "MassFu", "MassFd",
     # mixings / couplings
     "ZN", "UM", "UP", "ZDL", "ZDR", "ZUL", "ZUR", "Yu", "Yd",
-    "yh1", "yh2", "g1", "g2", "Lam", "PhaseFS", "vvSM", "CTW", "STW",
+    "yh1", "yh2", "g1", "g2", "g3", "Lam", "PhaseFS", "vvSM", "CTW", "STW",
 ]
 
 
@@ -86,6 +86,26 @@ def test_no_static_spin_summed_collapse():
     assert "projectOperators" in src
 
 
+def test_driver_passes_abbr_table_to_projector():
+    """F1 fix: the projector reads each chain's operator content from its ACTUAL
+    Abbr[] WeylChain definition, so the driver must extract the abbr table and pass
+    it to projectOperators (no hard-coded index blocks)."""
+    src = _driver_src()
+    assert re.search(r'abbrF\s*=\s*Cases\[abbr,\s*HoldPattern\[_ -> _WeylChain\]\]', src), \
+        "driver must extract the Abbr[] WeylChain table"
+    assert re.search(r'projectOperators\[Mnum,\s*abbrF,', src), \
+        "projectOperators must receive the abbr table (F1 fix)"
+
+
+def test_driver_has_completeness_guard():
+    """F2 fix: the driver must fail loudly when the projection is incomplete
+    (unrecognized structure / non-spanning residual), not silently drop content."""
+    src = _driver_src()
+    assert "SD-PROJECTION-INCOMPLETE" in src, "completeness guard must be present"
+    assert "SD-PROJECTION-FAILED" in src, "structural-failure guard must be present"
+    assert 'proj["completeness_ok"]' in src
+
+
 # ── Model dispatch ──────────────────────────────────────────────────────────────
 
 def _import_run_looptools():
@@ -123,16 +143,44 @@ def test_run_driver_signature_selects_driver_script():
     assert "driver_script_name" in sig.parameters
 
 
-# ── R2: projection chain-block disjointness (hermetic structural) ───────────────
+# ── Projector method: real-Abbr basis-vector solve, no hard-coded blocks ────────
 
-def test_scalar_and_twist2_chain_blocks_are_disjoint():
-    """The load-bearing R2 invariant: the scalar operator block and the twist-2
-    operator block share NO Weyl chain, so a pure-scalar amplitude cannot leak
-    into the twist-2 coefficient (and vice versa).  Merging the blocks is exactly
-    the 2HDM+a-collapse bug R2 exists to catch."""
+def test_projector_has_no_hardcoded_index_blocks():
+    """F1 [MAJOR] fix: PR #31 hard-coded {F1..F4}=scalar / {F5..F8}=twist-2 index
+    blocks — an UNPROVEN convention, wrong for the real SD process (whose scalar
+    chains are F1,F4 (chi) + F2,F3 (quark) and whose twist-2 chains are F15,F16).
+    The projector must NOT carry those contiguous-block assignments anymore."""
     src = SD_PROJ.read_text()
-    scal = set(re.search(r"\$scalarChains\s*=\s*\{([^}]*)\}", src).group(1).replace(" ", "").split(","))
-    twist = set(re.search(r"\$twist2Chains\s*=\s*\{([^}]*)\}", src).group(1).replace(" ", "").split(","))
-    assert scal == {"F1", "F2", "F3", "F4"}
-    assert twist == {"F5", "F6", "F7", "F8"}
-    assert scal.isdisjoint(twist), "scalar and twist-2 chain blocks must be disjoint"
+    assert "$scalarChains" not in src, "hard-coded $scalarChains block must be gone"
+    assert "$twist2Chains" not in src, "hard-coded $twist2Chains block must be gone"
+    assert "$mixedChains" not in src
+
+
+def test_projector_classifies_from_real_weylchains():
+    """The projector reads each chain's operator content from its ACTUAL WeylChain
+    definition (fermion line + rank + chirality), via a numerical spinor-basis
+    solve (Decision 3.2) — not an index block."""
+    src = SD_PROJ.read_text()
+    assert "classifyChain" in src and "chainClass" in src, "structural classifier required"
+    assert "WeylChain" in src and "Spinor" in src, "must inspect WeylChain/Spinor structure"
+    assert "LeastSquares" in src, "must solve for operator coefficients numerically"
+    # signature takes the abbr table
+    assert re.search(r"projectOperators\[M_,\s*abbr_List,\s*mchi_,\s*mq_\]", src)
+
+
+def test_projector_has_completeness_and_taxonomy_guards():
+    """F2 [MAJOR] fix: content outside the recognized set must fail loudly, named —
+    not be silently dropped with an empty residual (PR #31's silent fall-through)."""
+    src = SD_PROJ.read_text()
+    assert "unrecognizedChains" in src, "structural taxonomy guard required"
+    assert "UNRECOGNIZED-CHAIN-STRUCTURE" in src
+    assert "completeness_rel_residual" in src and "$completenessTol" in src
+
+
+def test_residual_symbols_scans_function_form_subs():
+    """F3 [MINOR] fix: the Sub#### guard must catch function-form Sub####[args]
+    (real amp has e.g. Sub3131[I3G2,I3G4,I3G5]) — scan HEADS, not only bare
+    symbols."""
+    src = SD_PROJ.read_text()
+    assert re.search(r"residualSymbols.*Heads\s*->\s*True", src, re.S), \
+        "residualSymbols must scan heads (Heads -> True) to catch Sub####[args]"

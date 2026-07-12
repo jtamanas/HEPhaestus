@@ -17,7 +17,8 @@
    The elastic  chi1 q -> chi1 q  one-loop amplitude for a MAJORANA chi1 and an
    external DOWN-type quark (STEP2.md: process {F[5,{1}], F[4,{.}]} elastic).
    Unlike run_eval.wls it does NOT spin-sum-collapse the Weyl chains: it keeps the
-   FormCalc form factors symbolic in F1..F16 and projects onto the operator basis
+   FormCalc form factors symbolic in the chains (F1..F18 for the real SD amp)
+   and projects onto the operator basis
    (scalar C_q + twist-2 C^(1,2)_q, Decision 3) via sd_projection.wl, so scalar
    and twist-2 are SEPARATED (they are degenerate under the static collapse).
 
@@ -59,10 +60,10 @@ Module[{
     point, masses, params, getMass, getParam, getParamAny,
     mchi1, mchi2, mchi3, mchiM, mh, mZ, mW, mchi, mq,
     ZNm, IMZNm, UMm, UPm, ZDLm, ZDRm, ZULm, ZURm, Yum, Ydm,
-    yh1v, yh2v, g1v, g2v, Lamv, PhaseFSv, vvSMv, ctw, stw,
-    amp, subexpr, ampBody, terms, mkNum,
+    yh1v, yh2v, g1v, g2v, g3v, Lamv, PhaseFSv, vvSMv, ctw, stw,
+    amp, subexpr, ampBody, abbr, abbrF, terms, mkNum, extIdx, extPins,
     evalAmp, Mnum, resid, proj, projAt, coeffNames,
-    cScalar, cTw, cTw1, cTw2, uvResidue, scaleResidue, finiteQ,
+    cScalar, cTw, cChiV, uvResidue, scaleResidue, finiteQ, complResidual,
     nPV, jsonAssoc, bindGuard, unbound, matrixUnbound
   },
 
@@ -104,6 +105,9 @@ Module[{
   yh1v = getParamAny[{"BSMPARAMS:3", "MINPAR:3"}];
   yh2v = getParamAny[{"BSMPARAMS:4", "MINPAR:4"}];
   g1v = getParam["GAUGE:1"]; g2v = getParam["GAUGE:2"];
+  g3v = getParam["GAUGE:3"];  (* the real reduced amp carries g3 (QCD coupling,
+     e.g. Sub352 in the Subexpr table); PR #31 never bound it — first exposed by
+     the live self-contained-artifact run. *)
   Lamv = getParam["SM:2"];
   PhaseFSv = getParam["PHASES:1"];
   vvSMv = getParam["HMIX:3"];
@@ -115,7 +119,8 @@ Module[{
     "MassFChi[3](chi3,9979223)" -> mchi3, "MassFChiM(chi+-,9984071)" -> mchiM,
     "Masshh(h,25)" -> mh, "MassVZ/MassAh(Z/G0,23)" -> mZ, "MassVWp/MassHp(W/G+,24)" -> mW,
     "yh1(BSMPARAMS:3|MINPAR:3)" -> yh1v, "yh2(BSMPARAMS:4|MINPAR:4)" -> yh2v,
-    "g1(GAUGE:1)" -> g1v, "g2(GAUGE:2)" -> g2v, "Lam(SM:2)" -> Lamv,
+    "g1(GAUGE:1)" -> g1v, "g2(GAUGE:2)" -> g2v, "g3(GAUGE:3)" -> g3v,
+    "Lam(SM:2)" -> Lamv,
     "PhaseFS(PHASES:1)" -> PhaseFSv, "vvSM(HMIX:3)" -> vvSMv};
   matrixUnbound = Join[
     If[MemberQ[Flatten[ZNm], $Failed] || ! FreeQ[ZNm, _Missing], {"ZN(ZNMIX+I*IMZNMIX)"}, {}],
@@ -140,6 +145,12 @@ Module[{
     WriteString["stderr", "run_eval_sd: Get[amp_reduced.m] failed\n"]; Exit[1]];
   subexpr = If[MatchQ[amp, _List] && MemberQ[amp[[All, 1]], "subexpr"], "subexpr" /. amp, {}];
   ampBody = If[MatchQ[amp, _List] && MemberQ[amp[[All, 1]], "amp"], "amp" /. amp, amp];
+  (* Abbr[] WeylChain table — REQUIRED by the numerical basis-vector projector
+     (sd_projection.wl): it reads each chain's operator content from its ACTUAL
+     WeylChain definition (the F1 review fix; no hard-coded index blocks). *)
+  abbr = If[MatchQ[amp, _List] && MemberQ[amp[[All, 1]], "abbr"], "abbr" /. amp, {}];
+  abbrF = Cases[abbr, HoldPattern[_ -> _WeylChain]];  (* HoldPattern: else Cases
+     reads `_ -> _WeylChain` as a pattern->transform rule, not a match target. *)
   terms = List @@ ampBody;
 
   (* ---- EARLY LOUD GUARD: undefined FormCalc abbreviations --------------------
@@ -149,8 +160,12 @@ Module[{
      cannot be reached.  Detect it here so the failure is loud and fast, not a
      slow full-amplitude evaluation that ends non-numeric. *)
   Module[{danglingSub},
+    (* Heads -> True (F3 review fix): the real amp carries FUNCTION-FORM
+       abbreviations Sub####[I3G2,...] whose Sub#### appears only as a HEAD; the
+       default Heads -> False would miss them when no bare-symbol Sub coexists. *)
     danglingSub = DeleteDuplicates[Cases[terms //. subexpr,
-      s_Symbol /; StringMatchQ[SymbolName[s], "Sub" ~~ DigitCharacter ..], Infinity]];
+      s_Symbol /; StringMatchQ[SymbolName[s], "Sub" ~~ DigitCharacter ..],
+      Infinity, Heads -> True]];
     If[Length[danglingSub] > 0,
       WriteString["stderr",
         "run_eval_sd: SD-AMP-ABBREVIATIONS-UNRESOLVED " <>
@@ -163,7 +178,18 @@ Module[{
         "  wrapped {\"amp\"->..,\"subexpr\"->..} association.\n"];
       Exit[3]]];
 
-  (* ---- numeric substitution rules — F1..F16 KEPT SYMBOLIC (Decision 3.1) ----- *)
+  (* ---- GUARD: Abbr[] table present (numerical basis-vector projector needs it) *)
+  If[abbrF === {},
+    WriteString["stderr",
+      "run_eval_sd: SD-AMP-ABBREVIATIONS-UNRESOLVED (no Abbr[] WeylChain table)\n" <>
+      "  The reduced amplitude carries no \"abbr\" -> {F -> WeylChain[..]} table, so\n" <>
+      "  the numerical basis-vector projector (Decision 3.2) cannot read each\n" <>
+      "  chain's operator content from its actual spinor structure.  Re-run\n" <>
+      "  /formcalc reduce persisting BOTH Subexpr[] and the Abbr[] WeylChain table.\n"];
+    Exit[3]];
+
+  (* ---- numeric substitution rules — F-chains KEPT SYMBOLIC (Decision 3.1;
+        the real SD amp carries F1..F18) ------------------------------------- *)
   mkNum[delta_, mudim_] := (
     setdelta[delta]; setmudim[mudim];
     {Den[a_, b_] :> 1/(a - b),
@@ -175,17 +201,31 @@ Module[{
      ZDL[i_, j_] :> ZDLm[[i, j]], ZDR[i_, j_] :> ZDRm[[i, j]],
      ZUL[i_, j_] :> ZULm[[i, j]], ZUR[i_, j_] :> ZURm[[i, j]],
      Yu[i_, j_] :> Yum[[i, j]], Yd[i_, j_] :> Ydm[[i, j]],
-     yh1 -> yh1v, yh2 -> yh2v, g1 -> g1v, g2 -> g2v, Lam -> Lamv,
+     yh1 -> yh1v, yh2 -> yh2v, g1 -> g1v, g2 -> g2v, g3 -> g3v, Lam -> Lamv,
      PhaseFS -> PhaseFSv, vvSM -> vvSMv, CTW -> ctw, STW -> stw,
      Finite -> 1, Mat[_] -> 1,
      T -> -TEPS, S -> (mchi + mq)^2, U -> (mchi - mq)^2});
+
+  (* ---- EXTERNAL-index pinning ------------------------------------------------
+     The reduced amp carries 3-arg `SumOver[i, n, External]` factors for the
+     EXTERNAL quark generation indices (I3G2 incoming, I3G4 outgoing).  These are
+     class-level bookkeeping, NOT physical sums: the elastic process has a fixed
+     external flavor, so we PIN them to generation 1 (down quark, matching
+     mq = mDlight and "external_quark": "d") and drop the SumOver factors.
+     evalTermCommon's iterator pattern is 2-arg, so unhandled External SumOvers
+     would otherwise leave I3G2/I3G4 symbolic (PV heads non-numeric).  INTERNAL
+     sums (I3G5, j21i, j22i, ...) remain expanded exactly (R3: no gen pinning
+     applies to internal sums; per-flavor EXTERNAL runs are item 4). *)
+  extIdx = DeleteDuplicates[Cases[terms, SumOver[i_, _, External] :> i, Infinity]];
+  extPins = Join[{SumOver[_, _, External] -> 1}, (# -> 1) & /@ extIdx];
 
   (* Evaluate the full amplitude to an F-LINEAR numeric form.  Fp = {} keeps the
      external chains symbolic (that IS the coefficient-level projection); the
      SumOver internal-eigenstate/generation sums are expanded exactly by
      evalTermCommon (R3: no gen pinning). *)
   evalAmp[delta_, mudim_] := Total[Table[
-    evalTermCommon[terms[[k]], subexpr, {}, mkNum[delta, mudim]], {k, Length[terms]}]];
+    evalTermCommon[terms[[k]], subexpr, {}, mkNum[delta, mudim], extPins],
+    {k, Length[terms]}]];
 
   Mnum = evalAmp[0, 1];
 
@@ -199,27 +239,60 @@ Module[{
     WriteString["stderr",
       "run_eval_sd: SD-AMP-ABBREVIATIONS-UNRESOLVED " <>
       ToString[Take[ToString /@ resid, UpTo[30]], InputForm] <> "\n" <>
-      "  The reduced amplitude is not fully numeric after substitution: the\n" <>
-      "  FormCalc Subexpr[] abbreviation table (Sub#### -> ...) was not persisted\n" <>
-      "  alongside amp_reduced.m (run_calcfeynamp.wls Put[reduced] writes only the\n" <>
-      "  Amp expression, not Subexpr[]).  The F-chains live inside those\n" <>
-      "  abbreviations, so the coefficient-level projection cannot resolve them.\n" <>
-      "  Fix: re-run /formcalc reduce persisting the abbreviation table (Subexpr[])\n" <>
-      "  into amp_reduced.m as a wrapped {\"amp\"->..,\"subexpr\"->..} association.\n"];
+      "  The reduced amplitude is not fully numeric after substitution: the named\n" <>
+      "  symbols survived the mkNum binding rules.  Common causes: (a) a coupling\n" <>
+      "  the amplitude uses but the binding table does not cover (e.g. g3 before\n" <>
+      "  this fix); (b) a Sub#### abbreviation with no definition in the persisted\n" <>
+      "  Subexpr[] table; (c) an index left symbolic so an indexed rule could not\n" <>
+      "  fire.  The F-chains/couplings inside unresolved abbreviations are\n" <>
+      "  unreachable, so the coefficient-level projection refuses to continue.\n"];
     Exit[3]];
 
-  (* ---- projection onto the operator basis (sd_projection.wl) ----------------- *)
-  proj = projectOperators[Mnum, mchi, mq];
-  cScalar = proj["C_scalar"]; cTw = proj["C_twist2"];
-  cTw1 = proj["C_twist2_1"];  cTw2 = proj["C_twist2_2"];
+  (* ---- projection onto the operator basis (sd_projection.wl, Decision 3.2) ----
+     Numerical spinor-basis solve: each chain is read from its ACTUAL WeylChain
+     definition (no hard-coded index blocks — the F1 review fix) and evaluated on
+     an explicit spinor basis; the operator coefficients are the least-squares
+     solution.  A structurally-unrecognized chain or an incomplete fit fails loud
+     (the F2 review fix — no silent fall-through). *)
+  proj = projectOperators[Mnum, abbrF, mchi, mq];
+  If[! TrueQ[proj["ok"]],
+    WriteString["stderr",
+      "run_eval_sd: SD-PROJECTION-FAILED " <> ToString[proj["reason"]] <> " " <>
+      ToString[Lookup[proj, "unrecognized_chains", {}], InputForm] <> "\n" <>
+      "  The chain-coefficient projection could not map the amplitude onto the\n" <>
+      "  recognized SI operator set.  Either a chain's WeylChain structure is\n" <>
+      "  outside the {chi|quark|mixed} x {rank 0|1} taxonomy the projector handles,\n" <>
+      "  or the amplitude carries content the recognized {scalar, twist-2, chi-\n" <>
+      "  vector} operators do not span.  This is a LOUD refusal, not a silent drop.\n"];
+    Exit[3]];
+  cScalar = proj["C_scalar"]; cTw = proj["C_twist2"]; cChiV = proj["C_chi_vector"];
+  complResidual = proj["completeness_rel_residual"];
+
+  (* ---- COMPLETENESS GUARD (F2, Decision) -------------------------------------
+     M - Sum_op c_op O_op must be ~0 (relative, to $completenessTol); a larger
+     residual means non-SI structure (parity-odd / tensor / higher-moment twist-2)
+     that the SI-floor projection does not handle -> fail loud, do not emit a
+     floor built on a partial fit. *)
+  If[! TrueQ[proj["completeness_ok"]],
+    WriteString["stderr",
+      "run_eval_sd: SD-PROJECTION-INCOMPLETE completeness_rel_residual=" <>
+      ToString[complResidual] <> " (tol=" <> ToString[$completenessTol] <> ")\n" <>
+      "  The recognized operator set {scalar, twist-2, chi-vector} does NOT span\n" <>
+      "  the amplitude at the sampled kinematics: M - Sum c_op O_op is non-zero.\n" <>
+      "  The amplitude carries non-SI structure (parity-odd / tensor / higher-\n" <>
+      "  moment twist-2) that the leading-order SI projection drops.  Resolving it\n" <>
+      "  (full velocity expansion, C^(1)/C^(2) split) is build-order item 4.\n"];
+    Exit[3]];
 
   (* ---- PER-COEFFICIENT UV-residue check (Decision 2, load-bearing) -----------
      The SD reduced core carries DIVERGENT B0i heads; setdelta/setmudim variation
      must leave every projected coefficient invariant (nonzero residue = a
      genuine 1/eps that the 1PI-core-only scope failed to cancel).  Assert
-     per-coefficient: setdelta-residue < 1e-10 rel, setmudim-residue < 1e-6 rel. *)
-  projAt[delta_, mudim_] := projectOperators[evalAmp[delta, mudim], mchi, mq];
-  coeffNames = {"C_scalar", "C_twist2_1", "C_twist2_2"};
+     per-coefficient: setdelta-residue < 1e-10 rel, setmudim-residue < 1e-6 rel.
+     projAt re-projects the amplitude re-evaluated at a different setdelta/setmudim
+     (first executable on live SD data — Decision 2's guard). *)
+  projAt[delta_, mudim_] := projectOperators[evalAmp[delta, mudim], abbrF, mchi, mq];
+  coeffNames = {"C_scalar", "C_twist2", "C_chi_vector"};
   Module[{p1 = projAt[1.0*^4, 1], p2 = projAt[0, 100.], relD, relS},
     relD = Max[Table[
       If[Abs[proj[c]] < 1*^-300, Abs[p1[c] - proj[c]],
@@ -230,7 +303,7 @@ Module[{
     uvResidue = relD; scaleResidue = relS];
   setdelta[0]; setmudim[1];
 
-  finiteQ = AllTrue[{cScalar, cTw1, cTw2}, (NumberQ[#] && Abs[#] < Infinity) &] &&
+  finiteQ = AllTrue[{cScalar, cTw, cChiV}, (NumberQ[#] && Abs[#] < Infinity) &] &&
             (uvResidue < 1.0*^-10) && (scaleResidue < 1.0*^-6);
 
   If[! finiteQ,
@@ -254,14 +327,14 @@ Module[{
       "uv_pole_residue" -> uvResidue,
       "scale_residue" -> scaleResidue,
       "ir_pole_residue" -> 0.0,
+      "completeness_rel_residual" -> complResidual,
       "gauge_parameter_dependence" -> Null (* Rxi variation deferred (Decision 2) *)
     |>,
     "wilson_coefficients" -> <|
-      "C_scalar"   -> Re[cScalar],
+      "C_scalar"    -> Re[cScalar],
       "C_scalar_im" -> Im[cScalar],
-      "C_twist2"   -> Re[cTw],
-      "C_twist2_1" -> Re[cTw1],
-      "C_twist2_2" -> Re[cTw2]
+      "C_twist2"    -> Re[cTw],
+      "C_chi_vector" -> Re[cChiV] (* Majorana diagnostic: expected ~0 *)
     |>,
     "nucleon_matching" -> "deferred_item4",
     "loop_topologies" -> {"chi_triangle_IRR2", "W_box_IRR3", "crossed_box_IRR4"},
@@ -270,18 +343,26 @@ Module[{
     "n_diagrams" -> Length[terms],
     "pv_heads_used" -> {"B0i", "C0i", "D0i"},
     "_diagnostics" -> <|
-      "method" -> "Majorana-chi + down-quark chain-coefficient projection (F-symbolic); " <>
-                  "scalar {F1..F4} vs twist-2 {F5..F8} separated (NOT static spin-summed collapse)",
+      "method" -> "Majorana-chi + down-quark NUMERICAL basis-vector projection " <>
+                  "(Decision 3.2): chains read from the real Abbr[] WeylChains, " <>
+                  "evaluated on an explicit spinor basis, operator coefficients " <>
+                  "least-squares-solved (NOT hard-coded index blocks, NOT the " <>
+                  "2HDM+a static spin-summed collapse)",
       "gamma5_scheme" -> "naive",
       "znmix_convention" -> "ZN = ZNMIX + I*IMZNMIX",
       "yh_block" -> "BSMPARAMS(3,4) preferred, MINPAR fallback",
+      "chain_map" -> "SD real Abbr: F1,F4=chi-scalar; F2,F3=quark-scalar; " <>
+                     "F13,F14=chi-vector; F15,F16=quark-vector(twist-2); " <>
+                     "F5-F12,F17,F18=mixed Fierz",
       "note" -> "Provisional: NO nucleon matching, NO sigma_SI (build-order item 4). " <>
-                "External quark pinned to representative down; per-flavor (u,d,s) runs are item 4."
+                "External quark pinned to representative down; per-flavor (u,d,s) runs " <>
+                "and the C^(1)/C^(2) twist-2 split are item 4."
     |>
   |>;
 
   writeEvalOutput[outPath, jsonAssoc];
   Print["run_eval_sd: wrote ", outPath, " (finite=", finiteQ,
-        ", C_scalar=", Re[cScalar], ", C_twist2=", Re[cTw], ")"];
+        ", C_scalar=", Re[cScalar], ", C_twist2=", Re[cTw],
+        ", completeness_resid=", complResidual, ")"];
   Exit[0]
 ]
