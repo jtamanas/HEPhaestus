@@ -45,13 +45,25 @@
    scalar integral.  Recursing, EVERY (q.u)^n integral reduces to a linear
    combination of scalar D0/C0/B0 with c-number coefficients — no Gram anywhere.
 
-   The two building blocks are validated EXACTLY (relative agreement ~1e-15) against
-   LoopTools' own tensor coefficients at non-degenerate kinematics (the A1-V test,
-   tests/test_dd_expansion_a1v.py):
-     * VECTOR:  Sum_i (k_i.k_j) D_i  ==  ddIntU[1] telescoping   (rank-1 exact PV)
-     * TRACE :  4 D00 + Sum_ij (k_i.k_j) D_ij == C0(remove prop0) + M_0^2 D0.
-   These are exact PV identities (true at ALL kinematics); the DD application is
-   their collinear (u-projected) specialisation, which is stable by construction.
+   WHAT CARRIES A LOOPTOOLS CROSS-CHECK, EXACTLY (A1-V, tests/test_dd_expansion_a1v):
+     * EXACT primitives (~1e-15 relative, all kinematics):
+         ddIntOffsetExact[da,j]  ==  Sum_i (k_i.k_j) D_i^LT      (exact PV vector)
+         ddTraceScalar[da]       ==  4 D00^LT + Sum (k.k) D_ij^LT (exact PV trace)
+       NOTE: ddIntOffsetExact is a VALIDATION primitive; the production path does
+       not call it.  It certifies ddScalarInt (shared with production) + the
+       numerator-identity machinery the telescoper is built from.
+     * PRODUCTION path, contracted level (the F2/amendment-0c check): the
+       telescoper ddIntU and the reconstruction ddBoxHead are compared against
+       LoopTools' OWN tensor u-contractions (Sum b_i D_i^LT, D00^LT + Sum b_i b_j
+       D_ij^LT, D00^LT) along the physical SD signature's non-zero-Gram T-path,
+       where both sides are stable:
+         rank-1 (ddIntU[.,1] vs Sum b_i D_i^LT): agrees to MACHINE PRECISION at
+         every T tested (the collinear numerator identity is exact for the
+         longitudinal component at all T);
+         rank-2 (ddIntU[.,2], D00, Duu): LoopTools contractions converge to the
+         production reconstruction as T -> 0 with the O(sqrt|T|)/O(|T|) rates of
+         the accuracy budget below; the extrapolated T->0 LoopTools value is the
+         reference the committed test asserts against.
 
    Head reconstruction (collinear gauge).  On the {g,uu} basis a box tensor is
         D^mu           = u^mu (u.D)                              (rank 1)
@@ -64,22 +76,46 @@
         D_ij  = D_uu   b_i b_j / |beta|^4
         D_00  = D00.
    This reproduces every u-contraction exactly (Sum b_i D_i = u.D, Sum b_i b_j D_ij
-   = D_uu) and vanishes on directions orthogonal to u — i.e. it is EXACT for the
-   leading DD (v=0) amplitude and drops only the O(v) transverse structure, which
-   is the documented round-2 twist-2 refinement (Decision A1 O(v), A5).  This is
-   why the completeness residual is REPORTED, not assumed zero (Decision A6): a
-   residual in [1e-4,1e-2] is the O(v) leakage finding, never a tolerance to loosen.
+   = D_uu) and vanishes on directions orthogonal to u — i.e. it is exact for the
+   leading DD (v=0) amplitude and drops the transverse structure.
+
+   ACCURACY BUDGET (measured; the committed A1-V production section reports it):
+   the driver evaluates box heads at T = -TEPS (not the exact T=0 limit), where the
+   offsets are NEARLY collinear (rank-1 Gram residual ~1e-9 on the SD signature).
+   The rank-1 telescoper contraction is exact at all T (machine precision vs
+   LoopTools).  The rank-2 components carry a collinear-leakage method error from
+   transverse q.k_perp in the telescoping numerator, measured to scale as
+   O(sqrt|T|): ~3e-3 relative at TEPS = 1e-4 on the chi+-/W/W signature (the D00
+   component scales O(|T|): ~5e-5).  This is a stated A-R1 method-accuracy budget,
+   small against the x3-5 floor anchor bands; the Hisano pure-doublet anchor
+   (Decision A6) is the independent physics check.
+
+   NOTE on the ~1.0 completeness residual at the canonical point (post PR #35
+   adversarial review): it is NOT produced by this expansion — the triangle-only
+   sector (untouched by this module) shows the same residual, and it is
+   velocity-pinned (pr35-review/REVIEW.md probes 1-2 refuted the earlier A-R2
+   velocity-gap reading).  Its design-level interpretation and the completed
+   reference basis are governed by DESIGN-ITEM4-AMENDMENT.md Rulings 1-3.
 
    ============================================================================
-   GUARDS (Decision A1 step 4, task scope)
+   GUARDS (Decision A1 step 4 + amendment stage-0c)
    ============================================================================
-   * SD-DD-EXPANSION-INCOMPLETE — after expansion the box sector must contain ZERO
-     tensor-reduction heads (any D0i[id,..] with id =!= dd0).  A survivor is a loud
-     recoverable blocker (blocker_catalog.yaml): the driver exits 3, nothing ships.
-   * SD-DD-DERIVATIVE-NONCONVERGENT — a mass-derivative finite difference whose
-     step-halving does not converge to 1e-6 relative is a loud stop.
-   * boxDegeneracyMonitor — emits det(Gram)/scale^3 and the rank-1 residual
-     ||Gram - beta⊗beta||/||Gram|| into the eval metadata (Gram/degeneracy monitor).
+   * SD-DD-EXPANSION-INCOMPLETE — ZERO tensor-reduction heads may survive the
+     expansion.  Checked on the SYMBOLIC amplitude structures (pre-mkNum: term
+     bodies + Subexpr table, where a D0i head cannot auto-evaluate) AND on the
+     evaluated amplitude (for inert symbolic ddBoxHead leftovers).  The symbolic-
+     side check is load-bearing: once arguments are numeric, an un-rewritten
+     D0i[dd11,..] auto-evaluates through the MathLink to a Gram-poled NUMBER and
+     is invisible to any head pattern (PR #35 review F5).  A survivor is a loud
+     recoverable blocker (blocker_catalog.yaml): exit 3, nothing ships.
+   * SD-DD-DOUBLED-OFFSET-UNSUPPORTED — if a box signature ever presents a
+     propagator subset with NO non-coincident offset pair (a doubled propagator in
+     the collinear limit), the reduction hard-errors (exit 3).  The mass-derivative
+     branch that previously claimed this case was excised per the amendment F4
+     ruling (it silently returned a ~0 derivative); reinstate only with its own
+     LoopTools cross-check.
+   * boxDegeneracyMonitor — det(Gram)/scale^3 + rank-1 residual
+     ||Gram - beta(x)beta||/||Gram|| per evaluated signature (Gram monitor).
 
    This file touches NO LoopTools/FormCalc symbol at read time; it is Get[]-loaded
    by run_eval_sd.wls AFTER run_eval_common.wl has Install[]ed LoopTools, so the
@@ -94,8 +130,7 @@
    explicit-momentum cross-check; production works from scalar invariants). *)
 ddDot[a_, b_] := a[[1]] b[[1]] - a[[2]] b[[2]] - a[[3]] b[[3]] - a[[4]] b[[4]];
 
-(* Tolerances (Decision A1 step 3 / A6). *)
-$ddDerivTol = 1.0*^-6;      (* mass-derivative FD step-halving convergence bar *)
+(* Tolerances. *)
 $ddOffsetDegenTol = 1.0*^-9; (* |b_a - b_r| below this => "coincident offset"   *)
 
 
@@ -210,8 +245,15 @@ ddIntOffsetExact[dargs_List, j_Integer] := Module[{Gx = ddGext[dargs], m = ddMas
    for a propagator pair (a,r) in P with the LARGEST |b_a - b_r| (numerically
    safest; never a Gram determinant).  N_a cancels prop a, N_r cancels prop r.
    Coincident-offset pairs (|b_a-b_r| < tol) are skipped as pivots; if NO
-   non-coincident pair exists the remaining (q.u) hits a doubled propagator and is
-   routed to the mass-derivative branch (ddMassDerivInt). *)
+   non-coincident pair exists the remaining (q.u) hits a DOUBLED propagator in the
+   collinear limit.  That case HARD-ERRORS (SD-DD-DOUBLED-OFFSET-UNSUPPORTED,
+   exit 3) per DESIGN-ITEM4-AMENDMENT.md stage-0c F4: the finite-difference
+   mass-derivative branch that previously claimed it was excised (PR #35 review
+   found it differentiated an integral from which the perturbed propagator had
+   already been removed — a silent ~0 derivative that would pass its own
+   convergence check).  In the SD box census this case is unreachable (prop 0 has
+   b_0 = 0, distinct from every massive-line offset); reinstate a derivative
+   branch only with its own LoopTools cross-check. *)
 
 ddPickPivot[dargs_List, P_List] := Module[{b = ddBoffsets[dargs], pairs, best},
   pairs = Subsets[Sort[P], {2}];
@@ -225,8 +267,21 @@ ddIntU[dargs_List, P_List, n_Integer?Positive] := Module[
   {b = ddBoffsets[dargs], m = ddMassSq[dargs], piv, a, r, denom, cst},
   piv = ddPickPivot[dargs, P];
   If[piv === $Failed,
-    (* all kept offsets coincide -> doubled-propagator, use mass derivative *)
-    Return[ddMassDerivInt[dargs, P, n]]];
+    (* All kept offsets coincide: a doubled propagator in the collinear limit.
+       HARD ERROR (amendment stage-0c F4) — the excised FD mass-derivative branch
+       silently returned ~0 here; a loud unsupported case is strictly better. *)
+    WriteString["stderr",
+      "sd_dd_expansion: SD-DD-DOUBLED-OFFSET-UNSUPPORTED props=" <>
+      ToString[P, InputForm] <> " offsets=" <> ToString[b[[P]], InputForm] <> "\n" <>
+      "  The collinear DD telescoping needs a propagator pair with distinct\n" <>
+      "  offsets (b_a != b_r) in every subset it recurses into; this box\n" <>
+      "  signature presents a subset with NONE (a doubled propagator in the\n" <>
+      "  collinear limit), which requires a mass-derivative of a scalar loop\n" <>
+      "  function.  That branch was excised (DESIGN-ITEM4-AMENDMENT.md stage-0c\n" <>
+      "  F4: the previous implementation was a latent silent-zero); reinstate it\n" <>
+      "  only with its own LoopTools cross-check.  Unreachable for the SD box\n" <>
+      "  census (b_0 = 0 is always distinct from the massive-line offsets).\n"];
+    Exit[3]];
   {a, r} = piv;
   denom = 2 (b[[a]] - b[[r]]);
   cst = -(b[[a]]^2 - b[[r]]^2) + (m[[a]] - m[[r]]);
@@ -234,42 +289,6 @@ ddIntU[dargs_List, P_List, n_Integer?Positive] := Module[
      ddIntU[dargs, DeleteCases[P, a], n - 1]      (* from N_a: cancels prop a *)
    - ddIntU[dargs, DeleteCases[P, r], n - 1]      (* from N_r: cancels prop r *)
    + cst ddIntU[dargs, P, n - 1])];
-
-(* Mass-derivative branch: when a (q.u) factor multiplies an integral whose only
-   available propagator pair is coincident (b_a = b_r, same offset, generally
-   different mass), the reduction produces a DERIVATIVE of the scalar integral in
-   the coincident-propagator mass^2.  We evaluate d/dM^2 by CENTRAL finite
-   differences of LoopTools' scalar output with step-halving convergence (Decision
-   A1 step 3).  In the SD box census this branch is not reached at leading order
-   (prop 0 has b_0=0, distinct from b_1=mchi+mq); it is implemented for
-   completeness and higher subsets.  Loud on non-convergence. *)
-ddMassDerivInt[dargs_List, P_List, n_Integer] := Module[{b = ddBoffsets[dargs], deg, others},
-  (* identify a coincident pair *)
-  deg = First[Select[Subsets[Sort[P], {2}], Abs[b[[#[[1]]]] - b[[#[[2]]]]] <= $ddOffsetDegenTol &], {}];
-  If[deg === {}, Return[$Failed]];
-  (* d/dM_a^2 of the (n-1) integral with prop a's mass perturbed *)
-  Module[{a = deg[[1]]},
-    ddCentralDeriv[
-      Function[dm, ddIntU[ReplacePart[dargs, (6 + a) -> dargs[[6 + a]] + dm], DeleteCases[P, a], n - 1]],
-      Max[Abs[dargs[[6 + a]]], 1.0] * 1.0*^-3]]];
-
-(* central finite difference f'(0) with step-halving until 1e-6 relative, else
-   loud SD-DD-DERIVATIVE-NONCONVERGENT.  Returns the converged derivative and
-   records the last relative change in $ddDerivDiagnostics. *)
-$ddDerivDiagnostics = {};
-ddCentralDeriv[f_, h0_] := Module[{h = h0, prev, cur, rel, k = 0},
-  prev = (f[h] - f[-h])/(2 h);
-  While[k < 20,
-    h = h/2; k++;
-    cur = (f[h] - f[-h])/(2 h);
-    rel = If[Abs[cur] < 1.0*^-300, Abs[cur - prev], Abs[(cur - prev)/cur]];
-    AppendTo[$ddDerivDiagnostics, <|"step" -> k, "h" -> h, "rel_change" -> rel|>];
-    If[rel < $ddDerivTol, Return[cur]];
-    prev = cur];
-  WriteString["stderr",
-    "sd_dd_expansion: SD-DD-DERIVATIVE-NONCONVERGENT (rel=" <> ToString[rel] <>
-    " after " <> ToString[k] <> " halvings, tol=" <> ToString[$ddDerivTol] <> ")\n"];
-  cur];
 
 
 (* ============================================================================
@@ -365,16 +384,59 @@ ddBoxHead::unknownid = "sd_dd_expansion: unhandled box tensor id `1` (census lis
 
 ddExpandRule = D0i -> ddBoxHead;
 
-(* Survivors = any tensor-reduction head that DID NOT reduce to a scalar: either a
-   raw D0i[id,..] (id =!= dd0) that escaped interception, or a ddBoxHead[id,..]
-   (id =!= dd0) still symbolic because its arguments never became numeric.  Both
-   are SD-DD-EXPANSION-INCOMPLETE conditions. *)
-ddTensorSurvivors[expr_] := DeleteDuplicates[Join[
-  Cases[expr, D0i[id_, ___] /; (id =!= dd0) :> id, Infinity],
-  Cases[expr, ddBoxHead[id_, ___] /; (id =!= dd0) :> id, Infinity]]];
+(* Survivor semantics are STAGE-AWARE (the canonical re-run caught the naive
+   union firing on every legitimate run — found live, fixed here, regression-
+   locked by run_dd_guard_check.wls mode "symbolic-clean"):
+
+   * raw D0i[id,..] (id =!= dd0): a survivor at EVERY stage — the rewrite
+     missed it, and once its arguments go numeric LoopTools evaluates it at the
+     Gram pole.
+   * ddBoxHead[id,..] (id =!= dd0) with symbolic arguments: at the SYMBOLIC
+     pre-eval stage this is the EXPECTED post-rewrite state (the head stays
+     inert until mkNum numericizes its arguments — that deferral is the whole
+     interception mechanism), so it is NOT a survivor there.  At the EVALUATED
+     stage the same head means its arguments never became numeric (an
+     unresolved index blocked the mkNum rules) and the box content silently
+     dropped out of the numeric amplitude: survivor. *)
+ddRawTensorSurvivors[expr_] := DeleteDuplicates[
+  Cases[expr, D0i[id_, ___] /; (id =!= dd0) :> id, Infinity]];
+ddInertBoxHeads[expr_] := DeleteDuplicates[
+  Cases[expr, ddBoxHead[id_, ___] /; (id =!= dd0) :> id, Infinity]];
+ddTensorSurvivors[expr_, stage_String:"evaluated"] :=
+  If[StringStartsQ[stage, "symbolic"],
+    ddRawTensorSurvivors[expr],
+    DeleteDuplicates[Join[ddRawTensorSurvivors[expr], ddInertBoxHeads[expr]]]];
 
 ddBoxSectorClean[expr_] := Module[{surv = ddTensorSurvivors[expr]},
   {surv === {}, surv}];
+
+(* THE loud guard (F5, runtime-driven by tests/test_dd_guard_exit3.py via
+   run_dd_guard_check.wls — the same function the driver calls, not a source
+   grep).  `stage` names WHERE the check runs AND selects the survivor
+   predicate (see ddTensorSurvivors above):
+     "symbolic-pre-eval-*" — term bodies / Subexpr table BEFORE numericization.
+       This is the load-bearing site for RAW D0i tensors: a D0i head here still
+       has symbolic arguments, so it cannot have auto-evaluated through the
+       MathLink; once mkNum numericizes, an un-rewritten tensor D0i evaluates
+       to a Gram-poled NUMBER and no head pattern can see it (PR #35 review
+       F5).  Rewritten ddBoxHead heads are the expected state here and pass.
+     "evaluated" — the post-evaluation amplitude; ALSO catches inert symbolic
+       ddBoxHead leftovers (arguments never went numeric).
+   On any survivor: emits the SD-DD-EXPANSION-INCOMPLETE marker + help text to
+   stderr and Exit[3] — nothing ships. *)
+ddAssertNoSurvivors[expr_, stage_String] := Module[{survivors = ddTensorSurvivors[expr, stage]},
+  If[survivors =!= {},
+    WriteString["stderr",
+      "run_eval_sd: SD-DD-EXPANSION-INCOMPLETE stage=" <> stage <> " " <>
+      ToString[survivors, InputForm] <> "\n" <>
+      "  The box small-momentum expansion left tensor-reduction heads in the\n" <>
+      "  amplitude at the named stage: these D0i tensor coefficients were NOT\n" <>
+      "  rewritten onto the rank-1 collinear scalar basis.  If they reach the\n" <>
+      "  numeric stage LoopTools evaluates them AT the degenerate DD point and\n" <>
+      "  re-introduces the Gram-determinant spurious pole (the verified item-4\n" <>
+      "  blocker) AS A NUMBER, invisibly.  Nothing ships.  Fix: extend\n" <>
+      "  sd_dd_expansion.wl ddBoxHead to cover the named tensor id(s).\n"];
+    Exit[3]]];
 
 (* census of box tensor heads present BEFORE expansion (for the amp_dd.m sidecar
    metadata: per-id counts). *)
@@ -404,8 +466,6 @@ writeAmpDdSidecar[path_, expandedAmp_, censusBefore_, ovOrder_, extra_:<||>] :=
         "box_head_census_before" -> censusBefore,
         "box_head_census_after" -> ddTensorSurvivors[expandedAmp],
         "ov_order" -> ovOrder,
-        "deriv_tol" -> $ddDerivTol,
-        "deriv_diagnostics_tail" -> Take[$ddDerivDiagnostics, -Min[10, Length[$ddDerivDiagnostics]]],
         "gram_monitor" -> ddMonitorSummary[],
         "expanded_amplitude" -> expandedAmp,
         "extra" -> extra|>, path];

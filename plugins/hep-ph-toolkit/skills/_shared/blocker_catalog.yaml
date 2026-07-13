@@ -894,47 +894,80 @@ blockers:
     severity: recoverable
     emitted_by: [looptools]
     triggered_by_axes: []
-    digest_reference: "looptools/scripts/sd_dd_expansion.wl + run_eval_sd.wls (box DD-expansion structural guard); eval/2506.19062_wimps_blind_spots/DESIGN-ITEM4.md Decision A1 step 4"
+    digest_reference: "looptools/scripts/sd_dd_expansion.wl ddAssertNoSurvivors + run_eval_sd.wls; DESIGN-ITEM4.md A1 step 4 + DESIGN-ITEM4-AMENDMENT.md stage-0c F5"
     description: >-
       The singlet-doublet box small-momentum (DD-limit) expansion left one or more
-      tensor-reduction heads in the evaluated amplitude — a D0i[id,..] with
-      id =!= dd0 (or an un-reduced ddBoxHead[id,..] whose arguments never became
-      numeric). Those box tensor coefficients were NOT rewritten onto the rank-1
-      collinear {g,uu} scalar basis, so LoopTools would evaluate them AT the
-      degenerate DD point and re-introduce the Gram-determinant spurious pole that
-      inflates ||M|| to ~1e28 (the verified item-4 blocker; kinematics-invest
-      FINDINGS.md + kinvest-verify VERIFY.md). Emitted verbatim as
-      "SD-DD-EXPANSION-INCOMPLETE <ids>", exit 3 — NOTHING ships. Fix: extend
-      sd_dd_expansion.wl ddBoxHead to cover the named tensor id(s); the census of
-      box heads present in amp_reduced/v2 is dd0,dd1..dd3,dd00,dd11..dd33 (no
-      rank>=3). This is a stronger, by-construction form of the Gram monitor: the
-      production path never computes near a Gram zero, so it monitors by
-      construction, not by value (DESIGN-ITEM4.md A5 guard placement).
-    workaround_codes: []
+      tensor-reduction heads in the amplitude. Checked at TWO stages by
+      ddAssertNoSurvivors (the same function the exit-3 test drives): (1) the
+      SYMBOLIC pre-evaluation stage (term bodies + Subexpr table after the
+      D0i -> ddBoxHead rewrite) — the load-bearing site, because a D0i tensor head
+      whose arguments have gone numeric auto-evaluates through the MathLink to a
+      Gram-poled NUMBER and is invisible to any head pattern (PR #35 review F5);
+      (2) the evaluated amplitude, for inert symbolic ddBoxHead leftovers. A
+      survivor at either stage means LoopTools would evaluate (or already
+      evaluated) a box tensor AT the degenerate DD point, re-introducing the
+      Gram-determinant spurious pole that inflates ||M|| to ~1e28 (the verified
+      item-4 blocker). Emitted verbatim as "SD-DD-EXPANSION-INCOMPLETE stage=<..>
+      <ids>", exit 3 — NOTHING ships. Fix: extend sd_dd_expansion.wl ddBoxHead to
+      cover the named tensor id(s); the amp_reduced/v2 census is
+      dd0,dd1..dd3,dd00,dd11..dd33 (no rank>=3).
     owned_by: looptools
 
-  SD_DD_DERIVATIVE_NONCONVERGENT:
+  SD_DD_DOUBLED_OFFSET_UNSUPPORTED:
     class: missing-tool-feature
     fix_locality: local_patch
     severity: recoverable
     emitted_by: [looptools]
     triggered_by_axes: []
-    digest_reference: "looptools/scripts/sd_dd_expansion.wl ddCentralDeriv (mass-derivative FD convergence guard); DESIGN-ITEM4.md Decision A1 step 3"
+    digest_reference: "looptools/scripts/sd_dd_expansion.wl ddIntU pivot guard; DESIGN-ITEM4-AMENDMENT.md stage-0c F4"
     description: >-
-      A mass-derivative in the box DD-expansion (a d/dM^2 of a LoopTools scalar
-      loop function, needed when two box propagator offsets coincide at the DD
-      point so a doubled propagator appears) was evaluated by central finite
-      differences with step-halving, and the step-halving did NOT converge to the
-      relative tolerance (1e-6 default) within the halving budget. Emitted as
-      "SD-DD-DERIVATIVE-NONCONVERGENT (rel=.. after N halvings, tol=..)". The DD
-      expansion delegates every integral EVALUATION to LoopTools (Decision A2: no
-      hand-coded loop-function values); a non-convergent finite difference means
-      the scalar loop function is too ill-conditioned at the requested masses for
-      a stable numerical derivative. Fix: check the mass scales feeding the box
-      signature, widen the initial FD step, or supply the derivative analytically
-      from a LoopTools-provided lower-point scalar. In the SD box census this
-      branch is not reached at leading order (prop 0 has offset b_0=0, distinct
-      from the massive-line offsets); it guards higher subsets and future
-      signatures.
+      The collinear DD box telescoping found a propagator subset with NO pair of
+      distinct collinear offsets (a doubled propagator in the DD limit), which
+      requires a mass-derivative of a scalar loop function. That branch was
+      EXCISED per DESIGN-ITEM4-AMENDMENT.md stage-0c F4: the previous
+      finite-difference implementation differentiated an integral from which the
+      perturbed propagator had already been removed, silently returning a ~0
+      derivative that passed its own convergence check (PR #35 review F4). A loud
+      unsupported case is strictly better than a latent silent-zero. Emitted as
+      "SD-DD-DOUBLED-OFFSET-UNSUPPORTED props=.. offsets=..", exit 3. Unreachable
+      for the SD box census (offset b_0=0 is always distinct from the
+      massive-line offsets); reinstate a derivative branch only with its own
+      LoopTools cross-check.
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_SI_EXTRACTION_UNSTABLE:
+    class: regime-mismatch
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/run_eval_sd.wls (Ruling 3 criterion 2); DESIGN-ITEM4-AMENDMENT.md"
+    description: >-
+      The scalar SI coefficient C_scalar moves by >=1% between the production
+      3-operator fit and the Fierz-complete reference-basis fit
+      (DESIGN-ITEM4-AMENDMENT.md Ruling 3 criterion 2): the 3-op extraction is
+      silently polluted by overlap with out-of-span content on the sample set.
+      Emitted as "SD-SI-EXTRACTION-UNSTABLE si_shift_rel=..", exit 3 — nothing
+      ships. Per Ruling 1, a persistent shift means the full-basis fit must
+      become the production fit (a design decision, not a driver-side toggle).
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_VELOCITY_UNSTABLE:
+    class: regime-mismatch
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/run_eval_sd.wls (Ruling 3 criterion 3); DESIGN-ITEM4-AMENDMENT.md"
+    description: >-
+      C_scalar/C_twist2 from the Fierz-complete reference fit drift by >=1% when
+      the sample-config velocities are scaled v -> v/10 (DESIGN-ITEM4-AMENDMENT.md
+      Ruling 3 criterion 3) — a twist-2-column conditioning or kinematic-
+      consistency problem in the projection, not a shippable extraction. The
+      pre-amendment probe showed a 15% C_scalar drift at v/100 on the 3-op fit;
+      this guard requires the full-basis fit to be shown stable, not assumed so.
+      Emitted as "SD-VELOCITY-UNSTABLE full_basis_drift=..", exit 3.
     workaround_codes: []
     owned_by: looptools

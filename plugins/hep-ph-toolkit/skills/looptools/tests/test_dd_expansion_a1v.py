@@ -9,22 +9,34 @@ DOUBLE-GATED (same discipline as test_smoke.py):
   * skip if the LoopTools MathLink binary is not configured
 
 What it asserts (drives scripts/run_dd_expansion_check.wls):
-  1. A1-V: the expansion's EXACT reduction primitives (the rank-1 vector reduction
-     and the trace reduction) reproduce LoopTools' OWN box tensor coefficients at
-     3 non-degenerate kinematic points (Gram = O(1)) to < 1e-6 relative — "same
-     integrals, tool-precision agreement, not a physics band" (Decision A1-V).
-     These are exact PV identities (true at all kinematics); the DD application is
-     their Gram-stable collinear specialisation.
-  2. DD finiteness (the cure): at the degenerate DD point the collinear reduction
-     ddBoxHead[dd11,..] stays FINITE (O(1e-10)) while LoopTools' own D0i[dd11,..]
-     rides the Gram-determinant pole (~1e8) — the verified item-4 blocker
-     (kinematics-invest/FINDINGS.md + kinvest-verify/VERIFY.md).  The ratio is the
-     ~1e-18 headline demonstrating the pole is gone.
+  1. EXACT primitives (validation-side; ddIntOffsetExact + ddTraceScalar vs
+     LoopTools tensors at 3 Gram-O(1) points, < 1e-6).  These certify
+     ddScalarInt (shared with production) + the numerator-identity machinery;
+     ddIntOffsetExact itself is NOT on the production path (PR #35 review F2 —
+     stated, not implied away).
+  2. PRODUCTION path, contracted level (DESIGN-ITEM4-AMENDMENT.md stage-0c F2):
+     ddIntU / ddBasisComponents (which feed ddBoxHead) vs LoopTools' own tensor
+     u-contractions along the physical SD signature's non-zero-Gram T-path:
+       * rank-1 contraction: machine precision at every point (1e-6 bar literal);
+       * rank-2: deviation falls toward the DD point with the budget power laws
+         (fitted log-log slopes);
+       * extrapolated T->0 LoopTools reference vs production at T=-TEPS, within
+         the stated budgets.  HONESTY NOTE (live A-R1 risk, bounded): the rank-2
+         contracted check is limited to ~1e-2 by the extrapolation reference
+         itself (threshold kinematics; a sqrt-adapted basis is ill-conditioned
+         and does worse).  The rank-2 production accuracy is therefore bounded
+         at the PERCENT level by this check, not 1e-6; the independent physics
+         check for rank-2 content is the Hisano pure-doublet anchor (stage 1).
+  3. DD finiteness (the cure): at the degenerate DD point the reduction stays
+     FINITE (O(1e-10)) while LoopTools' own D0i[dd11,..] rides the Gram pole
+     (~1e8) — the verified item-4 blocker (kinematics-invest/FINDINGS.md +
+     kinvest-verify/VERIFY.md).
 
 RED-FIRST against base: this file + scripts/run_dd_expansion_check.wls +
 scripts/sd_dd_expansion.wl do not exist at origin/main@5619b6d, so the A1-V check
-had nothing to run.  The mechanism it validates (the box DD expansion) is the
-item-4 deliverable.
+had nothing to run.  The production-path section (2) was added against PR #35's
+first commit, whose committed test validated only the exact primitives (review
+finding F2).
 """
 from __future__ import annotations
 
@@ -85,13 +97,53 @@ def check_result(tmp_path_factory) -> dict:
 
 
 def test_a1v_exact_primitives_match_looptools_tensors(check_result):
-    """Decision A1-V: rank-1 vector + trace reductions == LoopTools box tensor
-    coefficients at 3 non-degenerate points, to < 1e-6 relative."""
+    """Section 1: exact vector + trace primitives == LoopTools box tensor
+    coefficients at 3 non-degenerate points, to < 1e-6 relative (validation-side;
+    certifies ddScalarInt + the numerator machinery)."""
     d = check_result
     assert d["a1v_ok"], f"A1-V failed: max reldiff {d['a1v_max_reldiff']} >= 1e-6"
     assert d["a1v_max_reldiff"] < 1e-6, d["a1v_max_reldiff"]
     # each of the 3 points must individually pass (no averaging over a failure)
     assert all(r < 1e-6 for r in d["a1v_reldiffs"]), d["a1v_reldiffs"]
+
+
+def test_production_rank1_contraction_is_exact(check_result):
+    """Section 2a (amendment-0c F2): the PRODUCTION telescoper ddIntU's rank-1
+    contraction equals LoopTools' own Sum_i b_i D_i at every point of the
+    non-zero-Gram T-path — the 1e-6 bar met literally (measured ~1e-15)."""
+    d = check_result
+    assert d["prod_u1_max_rel"] < 1e-6, d["prod_u1_max_rel"]
+    # per-point (no averaging)
+    assert all(row["u1_rel"] < 1e-6 for row in d["prod_sameT"]), d["prod_sameT"]
+
+
+def test_production_rank2_converges_toward_dd_point(check_result):
+    """Section 2a: the rank-2 deviation between the production reduction and
+    LoopTools' contractions must FALL toward the DD point with a positive power
+    (measured slope ~1.0 in |T| over T=-100..-1).  A flat or growing deviation
+    would mean the collinear reconstruction does not approach LoopTools' tensors
+    in the limit it is designed for."""
+    d = check_result
+    assert 0.4 <= d["prod_u2_conv_slope"] <= 1.3, d["prod_u2_conv_slope"]
+    assert 0.6 <= d["prod_d00_conv_slope"] <= 1.3, d["prod_d00_conv_slope"]
+    # deviations must be monotonically decreasing as |T| decreases
+    u2 = [row["u2_rel"] for row in d["prod_sameT"]]      # T = -100, -10, -1
+    d00 = [row["D00_rel"] for row in d["prod_sameT"]]
+    assert u2[0] > u2[1] > u2[2], u2
+    assert d00[0] > d00[1] > d00[2], d00
+
+
+def test_production_matches_extrapolated_looptools_within_budget(check_result):
+    """Section 2b: LoopTools contractions extrapolated T->0 vs the PRODUCTION
+    values at T=-TEPS.  Budgets (stated, measured): rank-1 1e-6 (measured 1.4e-9),
+    D00 1e-3 (measured 4.8e-5), u2/Duu 2.5e-2 (measured ~1.2e-2 — limited by the
+    extrapolation reference itself; percent-level bound, Hisano anchor is the
+    tighter independent check)."""
+    d = check_result
+    assert d["prod_u1_extrap_rel"] < 1e-6, d["prod_u1_extrap_rel"]
+    assert d["prod_d00_extrap_rel"] < 1e-3, d["prod_d00_extrap_rel"]
+    assert d["prod_u2_extrap_rel"] < 2.5e-2, d["prod_u2_extrap_rel"]
+    assert d["prod_duu_extrap_rel"] < 2.5e-2, d["prod_duu_extrap_rel"]
 
 
 def test_dd_point_reduction_is_finite_while_looptools_blows_up(check_result):

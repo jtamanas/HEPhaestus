@@ -185,6 +185,113 @@ chiVector[kin_, spin_, P_] := Module[{ua, ub},
 
 
 (* ============================================================================
+   3b.  Fierz-complete REFERENCE basis (DESIGN-ITEM4-AMENDMENT.md Rulings 1-2)
+   ============================================================================
+   MEASUREMENT INSTRUMENTATION, NOT a physical-operator extension: these columns
+   let the completeness guard NAME the out-of-span content (Ruling-1 working
+   diagnosis: genuine Dirac content the 3-op SI basis cannot hold, leading
+   candidate axial x axial) instead of reporting an anonymous ~1 residual.
+   THE RULE (Ruling 2): only {C_scalar, C_twist2 (C^(1,2)), C_G} may ever flow
+   toward nucleon matching; every coefficient fitted on this basis is a
+   DIAGNOSTIC, emitted under out_of_span_diagnostics, never matched, never
+   quoted as a cross-section.  match_nucleon.py hard-refuses SD couplings
+   (invariant kept).  Sampling is UNCHANGED (off-axis, all helicities): the
+   amendment explicitly REJECTS parity-even sampling as guard-blinding.
+
+   Construction: general Dirac bilinears on each line between the explicit
+   spinors (chi line: kbar=k3,k=k1; quark: kbar=k4,k=k2), then line products and
+   metric contractions.  Momentum insertions use the OPPOSITE line's momentum
+   (P_q on the chi line, P_chi on the quark line): same-line insertions reduce
+   to S/P by the equations of motion and would only add degenerate columns. *)
+
+$metric = {1, -1, -1, -1};
+$sigmaMats = Table[(I/2) ($gamma[[mu]] . $gamma[[nu]] - $gamma[[nu]] . $gamma[[mu]]),
+  {mu, 4}, {nu, 4}];
+
+(* general bilinear on the chi / quark line for an arbitrary 4x4 spin matrix *)
+chiBilin[kin_, spin_, mat_] := Module[{ua, ub},
+  ua = uSpinor[k[3] /. kin, MassFChi[1] /. kin, k[3] /. spin];
+  ub = uSpinor[k[1] /. kin, MassFChi[1] /. kin, k[1] /. spin];
+  ubar[ua] . mat . ub];
+quarkBilin[kin_, spin_, mat_] := Module[{ua, ub},
+  ua = uSpinor[k[4] /. kin, MassFd[1] /. kin, k[4] /. spin];
+  ub = uSpinor[k[2] /. kin, MassFd[1] /. kin, k[2] /. spin];
+  ubar[ua] . mat . ub];
+
+(* Diagnostic reference operators.  Naming: D_<chi-structure>_<quark-structure>:
+   S/P = (pseudo)scalar; V/A = metric-contracted vector/axial pair; Vq/Aq =
+   gamma.P_q(gamma5) on the chi line; Vc/Ac = gamma.P_chi(gamma5) on the quark
+   line; T = tensor (sigma_munu), Tq/Tc = sigma-momentum contractions. *)
+$PqOf[kin_] := (k[2] + k[4])/2 /. kin;
+$PcOf[kin_] := (k[1] + k[3])/2 /. kin;
+
+$opRefsDiag = <|
+  "D_P_P" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, $g5] quarkBilin[kin, spin, $g5]],
+  "D_S_P" -> Function[{kin, spin, mchi, mq},
+    chiScalar[kin, spin] quarkBilin[kin, spin, $g5]],
+  "D_P_S" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, $g5] quarkScalar[kin, spin]],
+  "D_V_V" -> Function[{kin, spin, mchi, mq}, Sum[$metric[[mu]] *
+    chiBilin[kin, spin, $gamma[[mu]]] quarkBilin[kin, spin, $gamma[[mu]]], {mu, 4}]],
+  "D_A_A" -> Function[{kin, spin, mchi, mq}, Sum[$metric[[mu]] *
+    chiBilin[kin, spin, $gamma[[mu]] . $g5] quarkBilin[kin, spin, $gamma[[mu]] . $g5], {mu, 4}]],
+  "D_V_A" -> Function[{kin, spin, mchi, mq}, Sum[$metric[[mu]] *
+    chiBilin[kin, spin, $gamma[[mu]]] quarkBilin[kin, spin, $gamma[[mu]] . $g5], {mu, 4}]],
+  "D_A_V" -> Function[{kin, spin, mchi, mq}, Sum[$metric[[mu]] *
+    chiBilin[kin, spin, $gamma[[mu]] . $g5] quarkBilin[kin, spin, $gamma[[mu]]], {mu, 4}]],
+  "D_T_T" -> Function[{kin, spin, mchi, mq}, Sum[$metric[[mu]] $metric[[nu]] *
+    chiBilin[kin, spin, $sigmaMats[[mu, nu]]] quarkBilin[kin, spin, $sigmaMats[[mu, nu]]],
+    {mu, 4}, {nu, 4}]],
+  "D_T_T5" -> Function[{kin, spin, mchi, mq}, Sum[$metric[[mu]] $metric[[nu]] *
+    chiBilin[kin, spin, $sigmaMats[[mu, nu]]] quarkBilin[kin, spin, $sigmaMats[[mu, nu]] . $g5],
+    {mu, 4}, {nu, 4}]],
+  "D_Vq_Vc" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, slash[$PqOf[kin]]] quarkBilin[kin, spin, slash[$PcOf[kin]]]],
+  "D_Aq_Ac" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, slash[$PqOf[kin]] . $g5] quarkBilin[kin, spin, slash[$PcOf[kin]] . $g5]],
+  "D_Vq_Ac" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, slash[$PqOf[kin]]] quarkBilin[kin, spin, slash[$PcOf[kin]] . $g5]],
+  "D_Aq_Vc" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, slash[$PqOf[kin]] . $g5] quarkBilin[kin, spin, slash[$PcOf[kin]]]],
+  "D_S_Ac" -> Function[{kin, spin, mchi, mq},
+    chiScalar[kin, spin] quarkBilin[kin, spin, slash[$PcOf[kin]] . $g5]],
+  "D_P_Vc" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, $g5] quarkBilin[kin, spin, slash[$PcOf[kin]]]],
+  "D_P_Ac" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, $g5] quarkBilin[kin, spin, slash[$PcOf[kin]] . $g5]],
+  "D_Aq_S" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, slash[$PqOf[kin]] . $g5] quarkScalar[kin, spin]],
+  "D_Vq_P" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, slash[$PqOf[kin]]] quarkBilin[kin, spin, $g5]],
+  "D_Aq_P" -> Function[{kin, spin, mchi, mq},
+    chiBilin[kin, spin, slash[$PqOf[kin]] . $g5] quarkBilin[kin, spin, $g5]],
+  "D_Tq_V" -> Function[{kin, spin, mchi, mq}, Module[{Pq = $PqOf[kin]},
+    Sum[$metric[[mu]] *
+      Sum[$metric[[nu]] Pq[[nu]] chiBilin[kin, spin, $sigmaMats[[mu, nu]]], {nu, 4}] *
+      quarkBilin[kin, spin, $gamma[[mu]]], {mu, 4}]]],
+  "D_V_Tc" -> Function[{kin, spin, mchi, mq}, Module[{Pc = $PcOf[kin]},
+    Sum[$metric[[mu]] chiBilin[kin, spin, $gamma[[mu]]] *
+      Sum[$metric[[nu]] Pc[[nu]] quarkBilin[kin, spin, $sigmaMats[[mu, nu]]], {nu, 4}],
+      {mu, 4}]]],
+  "D_Tq_A" -> Function[{kin, spin, mchi, mq}, Module[{Pq = $PqOf[kin]},
+    Sum[$metric[[mu]] *
+      Sum[$metric[[nu]] Pq[[nu]] chiBilin[kin, spin, $sigmaMats[[mu, nu]]], {nu, 4}] *
+      quarkBilin[kin, spin, $gamma[[mu]] . $g5], {mu, 4}]]],
+  "D_A_Tc" -> Function[{kin, spin, mchi, mq}, Module[{Pc = $PcOf[kin]},
+    Sum[$metric[[mu]] chiBilin[kin, spin, $gamma[[mu]] . $g5] *
+      Sum[$metric[[nu]] Pc[[nu]] quarkBilin[kin, spin, $sigmaMats[[mu, nu]]], {nu, 4}],
+      {mu, 4}]]],
+  "D_Tq_Tc" -> Function[{kin, spin, mchi, mq}, Module[
+    {Pq = $PqOf[kin], Pc = $PcOf[kin]},
+    Sum[$metric[[mu]] *
+      Sum[$metric[[nu]] Pq[[nu]] chiBilin[kin, spin, $sigmaMats[[mu, nu]]], {nu, 4}] *
+      Sum[$metric[[rho]] Pc[[rho]] quarkBilin[kin, spin, $sigmaMats[[mu, rho]]], {rho, 4}],
+      {mu, 4}]]]
+  |>;
+
+
+(* ============================================================================
    4.  Sample configurations (forward DD momenta, all helicities, several
        OFF-AXIS momentum directions to resolve twist-2 AND expose every
        Dirac structure to the completeness guard)
@@ -200,12 +307,12 @@ $chiDirs = {{0.30, 0.00, 0.35}, {0.00, 0.40, 0.20}, {0.25, 0.25, 0.20},
             {0.35, 0.15, 0.00}, {0.10, 0.30, 0.25}};
 $qDirs   = {{0.40, 0.10, 0.00}, {0.10, 0.30, 0.20}, {0.20, 0.20, 0.25},
             {0.00, 0.35, 0.15}, {0.30, 0.00, 0.30}};
-sampleConfigs[mchi_, mq_] := Module[{spins, cfgs},
+sampleConfigs[mchi_, mq_, vscale_:1.0] := Module[{spins, cfgs},
   spins = Tuples[{1, -1}, 4];
   cfgs = Flatten[Table[
     Module[{kchi, kq, kin},
-      kchi = onShell[$chiDirs[[d]] mchi, mchi];
-      kq   = onShell[$qDirs[[d]] mq, mq];
+      kchi = onShell[vscale $chiDirs[[d]] mchi, mchi];
+      kq   = onShell[vscale $qDirs[[d]] mq, mq];
       kin = {k[1] -> kchi, k[3] -> kchi, k[2] -> kq, k[4] -> kq,
              MassFChi[_] -> mchi, MassFd[_] -> mq, MassFu[_] -> mq};
       Table[<|"kin" -> kin,
@@ -236,9 +343,20 @@ sampleConfigs[mchi_, mq_] := Module[{spins, cfgs},
    sub-leading operators) is build-order item 4. *)
 $completenessTol = 1.0*^-4;
 
-projectOperators[M_, abbr_List, mchi_, mq_] := Module[
+(* AMENDED completeness bar (DESIGN-ITEM4-AMENDMENT.md Ruling 3): the FULL
+   (Fierz-complete reference) basis must span the amplitude to numerical
+   precision — a residual above this is structural (un-spannable content or a
+   projector bug), never an "expected physics residual".  The 3-op residual
+   ($completenessTol above) remains REPORTED for continuity but is no longer the
+   shipping guard: any amplitude with Z/W content legitimately carries large
+   out-of-span-of-3-ops (e.g. axial x axial) structure. *)
+$fullCompletenessTol = 1.0*^-8;
+
+projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
   {cc, badChains, fsyms, chainDefs, cfgs, Mvals, opCols, opNames, mat, sol,
-   fit, residVec, mnorm, relResid, worstIdx, coeffs, projClass},
+   fit, residVec, mnorm, relResid, worstIdx, coeffs, projClass,
+   diagNames, fullNames, fullCols, fullMat, fullSol, fullCoeffs, fullFit,
+   fullResidVec, fullRelResid, diagShares, siShift},
   cc = chainClass[abbr];
   badChains = unrecognizedChains[abbr];
   (* FAIL-FAST structural guard (F1/F2): any chain whose WeylChain is outside the
@@ -253,16 +371,20 @@ projectOperators[M_, abbr_List, mchi_, mq_] := Module[
   fsyms = Keys[cc];
   chainDefs = Association[Cases[abbr, (f_ -> wc_WeylChain) :> (f -> wc)]];
 
-  cfgs = sampleConfigs[N[mchi], N[mq]];
+  cfgs = sampleConfigs[N[mchi], N[mq], vscale];
   opNames = Keys[$opRefs];
+  diagNames = Keys[$opRefsDiag];
+  fullNames = Join[opNames, diagNames];
 
-  (* evaluate M and every reference operator on each config *)
-  {Mvals, opCols} = Transpose[Table[
-    Module[{kin = cfg["kin"], spin = cfg["spin"], frule, mval, orow},
+  (* evaluate M, the 3 SI reference ops, AND the diagnostic reference basis on
+     each config (one pass — the chain substitution dominates the cost) *)
+  {Mvals, opCols, fullCols} = Transpose[Table[
+    Module[{kin = cfg["kin"], spin = cfg["spin"], frule, mval, orow, drow},
       frule = (# -> chainValueOn[chainDefs[#], kin, spin]) & /@ fsyms;
       mval = M /. frule;
       orow = Table[$opRefs[op][kin, spin, N[mchi], N[mq]], {op, opNames}];
-      {mval, orow}],
+      drow = Table[$opRefsDiag[op][kin, spin, N[mchi], N[mq]], {op, diagNames}];
+      {mval, orow, Join[orow, drow]}],
     {cfg, cfgs}]];
 
   (* guard: M must be numeric after chain substitution (else stray symbols) *)
@@ -270,7 +392,7 @@ projectOperators[M_, abbr_List, mchi_, mq_] := Module[
     Return[<|"ok" -> False, "reason" -> "M_NONNUMERIC_AFTER_CHAINS",
              "classification" -> cc|>]];
 
-  (* least-squares solve  opCols . coeffs = Mvals  *)
+  (* PRODUCTION 3-op least-squares solve (unchanged behavior) *)
   mat = N[opCols];
   sol = Quiet[LeastSquares[mat, N[Mvals]]];
   coeffs = AssociationThread[opNames -> sol];
@@ -279,6 +401,27 @@ projectOperators[M_, abbr_List, mchi_, mq_] := Module[
   mnorm = Norm[N[Mvals]];
   relResid = If[mnorm < 1*^-300, Norm[residVec], Norm[residVec]/mnorm];
   worstIdx = If[Length[residVec] > 0, First[Ordering[Abs[residVec], -1]], 0];
+
+  (* FULL-BASIS (Fierz-complete reference) fit — Ruling 1/3 instrumentation.
+     PseudoInverse (SVD, min-norm) rather than LeastSquares: the reference set is
+     deliberately generous and may be rank-deficient on the sample set; the SVD
+     solution is stable and reproducible under column near-degeneracy. *)
+  fullMat = N[fullCols];
+  fullSol = Quiet[PseudoInverse[fullMat, Tolerance -> 1.0*^-10] . N[Mvals]];
+  fullCoeffs = AssociationThread[fullNames -> fullSol];
+  fullFit = fullMat . fullSol;
+  fullResidVec = N[Mvals] - fullFit;
+  fullRelResid = If[mnorm < 1*^-300, Norm[fullResidVec], Norm[fullResidVec]/mnorm];
+
+  (* per-operator absorbed-norm share: ||c_op * O_op-column|| / ||M||  (names the
+     absorbing operators; sidecar diagnostics only, Ruling 2) *)
+  diagShares = AssociationThread[fullNames ->
+    Table[Abs[fullCoeffs[fullNames[[j]]]] Norm[fullMat[[All, j]]]/(mnorm + 1*^-300),
+      {j, Length[fullNames]}]];
+
+  (* SI-extraction stability (Ruling 3 criterion 2): 3-op vs full-basis C_scalar *)
+  siShift = If[Abs[coeffs["C_scalar"]] < 1*^-300, Abs[fullCoeffs["C_scalar"]],
+    Abs[(fullCoeffs["C_scalar"] - coeffs["C_scalar"])/coeffs["C_scalar"]]];
 
   (* structural cross-check classification of which chains are present *)
   projClass = <|
@@ -292,10 +435,20 @@ projectOperators[M_, abbr_List, mchi_, mq_] := Module[
     "C_scalar"      -> coeffs["C_scalar"],
     "C_twist2"      -> coeffs["C_twist2"],
     "C_chi_vector"  -> coeffs["C_chi_vector"],
+    (* 3-op residual: REPORTED for continuity; no longer the shipping guard *)
     "completeness_rel_residual" -> relResid,
-    "completeness_ok" -> (relResid < $completenessTol),
+    (* AMENDED guard (Ruling 3 criterion 1): full-basis span to num. precision *)
+    "full_basis_completeness_rel_residual" -> fullRelResid,
+    "completeness_ok" -> (fullRelResid < $fullCompletenessTol),
+    "si3_completeness_ok" -> (relResid < $completenessTol),
+    "C_scalar_full" -> fullCoeffs["C_scalar"],
+    "C_twist2_full" -> fullCoeffs["C_twist2"],
+    "si_shift_rel" -> siShift,
+    "full_basis_coeffs" -> fullCoeffs,
+    "absorbed_norm_shares" -> diagShares,
     "worst_config_residual" -> If[worstIdx > 0, Abs[residVec[[worstIdx]]], 0.],
     "n_configs" -> Length[cfgs],
+    "vscale" -> vscale,
     "unrecognized_chains" -> (ToString /@ badChains),
     "classification" -> cc,
     "present" -> projClass

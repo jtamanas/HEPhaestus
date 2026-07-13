@@ -72,7 +72,7 @@ Module[{
     ZNm, IMZNm, UMm, UPm, ZDLm, ZDRm, ZULm, ZURm, Yum, Ydm,
     yh1v, yh2v, g1v, g2v, g3v, Lamv, PhaseFSv, vvSMv, ctw, stw,
     amp, subexpr, ampBody, abbr, abbrF, terms, mkNum, extIdx, extPins,
-    boxCensusBefore, ddTerms, ddSubexpr, ddMon,
+    boxCensusBefore, ddTerms, ddSubexpr, velocityDrift,
     evalAmp, Mnum, resid, proj, projAt, coeffNames,
     cScalar, cTw, cChiV, uvResidue, scaleResidue, finiteQ, complResidual,
     nPV, jsonAssoc, bindGuard, unbound, matrixUnbound
@@ -242,6 +242,17 @@ Module[{
   ddTerms   = If[$ddExpansion, terms   /. ddExpandRule, terms];
   ddSubexpr = If[$ddExpansion, subexpr /. ddExpandRule, subexpr];
 
+  (* ---- STRUCTURAL GUARD, SYMBOLIC SIDE (F5, load-bearing) --------------------
+     Any D0i tensor head still present in the term bodies or the Subexpr table
+     AFTER the rewrite has SYMBOLIC arguments here, so it cannot yet have
+     auto-evaluated through the MathLink.  This is the ONLY stage at which an
+     un-rewritten box tensor is pattern-visible: once mkNum numericizes the
+     arguments, LoopTools evaluates it to a Gram-poled NUMBER and no head check
+     can see it (PR #35 review F5).  Exit 3 on any survivor — nothing ships. *)
+  If[$ddExpansion,
+    ddAssertNoSurvivors[ddTerms, "symbolic-pre-eval-terms"];
+    ddAssertNoSurvivors[ddSubexpr, "symbolic-pre-eval-subexpr"]];
+
   (* Evaluate the full amplitude to an F-LINEAR numeric form.  Fp = {} keeps the
      external chains symbolic (that IS the coefficient-level projection); the
      SumOver internal-eigenstate/generation sums are expanded exactly by
@@ -252,37 +263,28 @@ Module[{
 
   Mnum = evalAmp[0, 1];
 
-  (* ---- STRUCTURAL GUARD: SD-DD-EXPANSION-INCOMPLETE (Decision A1 step 4) ------
-     After expansion the box sector must carry ZERO tensor-reduction heads (any
-     D0i[id,..] with id =!= dd0, or an un-reduced ddBoxHead[id,..] whose args never
-     went numeric).  A survivor means the expansion did not fully cure the box
-     sector -> loud recoverable blocker (blocker_catalog.yaml), exit 3, NOTHING
-     ships.  Also emits the Gram/degeneracy monitor line here. *)
+  (* ---- STRUCTURAL GUARD, EVALUATED SIDE + GRAM MONITOR ------------------------
+     Catches inert symbolic ddBoxHead leftovers (arguments never went numeric,
+     e.g. an unresolved index blocked the mkNum rules).  A raw numeric D0i cannot
+     be caught here (it auto-evaluates) — that case is owned by the symbolic-side
+     guard above.  Also emits the Gram/degeneracy monitor line from the real
+     evaluation set. *)
   If[$ddExpansion,
-    Module[{survivors = ddTensorSurvivors[Mnum], mon = ddMonitorSummary[]},
+    Module[{mon = ddMonitorSummary[]},
       WriteString["stderr",
         "run_eval_sd: GRAM-MONITOR n_box_signatures=" <>
         ToString[Lookup[mon, "n_box_signatures", 0]] <>
         " max_rank1_residual=" <> ToString[Lookup[mon, "max_rank1_residual", "NA"]] <>
         " min_abs_gram_det_over_scale3=" <>
         ToString[Lookup[mon, "min_abs_gram_det_over_scale3", "NA"]] <> "\n"];
-      If[survivors =!= {},
-        WriteString["stderr",
-          "run_eval_sd: SD-DD-EXPANSION-INCOMPLETE " <>
-          ToString[survivors, InputForm] <> "\n" <>
-          "  The box small-momentum expansion left tensor-reduction heads in the\n" <>
-          "  evaluated amplitude: these D0i tensor coefficients were NOT rewritten\n" <>
-          "  onto the rank-1 collinear scalar basis, so LoopTools would evaluate\n" <>
-          "  them AT the degenerate DD point and re-introduce the Gram-determinant\n" <>
-          "  spurious pole (the verified item-4 blocker).  Nothing ships.  Fix:\n" <>
-          "  extend sd_dd_expansion.wl ddBoxHead to cover the named tensor id(s).\n"];
-        Exit[3]]]];
+      ddAssertNoSurvivors[Mnum, "evaluated"]]];
 
   (* ---- amp_dd.m SIDECAR (Decision A3) ---------------------------------------- *)
   If[$ddExpansion,
     writeAmpDdSidecar[
       FileNameJoin[{DirectoryName[outPath], "amp_dd.m"}], Mnum, boxCensusBefore,
-      "leading-DD (v=0 coefficients; O(v) twist-2 refinement = round 2)",
+      "leading-DD (v=0) collinear reconstruction; rank-2 method accuracy budget " <>
+      "~3e-3 at TEPS (see sd_dd_expansion.wl header)",
       <|"point_id" -> mchi, "external_quark" -> "d"|>]];
 
   (* ---- LOUD GUARD: unresolved abbreviations / non-numeric coefficients -------
@@ -324,25 +326,63 @@ Module[{
   cScalar = proj["C_scalar"]; cTw = proj["C_twist2"]; cChiV = proj["C_chi_vector"];
   complResidual = proj["completeness_rel_residual"];
 
-  (* ---- COMPLETENESS GUARD (F2, Decision) -------------------------------------
-     M - Sum_op c_op O_op must be ~0 (relative, to $completenessTol); a larger
-     residual means content the recognized SI set does not span -> fail loud, do
-     not emit a floor built on a partial fit.  Do NOT assume the residual is a
-     particular physics operator: on the real amp the PR #33 review showed no
-     Fierz-complete bilinear set spans it (projection/kinematics artifact
-     suspected — see the guard message). *)
+  (* ---- COMPLETENESS GUARD, AMENDED (DESIGN-ITEM4-AMENDMENT.md Ruling 3) ------
+     Criterion 1: the FULL Fierz-complete reference basis must span the amplitude
+     to numerical precision ($fullCompletenessTol = 1e-8).  This is STRICTER than
+     the old 3-op bar: nothing can hide as "expected residual".  The 3-op
+     residual is still reported (si3_completeness_ok) but is NOT the shipping
+     guard — an amplitude with Z/W content legitimately carries content (e.g.
+     axial x axial) outside the 3-op SI set; the reference basis exists to NAME
+     it (out_of_span_diagnostics), never to feed it to nucleon matching
+     (Ruling 2: only C_scalar/C_twist2/C_G ever flow onward). *)
   If[! TrueQ[proj["completeness_ok"]],
     WriteString["stderr",
-      "run_eval_sd: SD-PROJECTION-INCOMPLETE completeness_rel_residual=" <>
-      ToString[complResidual] <> " (tol=" <> ToString[$completenessTol] <> ")\n" <>
-      "  The recognized operator set {scalar, twist-2, chi-vector} does NOT span\n" <>
-      "  the amplitude at the sampled kinematics: M - Sum c_op O_op is non-zero.\n" <>
-      "  The out-of-span content is NOT identified (PR #33 review: no Fierz-\n" <>
-      "  complete bilinear operator set spans it either; ||M|| scale anomaly +\n" <>
-      "  unphysical-lambda PV warnings suggest a static-coefficient / off-axis-\n" <>
-      "  chain kinematic inconsistency).  Do NOT interpret the residual as\n" <>
-      "  physics; resolving it is the mandatory next work item before item 4.\n"];
+      "run_eval_sd: SD-PROJECTION-INCOMPLETE full_basis_completeness_rel_residual=" <>
+      ToString[proj["full_basis_completeness_rel_residual"]] <>
+      " (tol=" <> ToString[$fullCompletenessTol] <> ", 3-op residual=" <>
+      ToString[complResidual] <> ")\n" <>
+      "  The Fierz-complete REFERENCE basis does not span the amplitude to\n" <>
+      "  numerical precision.  Per DESIGN-ITEM4-AMENDMENT.md Ruling 1 this means\n" <>
+      "  structural out-of-span content (hypothesis (i): frozen-coefficient vs\n" <>
+      "  per-config kinematics inconsistency) or a projector bug — NOT an\n" <>
+      "  expected physics residual.  Nothing ships.\n"];
     Exit[3]];
+
+  (* ---- SI-EXTRACTION STABILITY (Ruling 3 criterion 2) -------------------------
+     |C_scalar(3-op) - C_scalar(full-basis)| / |C_scalar| < 1%: a larger shift
+     means the 3-op extraction was silently polluted by out-of-span overlap. *)
+  If[proj["si_shift_rel"] >= 0.01,
+    WriteString["stderr",
+      "run_eval_sd: SD-SI-EXTRACTION-UNSTABLE si_shift_rel=" <>
+      ToString[proj["si_shift_rel"]] <>
+      " (C_scalar 3-op=" <> ToString[cScalar] <> ", full-basis=" <>
+      ToString[proj["C_scalar_full"]] <> ", bar=1%)\n" <>
+      "  The scalar SI coefficient moves by >=1% between the 3-operator fit and\n" <>
+      "  the Fierz-complete reference fit (DESIGN-ITEM4-AMENDMENT.md Ruling 3\n" <>
+      "  criterion 2): the 3-op extraction is polluted by out-of-span overlap on\n" <>
+      "  the sample set.  Nothing ships.\n"];
+    Exit[3]];
+
+  (* ---- VELOCITY STABILITY (Ruling 3 criterion 3) ------------------------------
+     C_scalar and C_twist2 from the FULL-basis fit must be stable to <1% under
+     sample-velocity scaling v -> v/10 (conditioning check; the pre-amendment 15%
+     drift at v/100 must be shown cured, not assumed away). *)
+  Module[{projV = projectOperators[Mnum, abbrF, mchi, mq, 0.1], vDrift},
+    vDrift = Max[
+      If[Abs[proj["C_scalar_full"]] < 1*^-300, Abs[projV["C_scalar_full"]],
+        Abs[(projV["C_scalar_full"] - proj["C_scalar_full"])/proj["C_scalar_full"]]],
+      If[Abs[proj["C_twist2_full"]] < 1*^-300, Abs[projV["C_twist2_full"]],
+        Abs[(projV["C_twist2_full"] - proj["C_twist2_full"])/proj["C_twist2_full"]]]];
+    velocityDrift = vDrift;
+    If[vDrift >= 0.01,
+      WriteString["stderr",
+        "run_eval_sd: SD-VELOCITY-UNSTABLE full_basis_drift=" <> ToString[vDrift] <>
+        " under v -> v/10 (bar=1%)\n" <>
+        "  C_scalar/C_twist2 from the full-basis fit drift by >=1% when the\n" <>
+        "  sample velocities are scaled down (DESIGN-ITEM4-AMENDMENT.md Ruling 3\n" <>
+        "  criterion 3) — a conditioning or kinematic-consistency problem, not a\n" <>
+        "  shippable extraction.  Nothing ships.\n"];
+      Exit[3]]];
 
   (* ---- PER-COEFFICIENT UV-residue check (Decision 2, load-bearing) -----------
      The SD reduced core carries DIVERGENT B0i heads; setdelta/setmudim variation
@@ -390,11 +430,26 @@ Module[{
       "completeness_rel_residual" -> complResidual,
       "gauge_parameter_dependence" -> Null (* Rxi variation deferred (Decision 2) *)
     |>,
+    "a6_amended" -> <|  (* DESIGN-ITEM4-AMENDMENT.md Ruling 3, all three green
+                           (each is a hard Exit[3] guard above) *)
+      "full_basis_completeness_rel_residual" ->
+        proj["full_basis_completeness_rel_residual"],
+      "full_basis_completeness_tol" -> $fullCompletenessTol,
+      "si_shift_rel" -> proj["si_shift_rel"],
+      "velocity_drift_rel" -> velocityDrift,
+      "si3_completeness_rel_residual" -> complResidual
+    |>,
+    "out_of_span_diagnostics" -> <|  (* Ruling 2: DIAGNOSTICS ONLY — never
+        matched, never a cross-section; only C_scalar/C_twist2/C_G flow onward *)
+      "full_basis_coeffs_re" -> Map[Re, proj["full_basis_coeffs"]],
+      "absorbed_norm_shares" -> proj["absorbed_norm_shares"]
+    |>,
     "dd_expansion" -> <|
       "enabled" -> $ddExpansion,
       "method" -> "box small-momentum DD (rank-1 collinear {g,uu} basis) -> " <>
                   "scalar D0/C0/B0; DESIGN-ITEM4.md Decision A1",
-      "ov_order" -> "leading-DD (v=0); O(v) twist-2 = round 2",
+      "ov_order" -> "leading-DD (v=0) collinear reconstruction; rank-2 method " <>
+                    "accuracy budget ~3e-3 at TEPS",
       "box_head_census_before" -> boxCensusBefore,
       "gram_monitor" -> If[$ddExpansion, ddMonitorSummary[], <||>]
     |>,
