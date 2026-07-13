@@ -65,35 +65,55 @@ def test_pure_scalar_projects_to_scalar_no_twist2(tmp_path):
     # cross-talk: twist-2 must be < 1% of the scalar magnitude
     assert abs(d["C_twist2"]) < TOL * C_SCALAR_EXPECT, \
         f"scalar->twist-2 cross-talk {d['C_twist2']} (2HDM+a-collapse bug)"
+    # AMENDMENT3 production path: the shipping C_scalar (transfer R_S_S) must
+    # agree, the three instruments must be green, and the contracted twist-2
+    # sum must stay clean on a pure-scalar amplitude
+    assert abs(d["C_scalar_production"] - C_SCALAR_EXPECT) / C_SCALAR_EXPECT < TOL
+    assert d["cross_instrument"]["ok"] is True
+    assert abs(d["C_twist2_sum"]) < TOL * C_SCALAR_EXPECT, \
+        f"scalar->contracted-twist-2 cross-talk {d['C_twist2_sum']}"
 
 
 def test_pure_twist2_projects_to_twist2_no_scalar(tmp_path):
-    """NOTE on completeness semantics (rotated-complete instrument, AMENDMENT2):
-    a twist-2 fixture is a DERIVATIVE (momentum-insertion) operator, out of the
-    LOCAL 256-column dictionary's span by construction once the sampling leaves
-    the forward manifold — so the instrument-level `completeness_ok` is
-    legitimately False here (the derivative monomials are bar-exempt but fully
-    reported).  The fixture-level completeness statement that must hold is the
-    PRODUCTION 3-op one (`si3_completeness_ok`): the contracted operator set
-    spans this fixture exactly."""
+    """NOTE on the expected outcome (AMENDMENT3 Ruling 1, cross-instrument
+    guard): a twist-2 fixture is a DERIVATIVE (momentum-insertion) operator
+    whose LOCAL decomposition is out of the 256-column dictionary's span off
+    the forward manifold; with an O(1) derivative coefficient the transfer
+    dictionary's R_S_S column absorbs O(1) of that leakage (measured: -2.47
+    here), while the 3-op-on-rotated and forward instruments stay clean.  The
+    production path must therefore REFUSE at the named cross-instrument guard
+    — shipping the polluted transfer value would be exactly the silent-wrong
+    the guard exists to prevent.  The legacy cross-talk statement (twist-2
+    must NOT fold into the 3-op C_scalar) is asserted on the refusal payload.
+    (On the REAL amplitude the derivative monomials carry 1e-9..1e-14 weight
+    and the three instruments agree to ~3e-13 — probeF/probeE2 2026-07.)"""
     d = _project("pure_twist2", tmp_path)
-    assert d["ok"], f"projection failed: {d}"
-    assert not d["residual_symbols"], f"unexpected residuals: {d['residual_symbols']}"
-    assert d["si3_completeness_ok"], \
-        f"3-op completeness residual too large: {d['completeness_rel_residual']}"
+    assert not d["ok"], f"expected cross-instrument refusal, got: {d}"
+    assert d["reason"] == "SD-SI-CROSS-INSTRUMENT-DISAGREE", f"wrong reason: {d}"
+    ci = d["cross_instrument"]
+    # the transfer dictionary is the polluted instrument on this fixture...
+    assert abs(ci["transfer_R_S_S"]) > 1.0, f"expected O(1) transfer leakage: {ci}"
+    # ...while the other two instruments hold the truth (C_scalar == 0 here)
+    assert abs(ci["threeop_rotated"]) < TOL * C_TWIST2_EXPECT, f"3-op-rotated polluted: {ci}"
+    assert abs(ci["forward_R_S_S"]) < TOL * C_TWIST2_EXPECT, f"forward polluted: {ci}"
+    # legacy R2 cross-talk statement on the 3-op fit (refusal payload)
     assert abs(d["C_twist2"] - C_TWIST2_EXPECT) / C_TWIST2_EXPECT < TOL
-    # cross-talk: scalar must be < 1% of the twist-2 magnitude — the load-bearing R2
-    # check.  A static spin-summed collapse would fold this twist-2 into C_scalar.
     assert abs(d["C_scalar"]) < TOL * C_TWIST2_EXPECT, \
         f"twist-2->scalar cross-talk {d['C_scalar']} (2HDM+a-collapse bug)"
 
 
 def test_mixed_recovers_both_independently(tmp_path):
+    """Same expected refusal as pure_twist2 (the O(1) derivative content
+    pollutes the transfer R_S_S by the same -2.47); recovery of BOTH
+    coefficients is asserted on the refusal payload's clean instruments."""
     d = _project("mixed_scalar_twist2", tmp_path)
-    assert d["ok"], f"projection failed: {d}"
-    assert not d["residual_symbols"]
-    assert d["si3_completeness_ok"], \
-        f"3-op completeness residual too large: {d['completeness_rel_residual']}"
+    assert not d["ok"], f"expected cross-instrument refusal, got: {d}"
+    assert d["reason"] == "SD-SI-CROSS-INSTRUMENT-DISAGREE", f"wrong reason: {d}"
+    ci = d["cross_instrument"]
+    assert abs(ci["threeop_rotated"] - C_SCALAR_EXPECT) / C_SCALAR_EXPECT < TOL
+    assert abs(ci["forward_R_S_S"] - C_SCALAR_EXPECT) / C_SCALAR_EXPECT < TOL
+    assert abs(ci["transfer_R_S_S"] - C_SCALAR_EXPECT) / C_SCALAR_EXPECT > 0.01, \
+        f"transfer leakage vanished — refusal would be spurious: {ci}"
     assert abs(d["C_scalar"] - C_SCALAR_EXPECT) / C_SCALAR_EXPECT < TOL
     assert abs(d["C_twist2"] - C_TWIST2_EXPECT) / C_TWIST2_EXPECT < TOL
 
