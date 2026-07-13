@@ -9,21 +9,67 @@ Pipeline per leg: `SPhenoSingletDoublet(LesHouches.in, flag55=1, flag56=1)` ->
 Parametrization: MPsi = m_chi = 500, d-quark external flavor, held across legs;
 `yh1 = y cos(theta)`, `yh2 = y sin(theta)`.
 
-## THE THREE LEGS (as generated, theta = -0.152 held)
+## CAMPAIGN COMPLETE (6R3) — FOUR kernel legs projected, all bars computed
 
-| leg | MS (TeV) | y | measured singlet frac \|N_s\|^2 (SPheno ZNMIX) | m_chi1 | split chi2-chi1 | m_h | loop non-tachyonic | g_h_chi1chi1 (Eq.7) | tree DD / loop floor |
-|-----|----------|------|-----------------------------|--------|------|-------|------|---------|---------|
-| L1  | 3  | 1.00 | 1.762e-3 | 480.80 | 10.50 | 106.97 | YES | -3.39e-2 | 18.3x |
-| L2  | 3  | 0.35 | 2.112e-4 | 493.94 | 1.24  | 126.21 | YES | -4.22e-3 | 2.3x  |
-| L3  | 10 | 0.50 | 3.032e-5 | 479.40 | 0.77  | 125.73 | YES | -2.27e-3 | 1.2x  |
+Protocol as re-pinned by 6R1/6R2/6R3: four legs all at theta=-0.152; verdict
+legs placed by FRACTION only (loop-only amp => no tree in C_ours). All four are
+LOOP-level (flag 55=1, 56=1), non-tachyonic. C_ours = Re(R_S_S) rotated-complete
+scalar; C_Hisano = f_q*m_d (pure doublet n=2, Y=1/2, d-quark) at each leg's m_chi1.
 
-- All three are LOOP-level (flag 55=1, two-loop-Higgs flag 56=1), non-tachyonic,
-  positive m_h. L2/L3 have physical m_h ~ 126; L1's m_h = 107 (depressed by the
-  heavy-singlet tadpole but positive).
-- Bar-4 scaling pair (L1 vs L2, same MS=3, same theta): fraction ratio 8.3x (~10x).
-- Bar-1 decoupling pair (L2 MS=3 -> L3 MS=10, same theta): both < 1e-3.
-- Spectra live in scratch `/Users/yianni/.claude/jobs/c703354a/tmp/p3prime-scratch/{L1,L2,L3}/`
-  (`SPheno.spc.SingletDoublet`, `point.json`). Sidecars + leg-configs committed here.
+| leg | role | MS | y | frac \|N_s\|^2 | m_chi1 | m_h | Re(C_ours) | C_Hisano | ratio | scalar sign | twist2 sign |
+|-----|------|----|----|------|--------|------|-----------|----------|-------|------|------|
+| L1  | scaling ref | 3  | 1.00 | 1.762e-3 | 480.80 | 106.97 | +4.181e-11 | -3.025e-12 | -13.82 | DISAGREE | agree |
+| L1b | scaling partner | 3 | 0.35 | 2.112e-4 | 493.94 | 126.21 | +1.274e-11 | -2.222e-12 | -5.73 | DISAGREE | agree |
+| L2  | VERDICT (MS3) | 3 | 0.13 | 2.906e-5 | 495.51 | 126.06 | +1.053e-11 | -2.228e-12 | -4.73 | DISAGREE | agree |
+| L3  | VERDICT (MS10) | 10 | 0.50 | 3.032e-5 | 479.40 | 125.73 | +1.154e-11 | -2.229e-12 | -5.18 | DISAGREE | agree |
+
+Instrument health (all legs): completeness ~2.88e-9, rotation ~5e-16, basis rank
+256, si_shift ~1.000-1.003 — green. Full raw C_ours in `L*_cours_extract.json`;
+bar arithmetic in `campaign_bars.json`; comparison in `campaign_comparison.txt`.
+
+### BARS (MEASURED; formal PASS/FAIL is the design authority's to ratify)
+- **BAR 1 flatness gate (L2->L3): PASS** — Re(C_ours) drift 9.6% < 25%. The
+  verdict legs measure a genuinely DECOUPLED object (P3's 2.35x drift flattened).
+- **BAR 2 PASS: NOT met.** Scalar sign DISAGREES at both verdict legs (C_ours
+  positive ~+1.1e-11, Hisano negative ~-2.23e-12); |ratio| L2=4.73 (in [0.2,5]),
+  L3=5.18 (just outside).
+- **BAR 3 FAIL: FIRES** — flatness met + sign disagrees at both (+ L3 magnitude
+  out) => assembly-level construction error indicated. Diagnose SIGN first
+  (twist-2 sign AGREES while scalar disagrees = structure-specific slip, not a
+  global convention). NB the overall-i rescue is CLOSED per AMENDMENT6 (ours Im
+  ~ |C_Hisano| is the named transfer artifact; reported, not invoked).
+- **BAR 4 scaling (L1 vs L1b): mixing physics** — excess exponent in fraction
+  = 1.25 raw / 1.09 m_h-corrected / 1.21 (3-pt fit); all in [0.5,2], no straddle.
+  Excess ratio 14.15x over an 8.3x fraction span. L1 stays (not disqualified).
+  Independently corroborates that the P3 excess was real singlet-admixture loop
+  content, not an assembly artifact.
+- **Cleanliness (verdict legs): PASS** — extrapolated admixture contamination
+  L2=1.86e-13 (8.3% of |C_Hisano|), L3=1.96e-13 (8.8%); both < 2.3e-13. (This is
+  the admixture excess only; distinct from the floor-vs-Hisano discrepancy above.)
+- **BAR 5 twist-2: sign agrees at all legs** (sign-only weight; magnitude
+  caveated by the O_Tq bridge + the measured 11.46% twist-2 v-drift sampling
+  systematic, design-adjudication pending).
+
+Net measured picture: the decoupled pure-doublet loop floor is now FLAT (bar 1)
+and CLEAN (cleanliness) — the P3 confound is removed — but the flat clean floor
+DISAGREES with Hisano in SIGN and is ~5x in magnitude, so BAR 3 FAIL fires
+(assembly-level, sign-first diagnose round). Bar 4 confirms the mixing-excess
+reading. This is a well-posed FAIL, not P3's NO-VERDICT.
+
+## STATUS — theta-naming correction (6R1 R3)
+theta=-0.152 is the Eq.-8 blind-spot solution for the m_chi1=150 canonical
+benchmark; the exact tree-coupling zero at MPsi-degenerate parameters (m_chi1 ->
+MPsi) is theta=-pi/4. Prior arc results at -0.152 are UNAFFECTED (they measured
+that benchmark's dip, which is where its physical blind spot is). The distinction
+was made operational by the wall map (`wall_map.json`) + the singlet_doublet.py
+blind-spot re-derivation. Immaterial to past verdicts; material to leg placement.
+
+## HISTORICAL — spectrum-prep flags + wall analysis (superseded by 6R1/6R2/6R3 above)
+
+The three-leg build below preceded the 6R1-6R3 rulings; retained for the wall map
+and the loop-only finding. The old "L2" (y=0.35) is now L1b; the old "L3" (MS=10,
+frac 3.03e-5) is re-accepted as the verdict L3; a new L2 (y=0.13, frac 2.9e-5) was
+added; L1 unchanged.
 
 ## TWO ITEMS FLAGGED TO THE DESIGN AUTHORITY (see handoff / SendMessage to main)
 

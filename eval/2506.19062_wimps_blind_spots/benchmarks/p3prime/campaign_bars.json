@@ -1,0 +1,138 @@
+{
+  "_desc": "P3' campaign MEASURED bars (verdict = design authority's to ratify)",
+  "legs": {
+    "L1": {
+      "leg": "L1",
+      "m_chi": 480.796357,
+      "frac": 0.001761656028374648,
+      "m_h": 106.973817,
+      "C_ours_re": 4.180813002709523e-11,
+      "C_ours_im": 3.19413814545287e-12,
+      "C_twist2": 1.9673778519956034e-10,
+      "C_hisano": -3.0248704274756014e-12,
+      "ratio": -13.821461457437072,
+      "sign_agree": false
+    },
+    "L1b": {
+      "leg": "L1b",
+      "m_chi": 493.943589,
+      "frac": 0.00021123376377801887,
+      "m_h": 126.206811,
+      "C_ours_re": 1.2740276808261372e-11,
+      "C_ours_im": 2.4329514627333135e-12,
+      "C_twist2": 2.7792237517495672e-11,
+      "C_hisano": -2.221743163151542e-12,
+      "ratio": -5.734360757608585,
+      "sign_agree": false
+    },
+    "L2": {
+      "leg": "L2",
+      "m_chi": 495.510455,
+      "frac": 2.906014621003833e-05,
+      "m_h": 126.055097,
+      "C_ours_re": 1.0529814305861467e-11,
+      "C_ours_im": 2.4107653413793817e-12,
+      "C_twist2": 8.118085718356999e-12,
+      "C_hisano": -2.227659152884115e-12,
+      "ratio": -4.726851633576296,
+      "sign_agree": false
+    },
+    "L3": {
+      "leg": "L3",
+      "m_chi": 479.403955,
+      "frac": 3.031784717069038e-05,
+      "m_h": 125.733729,
+      "C_ours_re": 1.153915600657338e-11,
+      "C_ours_im": 2.3729229704760927e-12,
+      "C_twist2": 5.182619291215692e-11,
+      "C_hisano": -2.2288495162474847e-12,
+      "ratio": -5.177180389459774,
+      "sign_agree": false
+    }
+  },
+  "bar1_flatness_gate": {
+    "C_ours_L2": 1.0529814305861467e-11,
+    "C_ours_L3": 1.153915600657338e-11,
+    "rel_drift_L2toL3": 0.09585560308979603,
+    "threshold": 0.25,
+    "PASS": true,
+    "note": "P3 was 2.35x; now flat -> the legs ARE measuring a decoupled object"
+  },
+  "bar2_3_PASS_FAIL": {
+    "per_leg": {
+      "L2": {
+        "ratio": -4.726851633576296,
+        "abs_ratio_in_[0.2,5]": true,
+        "sign_agree": false
+      },
+      "L3": {
+        "ratio": -5.177180389459774,
+        "abs_ratio_in_[0.2,5]": false,
+        "sign_agree": false
+      }
+    },
+    "PASS_met": false,
+    "FAIL_fires": true,
+    "note": "PASS needs |ratio| in [0.2,5] AND sign-agree at BOTH L2,L3. FAIL = flatness met but sign/ratio out -> assembly-level construction error, diagnose SIGN first (twist-2 sign agrees while scalar disagrees = structure-specific slip).",
+    "im_coincidence_flag": "ours Im ~ |C_Hisano| (L2 Im=2.411e-12 vs |C_His|=2.228e-12); the overall-i rescue is CLOSED per AMENDMENT6 (3-op Im/Re=3.7e-8 convention-independent) - reported, not invoked"
+  },
+  "bar4_scaling": {
+    "floor_used_C_ours(L2)": 1.0529814305861467e-11,
+    "excess_L1": 3.127831572123376e-11,
+    "excess_L1b": 2.2104625023999047e-12,
+    "fraction_span_L1_over_L1b": 8.339841116621562,
+    "exponent_raw": 1.2492541840729872,
+    "exponent_mh_corrected": 1.093351900045246,
+    "mh_correction_factor": 0.7184381711008724,
+    "in_[0.5,2]_raw": true,
+    "in_[0.5,2]_corrected": true,
+    "straddles_boundary": false,
+    "excess_ratio_L1_over_L1b": 14.150122740048662,
+    "3point_fit_MS3": {
+      "exponent": 1.208,
+      "floor_C0": 1.0310785519891095e-11,
+      "A": 6.686536729337243e-08,
+      "residual": 2.2118870505429795e-15
+    },
+    "verdict": "mixing physics (exponent in [0.5,2], linear-to-quadratic in mixing); L1 stays, both raw and corrected in band"
+  },
+  "cleanliness_bar": {
+    "per_leg": {
+      "L2": {
+        "frac": 2.906014621003833e-05,
+        "extrapolated_contam": 1.854785614204995e-13,
+        "pct_of_|C_Hisano|": 8.326164313798335,
+        "under_2.3e-13": true
+      },
+      "L3": {
+        "frac": 3.031784717069038e-05,
+        "extrapolated_contam": 1.9556030271341547e-13,
+        "pct_of_|C_Hisano|": 8.774046937123998,
+        "under_2.3e-13": true
+      }
+    },
+    "A": 8.625572508180555e-08,
+    "p": 1.2492541840729872,
+    "bar": 2.3e-13,
+    "note": "admixture excess extrapolated to verdict fraction; distinct from the floor-vs-Hisano discrepancy (bar 2/3)"
+  },
+  "bar5_twist2_sign": {
+    "L1": {
+      "C_ours_twist2": 1.9673778519956034e-10,
+      "sign_agree_with_Hisano_gsum": true
+    },
+    "L1b": {
+      "C_ours_twist2": 2.7792237517495672e-11,
+      "sign_agree_with_Hisano_gsum": true
+    },
+    "L2": {
+      "C_ours_twist2": 8.118085718356999e-12,
+      "sign_agree_with_Hisano_gsum": true
+    },
+    "L3": {
+      "C_ours_twist2": 5.182619291215692e-11,
+      "sign_agree_with_Hisano_gsum": true
+    },
+    "note": "SIGN-ONLY weight; magnitude caveated by O_Tq bridge + the measured 11.46% twist-2 v-drift sampling systematic (design-adjudication pending). All legs: C_ours twist2 > 0, Hisano g_sum > 0 -> sign agrees."
+  }
+}
