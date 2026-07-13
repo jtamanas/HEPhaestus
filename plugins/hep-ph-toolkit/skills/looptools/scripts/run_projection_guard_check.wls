@@ -34,6 +34,12 @@
                          the monomial (a single-barred-chi crossed pairing that
                          is NOT rotatable and NOT plain-Fierz-reachable, with
                          O(1) weight)
+     cross-instrument -> Exit[3], SD-SI-CROSS-INSTRUMENT-DISAGREE (AMENDMENT3
+                         Ruling 1 shipping guard): the forward instrument is
+                         Block-redefined to return a corrupted C_scalar, so the
+                         three-instrument agreement check MUST fire — proving
+                         the guard actually compares three independently
+                         produced values, names them, and exits 3
      pass             -> Exit[0]: a synthetic amplitude carrying a genuine
                          Majorana-crossed pair (rotated) + direct products runs
                          end-to-end green through rotation, pre-fit guards and
@@ -45,7 +51,8 @@ Off[General::shdw]; Off[General::stop];
 If[Length[$ScriptCommandLine] < 2,
   WriteString["stderr",
     "run_projection_guard_check: usage <rank-deficient|null-column|collinear|" <>
-    "illconditioned|unidentifiable|rotation-inexact|monomial-out-of-span|pass>\n"];
+    "illconditioned|unidentifiable|rotation-inexact|monomial-out-of-span|" <>
+    "cross-instrument|pass>\n"];
   Exit[1]];
 $mode = $ScriptCommandLine[[2]];
 
@@ -161,6 +168,21 @@ Which[
     res = projectOperators[1.0 FA FX + 0.3 FC FQ, $abbrOutOfSpan, $mchi, $mq];
     projInstrumentAssert[res];
     WriteString["stderr", "run_projection_guard_check: GUARD DID NOT FIRE (monomial-out-of-span), got ok=" <>
+      ToString[res["ok"]] <> " reason=" <> ToString[Lookup[res, "reason", ""]] <> "\n"];
+    Exit[9]],
+
+  $mode === "cross-instrument",
+  Module[{res},
+    Block[{forwardScalarInstrument},
+      (* corrupted third instrument: a fixed wrong C_scalar, far outside
+         max(1% rel, 6e-10 abs) of the other two legs *)
+      forwardScalarInstrument[___] := <|"ok" -> True, "C_scalar_fwd" -> 1.0*^6,
+        "n_configs" -> 0, "n_null_columns" -> 0, "n_retained" -> 0,
+        "n_nonnull" -> 0, "retained_cond" -> 1.0, "retained_ident_err" -> 0.,
+        "completeness_rel_residual" -> 0.|>;
+      res = projectOperators[2.0 FA FB + 0.3 FC FQ, $abbrCrossed, $mchi, $mq]];
+    projInstrumentAssert[res];
+    WriteString["stderr", "run_projection_guard_check: GUARD DID NOT FIRE (cross-instrument), got ok=" <>
       ToString[res["ok"]] <> " reason=" <> ToString[Lookup[res, "reason", ""]] <> "\n"];
     Exit[9]],
 
