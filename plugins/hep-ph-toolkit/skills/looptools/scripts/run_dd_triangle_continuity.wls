@@ -12,6 +12,16 @@
    run_eval_sd.wls: same mkNum, same external pins, setdelta 0 / setmudim 1),
    projects it, and writes the FULL-PRECISION C_scalar as the pinned fixture.
 
+   RE-LABEL (DESIGN-ITEM4-AMENDMENT5R1.md R1/R5(a), 2026-07-13): this runner
+   and its pinned fixture are a REGRESSION instrument (instrument pin, NOT
+   physics).  -1.2831509485455282e-7 is the unrotated forward 3-op reading of
+   M_tri, measured (AMENDMENT5 Q2) to be quantitatively the O_S leakage of
+   M_tri's unrotated Majorana-crossed monomials (crossed share 0.7071 of
+   ||M_tri||; crossed-part leakage -1.28485e-7; direct part +1.696e-10).  It
+   pins bit-stability of the frozen unrotated code path; physical scalar
+   readings come from the rotated lineage.  Bit-identity REMAINS a merge
+   criterion in this regression role.
+
    PROBE 3 (amendment Ruling 4, RECONCILED per AMENDMENT2/RF-minor-2): if an
    amp_dd.m sidecar (the cured FULL amplitude from the canonical run) is
    supplied, also fit the ROTATED-COMPLETE reference instrument to (a) the

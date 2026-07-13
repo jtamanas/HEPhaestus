@@ -407,7 +407,11 @@ Module[{
      THREE-INSTRUMENT cross-check (SD-SI-CROSS-INSTRUMENT-DISAGREE, enforced
      inside projectOperators / projInstrumentAssert above).  si_shift_rel
      remains REPORTED (a ~100% shift is the EXPECTED signature of the retired
-     fit's pollution; a small shift would now be the anomaly worth reading). *)
+     fit's pollution; a small shift would now be the anomaly worth reading).
+     RE-LABEL (AMENDMENT5R1 R5(f)): the pollution mechanism is now measured —
+     branch X: the unrotated fit reads the O_S leakage of the Majorana-crossed
+     monomials (crossed share 0.7071 of ||M_tri||), so the ~100% si_shift is
+     the crossing artifact's signature, quantified in AMENDMENT5 Q2. *)
   WriteString["stderr",
     "run_eval_sd: si_shift_rel=" <> ToString[proj["si_shift_rel"], InputForm] <>
     " (retired 3-op fit vs production full-basis; REPORT ONLY per AMENDMENT3 " <>
@@ -416,6 +420,31 @@ Module[{
   cScalarProd = proj["C_scalar_production"];
   cTw2Sum = proj["C_twist2_sum"];
   cTw2Dif = proj["C_twist2_dif"];
+
+  (* HISTORY (AMENDMENT4 Ruling 4 -> AMENDMENT5/5R1, PR #36): the AMENDMENT3
+     off-blind-spot falsifier FAILED at both theta points (|C_full|/|C_tri| =
+     7.32e-4 at theta=-0.076 and 1.487e-3 at theta=-0.304, vs the 0.1 bar;
+     fixture half bit-identical).  That FAILED verdict stands as an
+     INSTRUMENT finding: the probe ladder (P1/P1b, Q1/Q2/Q3) adjudicated
+     branch X — the falsifier's DENOMINATOR C_tri = -1.28315e-7 is the O_S
+     leakage of M_tri's UNROTATED Majorana-crossed monomials (crossed share
+     0.7071 of ||M_tri||, rotating to ~1e-15; AMENDMENT5R1), so the
+     growth-vs-theta test is VOID (both lineage readings are theta-flat) and
+     the falsifier ratios are artifact-vs-noise measurements, not physics.
+     -2.0973e-7 remains an instrument artifact (round 3); +1.66e-10 remains
+     an UNVALIDATED reading pending the P3 Hisano anchor (AMENDMENT5R1 R4);
+     no sigma_SI may be quoted at any provenance level.  C_Q = -2.75e-5 is
+     VOID (built on the artifact C_tri); re-derivation = rotated-3op reading
+     of M_tri / m_q, canonical +3.63e-8 +- 1.28e-7 (CONSISTENT WITH ZERO;
+     AMENDMENT5R1 R2 binds the re-derivation + re-scoped cross-flavor guard
+     on the next leg).  Guard repairs also bound on the next leg: (1) the
+     cross-instrument guard is DEMOTED to report-only whenever |C| < 10x its
+     absolute floor (6e-9) — three same-M instruments agreeing at noise
+     scale is not validation; (2) SD-COEFF-IMAGINARY: |Im C|/|C| >= 0.1 on
+     the SHIPPING instrument's reading becomes a named refusal (measured
+     ~1e-9 GREEN; the transfer instrument's O(1) Im is a named exempt
+     sampling artifact); emitter + catalog entry land together, per the
+     no-emitterless-codes catalog norm. *)
 
   (* REPORT the production measurements immediately (stderr): a later named
      refusal (velocity/UV/reopen) must not orphan the measured coefficients —
@@ -530,11 +559,19 @@ Module[{
   (* ---- TRIANGLE-SECTOR 3-op fit (heavy-quark C_Q, Decision A4) ---------------
      threeOpFit is arithmetic-identical to the projectOperators production leg,
      so at the canonical point the triangle-only C_scalar below reproduces the
-     continuity fixture -1.2831509485455282e-7 BIT-FOR-BIT (the falsifier
-     prediction (i) check rides on this value).  C_Q = C_scalar(triangle)/m_q
-     is the m_q-normalized flavor-universal h-exchange coefficient (the SVZ
-     heavy-quark theorem input; cross-flavor equality assert is round-2 item
-     (iii)).  Its v-stability is measured here for the reopen adjudication. *)
+     continuity fixture -1.2831509485455282e-7 BIT-FOR-BIT.
+     RE-LABEL (AMENDMENT5R1 R1/R5): that fixture is a REGRESSION pin, NOT a
+     physical coefficient — it is the O_S leakage of M_tri's unrotated
+     Majorana-crossed monomials (AMENDMENT5 Q2: crossed share 0.7071,
+     rotating to ~1e-15; direct part +1.696e-10).  Consequently the cQuniv
+     emitted below (unrotated C_tri/m_q, the -2.75e-5-scale value) is VOID
+     as physics and is retained ONLY as the regression-instrument reading;
+     the R2 re-derivation (rotated-3op reading of M_tri / m_q, canonical
+     +3.63e-8 +- 1.28e-7, CONSISTENT WITH ZERO) binds on the next leg
+     together with the re-scoped cross-flavor guard (relative <1e-6 bar only
+     when |C_Q| > 10x its band; ABSOLUTE <6e-10/m_q below).  Its v-stability
+     is still measured here for the reopen adjudication (share re-measurement
+     is AMENDMENT5R1 R3, separate leg). *)
   chainDefsA = Association[abbrF];
   fsymsA = Keys[chainClass[abbrF]];
   triFit = threeOpFit[Mtri, chainDefsA, fsymsA, mchi, mq];

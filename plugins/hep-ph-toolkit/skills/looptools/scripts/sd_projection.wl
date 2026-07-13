@@ -525,7 +525,10 @@ rotatedMonoVals[chainDefs_Association, fsyms_List, crules_List, crossedQ_List,
 (* ---- 3-op fit, byte-equivalent arithmetic of the section-5 production leg --
    Reusable on ANY F-linear numeric amplitude (e.g. the driver's triangle-only
    sector: the bit-for-bit fixture contract -1.2831509485455282e-7 goes through
-   exactly this construction).  fsyms may include chains absent from M. *)
+   exactly this construction; per AMENDMENT5R1 R1 that fixture is a REGRESSION
+   pin, NOT physics — on unrotated crossed content this fit reads the crossed
+   monomials' out-of-span O_S leakage).  fsyms may include chains absent
+   from M. *)
 threeOpFit[M_, chainDefs_Association, fsyms_List, mchi_, mq_, vscale_:1.0] := Module[
   {cfgs, Mvals, opCols, mat, sol},
   cfgs = sampleConfigs[N[mchi], N[mq], vscale];
@@ -816,8 +819,9 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
 
   (* ---- PRODUCTION LEG (unchanged; fixture-stable): M + the 3 SI ops on the
      UNCHANGED forward sample set, plain LeastSquares.  This code path is the
-     bit-for-bit contract behind the triangle fixture -1.2831509485455282e-7 —
-     the instrument below must never feed back into it. *)
+     bit-for-bit contract behind the triangle fixture -1.2831509485455282e-7
+     (a REGRESSION pin, not physics — AMENDMENT5R1 R1) — the instrument below
+     must never feed back into it. *)
   {Mvals, opCols} = Transpose[Table[
     Module[{kin = cfg["kin"], spin = cfg["spin"], frule, mval, orow},
       frule = (# -> chainValueOn[chainDefs[#], kin, spin]) & /@ fsyms;
