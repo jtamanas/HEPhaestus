@@ -274,9 +274,9 @@ Module[{
       WriteString["stderr",
         "run_eval_sd: GRAM-MONITOR n_box_signatures=" <>
         ToString[Lookup[mon, "n_box_signatures", 0]] <>
-        " max_rank1_residual=" <> ToString[Lookup[mon, "max_rank1_residual", "NA"]] <>
+        " max_rank1_residual=" <> ToString[Lookup[mon, "max_rank1_residual", "NA"], InputForm] <>
         " min_abs_gram_det_over_scale3=" <>
-        ToString[Lookup[mon, "min_abs_gram_det_over_scale3", "NA"]] <> "\n"];
+        ToString[Lookup[mon, "min_abs_gram_det_over_scale3", "NA"], InputForm] <> "\n"];
       ddAssertNoSurvivors[Mnum, "evaluated"]]];
 
   (* ---- amp_dd.m SIDECAR (Decision A3) ---------------------------------------- *)
@@ -338,9 +338,9 @@ Module[{
   If[! TrueQ[proj["completeness_ok"]],
     WriteString["stderr",
       "run_eval_sd: SD-PROJECTION-INCOMPLETE full_basis_completeness_rel_residual=" <>
-      ToString[proj["full_basis_completeness_rel_residual"]] <>
-      " (tol=" <> ToString[$fullCompletenessTol] <> ", 3-op residual=" <>
-      ToString[complResidual] <> ")\n" <>
+      ToString[proj["full_basis_completeness_rel_residual"], InputForm] <>
+      " (tol=" <> ToString[$fullCompletenessTol, InputForm] <> ", 3-op residual=" <>
+      ToString[complResidual, InputForm] <> ")\n" <>
       "  The Fierz-complete REFERENCE basis does not span the amplitude to\n" <>
       "  numerical precision.  Per DESIGN-ITEM4-AMENDMENT.md Ruling 1 this means\n" <>
       "  structural out-of-span content (hypothesis (i): frozen-coefficient vs\n" <>
@@ -354,9 +354,9 @@ Module[{
   If[proj["si_shift_rel"] >= 0.01,
     WriteString["stderr",
       "run_eval_sd: SD-SI-EXTRACTION-UNSTABLE si_shift_rel=" <>
-      ToString[proj["si_shift_rel"]] <>
-      " (C_scalar 3-op=" <> ToString[cScalar] <> ", full-basis=" <>
-      ToString[proj["C_scalar_full"]] <> ", bar=1%)\n" <>
+      ToString[proj["si_shift_rel"], InputForm] <>
+      " (C_scalar 3-op=" <> ToString[cScalar, InputForm] <> ", full-basis=" <>
+      ToString[proj["C_scalar_full"], InputForm] <> ", bar=1%)\n" <>
       "  The scalar SI coefficient moves by >=1% between the 3-operator fit and\n" <>
       "  the Fierz-complete reference fit (DESIGN-ITEM4-AMENDMENT.md Ruling 3\n" <>
       "  criterion 2): the 3-op extraction is polluted by out-of-span overlap on\n" <>
@@ -376,7 +376,7 @@ Module[{
     velocityDrift = vDrift;
     If[vDrift >= 0.01,
       WriteString["stderr",
-        "run_eval_sd: SD-VELOCITY-UNSTABLE full_basis_drift=" <> ToString[vDrift] <>
+        "run_eval_sd: SD-VELOCITY-UNSTABLE full_basis_drift=" <> ToString[vDrift, InputForm] <>
         " under v -> v/10 (bar=1%)\n" <>
         "  C_scalar/C_twist2 from the full-basis fit drift by >=1% when the\n" <>
         "  sample velocities are scaled down (DESIGN-ITEM4-AMENDMENT.md Ruling 3\n" <>
@@ -409,7 +409,7 @@ Module[{
   If[! finiteQ,
     WriteString["stderr",
       "run_eval_sd: LOOPTOOLS_AMPLITUDE_NONFINITE per-coefficient UV/scale residue " <>
-      "(setdelta_rel=" <> ToString[uvResidue] <> ", setmudim_rel=" <> ToString[scaleResidue] <>
+      "(setdelta_rel=" <> ToString[uvResidue, InputForm] <> ", setmudim_rel=" <> ToString[scaleResidue, InputForm] <>
       ") — the 1PI-core-only scope did not cancel a 1/eps; extend to the\n" <>
       "  15-topology set with explicit counterterms (STEP3-DESIGN.md Decision 2).\n"]];
 
