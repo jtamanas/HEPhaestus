@@ -1,0 +1,136 @@
+{
+  "L2": {
+    "sectors_C_scalar": {
+      "triangle": 3.42656757274649e-12,
+      "directBox": 3.653155217877838e-12,
+      "crossedBox": 3.4310782578629727e-12
+    },
+    "sectors_C_twist2": {
+      "triangle": 9.026511928904528e-11,
+      "directBox": -3.052792808253962e-11,
+      "crossedBox": -5.1659879823810744e-11
+    },
+    "sum_C_scalar": 1.0510801048487301e-11,
+    "full_C_scalar": 1.053e-11,
+    "sum_C_twist2": 8.077311382694928e-12,
+    "full_C_twist2": 8.118e-12,
+    "C_Hisano": -2.228e-12,
+    "reconstruct_rel_err_scalar": 0.0018232622519181792,
+    "flip_candidates": {
+      "flip_triangle": {
+        "C_scalar": 3.657665902994321e-12,
+        "ratio_vs_Hisano": -1.6416812850064277,
+        "abs_ratio": 1.6416812850064277,
+        "sign_agree_scalar": false,
+        "in_[0.2,5]": true,
+        "twist2": -1.7245292719539565e-10,
+        "twist2_sign_positive": false,
+        "SATISFIES_ALL3": false
+      },
+      "flip_directBox": {
+        "C_scalar": 3.2044906127316245e-12,
+        "ratio_vs_Hisano": -1.4382812444935476,
+        "abs_ratio": 1.4382812444935476,
+        "sign_agree_scalar": false,
+        "in_[0.2,5]": true,
+        "twist2": 6.913316754777415e-11,
+        "twist2_sign_positive": true,
+        "SATISFIES_ALL3": false
+      },
+      "flip_crossedBox_S1": {
+        "C_scalar": 3.648644532761355e-12,
+        "ratio_vs_Hisano": -1.637632196032924,
+        "abs_ratio": 1.637632196032924,
+        "sign_agree_scalar": false,
+        "in_[0.2,5]": true,
+        "twist2": 1.1139707103031642e-10,
+        "twist2_sign_positive": true,
+        "SATISFIES_ALL3": false
+      },
+      "flip_wholeBox_S2": {
+        "C_scalar": -3.657665902994321e-12,
+        "ratio_vs_Hisano": 1.6416812850064277,
+        "abs_ratio": 1.6416812850064277,
+        "sign_agree_scalar": true,
+        "in_[0.2,5]": true,
+        "twist2": 1.7245292719539565e-10,
+        "twist2_sign_positive": true,
+        "SATISFIES_ALL3": true
+      }
+    }
+  },
+  "L3": {
+    "sectors_C_scalar": {
+      "triangle": 4.554446030728121e-12,
+      "directBox": 3.5733047020356063e-12,
+      "crossedBox": 3.337639766609869e-12
+    },
+    "sectors_C_twist2": {
+      "triangle": 1.365999449584162e-10,
+      "directBox": -3.140880457470737e-11,
+      "crossedBox": -5.353533762813607e-11
+    },
+    "sum_C_scalar": 1.1465390499373595e-11,
+    "full_C_scalar": 1.1539e-11,
+    "sum_C_twist2": 5.165580275557276e-11,
+    "full_C_twist2": 5.183e-11,
+    "C_Hisano": -2.229e-12,
+    "reconstruct_rel_err_scalar": 0.006379192358644958,
+    "flip_candidates": {
+      "flip_triangle": {
+        "C_scalar": 2.3564984379173544e-12,
+        "ratio_vs_Hisano": -1.057199837558257,
+        "abs_ratio": 1.057199837558257,
+        "sign_agree_scalar": false,
+        "in_[0.2,5]": true,
+        "twist2": -2.2154408716125962e-10,
+        "twist2_sign_positive": false,
+        "SATISFIES_ALL3": false
+      },
+      "flip_directBox": {
+        "C_scalar": 4.318781095302383e-12,
+        "ratio_vs_Hisano": -1.9375419898171302,
+        "abs_ratio": 1.9375419898171302,
+        "sign_agree_scalar": false,
+        "in_[0.2,5]": true,
+        "twist2": 1.1447341190498749e-10,
+        "twist2_sign_positive": true,
+        "SATISFIES_ALL3": false
+      },
+      "flip_crossedBox_S1": {
+        "C_scalar": 4.790110966153858e-12,
+        "ratio_vs_Hisano": -2.148995498498815,
+        "abs_ratio": 2.148995498498815,
+        "sign_agree_scalar": false,
+        "in_[0.2,5]": true,
+        "twist2": 1.587264780118449e-10,
+        "twist2_sign_positive": true,
+        "SATISFIES_ALL3": false
+      },
+      "flip_wholeBox_S2": {
+        "C_scalar": -2.3564984379173544e-12,
+        "ratio_vs_Hisano": 1.057199837558257,
+        "abs_ratio": 1.057199837558257,
+        "sign_agree_scalar": true,
+        "in_[0.2,5]": true,
+        "twist2": 2.2154408716125962e-10,
+        "twist2_sign_positive": true,
+        "SATISFIES_ALL3": true
+      }
+    }
+  }
+}
+
+=== SUMMARY: which single flip satisfies all 3, at BOTH legs ===
+flip_triangle: BOTH_LEGS_ALL3=False
+    L2: scalar=+3.658e-12 |ratio|=1.64 signOK=False t2+=False
+    L3: scalar=+2.356e-12 |ratio|=1.06 signOK=False t2+=False
+flip_directBox: BOTH_LEGS_ALL3=False
+    L2: scalar=+3.204e-12 |ratio|=1.44 signOK=False t2+=True
+    L3: scalar=+4.319e-12 |ratio|=1.94 signOK=False t2+=True
+flip_crossedBox_S1: BOTH_LEGS_ALL3=False
+    L2: scalar=+3.649e-12 |ratio|=1.64 signOK=False t2+=True
+    L3: scalar=+4.790e-12 |ratio|=2.15 signOK=False t2+=True
+flip_wholeBox_S2: BOTH_LEGS_ALL3=True
+    L2: scalar=-3.658e-12 |ratio|=1.64 signOK=True t2+=True
+    L3: scalar=-2.356e-12 |ratio|=1.06 signOK=True t2+=True
