@@ -21,12 +21,24 @@ Scalar (gH axis, DECISIVE):
   part; an overall-i amplitude convention would swap Re<->Im, flagged below.)
 
 Twist-2 (free second axis):
-  Hisano combined coefficient in the g/M convention is (g^(1)+g^(2))/M.  Our
-  origin/main pipeline reports a SINGLE contracted twist-2 operator coefficient
-  C_twist2 (O_Tq); the C^(1)/C^(2) split is an item-4 deliverable, so this axis
-  carries an operator-normalization caveat.  We report the ratio in the g/M
-  convention and flag the ~100x convention factor (4.096e-9 old-contraction vs
-  4.2525e-7 g/M) as CONVENTION, not a discrepancy.
+  Origin/main's C_twist2 is the coefficient of O_Tq = (chibar chi)(qbar
+  gamma.P_chi q), a GeV^-3 quantity.  Hisano's g^(1,2)_q (GeV^-3) multiply
+  (chibar id gamma chi)O/M and (chibar id id chi)O/M^2.  The DIMENSIONALLY
+  CONSISTENT bridge is the static-limit matrix-element matching (spinor norm
+  ubar u = 2m; chi at rest p=(M,0); quark at rest q=(m_q,0)):
+     <O_Tq>      = (2M)(P_chi . <qbar gamma q>) = (2M)(p . 2q)      = 4 M^2 m_q
+     <Hisano T1> = (1/M)(2 p^mu p^nu)(2 q_mu q_nu - g_munu m_q^2/2) = 3 M m_q^2
+     <Hisano T2> = (1/M^2)(p^mu p^nu 2M)(2 q_mu q_nu - g_munu m_q^2/2) = 3 M m_q^2
+  => amplitude equality  c_OTq * 4 M^2 m_q = (g1+g2) * 3 M m_q^2
+  => c_OTq = (3/4)(g1+g2) m_q / M   (both sides GeV^-3, ratio dimensionless)
+  CAVEAT (measured): the same bridge applied to the round-2 canonical
+  cross-instrument pair (old-contraction 4.096e-9 vs contracted-instrument
+  g_sum 5.643e-5 at m_chi=132.69) leaves a residual factor 2.75 — the fit
+  kinematics sit at velocity ~0.3, not the exact static limit — so the twist-2
+  ratio carries an O(3) operator-normalization uncertainty pending the item-4
+  C^(1)/C^(2) split.  The raw g/M-convention juxtaposition (the historical
+  ~100x "convention factor") is ALSO reported but labeled dimensional
+  (GeV) — it is NOT a physics ratio.
 
 EW inputs are read from the SAME SPheno spectrum that fed our amplitude (m_W,
 m_Z, m_h, g_2, sin^2 theta_W via the amplitude's own ctw=m_W/m_Z), so any
@@ -97,13 +109,21 @@ def compare_leg(cours: dict, point: dict, m_chi: float) -> dict:
         },
         "twist2": {
             "axis": "gT1+gT2 (free second axis)",
-            "note": "ours=O_Tq single contracted coeff (origin/main); Hisano in g/M "
-                    "convention (g1+g2)/M; C^(1)/C^(2) split is item-4.",
+            "note": "ours=O_Tq single contracted coeff (origin/main, GeV^-3); "
+                    "primary ratio uses the static-limit bridge "
+                    "C_hisano_OTq_equiv = (3/4)(g1+g2) m_q/M (dimensionless "
+                    "ratio, O(3) normalization caveat — see module docstring); "
+                    "the g/M juxtaposition is dimensional (GeV), kept only for "
+                    "continuity with the historical ~100x convention factor.",
             "C_ours": C_twist2_ours,
             "C_hisano_g_sum_GeV^-3": g_sum,
-            "C_hisano_g_over_M_GeV^-4": g_over_M,
-            "ratio_ours_over_hisano_gM": ratio(C_twist2_ours, g_over_M),
-            "sign_agree_gM": sign_agree(C_twist2_ours, g_over_M),
+            "C_hisano_OTq_equiv_GeV^-3": 0.75 * g_sum * M_D / m_chi,
+            "ratio_ours_over_hisano_OTq": ratio(C_twist2_ours,
+                                                0.75 * g_sum * M_D / m_chi),
+            "sign_agree": sign_agree(C_twist2_ours, g_sum),
+            "C_hisano_g_over_M_GeV^-4_DIMENSIONAL": g_over_M,
+            "ratio_ours_over_hisano_gM_DIMENSIONAL_GeV":
+                ratio(C_twist2_ours, g_over_M),
         },
         "instrument": {
             "si_shift_rel": cours.get("si_shift_rel"),
@@ -137,8 +157,13 @@ def main(argv=None):
               f"  ratio={s['ratio_ours_over_hisano']:+.4g}  sign_agree={s['sign_agree']}")
         print(f"               (Hisano f_q={s['hisano_f_q_GeV^-3']:+.5e} GeV^-3, "
               f"ours Im={s['C_ours_full_im']:+.3e})")
-        print(f"  TWIST2:      C_ours={t['C_ours']:+.5e}  C_Hisano(g/M)={t['C_hisano_g_over_M_GeV^-4']:+.5e}"
-              f"  ratio={t['ratio_ours_over_hisano_gM']:+.4g}  sign_agree={t['sign_agree_gM']}")
+        print(f"  TWIST2:      C_ours={t['C_ours']:+.5e}  "
+              f"C_Hisano(OTq-equiv)={t['C_hisano_OTq_equiv_GeV^-3']:+.5e}"
+              f"  ratio={t['ratio_ours_over_hisano_OTq']:+.4g}"
+              f"  sign_agree={t['sign_agree']}")
+        print(f"               (g_sum={t['C_hisano_g_sum_GeV^-3']:+.5e} GeV^-3; "
+              f"dimensional g/M juxtaposition="
+              f"{t['ratio_ours_over_hisano_gM_DIMENSIONAL_GeV']:+.4g} GeV)")
     outp = Path(argv[-1]).parent / "p3_comparison_results.json" if False else None
     print("\n" + json.dumps(results, indent=2))
     return results

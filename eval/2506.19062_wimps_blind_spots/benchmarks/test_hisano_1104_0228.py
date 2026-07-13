@@ -78,7 +78,8 @@ def test_compare_harness_shape():
     r = C.compare_leg(cours, point, 498.0)
     assert "ratio_ours_over_hisano" in r["scalar"]
     assert "sign_agree" in r["scalar"]
-    assert "ratio_ours_over_hisano_gM" in r["twist2"]
+    assert "ratio_ours_over_hisano_OTq" in r["twist2"]
+    assert "sign_agree" in r["twist2"]
     # Hisano scalar coefficient must be nonzero (pure-doublet gH is definitively
     # nonzero — the P3 denominator is valid, per Ruling 4).
     assert r["scalar"]["C_hisano"] != 0.0
