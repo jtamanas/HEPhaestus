@@ -1,6 +1,7 @@
 #!/usr/bin/env wolframscript
 (* run_dd_triangle_continuity.wls — triangle-continuity fixture (PR #35 review
-   F3) + Fierz-complete sector fits (DESIGN-ITEM4-AMENDMENT.md probe 3).
+   F3) + rotated-complete sector fits (AMENDMENT probe 3, re-read per
+   DESIGN-ITEM4-AMENDMENT2.md).
 
    TRIANGLE CONTINUITY (F3): the box DD expansion touches ONLY D0i heads, so the
    triangle/bubble sector must reproduce the item-3 baseline C_scalar exactly.
@@ -11,15 +12,20 @@
    run_eval_sd.wls: same mkNum, same external pins, setdelta 0 / setmudim 1),
    projects it, and writes the FULL-PRECISION C_scalar as the pinned fixture.
 
-   PROBE 3 (amendment Ruling 4): if an amp_dd.m sidecar (the cured FULL
-   amplitude from the canonical run) is supplied, also fit the Fierz-complete
-   reference basis to (a) the full amplitude, (b) the triangle-only sector,
-   (c) the expanded-box-only sector (full - triangle, exact by F-linearity),
-   reporting for each: full-basis completeness residual, named absorbing
-   operators (norm shares), the 3-op-vs-full C_scalar shift, and — for the full
-   amplitude — the v -> v/10 stability of the full-basis fit.  The result is
-   reported HONESTLY either way: < 1e-8 residual supports the amendment's
-   frozen-kinematics diagnosis; an O(1) residual refutes it.
+   PROBE 3 (amendment Ruling 4, RECONCILED per AMENDMENT2/RF-minor-2): if an
+   amp_dd.m sidecar (the cured FULL amplitude from the canonical run) is
+   supplied, also fit the ROTATED-COMPLETE reference instrument to (a) the
+   full amplitude, (b) the triangle-only sector, (c) the expanded-box-only
+   sector (full - triangle, exact by F-linearity), reporting for each: the
+   instrument completeness residual, named absorbing operators (norm shares),
+   and the 3-op-vs-full C_scalar shift.  HISTORY: the earlier version of this
+   note mapped "< 1e-8 supports frozen-kinematics" — that mapping was inverted
+   nonsense and is RETRACTED (pr35-rereview/REVIEW.md): the historical 0.669
+   residual was an instrument artifact (rank-12 basis + unrotated
+   Majorana-crossed monomials), no physics meaning.  The v -> v/10 leg is
+   attempted and reported; the transfer-sampled instrument is measured to
+   refuse ILLCONDITIONED at v/10 (cond ~ 1/v^2), which is recorded as a named
+   outcome, not a runner failure — the fixture is this runner's primary job.
 
    Usage (positional contract shared with run_eval_sd.wls via run_eval_common.wl):
      wolframscript -script run_dd_triangle_continuity.wls \
@@ -211,25 +217,29 @@ Module[{
     projFull  = projectOperators[MnumFull, abbrF, mchi, mq];
     projFullV = projectOperators[MnumFull, abbrF, mchi, mq, 0.1];
     projBox   = projectOperators[Mbox, abbrF, mchi, mq];
-    If[! TrueQ[projFull["ok"]] || ! TrueQ[projBox["ok"]] || ! TrueQ[projFullV["ok"]],
+    If[! TrueQ[projFull["ok"]] || ! TrueQ[projBox["ok"]],
       WriteString["stderr", "run_dd_triangle_continuity: probe-3 projection failed\n"];
       Exit[3]];
-    vDrift = Max[
+    (* v -> v/10 on C_scalar_full ONLY (C_twist2_full no longer exists in the
+       rotated-complete instrument).  A guard REFUSAL at v/10 (measured:
+       ILLCONDITIONED, cond ~ 1/v^2) is a named outcome here, not a runner
+       failure. *)
+    vDrift = If[TrueQ[projFullV["ok"]],
       If[Abs[projFull["C_scalar_full"]] < 1*^-300, Abs[projFullV["C_scalar_full"]],
         Abs[(projFullV["C_scalar_full"] - projFull["C_scalar_full"])/projFull["C_scalar_full"]]],
-      If[Abs[projFull["C_twist2_full"]] < 1*^-300, Abs[projFullV["C_twist2_full"]],
-        Abs[(projFullV["C_twist2_full"] - projFull["C_twist2_full"])/projFull["C_twist2_full"]]]];
+      "UNMEASURABLE: " <> ToString[projFullV["reason"]]];
     jsonAssoc = Join[jsonAssoc, <|
       "probe3" -> <|
         "full" -> sector[projFull],
         "expanded_box_only" -> sector[projBox],
         "full_basis_velocity_drift_rel_v10" -> vDrift,
-        "full_basis_velocity_drift_rel_v10_str" -> fp[vDrift],
-        "note" -> "Fierz-complete reference fits per DESIGN-ITEM4-AMENDMENT.md " <>
-          "probe 3; diagnostics ONLY (Ruling 2) — nothing here flows to nucleon " <>
-          "matching.  full-basis residual < 1e-8 supports the amendment's " <>
-          "frozen-kinematics diagnosis of the historical ~1.0 3-op residual; " <>
-          "an O(1) residual would refute it."
+        "full_basis_velocity_drift_rel_v10_str" ->
+          If[StringQ[vDrift], vDrift, fp[vDrift]],
+        "note" -> "rotated-complete instrument fits (DESIGN-ITEM4-AMENDMENT2.md); " <>
+          "diagnostics ONLY (Ruling 2) — nothing here flows to nucleon matching. " <>
+          "The historical 0.669 residual was an instrument artifact (rank-12 " <>
+          "basis + unrotated Majorana-crossed monomials); the earlier " <>
+          "frozen-kinematics mapping in this note was retracted (RF-minor-2)."
       |>|>]];
 
   writeEvalOutput[outPath, jsonAssoc];

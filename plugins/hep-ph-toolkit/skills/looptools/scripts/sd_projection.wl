@@ -484,12 +484,13 @@ referenceConfigs[mchi_, mq_, vscale_:1.0] := Join[
    1e-4 (documented): the recognized parity-even set {S, Tq, Tchi} spans the
    leading SI structure at the sample velocities (~0.3); a residual above this
    flags content the SI set does not span, which must not be silently dropped.
-   CAUTION (PR #33 review): a large residual is NOT evidence for any particular
-   missing operator — on the real amp no Fierz-complete bilinear set spans it,
-   and the ||M|| scale anomaly + unphysical-lambda PV warnings point to a
-   static-coefficient / off-axis-chain kinematic inconsistency.  This is a
-   LEADING-ORDER guard — the full velocity expansion (C^(1)/C^(2) twist-2 split,
-   sub-leading operators) is build-order item 4. *)
+   CAUTION (PR #33 review, RESOLVED in round 3): a large residual is NOT
+   evidence for any particular missing operator.  The once-unidentified 3-op
+   out-of-span content on the real amp IS now identified (re-review probe8 +
+   AMENDMENT2): unrotated Majorana-crossed chain monomials, which no chi(x)q
+   line-product set spans unrotated — handled by the rotated-complete
+   instrument in section 3b.  This 3-op residual is a LEADING-ORDER report
+   (si3), no longer the shipping guard. *)
 $completenessTol = 1.0*^-4;
 
 (* AMENDED completeness bar (AMENDMENT Ruling 3, RE-DERIVED per AMENDMENT2
