@@ -6,8 +6,16 @@ the production pipeline (which is exercised by the Wolfram driver + p3_extract).
 No Wolfram kernel is needed here (pure Python).
 """
 import math
+import sys
+from pathlib import Path
 
 import pytest
+
+# The modules under test (hisano_1104_0228, p3_compare) live in this same
+# directory. Put it on sys.path so the canonical repo-root command
+# `pytest plugins/ eval/` (--import-mode=importlib) collects this module
+# without a bare-import ModuleNotFoundError.
+sys.path.insert(0, str(Path(__file__).parent))
 
 import hisano_1104_0228 as H
 import p3_compare as C
