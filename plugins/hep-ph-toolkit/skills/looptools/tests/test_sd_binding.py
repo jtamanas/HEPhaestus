@@ -165,7 +165,7 @@ def test_projector_classifies_from_real_weylchains():
     assert "WeylChain" in src and "Spinor" in src, "must inspect WeylChain/Spinor structure"
     assert "LeastSquares" in src, "must solve for operator coefficients numerically"
     # signature takes the abbr table
-    assert re.search(r"projectOperators\[M_,\s*abbr_List,\s*mchi_,\s*mq_\]", src)
+    assert re.search(r"projectOperators\[M_,\s*abbr_List,\s*mchi_,\s*mq_,\s*vscale_:1\.0\]", src)  # vscale: amendment Ruling 3 velocity-stability knob
 
 
 def test_projector_has_completeness_and_taxonomy_guards():

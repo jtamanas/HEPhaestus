@@ -60,6 +60,13 @@ NAMED_GUARDS = (
     "SD-AMP-ABBREVIATIONS-UNRESOLVED",
     "SD-PROJECTION-FAILED",
     "SD-PROJECTION-INCOMPLETE",
+    "SD-SI-EXTRACTION-UNSTABLE",
+    "SD-VELOCITY-UNSTABLE",
+    "SD-FIERZ-ROTATION-INEXACT",
+    "SD-PROJECTION-BASIS-RANK-DEFICIENT",
+    "SD-PROJECTION-BASIS-ILLCONDITIONED",
+    "SD-PROJECTION-BASIS-UNIDENTIFIABLE",
+    "SD-PROJECTION-MONOMIAL-OUT-OF-SPAN",
     "UNBOUND-MODEL-PARAMETERS",
     "LOOPTOOLS_AMPLITUDE_NONFINITE",
 )
@@ -118,18 +125,19 @@ def test_sd_eval_finite_coeffs_or_named_guard(tmp_path):
         assert any(g in log for g in NAMED_GUARDS), (
             f"no named guard in driver log (rc={res.returncode}):\n{log[-2000:]}")
         # F5 fix: pin the SPECIFIC guard for the current known state, per artifact.
-        # Self-contained artifact (PR #32, abbr+subexpr persisted): the projection
-        # path runs and fails at the COMPLETENESS guard.  The out-of-span content is
-        # NOT YET IDENTIFIED (PR #33 review: a direct axial-axial add-back moves the
-        # residual only 0.995->0.992; no Fierz-complete operator set spans it;
-        # ||M||~1e28 scale anomaly + unphysical-lambda PV warnings point to a
-        # static-coefficient / off-axis-chain kinematic inconsistency).  Resolving
-        # that is the mandatory next work item before item 4.  Old artifact: the
-        # abbreviation guard.  A different guard firing = regression, must fail.
+        # Self-contained artifact (PR #32, abbr+subexpr persisted), post round-3
+        # (rotated-complete instrument, AMENDMENT2): the once-mysterious
+        # out-of-span content IS identified — a rank-12 instrument + unrotated
+        # Majorana-crossed monomials (re-review probe8); completeness now passes
+        # (3.12e-9 < 1e-8) and the run fails LOUDLY at the SI-extraction shift
+        # bar (si_shift ~ 100%: the unrotated crossed monomials' spurious O_S
+        # projection was round-2's -2.0973e-7 "direct-sector" value), pending
+        # the AMENDMENT2 Ruling-3 retirement adjudication.  A different guard
+        # firing = regression, must fail.
         if "subexpr-fix" in str(STEP2_AMP):
-            assert "SD-PROJECTION-INCOMPLETE" in log, (
-                f"expected the completeness guard on the self-contained artifact "
-                f"(rc={res.returncode}):\n{log[-2000:]}")
+            assert "SD-SI-EXTRACTION-UNSTABLE" in log, (
+                f"expected the SI-extraction-shift guard on the self-contained "
+                f"artifact (rc={res.returncode}):\n{log[-2000:]}")
         else:
             assert "SD-AMP-ABBREVIATIONS-UNRESOLVED" in log, (
                 f"expected the abbreviations guard on the pre-PR#32 artifact "
