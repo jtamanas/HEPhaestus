@@ -90,12 +90,13 @@
    small against the x3-5 floor anchor bands; the Hisano pure-doublet anchor
    (Decision A6) is the independent physics check.
 
-   NOTE on the ~1.0 completeness residual at the canonical point (post PR #35
-   adversarial review): it is NOT produced by this expansion — the triangle-only
-   sector (untouched by this module) shows the same residual, and it is
-   velocity-pinned (pr35-review/REVIEW.md probes 1-2 refuted the earlier A-R2
-   velocity-gap reading).  Its design-level interpretation and the completed
-   reference basis are governed by DESIGN-ITEM4-AMENDMENT.md Rulings 1-3.
+   NOTE on the historical ~1.0 3-op / 0.669 full-basis completeness residuals
+   at the canonical point: NOT produced by this expansion.  The second
+   re-review (pr35-rereview/REVIEW.md) pinned them to a rank-deficient
+   reference basis plus the two UNROTATED Majorana-crossed chain monomials
+   (F5*F6, F7*F8) — instrument artifacts with no physics meaning.  The
+   projection instrument and its rulings live in sd_projection.wl +
+   DESIGN-ITEM4-AMENDMENT2.md / AMENDMENT2R1.md.
 
    ============================================================================
    GUARDS (Decision A1 step 4 + amendment stage-0c)

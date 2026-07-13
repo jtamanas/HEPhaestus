@@ -89,6 +89,9 @@ result = If[TrueQ[proj["ok"]],
     "C_chi_vector" -> numOrNull[proj["C_chi_vector"]],
     "completeness_rel_residual" -> N[proj["completeness_rel_residual"]],
     "completeness_ok" -> TrueQ[proj["completeness_ok"]],
+    (* production 3-op completeness (the fixture-level statement for derivative
+       fixtures, which sit outside the LOCAL instrument span by construction) *)
+    "si3_completeness_ok" -> TrueQ[proj["si3_completeness_ok"]],
     "unrecognized_chains" -> proj["unrecognized_chains"],
     "residual_symbols" -> (ToString /@ resid)
   |>,

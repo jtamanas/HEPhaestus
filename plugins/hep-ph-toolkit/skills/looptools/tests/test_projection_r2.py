@@ -68,10 +68,19 @@ def test_pure_scalar_projects_to_scalar_no_twist2(tmp_path):
 
 
 def test_pure_twist2_projects_to_twist2_no_scalar(tmp_path):
+    """NOTE on completeness semantics (rotated-complete instrument, AMENDMENT2):
+    a twist-2 fixture is a DERIVATIVE (momentum-insertion) operator, out of the
+    LOCAL 256-column dictionary's span by construction once the sampling leaves
+    the forward manifold — so the instrument-level `completeness_ok` is
+    legitimately False here (the derivative monomials are bar-exempt but fully
+    reported).  The fixture-level completeness statement that must hold is the
+    PRODUCTION 3-op one (`si3_completeness_ok`): the contracted operator set
+    spans this fixture exactly."""
     d = _project("pure_twist2", tmp_path)
     assert d["ok"], f"projection failed: {d}"
     assert not d["residual_symbols"], f"unexpected residuals: {d['residual_symbols']}"
-    assert d["completeness_ok"], f"completeness residual too large: {d['completeness_rel_residual']}"
+    assert d["si3_completeness_ok"], \
+        f"3-op completeness residual too large: {d['completeness_rel_residual']}"
     assert abs(d["C_twist2"] - C_TWIST2_EXPECT) / C_TWIST2_EXPECT < TOL
     # cross-talk: scalar must be < 1% of the twist-2 magnitude — the load-bearing R2
     # check.  A static spin-summed collapse would fold this twist-2 into C_scalar.
@@ -83,7 +92,8 @@ def test_mixed_recovers_both_independently(tmp_path):
     d = _project("mixed_scalar_twist2", tmp_path)
     assert d["ok"], f"projection failed: {d}"
     assert not d["residual_symbols"]
-    assert d["completeness_ok"], f"completeness residual too large: {d['completeness_rel_residual']}"
+    assert d["si3_completeness_ok"], \
+        f"3-op completeness residual too large: {d['completeness_rel_residual']}"
     assert abs(d["C_scalar"] - C_SCALAR_EXPECT) / C_SCALAR_EXPECT < TOL
     assert abs(d["C_twist2"] - C_TWIST2_EXPECT) / C_TWIST2_EXPECT < TOL
 

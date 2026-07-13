@@ -942,15 +942,21 @@ blockers:
     severity: recoverable
     emitted_by: [looptools]
     triggered_by_axes: []
-    digest_reference: "looptools/scripts/run_eval_sd.wls (Ruling 3 criterion 2); DESIGN-ITEM4-AMENDMENT.md"
+    digest_reference: "looptools/scripts/run_eval_sd.wls; DESIGN-ITEM4-AMENDMENT2.md Ruling 3"
     description: >-
       The scalar SI coefficient C_scalar moves by >=1% between the production
-      3-operator fit and the Fierz-complete reference-basis fit
-      (DESIGN-ITEM4-AMENDMENT.md Ruling 3 criterion 2): the 3-op extraction is
-      silently polluted by overlap with out-of-span content on the sample set.
+      3-operator fit (UNROTATED amplitude) and the rotated-complete instrument
+      fit. HISTORY: earlier catalog text quoted a 12.4 shift measured on the
+      rank-12 pre-amendment2 basis — an instrument artifact, no physics meaning.
+      MEASURED (round 3, canonical point): si_shift_rel = 1.0008 with all
+      instrument guards green, and the crossing-symmetry probe pinned the cause
+      as REAL 3-op pollution — the unrotated Majorana-crossed monomials project
+      a spurious -2.099e-7 onto O_S (the round-2 "direct-sector C_scalar")
+      while both Majorana crossings genuinely contribute ~0 scalar (1e-14).
       Emitted as "SD-SI-EXTRACTION-UNSTABLE si_shift_rel=..", exit 3 — nothing
-      ships. Per Ruling 1, a persistent shift means the full-basis fit must
-      become the production fit (a design decision, not a driver-side toggle).
+      ships. Per AMENDMENT2 Ruling 3, a persistent shift > 10% RETIRES the 3-op
+      fit in favour of the full-basis fit as production — an adjudication-level
+      change (AMENDMENT3), not a driver-side toggle.
     workaround_codes: []
     owned_by: looptools
 
@@ -960,14 +966,116 @@ blockers:
     severity: recoverable
     emitted_by: [looptools]
     triggered_by_axes: []
-    digest_reference: "looptools/scripts/run_eval_sd.wls (Ruling 3 criterion 3); DESIGN-ITEM4-AMENDMENT.md"
+    digest_reference: "looptools/scripts/run_eval_sd.wls; DESIGN-ITEM4-AMENDMENT2.md Ruling 2 trigger (b)"
     description: >-
-      C_scalar/C_twist2 from the Fierz-complete reference fit drift by >=1% when
-      the sample-config velocities are scaled v -> v/10 (DESIGN-ITEM4-AMENDMENT.md
-      Ruling 3 criterion 3) — a twist-2-column conditioning or kinematic-
-      consistency problem in the projection, not a shippable extraction. The
-      pre-amendment probe showed a 15% C_scalar drift at v/100 on the 3-op fit;
-      this guard requires the full-basis fit to be shown stable, not assumed so.
-      Emitted as "SD-VELOCITY-UNSTABLE full_basis_drift=..", exit 3.
+      C_scalar_full from the rotated-complete instrument fit drifts by >=1%
+      when the sample-config velocities are scaled v -> v/10, OR the v/10
+      instrument refuses its own pre-fit guards so the drift is unmeasurable.
+      HISTORY: the earlier 97.9 drift was measured on the rank-12
+      pre-amendment2 basis — an instrument artifact. MEASURED (round 3): the
+      transfer-sampled instrument's conditioning collapses ~1/v^2 (cond 6.1e3
+      at v -> 4.8e6 at v/10; the direction-variation separations are O(v^2)),
+      so the v/10 leg refuses ILLCONDITIONED; independently, the 3-op fit on
+      the ROTATED amplitude shows a 10.4% C_scalar drift — pre-registered
+      reopen trigger (b) for per-config kinematics as coefficient-value bias.
+      Emitted as "SD-VELOCITY-UNSTABLE full_basis_drift=.." or
+      "SD-VELOCITY-UNSTABLE v/10 instrument refused: ..", exit 3.
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_FIERZ_ROTATION_INEXACT:
+    class: regime-mismatch
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/sd_projection.wl projectOperators; DESIGN-ITEM4-AMENDMENT2R1.md"
+    description: >-
+      The C-conjugate-then-rotate identity for a Majorana-crossed monomial
+      (F5*F6/F7*F8 shape: BOTH chains chi-barred) failed its per-run
+      verification: the flipped-spin production form and the machine-evaluated
+      constant-coefficient direct combination (16-Gamma completeness + measured
+      Majorana relations v(p,s)=C ubar^T=s g5 u(p,-s)) disagree at >= 1e-12
+      scale-relative, or the amplitude has F-degree > 2, or a crossed chain's
+      leg layout is not the supported chi=k1/k3, q=k2/k4. The identity —
+      including the Majorana C phase convention — is checked by evaluation
+      every run, never trusted (measured 4.3e-16 on the canonical point).
+      Emitted verbatim as "SD-FIERZ-ROTATION-INEXACT ..", exit 3.
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_PROJECTION_BASIS_RANK_DEFICIENT:
+    class: regime-mismatch
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/sd_projection.wl referenceBasisGuards; DESIGN-ITEM4-AMENDMENT2.md Ruling 1 guard 1"
+    description: >-
+      The rotated-complete instrument's design matrix has SVD numerical rank
+      below its column count; the null-space combinations are NAMED in the
+      message (this guard alone would have caught the historical rank-12-of-27
+      basis and its D_Vq_Ac == D_Aq_Vc duplicate pair). A rank-deficient
+      instrument can never silently measure again. Emitted as
+      "SD-PROJECTION-BASIS-RANK-DEFICIENT rank .. of ..; null-space
+      combinations: ..", exit 3.
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_PROJECTION_BASIS_ILLCONDITIONED:
+    class: regime-mismatch
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/sd_projection.wl referenceBasisGuards; DESIGN-ITEM4-AMENDMENT2.md Ruling 1 guards 2-3"
+    description: >-
+      The rotated-complete instrument failed null-column / collinear-pair /
+      condition-number pre-fit guards: a column with ||col|| < 1e-12 ||mat||_F
+      (the review's 7 forward-null pseudoscalar columns were exactly this — a
+      sampling defect to FIX via transfer kinematics, not silently drop), a
+      pairwise collinearity > 1-1e-10, or cond(column-normalized) >= 1e4.
+      Measured healthy values at the canonical point: rank 256/256, cond 6.1e3
+      with the 8x8 direction-cross transfer sampling. Emitted as
+      "SD-PROJECTION-BASIS-ILLCONDITIONED ..", exit 3.
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_PROJECTION_BASIS_UNIDENTIFIABLE:
+    class: regime-mismatch
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/sd_projection.wl referenceBasisGuards; DESIGN-ITEM4-AMENDMENT2.md Ruling 1 guard 4"
+    description: >-
+      Per-column identifiability control failed: synthetic recovery through the
+      instrument's pseudoinverse (PseudoInverse[nmat].nmat vs identity) shows a
+      coefficient recovery / cross-talk error >= 1e-10 for at least one column.
+      Extends the R2 single-fixture control to EVERY column, every run: a
+      degenerate basis fails its own control before touching live data.
+      Measured healthy value at the canonical point: 7.0e-13. Emitted as
+      "SD-PROJECTION-BASIS-UNIDENTIFIABLE ..", exit 3.
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_PROJECTION_MONOMIAL_OUT_OF_SPAN:
+    class: regime-mismatch
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/sd_projection.wl projectOperators per-monomial diagnostic; DESIGN-ITEM4-AMENDMENT2R1.md"
+    description: >-
+      The permanent per-monomial diagnostic (the re-review's probe8, made a
+      shipping guard) found an F-chain monomial of the (rotated) amplitude
+      whose CONTRIBUTION to the completeness residual
+      (raw_resid * |coeff| * ||mono|| / ||M_rot||) is >= 1e-8; the monomial is
+      NAMED. The bar is on contribution, not raw in-span residual, because
+      derivative (momentum-insertion) monomials are O(0.1) raw off the forward
+      manifold IN PRINCIPLE while carrying 1e-9..1e-14 weight (measured: worst
+      raw F3*F13 = 0.189, worst contribution 9.6e-10; raw residuals ship in the
+      sidecar). Emitted as "SD-PROJECTION-MONOMIAL-OUT-OF-SPAN F-monomial ..",
+      exit 3.
     workaround_codes: []
     owned_by: looptools

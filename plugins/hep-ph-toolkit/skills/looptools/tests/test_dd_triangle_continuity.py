@@ -37,11 +37,14 @@ RUNNER = SCRIPTS_DIR / "run_dd_triangle_continuity.wls"
 # point (mchi1 = 132.69 GeV, external down quark, setdelta 0 / setmudim 1), as
 # produced by run_dd_triangle_continuity.wls (this runner is deterministic for
 # a given kernel/LoopTools build, so the comparison below is exact-tolerance).
-# The PR #35 adversarial review measured -1.2831508511406324e-7 with its own
-# ad-hoc split script (REVIEW.md F3); this runner agrees with that independent
-# measurement to 7.6e-8 RELATIVE (float noise through a different evaluation
-# order + LeastSquares path), which is the honest cross-check statement — the
-# two are NOT bit-identical.
+# Two independent review measurements exist (RF-minor-3 clarification):
+#   - the SECOND re-review reproduced THIS runner's fixture BIT-FOR-BIT
+#     (-1.2831509485455282e-7), so the pinned value below is reviewer-confirmed
+#     at exact precision;
+#   - the FIRST review's own ad-hoc split script measured
+#     -1.2831508511406324e-7, agreeing to 7.6e-8 RELATIVE (float noise through
+#     a different evaluation order + LeastSquares path) — kept as the
+#     independent-implementation cross-check at loose tolerance.
 TRIANGLE_C_SCALAR = -1.2831509485455282e-7
 REVIEWER_C_SCALAR = -1.2831508511406324e-7
 
@@ -108,9 +111,11 @@ def test_triangle_sector_c_scalar_matches_pinned_fixture(continuity_result):
 
 
 def test_triangle_sector_agrees_with_independent_review_measurement(continuity_result):
-    """Cross-check against the reviewer's independently-scripted measurement:
-    agreement to 1e-6 relative (measured 7.6e-8) — loose enough for a different
-    evaluation order, tight enough that a physics-level drift cannot hide."""
+    """Cross-check against the FIRST review's independently-scripted (ad-hoc
+    split) measurement: agreement to 1e-6 relative (measured 7.6e-8) — loose
+    enough for a different evaluation order, tight enough that a physics-level
+    drift cannot hide.  (The second re-review reproduced the pinned fixture
+    above bit-for-bit — RF-minor-3.)"""
     got = continuity_result["triangle_only"]["C_scalar_re"]
     rel = abs(got - REVIEWER_C_SCALAR) / abs(REVIEWER_C_SCALAR)
     assert rel < 1e-6, (

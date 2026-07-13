@@ -313,6 +313,10 @@ Module[{
      solution.  A structurally-unrecognized chain or an incomplete fit fails loud
      (the F2 review fix — no silent fall-through). *)
   proj = projectOperators[Mnum, abbrF, mchi, mq];
+  (* instrument-level failures carry their own marker names (SD-FIERZ-ROTATION-
+     INEXACT, SD-PROJECTION-BASIS-{RANK-DEFICIENT,ILLCONDITIONED,UNIDENTIFIABLE},
+     SD-PROJECTION-MONOMIAL-OUT-OF-SPAN) — emitted verbatim + Exit[3] here *)
+  projInstrumentAssert[proj];
   If[! TrueQ[proj["ok"]],
     WriteString["stderr",
       "run_eval_sd: SD-PROJECTION-FAILED " <> ToString[proj["reason"]] <> " " <>
@@ -326,26 +330,29 @@ Module[{
   cScalar = proj["C_scalar"]; cTw = proj["C_twist2"]; cChiV = proj["C_chi_vector"];
   complResidual = proj["completeness_rel_residual"];
 
-  (* ---- COMPLETENESS GUARD, AMENDED (DESIGN-ITEM4-AMENDMENT.md Ruling 3) ------
-     Criterion 1: the FULL Fierz-complete reference basis must span the amplitude
-     to numerical precision ($fullCompletenessTol = 1e-8).  This is STRICTER than
-     the old 3-op bar: nothing can hide as "expected residual".  The 3-op
-     residual is still reported (si3_completeness_ok) but is NOT the shipping
-     guard — an amplitude with Z/W content legitimately carries content (e.g.
-     axial x axial) outside the 3-op SI set; the reference basis exists to NAME
-     it (out_of_span_diagnostics), never to feed it to nucleon matching
-     (Ruling 2: only C_scalar/C_twist2/C_G ever flow onward). *)
+  (* ---- COMPLETENESS GUARD (AMENDMENT2 Ruling 4, rotated-complete) ------------
+     Criterion 1: the ROTATED-COMPLETE reference instrument (rank-verified
+     256-column dictionary, Majorana-crossed monomials C-conjugate-rotated) must
+     span the ROTATED amplitude to $fullCompletenessTol = 1e-8.  RECONCILIATION
+     (AMENDMENT2, RF-minor-2): the historical 0.669 residual here was an
+     instrument artifact of a rank-12 basis plus UNROTATED Majorana-crossed
+     content — no physics meaning; the earlier frozen-kinematics reading is
+     RETRACTED (pr35-rereview/REVIEW.md).  A residual over the bar WITH the
+     rotation + rank guards green is pre-registered reopen trigger (a) for
+     per-config kinematics (Ruling 2).  The 3-op residual is still reported
+     (si3_completeness_ok) but is NOT the shipping guard; the instrument NAMES
+     out-of-span content (out_of_span_diagnostics), never feeds nucleon
+     matching (Ruling 2: only C_scalar/C_twist2/C_G ever flow onward). *)
   If[! TrueQ[proj["completeness_ok"]],
     WriteString["stderr",
       "run_eval_sd: SD-PROJECTION-INCOMPLETE full_basis_completeness_rel_residual=" <>
       ToString[proj["full_basis_completeness_rel_residual"], InputForm] <>
       " (tol=" <> ToString[$fullCompletenessTol, InputForm] <> ", 3-op residual=" <>
       ToString[complResidual, InputForm] <> ")\n" <>
-      "  The Fierz-complete REFERENCE basis does not span the amplitude to\n" <>
-      "  numerical precision.  Per DESIGN-ITEM4-AMENDMENT.md Ruling 1 this means\n" <>
-      "  structural out-of-span content (hypothesis (i): frozen-coefficient vs\n" <>
-      "  per-config kinematics inconsistency) or a projector bug — NOT an\n" <>
-      "  expected physics residual.  Nothing ships.\n"];
+      "  The rotated-complete REFERENCE instrument does not span the rotated\n" <>
+      "  amplitude to the bar with its rank/rotation guards green — the\n" <>
+      "  pre-registered reopen trigger (a) for per-config kinematics\n" <>
+      "  (DESIGN-ITEM4-AMENDMENT2.md Ruling 2).  Nothing ships.\n"];
     Exit[3]];
 
   (* ---- SI-EXTRACTION STABILITY (Ruling 3 criterion 2) -------------------------
@@ -357,31 +364,49 @@ Module[{
       ToString[proj["si_shift_rel"], InputForm] <>
       " (C_scalar 3-op=" <> ToString[cScalar, InputForm] <> ", full-basis=" <>
       ToString[proj["C_scalar_full"], InputForm] <> ", bar=1%)\n" <>
-      "  The scalar SI coefficient moves by >=1% between the 3-operator fit and\n" <>
-      "  the Fierz-complete reference fit (DESIGN-ITEM4-AMENDMENT.md Ruling 3\n" <>
-      "  criterion 2): the 3-op extraction is polluted by out-of-span overlap on\n" <>
-      "  the sample set.  Nothing ships.\n"];
+      "  The scalar SI coefficient moves by >=1% between the 3-operator fit\n" <>
+      "  (UNROTATED amplitude) and the rotated-complete instrument fit.\n" <>
+      "  MEASURED CONTEXT (probeH crossing-symmetry, 2026-07): the unrotated\n" <>
+      "  crossed monomials project a spurious scalar onto O_S, so a persistent\n" <>
+      "  shift here is expected to be REAL 3-op pollution.  Per\n" <>
+      "  DESIGN-ITEM4-AMENDMENT2.md Ruling 3, a persistent shift > 10% RETIRES\n" <>
+      "  the 3-op fit in favour of the full-basis fit as production — an\n" <>
+      "  adjudication-level change (AMENDMENT3) this driver refuses to make\n" <>
+      "  silently.  Nothing ships.\n"];
     Exit[3]];
 
-  (* ---- VELOCITY STABILITY (Ruling 3 criterion 3) ------------------------------
-     C_scalar and C_twist2 from the FULL-basis fit must be stable to <1% under
-     sample-velocity scaling v -> v/10 (conditioning check; the pre-amendment 15%
-     drift at v/100 must be shown cured, not assumed away). *)
+  (* ---- VELOCITY STABILITY (AMENDMENT2 Ruling 2 trigger (b)) -------------------
+     C_scalar_full from the instrument fit must be stable to <1% under sample-
+     velocity scaling v -> v/10.  C_twist2_full no longer exists (the free-
+     dictionary instrument has no contracted twist-2 column; the production
+     C_twist2 is the twist-2 quantity).  If the v/10 instrument REFUSES its own
+     pre-fit guards (measured: cond collapses ~1/v^2 to 4.8e6 at v/10 — the
+     direction-variation separations that condition the dictionary are O(v^2)),
+     that refusal IS a velocity-stability failure: drift is unmeasurable on
+     this instrument at v/10, reported loudly, nothing assumed. *)
   Module[{projV = projectOperators[Mnum, abbrF, mchi, mq, 0.1], vDrift},
-    vDrift = Max[
+    If[! TrueQ[projV["ok"]],
+      WriteString["stderr",
+        "run_eval_sd: SD-VELOCITY-UNSTABLE v/10 instrument refused: " <>
+        ToString[projV["reason"]] <> " " <>
+        ToString[Lookup[projV, "detail", ""]] <> "\n" <>
+        "  The rotated-complete instrument cannot be built at v/10 under its own\n" <>
+        "  pre-fit guards, so the v -> v/10 drift of C_scalar_full is\n" <>
+        "  UNMEASURABLE here (pre-registered trigger (b) territory,\n" <>
+        "  DESIGN-ITEM4-AMENDMENT2.md Ruling 2).  Nothing ships.\n"];
+      Exit[3]];
+    vDrift =
       If[Abs[proj["C_scalar_full"]] < 1*^-300, Abs[projV["C_scalar_full"]],
-        Abs[(projV["C_scalar_full"] - proj["C_scalar_full"])/proj["C_scalar_full"]]],
-      If[Abs[proj["C_twist2_full"]] < 1*^-300, Abs[projV["C_twist2_full"]],
-        Abs[(projV["C_twist2_full"] - proj["C_twist2_full"])/proj["C_twist2_full"]]]];
+        Abs[(projV["C_scalar_full"] - proj["C_scalar_full"])/proj["C_scalar_full"]]];
     velocityDrift = vDrift;
     If[vDrift >= 0.01,
       WriteString["stderr",
         "run_eval_sd: SD-VELOCITY-UNSTABLE full_basis_drift=" <> ToString[vDrift, InputForm] <>
         " under v -> v/10 (bar=1%)\n" <>
-        "  C_scalar/C_twist2 from the full-basis fit drift by >=1% when the\n" <>
-        "  sample velocities are scaled down (DESIGN-ITEM4-AMENDMENT.md Ruling 3\n" <>
-        "  criterion 3) — a conditioning or kinematic-consistency problem, not a\n" <>
-        "  shippable extraction.  Nothing ships.\n"];
+        "  C_scalar_full from the instrument fit drifts by >=1% when the sample\n" <>
+        "  velocities are scaled down — pre-registered reopen trigger (b) for\n" <>
+        "  per-config kinematics as coefficient-value bias\n" <>
+        "  (DESIGN-ITEM4-AMENDMENT2.md Ruling 2).  Nothing ships.\n"];
       Exit[3]]];
 
   (* ---- PER-COEFFICIENT UV-residue check (Decision 2, load-bearing) -----------
@@ -430,19 +455,27 @@ Module[{
       "completeness_rel_residual" -> complResidual,
       "gauge_parameter_dependence" -> Null (* Rxi variation deferred (Decision 2) *)
     |>,
-    "a6_amended" -> <|  (* DESIGN-ITEM4-AMENDMENT.md Ruling 3, all three green
-                           (each is a hard Exit[3] guard above) *)
+    "a6_amended" -> <|  (* AMENDMENT2 Rulings 1+4 bars, all green (each is a
+                           hard Exit[3] guard above) *)
       "full_basis_completeness_rel_residual" ->
         proj["full_basis_completeness_rel_residual"],
       "full_basis_completeness_tol" -> $fullCompletenessTol,
       "si_shift_rel" -> proj["si_shift_rel"],
       "velocity_drift_rel" -> velocityDrift,
-      "si3_completeness_rel_residual" -> complResidual
+      "si3_completeness_rel_residual" -> complResidual,
+      "rotation_exactness_max" -> proj["rotation_exactness_max"],
+      "basis_rank" -> proj["basis_rank"],
+      "basis_n_columns" -> proj["basis_n_columns"],
+      "basis_cond" -> proj["basis_cond"],
+      "identifiability_max_err" -> proj["identifiability_max_err"],
+      "monomial_worst" -> proj["monomial_worst"]
     |>,
     "out_of_span_diagnostics" -> <|  (* Ruling 2: DIAGNOSTICS ONLY — never
         matched, never a cross-section; only C_scalar/C_twist2/C_G flow onward *)
       "full_basis_coeffs_re" -> Map[Re, proj["full_basis_coeffs"]],
-      "absorbed_norm_shares" -> proj["absorbed_norm_shares"]
+      "absorbed_norm_shares" -> proj["absorbed_norm_shares"],
+      "monomial_residuals" -> proj["monomial_residuals"],
+      "monomial_contributions" -> proj["monomial_contributions"]
     |>,
     "dd_expansion" -> <|
       "enabled" -> $ddExpansion,

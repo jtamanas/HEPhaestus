@@ -113,13 +113,20 @@ def test_expand_rule_touches_only_boxes_triangle_continuity_by_construction():
 
 
 def test_no_retracted_velocity_gap_narrative():
-    """PR #35 review F1: the 'residual ~= 1.0 is the A-R2 velocity gap; round-2
-    O(v) twist-2 resolves it' claim was empirically refuted and RETRACTED.  It
-    must not survive anywhere in the shipped sources; design-level interpretation
-    is attributed to DESIGN-ITEM4-AMENDMENT.md only."""
+    """PR #35 review F1 + re-review RN1: the 'residual ~= 1.0 is the A-R2
+    velocity gap; round-2 O(v) twist-2 resolves it' claim was empirically
+    refuted and RETRACTED — including the HYPHENATED spelling the first grep
+    missed (RN1).  Likewise the round-2 'confirms/supports frozen-kinematics'
+    reading was refuted by the second re-review (fixed scalar coefficients
+    cannot create content orthogonal to a complete local basis); the shipped
+    sources may DESCRIBE the retraction but must not assert the claim."""
     for path in (MODULE, DRIVER, PROJECTION, CHECK_RUNNER, GUARD_RUNNER):
         src = _read(path)
-        for phrase in ("velocity gap", "A-R2 velocity", "resolves it"):
+        for phrase in ("velocity gap", "velocity-gap", "A-R2 velocity",
+                       "resolves it", "confirms the frozen-kinematics",
+                       "confirms frozen-kinematics",
+                       "supports frozen-kinematics",
+                       "supports the frozen-kinematics"):
             assert phrase not in src, \
                 f"retracted narrative phrase {phrase!r} found in {path.name}"
 
@@ -177,18 +184,55 @@ def test_driver_enforces_amended_ruling3_bars():
 
 
 # ---------------------------------------------------------------- projection layer
-def test_projection_reference_basis_is_diagnostics_only():
-    """Amendment Ruling 1/2 (F6 reversal): the Fierz-complete reference basis is
-    measurement instrumentation.  Only {C_q, C_q^(1,2), C_G} may flow to nucleon
-    matching; the full-basis coefficients ship as sidecar diagnostics."""
+def test_projection_reference_instrument_is_diagnostics_only():
+    """AMENDMENT2 Rulings 1/2: the ROTATED-COMPLETE reference instrument (the
+    27-column contracted basis and its $opRefsDiag table are GONE — rank 12 of
+    27, re-review) is measurement instrumentation.  Only {C_q, C_q^(1,2), C_G}
+    may flow to nucleon matching; instrument coefficients ship as sidecar
+    diagnostics."""
     src = _read(PROJECTION)
-    assert "$opRefsDiag" in src, "reference operator basis must be defined"
+    assert "$opRefsDiag" not in src, \
+        "the retired rank-deficient 27-column basis must not come back"
+    assert "$refNames" in src and "refRow[" in src, \
+        "the 256-column line-product dictionary must be defined"
+    assert "referenceBasisGuards" in src, \
+        "fatal pre-fit guards must be defined (AMENDMENT2 Ruling 1)"
+    assert "crossedRotValue" in src and "crossedRotAlgebraic" in src, \
+        "the Majorana C-conjugate rotation must be machine-evaluated both ways"
+    assert "rotated-complete" in src.lower(), \
+        "the instrument label is 'rotated-complete' (Ruling 4 rename)"
     assert "full_basis_completeness_rel_residual" in src
     assert "absorbed_norm_shares" in src
     assert "$fullCompletenessTol" in src
+    assert "$fierzRotationTol" in src and "$monomialContribTol" in src
     # the production 3-op fit must still be what feeds C_scalar/C_twist2
     assert "si_shift_rel" in src, \
         "3-op-vs-full C_scalar shift must be measured (Ruling 3 criterion 2)"
+
+
+def test_projection_instrument_guard_markers_and_exit3():
+    """Every instrument guard has a named marker, and the shared assert
+    (projInstrumentAssert, called by the driver) carries the Exit[3]."""
+    src = _read(PROJECTION)
+    for marker in (
+        "SD-FIERZ-ROTATION-INEXACT",
+        "SD-PROJECTION-BASIS-RANK-DEFICIENT",
+        "SD-PROJECTION-BASIS-ILLCONDITIONED",
+        "SD-PROJECTION-BASIS-UNIDENTIFIABLE",
+        "SD-PROJECTION-MONOMIAL-OUT-OF-SPAN",
+    ):
+        assert marker in src, f"instrument marker {marker} must be defined"
+    idx = src.index("projInstrumentAssert[proj_Association]")
+    assert "Exit[3]" in src[idx:idx + 600], \
+        "projInstrumentAssert must Exit[3] on instrument failures"
+    assert "projInstrumentAssert[proj]" in _read(DRIVER), \
+        "run_eval_sd.wls must route projection failures through projInstrumentAssert"
+
+
+def test_amendment2_design_docs_are_committed():
+    """The round-3 rulings must live in-repo, next to the earlier design docs."""
+    for doc in ("DESIGN-ITEM4-AMENDMENT2.md", "DESIGN-ITEM4-AMENDMENT2R1.md"):
+        assert (EVAL_DIR / doc).exists(), f"{doc} must be committed in eval/"
 
 
 # ---------------------------------------------------------------- blocker catalog
@@ -202,6 +246,11 @@ def catalog():
     "SD_DD_DOUBLED_OFFSET_UNSUPPORTED",
     "SD_SI_EXTRACTION_UNSTABLE",
     "SD_VELOCITY_UNSTABLE",
+    "SD_FIERZ_ROTATION_INEXACT",
+    "SD_PROJECTION_BASIS_RANK_DEFICIENT",
+    "SD_PROJECTION_BASIS_ILLCONDITIONED",
+    "SD_PROJECTION_BASIS_UNIDENTIFIABLE",
+    "SD_PROJECTION_MONOMIAL_OUT_OF_SPAN",
 ])
 def test_blocker_entries_registered_and_well_shaped(catalog, code):
     assert code in catalog, f"{code} must be registered in blocker_catalog.yaml"

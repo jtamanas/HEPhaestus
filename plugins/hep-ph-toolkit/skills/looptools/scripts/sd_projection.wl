@@ -383,7 +383,8 @@ referenceBasisGuards[mat_?MatrixQ, names_List] := Module[
   If[identErr >= $refIdentTol,
     Return[<|"ok" -> False, "reason" -> "SD-PROJECTION-BASIS-UNIDENTIFIABLE",
       "detail" -> "per-column synthetic recovery error " <>
-        ToString[identErr, InputForm] <> " >= 1e-10", "ident_err" -> identErr|>]];
+        ToString[identErr, InputForm] <> " >= " <>
+        ToString[$refIdentTol, InputForm], "ident_err" -> identErr|>]];
   <|"ok" -> True, "rank" -> rank, "cond" -> cond, "ident_err" -> identErr,
     "n_columns" -> Length[names]|>];
 
@@ -519,7 +520,7 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
    refData, monoVals,
    fullMat, MrotVals, basisGuards, colNorms, nmat, fullSol, fullCoeffs,
    fullFit, fullResidVec, refMnorm, fullRelResid, monoResids, monoContribs,
-   monoWorst, diagShares, siShift},
+   derivMonoQ, monoWorst, diagShares, siShift},
   cc = chainClass[abbr];
   badChains = unrecognizedChains[abbr];
   (* FAIL-FAST structural guard (F1/F2): any chain whose WeylChain is outside the
@@ -676,13 +677,28 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
   monoContribs = Table[
     monoResids[[t]] Abs[Values[crules][[t]]] Norm[N[monoVals[[t]]]]/
       (refMnorm + 1*^-300), {t, Length[crules]}];
-  monoWorst = First[Ordering[monoContribs, -1]];
-  If[monoContribs[[monoWorst]] >= $monomialContribTol,
+  (* DERIVATIVE EXEMPTION from the FATAL bar (not from reporting): a monomial
+     containing a rank-1 (momentum-insertion) chain is a twist-2-family
+     DERIVATIVE operator — out of LOCAL 4-fermi span by construction once the
+     sampling leaves the forward manifold (its local decomposition coefficients
+     are momentum-dependent).  That content is handled by the production
+     CONTRACTED operators (O_Tq/O_Tchi), not by this local dictionary; its raw
+     residual still ships in the sidecar, and weight-bearing derivative content
+     still trips the full completeness bar at the driver.  The fatal
+     per-monomial bar targets rank-0 content that claims to be local but is not
+     (the Majorana-crossed class probe8 caught). *)
+  derivMonoQ = Table[Module[{ex = Keys[crules][[t]], ss},
+      ss = Flatten[Table[ConstantArray[fsyms[[i]], ex[[i]]], {i, Length[fsyms]}]];
+      AnyTrue[ss, (cc[#]["rank"] >= 1) &]],
+    {t, Length[crules]}];
+  monoWorst = First[Ordering[
+    MapThread[If[#2, 0., #1] &, {monoContribs, derivMonoQ}], -1]];
+  If[! derivMonoQ[[monoWorst]] && monoContribs[[monoWorst]] >= $monomialContribTol,
     Return[<|"ok" -> False, "reason" -> "SD-PROJECTION-MONOMIAL-OUT-OF-SPAN",
       "detail" -> "F-monomial " <> monoNames[[monoWorst]] <>
         " contributes relative completeness residual " <>
         ToString[monoContribs[[monoWorst]], InputForm] <>
-        " >= 1e-8 (raw in-span residual " <>
+        " >= " <> ToString[$monomialContribTol, InputForm] <> " (raw in-span residual " <>
         ToString[monoResids[[monoWorst]], InputForm] <> ")",
       "monomial_residuals" -> AssociationThread[monoNames -> monoResids],
       "monomial_contributions" -> AssociationThread[monoNames -> monoContribs],
@@ -730,7 +746,10 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
     "monomial_contributions" -> AssociationThread[monoNames -> monoContribs],
     "monomial_worst" -> <|"name" -> monoNames[[monoWorst]],
       "rel_residual" -> monoResids[[monoWorst]],
-      "contribution" -> monoContribs[[monoWorst]]|>,
+      "contribution" -> monoContribs[[monoWorst]],
+      (* worst among the guard-relevant (non-derivative) monomials; derivative
+         monomials are bar-exempt but fully reported in monomial_contributions *)
+      "guard_scope" -> "non-derivative"|>,
     "instrument" -> "rotated-complete/v2: 256-column line-product dictionary, " <>
       "transfer sampling |q|=sqrt(TEPS), Majorana-crossed monomials " <>
       "C-conjugate-rotated (DESIGN-ITEM4-AMENDMENT2R1.md)",
