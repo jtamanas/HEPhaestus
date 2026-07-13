@@ -155,7 +155,7 @@ def g_T1(x: float) -> float:
     g^(1)_q coefficient Eq. 17).  FIRST TERM has b_x in the NUMERATOR:
         g_T1(x) = (1/3) b_x (2 + x^2) tan^-1(2 b_x/sqrt x)
                   + (1/12) sqrt(x) (1 - 2x - x(2-x) log x)
-    UNLIKE g_H / g_S / g_AV / g_T2, which all carry 1/b_x (denominator).
+    UNLIKE g_H / g_S / g_T2, which all carry 1/b_x (denominator).
     Verified VERBATIM against the published PDF via pdftotext (2026-07-13),
     reconciling an earlier denominator transcription (ar5iv rendering ambiguity).
     g_T1(x->0) -> pi/3 (b_x->1, so the limit is insensitive to the placement,
