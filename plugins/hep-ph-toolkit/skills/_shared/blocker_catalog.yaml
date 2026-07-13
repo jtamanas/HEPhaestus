@@ -1002,12 +1002,22 @@ blockers:
       coefficient ships. Emitted verbatim with all three values and the
       tolerance, exit 3. Runtime-driven by
       run_projection_guard_check.wls cross-instrument.
+      AMENDMENT4 demotion (binds on the next leg, not yet enforced): whenever
+      |C| < 10x the absolute floor (6e-9) this guard is REPORT-ONLY — all
+      three instruments share M and the sample set, so agreement at noise
+      scale is trivially green and is NOT validation (the PR #36 falsifier
+      failure was cross-instrument green at every theta). Independence
+      henceforth means a different evaluation path or a different physics
+      lineage (the Hisano anchor; AMENDMENT5 withdrew the unexpanded-box
+      path with H2). A companion SD_COEFF_IMAGINARY refusal (|Im C|/|C| >= 0.1 on
+      any coefficient entering f_N) is pre-registered in AMENDMENT4 and lands
+      together with its emitter (no-emitterless-codes catalog norm).
     workaround_codes: []
     owned_by: looptools
 
   SD_KINEMATICS_REOPEN_TRIGGERED:
     class: regime-mismatch
-    fix_locality: design_gap
+    fix_locality: local_patch  # design-level reopen adjudicated in-repo (AMENDMENT3 Ruling 2 / AMENDMENT4 Ruling 2); "design_gap" was outside the FixLocalityEnum
     severity: recoverable
     emitted_by: [looptools]
     triggered_by_axes: []
