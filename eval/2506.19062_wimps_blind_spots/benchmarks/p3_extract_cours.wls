@@ -21,8 +21,15 @@
 *)
 args = Rest[$ScriptCommandLine];
 {projPath, ampPath, ddPath, mchiS, mqS, outPath} = args;
-mchi = ToExpression[mchiS];
-mq = ToExpression[mqS];
+(* C-style exponent notation ("4.67e-3") parses in Wolfram as 4.67*e - 3 (a
+   symbolic Plus!) — map it to *^ before ToExpression, and REFUSE non-numeric. *)
+parseNum[s_String] := Module[{v = ToExpression[StringReplace[s, "e" -> "*^"]]},
+  If[! NumberQ[N[v]],
+    WriteString["stderr", "p3_extract: non-numeric argument: " <> s <> "\n"];
+    Exit[2]];
+  N[v]];
+mchi = parseNum[mchiS];
+mq = parseNum[mqS];
 
 Get[projPath];
 amp = Get[ampPath];
@@ -58,6 +65,13 @@ result = <|
   "completeness_ok" -> Lookup[p, "completeness_ok", Missing[]]
 |>;
 
+(* JSON-sanitize: Missing/unevaluated -> Null / string (Export would otherwise
+   fail and leave a 0-byte file — measured failure mode). *)
+sanitize[v_] := Which[
+  NumberQ[v] || StringQ[v] || BooleanQ[v] || v === Null, v,
+  MatchQ[v, _Missing], Null,
+  True, ToString[v, InputForm]];
+result = sanitize /@ result;
 Export[outPath, result, "JSON"];
 Print["p3_extract: wrote ", outPath];
 Print["  C_scalar_full(R_S_S) Re = ", InputForm[result["C_scalar_full_re"]],
