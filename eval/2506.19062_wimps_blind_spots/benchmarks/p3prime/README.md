@@ -9,9 +9,12 @@ validation. No coefficient here is asserted as a validated physics value.
 - **BAR-3: FAIL (ratified).** The decoupled pure-doublet loop-floor C_scalar
   disagrees with Hisano (arXiv:1104.0228) in SIGN and magnitude: floor
   ~+1.0e-11 vs Hisano −2.23e-12, |ratio| ~4.5–5×. An independent adversarial
-  robustness review CONFIRMED the FAIL is robust and well-posed. The signature
-  is STRUCTURE-SPECIFIC (twist-2 sign AGREES at all four legs while scalar
-  flips), so a global/wholesale-sector sign flip is excluded.
+  robustness review CONFIRMED the FAIL is robust and well-posed ("could not
+  break it") — five attacks tried, floor stays wrong-sign and ~4.4–4.7× after
+  contamination subtraction across mixing exponents p=0.5–2.0, campaign numbers
+  bit-reproduce; full substance in `ROBUSTNESS_REVIEW.md` (this directory). The
+  signature is STRUCTURE-SPECIFIC (twist-2 sign AGREES at all four legs while
+  scalar flips), so a global/wholesale-sector sign flip is excluded.
 - **BAR-4: POSITIVE.** The mixing-physics extrapolation is well-behaved — the
   admixture excess monotonically shrinks L1→L2, exponent ~1.25 raw / ~1.09
   m_h-corrected, flatness ~9.6%. Confirms the P3 excess was real
@@ -30,6 +33,8 @@ validation. No coefficient here is asserted as a validated physics value.
   at fraction→0 would be the definitive hole-closer but is near-singular
   (m_χ1→m_D forces sin2θ=−1); the campaign relied on the fraction→0
   extrapolation instead.
+- **Optional post-fix validation:** θ=−π/4 decoupled leg — near-singular by
+  construction (m_χ1→mD forces sin2θ=−1); deferred per manager ruling this round.
 
 Protocol: `DESIGN-ITEM4-AMENDMENT6.md` Ruling 1 (do not duplicate; read it there).
 This half generates the LOOP-LEVEL SPheno spectra + sidecars; the Wolfram/LoopTools
