@@ -75,7 +75,10 @@ $wcQ = WeylChain[Spinor[k[4], MassFd[1]], 7, Spinor[k[2], MassFd[1]]];
    chi-barred), not plain-Fierz-reachable to the ubar(k3)..u(k1) dictionary *)
 $wcQmix = WeylChain[Spinor[k[4], MassFd[1]], 7, Spinor[k[3], MassFChi[1]]];
 $abbrCrossed = {FA -> $wcA, FB -> $wcB, FC -> $wcChi, FQ -> $wcQ};
-$abbrOutOfSpan = {FA -> $wcA, FX -> $wcQmix, FC -> $wcChi, FQ -> $wcQ};
+(* rank-0 variant of the crossed chain for the out-of-span mode: a rank-1
+   (insertion) chain would be derivative-EXEMPT from the fatal bar *)
+$wcA0 = WeylChain[Spinor[k[1], MassFChi[1]], 6, Spinor[k[2], MassFd[1]]];
+$abbrOutOfSpan = {FA -> $wcA0, FX -> $wcQmix, FC -> $wcChi, FQ -> $wcQ};
 
 Which[
   $mode === "rank-deficient",
