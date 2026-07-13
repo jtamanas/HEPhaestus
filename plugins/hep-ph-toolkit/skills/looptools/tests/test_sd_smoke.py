@@ -145,19 +145,29 @@ def test_sd_eval_finite_coeffs_or_named_guard(tmp_path):
         assert any(g in log for g in NAMED_GUARDS), (
             f"no named guard in driver log (rc={res.returncode}):\n{log[-2000:]}")
         # F5 fix: pin the SPECIFIC state for the current artifact.
-        # Self-contained artifact, post AMENDMENT3 round-2 rewiring: the
-        # SI-extraction gate is RETIRED (report-only), the cross-instrument
-        # guard is measured GREEN at the canonical point (probeF/probeE2:
-        # three instruments agree to ~3e-13), so the expected outcome is A
-        # (output written) — reaching this branch on the subexpr-fix artifact
-        # is itself a regression.
+        # Self-contained artifact, post AMENDMENT3 round-2 rewiring, MEASURED
+        # canonical state (2026-07-13 run): the SI-extraction gate is RETIRED
+        # (report-only; ~100% shift line must appear), the cross-instrument
+        # guard is GREEN (three instruments agree to ~3e-13), and the run
+        # refuses at the PRE-REGISTERED kinematics reopen trigger — the
+        # partial (d-flavor) f_N is a twist2-vs-gluon near-cancellation
+        # (shares 11.10/10.10 of |f_N|) and both terms drift > 1% at the
+        # green-guarded v/10 legs (twist2_sum 11.46%, C_Q 2.09%), plus the
+        # contracted-leg scalar column drifts 1.53e-8 abs > 6e-10.  A
+        # DIFFERENT guard firing = regression, must fail.  (If a future
+        # adjudication clears the reopen trigger, this pin moves to outcome A
+        # — the sigma_SI bracket asserts above.)
         if "subexpr-fix" in str(STEP2_AMP):
             assert "SD-SI-EXTRACTION-UNSTABLE" not in log, (
                 "the RETIRED SI-extraction gate fired — it must be "
                 f"report-only after AMENDMENT3 (rc={res.returncode}):\n{log[-2000:]}")
-            raise AssertionError(
-                "expected outcome A (sigma_SI bracket) on the self-contained "
-                f"artifact after the AMENDMENT3 rewiring (rc={res.returncode}):\n{log[-3000:]}")
+            assert "si_shift_rel=" in log and "REPORT ONLY" in log
+            assert "SD-KINEMATICS-REOPEN-TRIGGERED" in log, (
+                "expected the pre-registered Ruling-2 reopen refusal on the "
+                f"self-contained artifact (rc={res.returncode}):\n{log[-3000:]}")
+            # the refusal must not orphan the measured production values
+            assert "PRODUCTION C_scalar_production=" in log
+            assert "CROSS-INSTRUMENT threeop_rotated=" in log
         else:
             assert "SD-AMP-ABBREVIATIONS-UNRESOLVED" in log, (
                 f"expected the abbreviations guard on the pre-PR#32 artifact "
