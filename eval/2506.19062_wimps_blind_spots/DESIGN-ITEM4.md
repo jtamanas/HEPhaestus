@@ -1,5 +1,15 @@
 # DESIGN-ITEM4 — Box treatment + per-flavor floor assembly (STEP3-DESIGN amendment)
 
+> RE-LABEL (DESIGN-ITEM4-AMENDMENT5R1.md R5(d), 2026-07-13): this document's
+> "triangle-only C_scalar −1.28e-7 already stable" prose (item-3 continuity,
+> F3 bar) describes INSTRUMENT stability of the unrotated forward 3-op
+> reading, not a physical coefficient — AMENDMENT5 Q2 measured that value to
+> be the O_S leakage of M_tri's unrotated Majorana-crossed monomials (crossed
+> share 0.7071, rotating to ~1e-15). The fixture remains binding as a
+> REGRESSION pin. C_Q built from it is VOID (AMENDMENT5R1 R2). The Gram-pole
+> diagnosis, DD-expansion cure, and all engineering guards below are
+> unaffected.
+
 Reviewer: physics-design review agent (Fable), Jul 2026. Amends STEP3-DESIGN.md
 after the verified item-3 diagnosis (kinematics-invest/FINDINGS.md +
 kinvest-verify/VERIFY.md, both under the c703354a job scratch): the 0.995
