@@ -22,9 +22,11 @@
    (scalar C_q + twist-2 C^(1,2)_q, Decision 3) via sd_projection.wl, so scalar
    and twist-2 are SEPARATED (they are degenerate under the static collapse).
 
-   Output: per-operator Wilson coefficients (schema looptools_sd_coefficients/v1).
-   NO sigma_SI — nucleon matching (twist-2 + 2/27-gluon contractions through the
-   SD Higgs sector) is build-order item 4.
+   Output: per-operator Wilson coefficients + driver-side A5 nucleon contraction
+   (schema looptools_sd_coefficients/v2).  sigma_SI ships as the AMENDMENT3
+   Ruling-1 TWO-VALUE BRACKET (with / without the C_G gluon term), both values
+   sigma_provisional, with the +-6e-10 rank-2 band on the measured light-quark
+   C_q propagated into f_N.  match_nucleon.py stays byte-untouched.
 
    ------------------------------------------------------------------------------
    TWO [VERIFY] FLAGS resolved against the SD SPheno output (Decision 4 table):
@@ -72,10 +74,13 @@ Module[{
     ZNm, IMZNm, UMm, UPm, ZDLm, ZDRm, ZULm, ZURm, Yum, Ydm,
     yh1v, yh2v, g1v, g2v, g3v, Lamv, PhaseFSv, vvSMv, ctw, stw,
     amp, subexpr, ampBody, abbr, abbrF, terms, mkNum, extIdx, extPins,
-    boxCensusBefore, ddTerms, ddSubexpr, velocityDrift,
-    evalAmp, Mnum, resid, proj, projAt, coeffNames,
+    boxCensusBefore, ddTerms, ddSubexpr,
+    evalAmp, Mnum, Mtri, nTriTerms, resid, proj, projAt, coeffNames,
     cScalar, cTw, cChiV, uvResidue, scaleResidue, finiteQ, complResidual,
-    nPV, jsonAssoc, bindGuard, unbound, matrixUnbound
+    nPV, jsonAssoc, bindGuard, unbound, matrixUnbound,
+    chainDefsA, fsymsA, triFit, triFitV, cTri, cQuniv, cQdrift,
+    transferV10Outcome, prodV, cScalarProd, cTw2Sum, cTw2Dif,
+    driftCscalarAbs, driftTw2SumRel, vlegNote, nucleon, uvOkQ, reopenChecks
   },
 
   (* ---- point import (model-agnostic; duplicated per include header note) ----- *)
@@ -261,7 +266,43 @@ Module[{
     evalTermCommon[ddTerms[[k]], ddSubexpr, {}, mkNum[delta, mudim], extPins],
     {k, Length[ddTerms]}]];
 
-  Mnum = evalAmp[0, 1];
+  (* ---- TRIANGLE/BOX SECTOR SPLIT (AMENDMENT3 Ruling 1 / Decision A4) ---------
+     The heavy-quark C_Q (SVZ gluon term) is the flavor-universal h-exchange
+     TRIANGLE coefficient, so the driver needs the triangle-only sector.  Same
+     exact split as run_dd_triangle_continuity.wls: a term's resolved body
+     contains a D0i iff the raw term carries D0i directly or references (at any
+     depth) a Sub whose definition transitively does.  Computed on the RAW
+     terms/subexpr (the dd expansion touches only D0i heads, so D0i-free terms
+     and the Subs they reference are byte-identical before/after — the
+     triangle-only evaluation below is bit-for-bit the continuity fixture's).
+     Evaluated per term ONCE at the canonical (0,1) scheme point, so the split
+     costs no extra amplitude evaluation. *)
+  Module[{subSymOf, boxySyms, changed, triQ, termVals, triIdx},
+    subSymOf[lhs_] := If[AtomQ[lhs], lhs, Head[lhs]];
+    boxySyms = {}; changed = True;
+    While[changed, changed = False;
+      Do[Module[{s = subSymOf[r[[1]]], rhs = r[[2]]},
+          If[! MemberQ[boxySyms, s] &&
+             (! FreeQ[rhs, D0i] || AnyTrue[boxySyms, ! FreeQ[rhs, #] &]),
+            AppendTo[boxySyms, s]; changed = True]],
+        {r, subexpr}]];
+    triQ[t_] := FreeQ[t, D0i] && AllTrue[boxySyms, FreeQ[t, #] &];
+    triIdx = Flatten[Position[terms, t_ /; triQ[t], {1}, Heads -> False]];
+    termVals = Table[
+      evalTermCommon[ddTerms[[k]], ddSubexpr, {}, mkNum[0, 1], extPins],
+      {k, Length[ddTerms]}];
+    Mnum = Total[termVals];
+    If[triIdx === {} || Length[triIdx] === Length[terms],
+      WriteString["stderr",
+        "run_eval_sd: SD-TRIANGLE-SECTOR-EMPTY degenerate triangle/box split (" <>
+        ToString[Length[triIdx]] <> " of " <> ToString[Length[terms]] <>
+        " terms triangle-only)\n" <>
+        "  The flavor-universal heavy-quark C_Q is the triangle-sector scalar\n" <>
+        "  coefficient (Decision A4); with a degenerate split it is unmeasurable\n" <>
+        "  and no sigma_SI bracket can be built.  Nothing ships.\n"];
+      Exit[3]];
+    Mtri = Total[termVals[[triIdx]]];
+    nTriTerms = Length[triIdx]];
 
   (* ---- STRUCTURAL GUARD, EVALUATED SIDE + GRAM MONITOR ------------------------
      Catches inert symbolic ddBoxHead leftovers (arguments never went numeric,
@@ -355,59 +396,68 @@ Module[{
       "  (DESIGN-ITEM4-AMENDMENT2.md Ruling 2).  Nothing ships.\n"];
     Exit[3]];
 
-  (* ---- SI-EXTRACTION STABILITY (Ruling 3 criterion 2) -------------------------
-     |C_scalar(3-op) - C_scalar(full-basis)| / |C_scalar| < 1%: a larger shift
-     means the 3-op extraction was silently polluted by out-of-span overlap. *)
-  If[proj["si_shift_rel"] >= 0.01,
-    WriteString["stderr",
-      "run_eval_sd: SD-SI-EXTRACTION-UNSTABLE si_shift_rel=" <>
-      ToString[proj["si_shift_rel"], InputForm] <>
-      " (C_scalar 3-op=" <> ToString[cScalar, InputForm] <> ", full-basis=" <>
-      ToString[proj["C_scalar_full"], InputForm] <> ", bar=1%)\n" <>
-      "  The scalar SI coefficient moves by >=1% between the 3-operator fit\n" <>
-      "  (UNROTATED amplitude) and the rotated-complete instrument fit.\n" <>
-      "  MEASURED CONTEXT (probeH crossing-symmetry, 2026-07): the unrotated\n" <>
-      "  crossed monomials project a spurious scalar onto O_S, so a persistent\n" <>
-      "  shift here is expected to be REAL 3-op pollution.  Per\n" <>
-      "  DESIGN-ITEM4-AMENDMENT2.md Ruling 3, a persistent shift > 10% RETIRES\n" <>
-      "  the 3-op fit in favour of the full-basis fit as production — an\n" <>
-      "  adjudication-level change (AMENDMENT3) this driver refuses to make\n" <>
-      "  silently.  Nothing ships.\n"];
-    Exit[3]];
+  (* ---- SI-EXTRACTION SHIFT: superseded gate, now a REPORT -------------------
+     HISTORY: through PR #35 this block was the SD-SI-EXTRACTION-UNSTABLE
+     Exit[3] refusal (Ruling 3 criterion 2), and it FIRED on the canonical
+     point (si_shift 100.1%) — the pre-registered retirement clause.
+     DESIGN-ITEM4-AMENDMENT3.md Ruling 1 adjudicated it: the 3-op fit on the
+     UNROTATED amplitude is RETIRED as the production SI extractor (the
+     unrotated Majorana-crossed monomials project a spurious scalar onto O_S,
+     probeH), the full-basis fit is production, and the shipping guard is the
+     THREE-INSTRUMENT cross-check (SD-SI-CROSS-INSTRUMENT-DISAGREE, enforced
+     inside projectOperators / projInstrumentAssert above).  si_shift_rel
+     remains REPORTED (a ~100% shift is the EXPECTED signature of the retired
+     fit's pollution; a small shift would now be the anomaly worth reading). *)
+  WriteString["stderr",
+    "run_eval_sd: si_shift_rel=" <> ToString[proj["si_shift_rel"], InputForm] <>
+    " (retired 3-op fit vs production full-basis; REPORT ONLY per AMENDMENT3 " <>
+    "Ruling 1 — cross-instrument guard is the shipping gate)\n"];
 
-  (* ---- VELOCITY STABILITY (AMENDMENT2 Ruling 2 trigger (b)) -------------------
-     C_scalar_full from the instrument fit must be stable to <1% under sample-
-     velocity scaling v -> v/10.  C_twist2_full no longer exists (the free-
-     dictionary instrument has no contracted twist-2 column; the production
-     C_twist2 is the twist-2 quantity).  If the v/10 instrument REFUSES its own
-     pre-fit guards (measured: cond collapses ~1/v^2 to 4.8e6 at v/10 — the
-     direction-variation separations that condition the dictionary are O(v^2)),
-     that refusal IS a velocity-stability failure: drift is unmeasurable on
-     this instrument at v/10, reported loudly, nothing assumed. *)
-  Module[{projV = projectOperators[Mnum, abbrF, mchi, mq, 0.1], vDrift},
-    If[! TrueQ[projV["ok"]],
-      WriteString["stderr",
-        "run_eval_sd: SD-VELOCITY-UNSTABLE v/10 instrument refused: " <>
-        ToString[projV["reason"]] <> " " <>
-        ToString[Lookup[projV, "detail", ""]] <> "\n" <>
-        "  The rotated-complete instrument cannot be built at v/10 under its own\n" <>
-        "  pre-fit guards, so the v -> v/10 drift of C_scalar_full is\n" <>
-        "  UNMEASURABLE here (pre-registered trigger (b) territory,\n" <>
-        "  DESIGN-ITEM4-AMENDMENT2.md Ruling 2).  Nothing ships.\n"];
-      Exit[3]];
-    vDrift =
-      If[Abs[proj["C_scalar_full"]] < 1*^-300, Abs[projV["C_scalar_full"]],
-        Abs[(projV["C_scalar_full"] - proj["C_scalar_full"])/proj["C_scalar_full"]]];
-    velocityDrift = vDrift;
-    If[vDrift >= 0.01,
-      WriteString["stderr",
-        "run_eval_sd: SD-VELOCITY-UNSTABLE full_basis_drift=" <> ToString[vDrift, InputForm] <>
-        " under v -> v/10 (bar=1%)\n" <>
-        "  C_scalar_full from the instrument fit drifts by >=1% when the sample\n" <>
-        "  velocities are scaled down — pre-registered reopen trigger (b) for\n" <>
-        "  per-config kinematics as coefficient-value bias\n" <>
-        "  (DESIGN-ITEM4-AMENDMENT2.md Ruling 2).  Nothing ships.\n"];
-      Exit[3]]];
+  cScalarProd = proj["C_scalar_production"];
+  cTw2Sum = proj["C_twist2_sum"];
+  cTw2Dif = proj["C_twist2_dif"];
+
+  (* ---- VELOCITY STABILITY (AMENDMENT3 Ruling 2 replacement bar) --------------
+     The transfer dictionary is honestly UNMEASURABLE at v/10 (cond ~ 1/v^2 ->
+     4.8e6; ratified named refusal, Ruling 4c) — its refusal is RECORDED, not
+     fatal, and never retried by loosening cond.  Velocity stability of the
+     PRODUCTION coefficients is measured on the green-guarded legs
+     (productionVLeg: 3-op-on-rotated + contracted twist-2, each under its own
+     fatal rank/cond/identifiability guards).  The pre-registered reopen
+     trigger — any coefficient carrying > 1% of |f_N| drifting > 1% relative
+     under a green-guarded v change, or |Delta C_scalar| > 6e-10 ABSOLUTE — is
+     adjudicated AFTER the nucleon contraction below (it needs the f_N
+     shares); the measurements happen here. *)
+  Module[{projV = projectOperators[Mnum, abbrF, mchi, mq, 0.1]},
+    transferV10Outcome = If[TrueQ[projV["ok"]],
+      <|"measurable" -> True,
+        "C_scalar_full_drift_rel" ->
+          If[Abs[proj["C_scalar_full"]] < 1*^-300, Abs[projV["C_scalar_full"]],
+            Abs[(projV["C_scalar_full"] - proj["C_scalar_full"])/
+              proj["C_scalar_full"]]]|>,
+      <|"measurable" -> False,
+        "outcome" -> "UNMEASURABLE: " <> ToString[projV["reason"]] <>
+          " (named outcome per AMENDMENT3 Ruling 4c; transfer conditioning " <>
+          "collapses ~1/v^2, never retried by loosening bars)"|>]];
+  prodV = productionVLeg[Mnum, abbrF, mchi, mq, 0.1];
+  If[! TrueQ[prodV["ok"]],
+    WriteString["stderr",
+      "run_eval_sd: SD-VELOCITY-UNSTABLE production velocity leg refused: " <>
+      ToString[prodV["reason"]] <> " " <> ToString[Lookup[prodV, "detail", ""]] <> "\n" <>
+      "  The GREEN-GUARDED production legs (3-op-on-rotated + contracted\n" <>
+      "  twist-2) could not be built at v/10 under their own guards, so the\n" <>
+      "  Ruling-2 replacement stability bar is unmeasurable.  Nothing ships.\n"];
+    Exit[3]];
+  driftCscalarAbs = Max[
+    Abs[prodV["threeop_rotated_coeffs"]["C_scalar"] -
+        proj["threeop_rotated_coeffs"]["C_scalar"]],
+    Abs[prodV["contracted_coeffs"]["C_scalar"] -
+        proj["C_scalar_contracted_rotated"]]];
+  driftTw2SumRel = If[Abs[cTw2Sum] < 1*^-300,
+    Abs[prodV["contracted_coeffs"]["C_twist2_sum"]],
+    Abs[(prodV["contracted_coeffs"]["C_twist2_sum"] - cTw2Sum)/cTw2Sum]];
+  vlegNote = "green-guarded v/10 legs: 3-op-on-rotated (forward samples) + " <>
+    "contracted twist-2 (cond " <> ToString[prodV["production_basis_cond"], InputForm] <> ")";
 
   (* ---- PER-COEFFICIENT UV-residue check (Decision 2, load-bearing) -----------
      The SD reduced core carries DIVERGENT B0i heads; setdelta/setmudim variation
@@ -416,20 +466,41 @@ Module[{
      per-coefficient: setdelta-residue < 1e-10 rel, setmudim-residue < 1e-6 rel.
      projAt re-projects the amplitude re-evaluated at a different setdelta/setmudim
      (first executable on live SD data — Decision 2's guard). *)
-  projAt[delta_, mudim_] := projectOperators[evalAmp[delta, mudim], abbrF, mchi, mq];
-  coeffNames = {"C_scalar", "C_twist2", "C_chi_vector"};
-  Module[{p1 = projAt[1.0*^4, 1], p2 = projAt[0, 100.], relD, relS},
+  (* PRODUCTION coefficient set for the UV/scale gate (AMENDMENT3 Ruling 1):
+     the f_N inputs C_scalar_production and C_twist2_sum, plus the retired-fit
+     names for continuity reporting.  ABSOLUTE FLOOR on the C_scalar family:
+     the shipped C_scalar carries a declared +-6e-10 rank-2 band, so a
+     scheme-variation wobble INSIDE that band cannot change any shipped
+     statement — the relative bar alone would spuriously refuse a ~1e-10
+     near-cancellation coefficient over ~1e-16 absolute scheme noise. *)
+  projAt[delta_, mudim_] := Module[{p = projectOperators[evalAmp[delta, mudim],
+      abbrF, mchi, mq]},
+    projInstrumentAssert[p];
+    If[! TrueQ[p["ok"]],
+      WriteString["stderr", "run_eval_sd: SD-PROJECTION-FAILED (UV/scale leg) " <>
+        ToString[p["reason"]] <> "\n"]; Exit[3]];
+    p];
+  coeffNames = {"C_scalar_production", "C_twist2_sum", "C_scalar", "C_twist2",
+    "C_chi_vector"};
+  Module[{p1 = projAt[1.0*^4, 1], p2 = projAt[0, 100.], relD, relS, absFloor,
+      okD, okS},
+    absFloor[c_] := If[StringStartsQ[c, "C_scalar"], 6.0*^-10, 0.];
     relD = Max[Table[
       If[Abs[proj[c]] < 1*^-300, Abs[p1[c] - proj[c]],
          Abs[(p1[c] - proj[c])/proj[c]]], {c, coeffNames}]];
     relS = Max[Table[
       If[Abs[proj[c]] < 1*^-300, Abs[p2[c] - proj[c]],
          Abs[(p2[c] - proj[c])/proj[c]]], {c, coeffNames}]];
-    uvResidue = relD; scaleResidue = relS];
+    okD = AllTrue[coeffNames, (Abs[p1[#] - proj[#]] <=
+      Max[1.0*^-10 Abs[proj[#]], absFloor[#]]) &];
+    okS = AllTrue[coeffNames, (Abs[p2[#] - proj[#]] <=
+      Max[1.0*^-6 Abs[proj[#]], absFloor[#]]) &];
+    uvResidue = relD; scaleResidue = relS;
+    uvOkQ = okD && okS];
   setdelta[0]; setmudim[1];
 
-  finiteQ = AllTrue[{cScalar, cTw, cChiV}, (NumberQ[#] && Abs[#] < Infinity) &] &&
-            (uvResidue < 1.0*^-10) && (scaleResidue < 1.0*^-6);
+  finiteQ = AllTrue[{cScalar, cTw, cChiV, cScalarProd, cTw2Sum},
+              (NumberQ[#] && Abs[#] < Infinity) &] && uvOkQ;
 
   If[! finiteQ,
     WriteString["stderr",
@@ -440,8 +511,133 @@ Module[{
 
   nPV = Length[Cases[terms, (B0i | C0i | D0i)[__], Infinity]];
 
+  (* ---- TRIANGLE-SECTOR 3-op fit (heavy-quark C_Q, Decision A4) ---------------
+     threeOpFit is arithmetic-identical to the projectOperators production leg,
+     so at the canonical point the triangle-only C_scalar below reproduces the
+     continuity fixture -1.2831509485455282e-7 BIT-FOR-BIT (the falsifier
+     prediction (i) check rides on this value).  C_Q = C_scalar(triangle)/m_q
+     is the m_q-normalized flavor-universal h-exchange coefficient (the SVZ
+     heavy-quark theorem input; cross-flavor equality assert is round-2 item
+     (iii)).  Its v-stability is measured here for the reopen adjudication. *)
+  chainDefsA = Association[abbrF];
+  fsymsA = Keys[chainClass[abbrF]];
+  triFit = threeOpFit[Mtri, chainDefsA, fsymsA, mchi, mq];
+  cTri = triFit["coeffs"]["C_scalar"];
+  triFitV = threeOpFit[Mtri, chainDefsA, fsymsA, mchi, mq, 0.1];
+  cQuniv = cTri/mq;
+  cQdrift = If[Abs[cTri] < 1*^-300, Abs[triFitV["coeffs"]["C_scalar"]],
+    Abs[(triFitV["coeffs"]["C_scalar"] - cTri)/cTri]];
+  WriteString["stderr", "run_eval_sd: C_scalar_triangle=" <>
+    ToString[Re[cTri], InputForm] <> " C_Q_universal=" <>
+    ToString[Re[cQuniv], InputForm] <> " triangle_v10_drift_rel=" <>
+    ToString[cQdrift, InputForm] <> "\n"];
+
+  (* ---- NUCLEON CONTRACTION, DRIVER-SIDE (Decision A5 / AMENDMENT3 Ruling 1) --
+     match_nucleon.py stays byte-untouched (it owns only (4/pi) mu^2 f^2; this
+     block owns the contraction, per its module docstring's division of labor).
+     Formula (Hisano-Ishiwata-Nagata arXiv:1104.0228 Eqs. (6)-(8) convention;
+     C^(i) = g^(i)/m_chi, see sd_projection.wl section 3c):
+       f_N/m_N = Sum_{q=u,d,s} f_Tq^N C_q
+               + (2/27) f_TG^N Sum_{Q=c,b,t} C_Q
+               + (3/4) m_chi Sum_q [q^N(2)+qbar^N(2)] (C_q^(1)+C_q^(2))
+     Constants transcribed from eval/2506.19062_wimps_blind_spots/constants.py
+     (measured data, not physics reimplementation):
+       f_Tq (Hoferichter et al.): F_U_P=0.0153 F_D_P=0.0191 F_S_P=0.0447,
+         F_U_N=0.0110 F_D_N=0.0273 F_S_N=0.0447; f_TG^N = 1 - Sum f_q^N.
+       Second moments Q2_*/QBAR2_* (proton): u 0.22/0.034, d 0.11/0.036,
+         s 0.026 (q=qbar), c 0.019, b 0.012.  NEUTRON moments = isospin
+         u<->d swap of the proton values (s,c,b unchanged) — standard, noted.
+       CAVEAT (reported, not tuned): constants.py labels the moments mu=2 GeV;
+       AMENDMENT3 Ruling 1 directs their use as the mu=m_Z inputs of the
+       Hisano convention — the discrepancy is an anchor-leg (item (v)) matter.
+     THIS LEG measures flavor d ONLY (per-flavor u/s runs are round-2 item
+     (iii)): the light-quark scalar and twist-2 sums below carry the d term
+     alone, flagged in flavors_measured — a PARTIAL f_N, honestly labeled.
+     The light-quark scalar term uses the MEASURED C_q = C_scalar/m_q (a ~0 is
+     a value, not a zero by hand) with the +-6e-10 rank-2 band propagated into
+     f_N.  sigma_SI ships as a TWO-VALUE BRACKET (with / without the C_G
+     gluon term): C_Q carries full triangle strength — its box partner is the
+     out-of-scope two-loop gluon box — so a single unbracketed floor number is
+     FORBIDDEN until the Hisano pure-doublet anchor adjudicates (Ruling 1). *)
+  nucleon = Module[{fT, fTG, mom2d, mNs, cq, cqBand, terms2, gev2cm2, out},
+    fT = <|"p" -> <|"u" -> 0.0153, "d" -> 0.0191, "s" -> 0.0447|>,
+           "n" -> <|"u" -> 0.0110, "d" -> 0.0273, "s" -> 0.0447|>|>;
+    fTG = <|"p" -> 1. - 0.0153 - 0.0191 - 0.0447,
+            "n" -> 1. - 0.0110 - 0.0273 - 0.0447|>;
+    (* [q(2)+qbar(2)] for the d quark; neutron = proton u-moments (isospin) *)
+    mom2d = <|"p" -> 0.11 + 0.036, "n" -> 0.22 + 0.034|>;
+    mNs = <|"p" -> 0.93827, "n" -> 0.93957|>;
+    gev2cm2 = 0.3894*^-27;
+    cq = Re[cScalarProd]/mq;         (* m_q-normalized MEASURED C_q, flavor d *)
+    cqBand = 6.0*^-10/mq;            (* rank-2 band, propagated *)
+    out = Association @@ Table[Module[
+        {scalarD, scalarBand, gluon, tw2, fom, fomNoCG, f, fNoCG, fLo, fHi,
+         fNoCGLo, fNoCGHi, muN, sig},
+        scalarD = fT[nuc]["d"] cq;
+        scalarBand = fT[nuc]["d"] cqBand;
+        gluon = (2./27.) fTG[nuc] 3. Re[cQuniv];
+        tw2 = (3./4.) mchi mom2d[nuc] Re[cTw2Sum];
+        fom = scalarD + gluon + tw2;
+        fomNoCG = scalarD + tw2;
+        f = mNs[nuc] fom;          fLo = mNs[nuc] (fom - scalarBand);
+        fHi = mNs[nuc] (fom + scalarBand);
+        fNoCG = mNs[nuc] fomNoCG;  fNoCGLo = mNs[nuc] (fomNoCG - scalarBand);
+        fNoCGHi = mNs[nuc] (fomNoCG + scalarBand);
+        muN = mchi mNs[nuc]/(mchi + mNs[nuc]);
+        sig[ff_] := (4./Pi) muN^2 ff^2 gev2cm2;
+        nuc -> <|
+          "terms_f_over_mN" -> <|"scalar_d" -> scalarD, "scalar_d_band_abs" -> scalarBand,
+            "gluon_CG" -> gluon, "twist2_d" -> tw2|>,
+          "shares_with_CG" -> If[Abs[fom] < 1*^-300, <||>,
+            <|"scalar_d" -> Abs[scalarD/fom], "gluon_CG" -> Abs[gluon/fom],
+              "twist2_d" -> Abs[tw2/fom]|>],
+          "shares_without_CG" -> If[Abs[fomNoCG] < 1*^-300, <||>,
+            <|"scalar_d" -> Abs[scalarD/fomNoCG], "twist2_d" -> Abs[tw2/fomNoCG]|>],
+          "f_gev2_with_CG" -> f, "f_gev2_with_CG_band" -> {fLo, fHi},
+          "f_gev2_without_CG" -> fNoCG, "f_gev2_without_CG_band" -> {fNoCGLo, fNoCGHi},
+          "sigma_SI_cm2_with_CG" -> sig[f],
+          "sigma_SI_cm2_with_CG_band" -> Sort[{sig[fLo], sig[fHi]}],
+          "sigma_SI_cm2_without_CG" -> sig[fNoCG],
+          "sigma_SI_cm2_without_CG_band" -> Sort[{sig[fNoCGLo], sig[fNoCGHi]}]|>],
+      {nuc, {"p", "n"}}];
+    out];
+
+  (* ---- KINEMATICS REOPEN ADJUDICATION (AMENDMENT3 Ruling 2 replacement bar) --
+     Per-config kinematics REOPENS — and this driver refuses to ship — if any
+     production coefficient carrying > 1% of |f_N| (either bracket member,
+     either nucleon) drifts > 1% relative under the green-guarded v change, or
+     if |Delta C_scalar| > 6e-10 ABSOLUTE under any green-guarded v change.
+     Report, never tune. *)
+  reopenChecks = Module[{share, checks = {}},
+    share[term_] := Max[Table[Max[
+        Lookup[nucleon[nuc]["shares_with_CG"], term, 0.],
+        Lookup[nucleon[nuc]["shares_without_CG"], term, 0.]],
+      {nuc, {"p", "n"}}]];
+    If[driftCscalarAbs > 6.0*^-10,
+      AppendTo[checks, "C_scalar ABSOLUTE v-drift " <>
+        ToString[driftCscalarAbs, InputForm] <> " > 6e-10"]];
+    If[share["twist2_d"] > 0.01 && driftTw2SumRel > 0.01,
+      AppendTo[checks, "C_twist2_sum carries " <> ToString[share["twist2_d"]] <>
+        " of f_N and drifts " <> ToString[driftTw2SumRel, InputForm] <> " > 1% at v/10"]];
+    If[share["gluon_CG"] > 0.01 && cQdrift > 0.01,
+      AppendTo[checks, "C_Q(triangle) carries " <> ToString[share["gluon_CG"]] <>
+        " of f_N(with-CG) and drifts " <> ToString[cQdrift, InputForm] <> " > 1% at v/10"]];
+    (* C_scalar carries NO relative-drift check by design: Ruling 2 replaced it
+       with the ABSOLUTE 6e-10 bar above (a relative bar on a noise-scale
+       coefficient did not survive its anchor's retirement). *)
+    checks];
+  If[reopenChecks =!= {},
+    WriteString["stderr",
+      "run_eval_sd: SD-KINEMATICS-REOPEN-TRIGGERED " <>
+      StringRiffle[reopenChecks, " | "] <> "\n" <>
+      "  The pre-registered AMENDMENT3 Ruling 2 replacement trigger fired:\n" <>
+      "  per-config kinematics REOPENS and this driver refuses to ship a\n" <>
+      "  sigma_SI whose inputs are velocity-biased.  Report upstream; do not\n" <>
+      "  tune the bars.\n"];
+    Exit[3]];
+
   jsonAssoc = <|
-    "schema" -> "looptools_sd_coefficients/v1",
+    "schema" -> "looptools_sd_coefficients/v2",
     "model" -> "singlet_doublet",
     "point_id" -> "singlet-doublet-dm" <> ToString[mchi],
     "m_dm_gev" -> mchi,
@@ -455,20 +651,48 @@ Module[{
       "completeness_rel_residual" -> complResidual,
       "gauge_parameter_dependence" -> Null (* Rxi variation deferred (Decision 2) *)
     |>,
-    "a6_amended" -> <|  (* AMENDMENT2 Rulings 1+4 bars, all green (each is a
-                           hard Exit[3] guard above) *)
+    "a6_amended" -> <|  (* AMENDMENT2 Rulings 1+4 + AMENDMENT3 Ruling 1/2 bars,
+                           all green (each is a hard Exit[3] guard above) *)
       "full_basis_completeness_rel_residual" ->
         proj["full_basis_completeness_rel_residual"],
       "full_basis_completeness_tol" -> $fullCompletenessTol,
       "si_shift_rel" -> proj["si_shift_rel"],
-      "velocity_drift_rel" -> velocityDrift,
+      "si_shift_status" -> "REPORT ONLY (AMENDMENT3 Ruling 1: 3-op retired; " <>
+        "~100% shift is the expected signature of the retired fit's pollution)",
       "si3_completeness_rel_residual" -> complResidual,
       "rotation_exactness_max" -> proj["rotation_exactness_max"],
       "basis_rank" -> proj["basis_rank"],
       "basis_n_columns" -> proj["basis_n_columns"],
       "basis_cond" -> proj["basis_cond"],
       "identifiability_max_err" -> proj["identifiability_max_err"],
-      "monomial_worst" -> proj["monomial_worst"]
+      "monomial_worst" -> proj["monomial_worst"],
+      (* AMENDMENT3 Ruling 1 shipping guard state (green if we got here) *)
+      "cross_instrument" -> <|
+        "threeop_rotated_re" -> Re[proj["cross_instrument"]["threeop_rotated"]],
+        "threeop_rotated_im" -> Im[proj["cross_instrument"]["threeop_rotated"]],
+        "transfer_R_S_S_re" -> Re[proj["cross_instrument"]["transfer_R_S_S"]],
+        "transfer_R_S_S_im" -> Im[proj["cross_instrument"]["transfer_R_S_S"]],
+        "forward_R_S_S_re" -> Re[proj["cross_instrument"]["forward_R_S_S"]],
+        "forward_R_S_S_im" -> Im[proj["cross_instrument"]["forward_R_S_S"]],
+        "max_pairwise_diff" -> proj["cross_instrument"]["max_pairwise_diff"],
+        "tolerance" -> proj["cross_instrument"]["tolerance"]|>,
+      "forward_instrument" -> <|
+        "n_retained" -> proj["forward_instrument"]["n_retained"],
+        "n_null_columns" -> proj["forward_instrument"]["n_null_columns"],
+        "retained_cond" -> proj["forward_instrument"]["retained_cond"],
+        "retained_ident_err" -> proj["forward_instrument"]["retained_ident_err"],
+        "completeness_rel_residual" ->
+          proj["forward_instrument"]["completeness_rel_residual"]|>,
+      "production_basis_cond" -> proj["production_basis_cond"],
+      "production_basis_ident_err" -> proj["production_basis_ident_err"],
+      (* AMENDMENT3 Ruling 2 replacement-bar measurements (adjudicated above) *)
+      "velocity" -> <|
+        "transfer_instrument_v10" -> transferV10Outcome,
+        "production_leg_note" -> vlegNote,
+        "C_scalar_v10_drift_abs" -> driftCscalarAbs,
+        "C_scalar_abs_bar" -> 6.0*^-10,
+        "C_twist2_sum_v10_drift_rel" -> driftTw2SumRel,
+        "C_Q_triangle_v10_drift_rel" -> cQdrift|>
     |>,
     "out_of_span_diagnostics" -> <|  (* Ruling 2: DIAGNOSTICS ONLY — never
         matched, never a cross-section; only C_scalar/C_twist2/C_G flow onward *)
@@ -487,12 +711,51 @@ Module[{
       "gram_monitor" -> If[$ddExpansion, ddMonitorSummary[], <||>]
     |>,
     "wilson_coefficients" -> <|
-      "C_scalar"    -> Re[cScalar],
-      "C_scalar_im" -> Im[cScalar],
-      "C_twist2"    -> Re[cTw],
-      "C_chi_vector" -> Re[cChiV] (* Majorana diagnostic: expected ~0 *)
+      (* PRODUCTION (AMENDMENT3 Ruling 1): C_scalar = full-basis R_S_S at
+         canonical v; convention: coefficient of (chibar chi)(qbar q) — the
+         m_q-normalized Hisano f_q is C_scalar/m_q (emitted as C_q_mq_norm).
+         Im(C_scalar) is measured transfer-instrument leakage, |Im| < the
+         6e-10 band (the other two instruments carry Im ~ 1e-14). *)
+      "C_scalar"    -> Re[cScalarProd],
+      "C_scalar_im" -> Im[cScalarProd],
+      "C_scalar_band_abs" -> 6.0*^-10,
+      "C_q_mq_norm" -> Re[cScalarProd]/mq,
+      "C_twist2_sum" -> Re[cTw2Sum],   (* = C^(1)+C^(2) = (g1+g2)/m_chi; the f_N input *)
+      "C_twist2_dif" -> Re[cTw2Dif],   (* DIAGNOSTIC: intrinsically ill-resolved split *)
+      "C_twist2_g1" -> Re[proj["C_twist2_g1"]],
+      "C_twist2_g2" -> Re[proj["C_twist2_g2"]],
+      "C_scalar_triangle" -> Re[cTri],
+      "C_scalar_triangle_str" -> ToString[Re[cTri], InputForm], (* fixture; full precision *)
+      "C_Q_universal" -> Re[cQuniv],   (* triangle/m_q: heavy-quark SVZ input *)
+      "C_chi_vector" -> Re[proj["C_chi_vector_rotated"]], (* Majorana diagnostic: ~0 *)
+      "retired_3op_fit" -> <|  (* continuity report ONLY (AMENDMENT3 Ruling 1) *)
+        "C_scalar" -> Re[cScalar], "C_scalar_im" -> Im[cScalar],
+        "C_twist2" -> Re[cTw], "C_chi_vector" -> Re[cChiV]|>
     |>,
-    "nucleon_matching" -> "deferred_item4",
+    "nucleon_matching" -> <|
+      "status" -> "driver-side A5 contraction (match_nucleon.py byte-untouched)",
+      "convention" -> "Hisano arXiv:1104.0228 Eqs.(6)-(8); C^(i)=g^(i)/m_chi; " <>
+        "f_q = C_scalar/m_q (m_q-normalized); moments transcribed from " <>
+        "eval/2506.19062_wimps_blind_spots/constants.py",
+      "moments_scale_caveat" -> "constants.py labels the second moments mu=2 GeV; " <>
+        "AMENDMENT3 Ruling 1 directs their use as the mu=m_Z Hisano inputs — " <>
+        "discrepancy deferred to the Hisano-anchor leg (round-2 item (v))",
+      "flavors_measured" -> {"d"},
+      "flavors_pending" -> {"u", "s"},
+      "partial_fN_caveat" -> "light-quark scalar + twist-2 sums carry the " <>
+        "MEASURED d flavor only (item (iii) adds u,s); heavy-quark gluon term " <>
+        "carries all of c,b,t via the flavor-universal triangle C_Q",
+      "neutron_moments" -> "isospin u<->d swap of proton values",
+      "CG_bracket_caveat" -> "C_Q is NOT cancelled: its box partner is the " <>
+        "declared-out-of-scope two-loop gluon box, hence the with/without-CG " <>
+        "TWO-VALUE BRACKET (AMENDMENT3 Ruling 1); single floor number forbidden " <>
+        "until the Hisano pure-doublet anchor",
+      "normalization_caveat" -> "global amplitude-to-L_eff normalization is " <>
+        "unanchored until the Hisano pure-doublet leg; sigma_provisional on " <>
+        "BOTH bracket values",
+      "proton" -> nucleon["p"],
+      "neutron" -> nucleon["n"]
+    |>,
     "loop_topologies" -> {"chi_triangle_IRR2", "W_box_IRR3", "crossed_box_IRR4"},
     "looptools_version" -> "2.16",
     "n_pv_calls" -> nPV,
@@ -510,15 +773,22 @@ Module[{
       "chain_map" -> "SD real Abbr: F1,F4=chi-scalar; F2,F3=quark-scalar; " <>
                      "F13,F14=chi-vector; F15,F16=quark-vector(twist-2); " <>
                      "F5-F12,F17,F18=mixed Fierz",
-      "note" -> "Provisional: NO nucleon matching, NO sigma_SI (build-order item 4). " <>
-                "External quark pinned to representative down; per-flavor (u,d,s) runs " <>
-                "and the C^(1)/C^(2) twist-2 split are item 4."
+      "note" -> "PARTIAL f_N / sigma_SI bracket (AMENDMENT3 Ruling 1): flavor d " <>
+                "measured; per-flavor u,s runs are round-2 item (iii); Hisano " <>
+                "pure-doublet anchor is item (v).  sigma_provisional on both " <>
+                "bracket values.",
+      "n_triangle_terms" -> nTriTerms,
+      "n_terms" -> Length[terms]
     |>
   |>;
 
   writeEvalOutput[outPath, jsonAssoc];
   Print["run_eval_sd: wrote ", outPath, " (finite=", finiteQ,
-        ", C_scalar=", Re[cScalar], ", C_twist2=", Re[cTw],
+        ", C_scalar_production=", Re[cScalarProd],
+        ", C_twist2_sum=", Re[cTw2Sum],
+        ", C_scalar_triangle=", Re[cTri],
+        ", sigma_SI_p_with_CG=", nucleon["p"]["sigma_SI_cm2_with_CG"],
+        ", sigma_SI_p_without_CG=", nucleon["p"]["sigma_SI_cm2_without_CG"],
         ", completeness_resid=", complResidual, ")"];
   Exit[0]
 ]

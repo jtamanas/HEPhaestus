@@ -174,13 +174,26 @@ def test_driver_writes_sidecar_and_gram_monitor():
 
 
 def test_driver_enforces_amended_ruling3_bars():
-    """DESIGN-ITEM4-AMENDMENT.md Ruling 3: three loud, gating criteria on the
-    canonical run — full-basis completeness, 3-op-vs-full SI shift, velocity
-    stability of the full-basis fit."""
+    """AMENDMENT3 Ruling 1/2 driver gates: full-basis completeness stays; the
+    SI-extraction gate is SUPERSEDED (history note must remain, si_shift is
+    report-only); velocity stability moves to the green-guarded production
+    legs + the reopen adjudication; the A5 contraction and its named refusals
+    exist."""
     src = _read(DRIVER)
-    for marker in ("SD-PROJECTION-INCOMPLETE", "SD-SI-EXTRACTION-UNSTABLE",
-                   "SD-VELOCITY-UNSTABLE", '"a6_amended"'):
-        assert marker in src, f"driver must carry {marker} (amended Ruling 3)"
+    for marker in ("SD-PROJECTION-INCOMPLETE", "SD-VELOCITY-UNSTABLE",
+                   '"a6_amended"',
+                   # superseded gate: history note + report-only line
+                   "SD-SI-EXTRACTION-UNSTABLE", "REPORT ONLY",
+                   # AMENDMENT3 production path
+                   "SD-KINEMATICS-REOPEN-TRIGGERED", "SD-TRIANGLE-SECTOR-EMPTY",
+                   "sigma_SI_cm2_with_CG", "sigma_SI_cm2_without_CG",
+                   "looptools_sd_coefficients/v2", "productionVLeg",
+                   "threeOpFit", "C_Q_universal"):
+        assert marker in src, f"driver must carry {marker} (AMENDMENT3)"
+    assert "looptools_sd_coefficients/v1" not in src, \
+        "schema must be bumped to /v2 (nucleon block added)"
+    assert '"nucleon_matching" -> "deferred_item4"' not in src, \
+        "nucleon matching is no longer deferred (AMENDMENT3 Ruling 1)"
 
 
 # ---------------------------------------------------------------- projection layer
@@ -205,9 +218,18 @@ def test_projection_reference_instrument_is_diagnostics_only():
     assert "absorbed_norm_shares" in src
     assert "$fullCompletenessTol" in src
     assert "$fierzRotationTol" in src and "$monomialContribTol" in src
-    # the production 3-op fit must still be what feeds C_scalar/C_twist2
+    # si_shift stays MEASURED (report-only after AMENDMENT3 Ruling 1)
     assert "si_shift_rel" in src, \
-        "3-op-vs-full C_scalar shift must be measured (Ruling 3 criterion 2)"
+        "3-op-vs-full C_scalar shift must be measured (continuity report)"
+    # AMENDMENT3 Ruling 1 production machinery
+    assert "$opRefs2" in src and "twist2Ref1" in src and "twist2Ref2" in src, \
+        "contracted Hisano twist-2 reference operators must be defined"
+    assert "C_twist2_sum" in src and "C_twist2_dif" in src, \
+        "the orthogonalized sum/dif twist-2 fit basis must be defined"
+    assert "forwardScalarInstrument" in src and "productionVLeg" in src
+    assert "SD-SI-CROSS-INSTRUMENT-DISAGREE" in src, \
+        "the three-instrument shipping guard must be defined"
+    assert "$crossInstrTolRel" in src and "$crossInstrTolAbs" in src
 
 
 def test_projection_instrument_guard_markers_and_exit3():
@@ -251,6 +273,9 @@ def catalog():
     "SD_PROJECTION_BASIS_ILLCONDITIONED",
     "SD_PROJECTION_BASIS_UNIDENTIFIABLE",
     "SD_PROJECTION_MONOMIAL_OUT_OF_SPAN",
+    "SD_SI_CROSS_INSTRUMENT_DISAGREE",
+    "SD_KINEMATICS_REOPEN_TRIGGERED",
+    "SD_TRIANGLE_SECTOR_EMPTY",
 ])
 def test_blocker_entries_registered_and_well_shaped(catalog, code):
     assert code in catalog, f"{code} must be registered in blocker_catalog.yaml"
