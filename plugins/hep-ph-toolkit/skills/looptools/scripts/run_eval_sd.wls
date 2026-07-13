@@ -417,6 +417,22 @@ Module[{
   cTw2Sum = proj["C_twist2_sum"];
   cTw2Dif = proj["C_twist2_dif"];
 
+  (* REPORT the production measurements immediately (stderr): a later named
+     refusal (velocity/UV/reopen) must not orphan the measured coefficients —
+     the falsifier legs (AMENDMENT3 Ruling 3) read C_scalar_production and the
+     cross-instrument triple from THESE lines even when nothing ships. *)
+  WriteString["stderr",
+    "run_eval_sd: PRODUCTION C_scalar_production=" <>
+    ToString[cScalarProd, InputForm] <>
+    " C_twist2_sum=" <> ToString[cTw2Sum, InputForm] <>
+    " C_twist2_dif=" <> ToString[cTw2Dif, InputForm] <> "\n" <>
+    "run_eval_sd: CROSS-INSTRUMENT threeop_rotated=" <>
+    ToString[proj["cross_instrument"]["threeop_rotated"], InputForm] <>
+    " transfer_R_S_S=" <> ToString[proj["cross_instrument"]["transfer_R_S_S"], InputForm] <>
+    " forward_R_S_S=" <> ToString[proj["cross_instrument"]["forward_R_S_S"], InputForm] <>
+    " max_pairwise_diff=" <> ToString[proj["cross_instrument"]["max_pairwise_diff"], InputForm] <>
+    " tol=" <> ToString[proj["cross_instrument"]["tolerance"], InputForm] <> "\n"];
+
   (* ---- VELOCITY STABILITY (AMENDMENT3 Ruling 2 replacement bar) --------------
      The transfer dictionary is honestly UNMEASURABLE at v/10 (cond ~ 1/v^2 ->
      4.8e6; ratified named refusal, Ruling 4c) — its refusal is RECORDED, not
@@ -601,6 +617,15 @@ Module[{
           "sigma_SI_cm2_without_CG_band" -> Sort[{sig[fNoCGLo], sig[fNoCGHi]}]|>],
       {nuc, {"p", "n"}}];
     out];
+
+  (* diagnostic report of the contraction terms (stderr; sigma itself is NOT
+     printed here — it ships only through the guarded JSON path below) *)
+  WriteString["stderr", "run_eval_sd: F_N-TERMS(p, f/m_N) scalar_d=" <>
+    ToString[nucleon["p"]["terms_f_over_mN"]["scalar_d"], InputForm] <>
+    " gluon_CG=" <> ToString[nucleon["p"]["terms_f_over_mN"]["gluon_CG"], InputForm] <>
+    " twist2_d=" <> ToString[nucleon["p"]["terms_f_over_mN"]["twist2_d"], InputForm] <>
+    " (band_abs=" <> ToString[nucleon["p"]["terms_f_over_mN"]["scalar_d_band_abs"], InputForm] <>
+    ")\n"];
 
   (* ---- KINEMATICS REOPEN ADJUDICATION (AMENDMENT3 Ruling 2 replacement bar) --
      Per-config kinematics REOPENS — and this driver refuses to ship — if any
