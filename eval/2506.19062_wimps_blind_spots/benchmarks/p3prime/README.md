@@ -27,6 +27,19 @@ Parametrization: MPsi = m_chi = 500, d-quark external flavor, held across legs;
 
 ## TWO ITEMS FLAGGED TO THE DESIGN AUTHORITY (see handoff / SendMessage to main)
 
+> **AMPLITUDE IS LOOP-ONLY (verified by code-read of `amp_reduced.m`).** The
+> projected amplitude is the χ1-pinned 1PI core (32 one-loop diagrams = 2
+> triangles + 2 boxes; heads B0i/C0i/D0i only, A0i=0; the 18 `Den[T,m²]` are
+> one-loop penguin mediator propagators, 18/18 co-occurring with a loop head,
+> ZERO bare tree terms). So the tree χ1χ1h coupling is NOT in C_ours. The
+> residual-tree-coupling / contamination numbers in the sidecars describe the
+> PHYSICAL σ_SI (tree Higgs exchange), NOT the loop object compared to Hisano.
+> For the Hisano comparison only the SINGLET FRACTION (pure-doubletness) matters;
+> "at the blind spot" ≡ "zero fraction" ≡ "pure doublet" are the same order
+> parameter, so the low-fraction decoupled legs L2/L3 ARE the Hisano-comparable
+> points regardless of the exact θ. Item (A) below is thereby SOFTENED (θ=−π/4
+> not required); item (B) is unaffected.
+
 ### (A) Blind-spot vs fraction is OVER-CONSTRAINED (protocol question, not resolved here)
 The singlet fraction of chi1 and the tree h-chi1-chi1 coupling are the SAME order
 parameter (both measure S-D mixing in chi1). The decoupled-regime blind spot is
