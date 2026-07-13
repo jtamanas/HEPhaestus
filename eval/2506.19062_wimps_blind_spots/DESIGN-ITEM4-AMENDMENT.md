@@ -1,5 +1,15 @@
 # DESIGN-ITEM4-AMENDMENT — round-2 redirect ruling (post PR #35 review)
 
+> **HISTORICAL NOTE (superseded, DESIGN-ITEM4-AMENDMENT3.md):** every
+> reference in this document to C_scalar ~ **−2.10e-7** (probe-1 full-amp fit,
+> "direct-sector" value, expanded-box −8.14e-8 split, and any prediction
+> anchored on them) describes what round 3 MEASURED to be an **instrument
+> artifact**: the unrotated Majorana-crossed monomials' spurious out-of-span
+> projection onto O_S (probeH crossing-symmetry decomposition). It is not a
+> physics value. The measured scalar coefficient at the canonical point is
+> +1.66e-10. This document is preserved verbatim below as the historical
+> ruling record.
+
 Amends DESIGN-ITEM4.md after pr35-review/REVIEW.md refuted the A-R2 velocity-gap
 reading. Accepted as established: the A1 box expansion cures the Gram pole
 (box max|c| 1.17e28 → 1.82; expanded-box C_scalar = −8.14e-8, and note

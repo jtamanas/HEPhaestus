@@ -1,5 +1,15 @@
 # DESIGN-ITEM4-AMENDMENT2 — crossing-sector ruling (post PR #35 re-review)
 
+> **HISTORICAL NOTE (superseded, DESIGN-ITEM4-AMENDMENT3.md):** every
+> reference in this document to C_scalar ~ **−2.10e-7** (probe-1 full-amp fit,
+> "direct-sector" value, expanded-box −8.14e-8 split, and any prediction
+> anchored on them) describes what round 3 MEASURED to be an **instrument
+> artifact**: the unrotated Majorana-crossed monomials' spurious out-of-span
+> projection onto O_S (probeH crossing-symmetry decomposition). It is not a
+> physics value. The measured scalar coefficient at the canonical point is
+> +1.66e-10. This document is preserved verbatim below as the historical
+> ruling record.
+
 Amends AMENDMENT.md after pr35-rereview/REVIEW.md. Accepted as established: the
 committed 27-op basis was rank 12 (cond 4.1e5, D_Vq_Ac ≡ D_Aq_Vc, 7 null
 pseudoscalar columns); a control-validated 256-op χ⊗q basis still leaves 0.206
