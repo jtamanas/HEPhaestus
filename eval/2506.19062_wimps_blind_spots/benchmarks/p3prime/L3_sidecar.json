@@ -1,6 +1,6 @@
 {
   "leg": "L3",
-  "role": "L3 decoupled-B: fraction<1e-3, MS=10TeV",
+  "role": "L3 VERDICT leg (decoupled floor, MS=10TeV): theta=-0.152, shipped fraction 3.03e-5 re-accepted (6R3)",
   "status": "OK",
   "note_pinned_quantity": "MEASURED singlet fraction |N_singlet|^2 of chi1 from SPheno ZNMIX/IMZNMIX",
   "MS_gev": 10000.0,
@@ -13,7 +13,7 @@
   "theta_derivation": "held at canonical theta=-0.152 (Eq.8 blind spot of the ORIGINAL m_chi1=150 benchmark); NOT the decoupled-regime blind spot theta=-pi/4=-0.7854 (where m_chi1->mD forces sin2theta=-1). See protocol-conflict flag.",
   "measured_singlet_fraction_chi1": 3.031784717069038e-05,
   "singlet_gauge_column": 1,
-  "fraction_bar": "L3 decoupled-B: fraction<1e-3, MS=10TeV",
+  "fraction_bar": "L3 VERDICT leg (decoupled floor, MS=10TeV): theta=-0.152, shipped fraction 3.03e-5 re-accepted (6R3)",
   "FChi1_gev": 479.403955,
   "FChi2_gev": 480.170714,
   "FChi3_singlet_gev": 10097.2795,
@@ -30,9 +30,10 @@
   "residual_tree_scalar_coupling": {
     "g_h_chi1chi1_Eq7": -0.002267471560937927,
     "g_h_chi1chi1_mixing": -0.0011337357804689632,
-    "abs_over_loop_floor_threshold": 1.2229869287492376,
+    "tree_DD_over_loop_floor_ratio": 1.2229869287492376,
     "g_clean_threshold": 0.0018540439866,
-    "interpretation": "tree Higgs-exchange DD == Hisano loop floor at |g|=g_clean; ratio>1 means tree contaminates the loop-floor comparison"
+    "label": "SIGMA-LEVEL CONTEXT ONLY (6R3)",
+    "interpretation": "The projected amplitude amp_reduced.m is LOOP-ONLY (1PI core: 32 one-loop diagrams, B0i/C0i/D0i heads, all Den[T,m^2] are penguin mediator propagators, NO bare tree term). So this tree coupling is NOT in C_ours and is NOT a contamination bar. It is context for the PHYSICAL sigma_SI only. The real verdict-leg bar rides the singlet FRACTION (cleanliness bar, 6R1 R2 / 6R3)."
   },
   "blind_spot": {
     "theta_bs_decoupled_rad": -0.7853981633974483,

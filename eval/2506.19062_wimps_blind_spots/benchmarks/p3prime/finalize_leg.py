@@ -73,9 +73,14 @@ def main():
                        "tachyon_lines":tach},
       "residual_tree_scalar_coupling":{
         "g_h_chi1chi1_Eq7":coup7,"g_h_chi1chi1_mixing":coup_mix,
-        "abs_over_loop_floor_threshold":abs(coup7)/G_CLEAN,
+        "tree_DD_over_loop_floor_ratio":abs(coup7)/G_CLEAN,
         "g_clean_threshold":G_CLEAN,
-        "interpretation":"tree Higgs-exchange DD == Hisano loop floor at |g|=g_clean; ratio>1 means tree contaminates the loop-floor comparison"},
+        "label":"SIGMA-LEVEL CONTEXT ONLY (6R3)",
+        "interpretation":("The projected amplitude amp_reduced.m is LOOP-ONLY (1PI core: "
+          "32 one-loop diagrams, B0i/C0i/D0i heads, all Den[T,m^2] are penguin mediator "
+          "propagators, NO bare tree term). So this tree coupling is NOT in C_ours and is "
+          "NOT a contamination bar. It is context for the PHYSICAL sigma_SI only. The real "
+          "verdict-leg bar rides the singlet FRACTION (cleanliness bar, 6R1 R2 / 6R3).")},
       "blind_spot":{"theta_bs_decoupled_rad":theta_bs,"delta_theta_from_bs":theta-theta_bs,
                     "at_blind_spot":abs(theta-theta_bs)<1e-3,
                     "comment":"NOT at the decoupled blind spot; fraction and tree coupling are the SAME order parameter (both ~0 only at theta=-pi/4)."},
