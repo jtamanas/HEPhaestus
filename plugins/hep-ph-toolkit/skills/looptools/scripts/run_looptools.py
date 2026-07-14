@@ -517,14 +517,16 @@ def main(argv=None):
             sys.exit(1)
     wall_clock = time.time() - t0
 
-    # SD branch (Decision 4): the singlet-doublet driver emits per-operator Wilson
-    # coefficients (looptools_sd_coefficients/v1), NOT a sigma_SI — nucleon
-    # matching (twist-2 + 2/27-gluon through the SD Higgs sector) is build-order
-    # item 4.  So we persist the coefficient artifact and stop here, WITHOUT
-    # touching the 2HDM+a match_nucleon / emit_scattering path below.
+    # SD branch (Decision 4 + AMENDMENT3 Ruling 1): the singlet-doublet driver
+    # emits per-operator Wilson coefficients PLUS the driver-side A5 nucleon
+    # contraction (looptools_sd_coefficients/v2) — sigma_SI as the with/without-
+    # C_G TWO-VALUE BRACKET, sigma_provisional on both.  We persist the artifact
+    # verbatim and stop here, WITHOUT touching the 2HDM+a match_nucleon /
+    # emit_scattering path below (match_nucleon.py stays byte-untouched).
     if model == "singlet_doublet":
         coeff_path = output_dir / "sd_coefficients.json"
         coeff_path.write_text(json.dumps(raw, indent=2) + "\n")
+        _nm = raw.get("nucleon_matching")
         summary = {
             "model": model,
             "n_diagrams": raw.get("n_diagrams"),
@@ -535,7 +537,12 @@ def main(argv=None):
             "point_id": raw.get("point_id"),
             "finite": raw.get("amplitude", {}).get("finite"),
             "sigma_provisional": True,
-            "nucleon_matching": "deferred_item4",
+            "nucleon_matching": ("driver_side_A5" if isinstance(_nm, dict)
+                                 else _nm),
+            "sigma_SI_bracket_p_cm2": (
+                {"with_CG": _nm.get("proton", {}).get("sigma_SI_cm2_with_CG"),
+                 "without_CG": _nm.get("proton", {}).get("sigma_SI_cm2_without_CG")}
+                if isinstance(_nm, dict) else None),
         }
         (run_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
         _write_build_key(output_dir, key)

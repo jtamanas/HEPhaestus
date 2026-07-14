@@ -1,5 +1,14 @@
 # DESIGN-ITEM4-AMENDMENT3 — retirement, production SI path, cancellation adjudication
 
+> SUPERSEDED IN PART by DESIGN-ITEM4-AMENDMENT4.md (PR #36): the Ruling-3
+> off-blind-spot falsifier FAILED at both theta points, so the phrase
+> "true C_scalar(d) = +1.66e-10 across three instruments" below is
+> RETRACTED as a validation claim — it is an UNVALIDATED instrument reading
+> of an amplitude whose box scalar sector is under construction-error
+> investigation, and this document's falsifier outcome dichotomy was
+> incomplete (no branch for a theta-independent structural cancellation).
+> Preserved verbatim below as the historical round-3 adjudication.
+
 Amends AMENDMENT2R1.md after PR #35 round 3 (head 5ac2fd1). Accepted as
 established: rotation exactness 4.3e-16 (scale-relative); 256/256 rank, cond
 6.1e3, identifiability 7.0e-13; completeness 3.12e-9 (named derivative dust,

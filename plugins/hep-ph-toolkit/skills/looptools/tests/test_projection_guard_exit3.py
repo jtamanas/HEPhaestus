@@ -73,6 +73,7 @@ def _run(mode: str) -> subprocess.CompletedProcess:
         ("unidentifiable", "SD-PROJECTION-BASIS-UNIDENTIFIABLE"),
         ("rotation-inexact", "SD-FIERZ-ROTATION-INEXACT"),
         ("monomial-out-of-span", "SD-PROJECTION-MONOMIAL-OUT-OF-SPAN"),
+        ("cross-instrument", "SD-SI-CROSS-INSTRUMENT-DISAGREE"),
     ],
 )
 def test_guard_fires_with_exit_3_and_marker(mode, marker):
@@ -110,6 +111,18 @@ def test_out_of_span_monomial_is_named():
     assert "raw in-span residual" in res.stderr, res.stderr
 
 
+def test_cross_instrument_disagree_names_all_three_values():
+    """AMENDMENT3 Ruling 1 shipping guard: the refusal must carry all three
+    instrument values (3-op-on-rotated, transfer R_S_S, forward R_S_S) and the
+    max(1% rel, 6e-10 abs) tolerance statement, so a disagreement is
+    diagnosable from the marker line alone."""
+    res = _run("cross-instrument")
+    assert res.returncode == 3
+    for needle in ("3-op-on-rotated=", "transfer R_S_S=", "forward R_S_S=",
+                   "max pairwise diff", "6e-10 abs"):
+        assert needle in res.stderr, f"{needle!r} missing:\n{res.stderr}"
+
+
 def test_pass_mode_runs_green_end_to_end():
     res = _run("pass")
     assert res.returncode == 0, (
@@ -123,5 +136,6 @@ def test_pass_mode_runs_green_end_to_end():
         "SD-PROJECTION-BASIS-ILLCONDITIONED",
         "SD-PROJECTION-BASIS-UNIDENTIFIABLE",
         "SD-PROJECTION-MONOMIAL-OUT-OF-SPAN",
+        "SD-SI-CROSS-INSTRUMENT-DISAGREE",
     ):
         assert marker not in res.stderr

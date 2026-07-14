@@ -944,19 +944,18 @@ blockers:
     triggered_by_axes: []
     digest_reference: "looptools/scripts/run_eval_sd.wls; DESIGN-ITEM4-AMENDMENT2.md Ruling 3"
     description: >-
-      The scalar SI coefficient C_scalar moves by >=1% between the production
-      3-operator fit (UNROTATED amplitude) and the rotated-complete instrument
-      fit. HISTORY: earlier catalog text quoted a 12.4 shift measured on the
-      rank-12 pre-amendment2 basis — an instrument artifact, no physics meaning.
-      MEASURED (round 3, canonical point): si_shift_rel = 1.0008 with all
-      instrument guards green, and the crossing-symmetry probe pinned the cause
-      as REAL 3-op pollution — the unrotated Majorana-crossed monomials project
-      a spurious -2.099e-7 onto O_S (the round-2 "direct-sector C_scalar")
-      while both Majorana crossings genuinely contribute ~0 scalar (1e-14).
-      Emitted as "SD-SI-EXTRACTION-UNSTABLE si_shift_rel=..", exit 3 — nothing
-      ships. Per AMENDMENT2 Ruling 3, a persistent shift > 10% RETIRES the 3-op
-      fit in favour of the full-basis fit as production — an adjudication-level
-      change (AMENDMENT3), not a driver-side toggle.
+      SUPERSEDED / RETIRED as a live gate (DESIGN-ITEM4-AMENDMENT3.md Ruling 1;
+      kept for history and for older logs). Through PR #35 this was the Exit[3]
+      refusal on si_shift_rel >= 1% between the production 3-op fit (UNROTATED
+      amplitude) and the rotated-complete instrument fit; it FIRED on the
+      canonical point (si_shift 100.1%) — the pre-registered retirement clause
+      — and AMENDMENT3 adjudicated: the 3-op fit is RETIRED as the production
+      SI extractor (probeH crossing symmetry pinned its unrotated crossed
+      monomials as projecting the spurious -2.099e-7 onto O_S), the full-basis
+      fit is production, and the LIVE shipping gate is
+      SD_SI_CROSS_INSTRUMENT_DISAGREE. run_eval_sd.wls now emits si_shift_rel
+      as a REPORT-ONLY line (~100% is the expected signature of the retired
+      fit's pollution).
     workaround_codes: []
     owned_by: looptools
 
@@ -968,18 +967,88 @@ blockers:
     triggered_by_axes: []
     digest_reference: "looptools/scripts/run_eval_sd.wls; DESIGN-ITEM4-AMENDMENT2.md Ruling 2 trigger (b)"
     description: >-
-      C_scalar_full from the rotated-complete instrument fit drifts by >=1%
-      when the sample-config velocities are scaled v -> v/10, OR the v/10
-      instrument refuses its own pre-fit guards so the drift is unmeasurable.
-      HISTORY: the earlier 97.9 drift was measured on the rank-12
-      pre-amendment2 basis — an instrument artifact. MEASURED (round 3): the
-      transfer-sampled instrument's conditioning collapses ~1/v^2 (cond 6.1e3
-      at v -> 4.8e6 at v/10; the direction-variation separations are O(v^2)),
-      so the v/10 leg refuses ILLCONDITIONED; independently, the 3-op fit on
-      the ROTATED amplitude shows a 10.4% C_scalar drift — pre-registered
-      reopen trigger (b) for per-config kinematics as coefficient-value bias.
-      Emitted as "SD-VELOCITY-UNSTABLE full_basis_drift=.." or
-      "SD-VELOCITY-UNSTABLE v/10 instrument refused: ..", exit 3.
+      The GREEN-GUARDED production velocity legs (3-op-on-rotated + contracted
+      twist-2, each under its own fatal rank/cond/identifiability guards)
+      could not be built at v/10, so the AMENDMENT3 Ruling-2 replacement
+      stability bar is unmeasurable and nothing ships. HISTORY: through PR #35
+      this guard also fired on the 256-column transfer instrument's own v/10
+      refusal; AMENDMENT3 Ruling 4c ratified that refusal as a NAMED OUTCOME
+      instead (the transfer conditioning collapses ~1/v^2, cond 6.1e3 -> 4.8e6
+      at v/10 — recorded, not fatal, never retried by loosening cond), and
+      Ruling 2 moved the reopen trigger to SD_KINEMATICS_REOPEN_TRIGGERED.
+      Emitted as "SD-VELOCITY-UNSTABLE production velocity leg refused: ..",
+      exit 3.
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_SI_CROSS_INSTRUMENT_DISAGREE:
+    class: regime-mismatch
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/sd_projection.wl projectOperators; DESIGN-ITEM4-AMENDMENT3.md Ruling 1"
+    description: >-
+      The AMENDMENT3 Ruling-1 SHIPPING GUARD (replaces the retired
+      SD_SI_EXTRACTION_UNSTABLE gate): the three independent C_scalar
+      instruments — the 3-op fit on the ROTATED amplitude (forward samples),
+      the transfer-sampled dictionary R_S_S (the shipping value), and the
+      forward-manifold retained-dictionary R_S_S (golden-spiral sampling,
+      R_S_S-seeded greedy retention) — must agree within max(1% relative,
+      6e-10 absolute; the rank-2 dd-expansion budget 3e-3 x the 2.1e-7 triangle
+      scale). Any disagreement means at least one instrument is measuring its
+      own systematics (measured example: O(1)-weight derivative content leaks
+      -2.47 per unit coefficient into the transfer R_S_S), so no scalar
+      coefficient ships. Emitted verbatim with all three values and the
+      tolerance, exit 3. Runtime-driven by
+      run_projection_guard_check.wls cross-instrument.
+      AMENDMENT4 demotion (binds on the next leg, not yet enforced): whenever
+      |C| < 10x the absolute floor (6e-9) this guard is REPORT-ONLY — all
+      three instruments share M and the sample set, so agreement at noise
+      scale is trivially green and is NOT validation (the PR #36 falsifier
+      failure was cross-instrument green at every theta). Independence
+      henceforth means a different evaluation path or a different physics
+      lineage (the Hisano anchor; AMENDMENT5 withdrew the unexpanded-box
+      path with H2). A companion SD_COEFF_IMAGINARY refusal (|Im C|/|C| >= 0.1 on
+      any coefficient entering f_N) is pre-registered in AMENDMENT4 and lands
+      together with its emitter (no-emitterless-codes catalog norm).
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_KINEMATICS_REOPEN_TRIGGERED:
+    class: regime-mismatch
+    fix_locality: local_patch  # design-level reopen adjudicated in-repo (AMENDMENT3 Ruling 2 / AMENDMENT4 Ruling 2); "design_gap" was outside the FixLocalityEnum
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/run_eval_sd.wls; DESIGN-ITEM4-AMENDMENT3.md Ruling 2"
+    description: >-
+      The pre-registered AMENDMENT3 Ruling-2 replacement trigger for reopening
+      per-config kinematics fired: a production coefficient carrying > 1% of
+      |f_N| (either sigma_SI bracket member, either nucleon) drifted > 1%
+      relative under the green-guarded v -> v/10 production legs, or
+      |Delta C_scalar| exceeded the 6e-10 ABSOLUTE bar under a green-guarded
+      velocity change. The driver refuses to ship velocity-biased sigma_SI
+      inputs; report upstream (adjudication-level), never tune the bars.
+      Emitted as "SD-KINEMATICS-REOPEN-TRIGGERED <named checks>", exit 3.
+    workaround_codes: []
+    owned_by: looptools
+
+  SD_TRIANGLE_SECTOR_EMPTY:
+    class: regime-mismatch
+    fix_locality: local_patch
+    severity: recoverable
+    emitted_by: [looptools]
+    triggered_by_axes: []
+    digest_reference: "looptools/scripts/run_eval_sd.wls; DESIGN-ITEM4.md Decision A4"
+    description: >-
+      The driver-side triangle/box sector split (transitive closure of
+      D0i-carrying Subexpr definitions, same split as
+      run_dd_triangle_continuity.wls) came out degenerate — zero triangle-only
+      terms, or zero box terms. The flavor-universal heavy-quark C_Q is the
+      triangle-sector scalar coefficient, so with a degenerate split the SVZ
+      gluon term of f_N is unmeasurable and no sigma_SI bracket can be built.
+      Emitted as "SD-TRIANGLE-SECTOR-EMPTY ..", exit 3.
     workaround_codes: []
     owned_by: looptools
 

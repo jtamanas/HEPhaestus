@@ -393,6 +393,282 @@ $PqOf[kin_] := (k[2] + k[4])/2 /. kin;
 $PcOf[kin_] := (k[1] + k[3])/2 /. kin;
 
 
+(* ============================================================================
+   3c.  PRODUCTION path (DESIGN-ITEM4-AMENDMENT3.md Ruling 1)
+   ============================================================================
+   The 3-op fit on the UNROTATED amplitude is RETIRED as the production SI
+   extractor (measured si_shift 100.1% fired the pre-registered AMENDMENT2
+   Ruling-3 clause; the unrotated Majorana-crossed monomials project a spurious
+   scalar onto O_S — probeH crossing symmetry).  It survives ONLY as
+   (a) the byte-stable triangle-continuity fixture path (section 5 production
+   leg, bit-for-bit contract) and (b) a cross-instrument consistency probe
+   evaluated on the ROTATED amplitude.
+
+   PRODUCTION COEFFICIENTS:
+   - C_scalar = the rotated-complete instrument's scalar (x) scalar dictionary
+     coefficient R_S_S (transfer sampling, canonical v).  SHIPPING GUARD
+     (replaces SD-SI-EXTRACTION-UNSTABLE): THREE independent instruments must
+     agree on C_scalar within max(1% relative, 6e-10 absolute — the rank-2
+     dd-expansion budget 3e-3 times the 2.1e-7 triangle scale):
+       (1) the 3-op fit on the ROTATED amplitude (forward sample set),
+       (2) the transfer-sampled dictionary R_S_S (the shipping value),
+       (3) a forward-manifold retained-dictionary R_S_S (golden-spiral
+           directions, R_S_S-seeded greedy retention — an independent sampling
+           manifold AND an independent column-selection scheme).
+     Any disagreement -> SD-SI-CROSS-INSTRUMENT-DISAGREE, Exit[3] at the driver
+     (projInstrumentAssert).  NOTE the forward instrument carries NO hard cond
+     bar of its own (measured retained cond 2.9e4 at canonical v, probeE2): its
+     authority here is only as a cross-check, and any conditioning-induced bias
+     beyond the agreement bar IS the guard firing.
+   - C_twist2 split (C^(1), C^(2)) = contracted twist-2 reference operators fit
+     on the ROTATED amplitude (NOT the local dictionary: derivative content is
+     out of local span by construction off the forward manifold — the ratified
+     probe8 exemption).  CONVENTION (pinned, resolving the DESIGN-ITEM4.md A5
+     [VERIFY]): Hisano-Ishiwata-Nagata arXiv:1104.0228 Eqs. (2)-(3),
+       L_eff  ⊃  (g_q^(1)/m_chi)   chibar i d^mu gamma^nu chi O^q_{mu nu}
+              +  (g_q^(2)/m_chi^2) chibar i d^mu i d^nu chi O^q_{mu nu},
+       O^q_{mu nu} = (1/2) qbar i (D_mu gamma_nu + D_nu gamma_mu
+                                   - (1/2) g_{mu nu} Dslash) q .
+     The reference operators below are the FREE-SPINOR matrix elements with the
+     symmetrized momenta P_chi = (k1+k3)/2, P_q = (k2+k4)/2 and the on-shell
+     reduction qbar i Dslash q -> m_q qbar q:
+       <O^q_{mu nu}> = (1/2)[P_q_mu (qbar gamma_nu q) + P_q_nu (qbar gamma_mu q)]
+                       - (1/4) g_{mu nu} m_q (qbar q),
+     normalized so the FITTED coefficients are C^(i) = g^(i)/m_chi, i.e. the A5
+     contraction  f_N/m_N ⊃ (3/4) m_chi Sum_q [q(2)+qbar(2)] (C^(1)+C^(2))
+     equals Hisano Eq. (6)'s  (3/4) [q(2)+qbar(2)] (g^(1)+g^(2))  exactly:
+       ref(C^(1)) =          P_chi^mu (chibar gamma^nu chi) <O^q_{mu nu}>
+       ref(C^(2)) = (1/m_chi) P_chi^mu P_chi^nu (chibar chi) <O^q_{mu nu}> .
+
+   CONDITIONING (measured): ref(C^(1)) and ref(C^(2)) are IDENTICAL on every
+   chi-spin-DIAGONAL config at forward kinematics (chibar gamma^nu chi -> 2 P^nu
+   and chibar chi -> 2 m_chi collapse them onto the same value); only the
+   chi-spin-off-diagonal rows separate them, so the raw {g1, g2} column pair is
+   nearly parallel at DD kinematics (measured cond 1.05e5 — over the 1e4 bar).
+   f_N consumes ONLY THE SUM C^(1)+C^(2) (Hisano Eq. (6): both multiply the same
+   (3/4)[q(2)+qbar(2)] moment), so the fit basis is the exactly-equivalent
+   orthogonalized pair
+       O_sum = (ref1+ref2)/2  with coefficient  c_sum = C^(1)+C^(2)  (SHIPS),
+       O_dif = (ref1-ref2)/2  with coefficient  c_dif = C^(1)-C^(2)  (DIAGNOSTIC)
+   (exact linear reparametrization: C^(1) = (c_sum+c_dif)/2, C^(2) =
+   (c_sum-c_dif)/2).  O_sum captures the common (near-parallel) direction and
+   O_dif the small separating direction, so the FIT basis passes the fatal
+   cond/identifiability guards honestly, while the g1/g2 SPLIT inherits the
+   intrinsic near-degeneracy — it is reported as a diagnostic with exactly that
+   caveat, never consumed by f_N. *)
+
+$mdot[a_, b_] := a[[1]] b[[1]] - a[[2]] b[[2]] - a[[3]] b[[3]] - a[[4]] b[[4]];
+chiVec[kin_, spin_]   := Table[chiBilin[kin, spin, $gamma[[mu]]], {mu, 4}];
+quarkVec[kin_, spin_] := Table[quarkBilin[kin, spin, $gamma[[mu]]], {mu, 4}];
+
+(* free-spinor matrix elements of the two Hisano twist-2 contractions *)
+twist2Ref1[kin_, spin_, mchi_, mq_] := Module[
+  {Pc = $PcOf[kin], Pq = $PqOf[kin], cv = chiVec[kin, spin],
+   qv = quarkVec[kin, spin], Sq = quarkScalar[kin, spin]},
+  (1/2) ($mdot[Pc, Pq] $mdot[cv, qv] + $mdot[Pc, qv] $mdot[cv, Pq])
+    - (1/4) $mdot[Pc, cv] mq Sq];
+twist2Ref2[kin_, spin_, mchi_, mq_] := Module[
+  {Pc = $PcOf[kin], Pq = $PqOf[kin], qv = quarkVec[kin, spin],
+   Sc = chiScalar[kin, spin], Sq = quarkScalar[kin, spin]},
+  (Sc/mchi) ($mdot[Pc, Pq] $mdot[Pc, qv] - (1/4) $mdot[Pc, Pc] mq Sq)];
+
+$opRefs2 = <|
+  "C_scalar" -> Function[{kin, spin, mchi, mq},
+    (chiScalar[kin, spin]) (quarkScalar[kin, spin])],
+  "C_twist2_sum" -> Function[{kin, spin, mchi, mq},
+    (twist2Ref1[kin, spin, mchi, mq] + twist2Ref2[kin, spin, mchi, mq])/2],
+  "C_twist2_dif" -> Function[{kin, spin, mchi, mq},
+    (twist2Ref1[kin, spin, mchi, mq] - twist2Ref2[kin, spin, mchi, mq])/2],
+  "C_chi_vector" -> Function[{kin, spin, mchi, mq},
+    (chiVector[kin, spin, (k[2] + k[4])/2 /. kin]) (quarkScalar[kin, spin])]
+|>;
+
+(* cross-instrument agreement bars (AMENDMENT3 Ruling 1) *)
+$crossInstrTolRel = 0.01;
+$crossInstrTolAbs = 6.0*^-10;
+
+(* ---- rotated monomial evaluation over an arbitrary config list -------------
+   Shared by the transfer-instrument leg of projectOperators, the forward
+   instrument, and the production velocity leg.  Returns per-monomial values
+   (crossed monomials C-conjugate-ROTATED) and, when checkAlgebraic is True,
+   the scale-relative rotation-exactness maximum (the SD-FIERZ-ROTATION-INEXACT
+   quantity; see the guard comment in projectOperators). *)
+rotatedMonoVals[chainDefs_Association, fsyms_List, crules_List, crossedQ_List,
+    cfgs_List, checkAlgebraic_:True] := Module[
+  {rotAbsErr, rotScaleRef, refData, failed = False},
+  rotAbsErr = ConstantArray[0., Length[crules]];
+  rotScaleRef = ConstantArray[0., Length[crules]];
+  refData = Table[Module[
+      {kin = cfg["kin"], spin = cfg["spin"], fvals},
+      fvals = Association[(# -> chainValueOn[chainDefs[#], kin, spin]) & /@ fsyms];
+      Table[Module[{ex = Keys[crules][[t]], ss, v},
+          ss = Flatten[Table[ConstantArray[fsyms[[i]], ex[[i]]], {i, Length[fsyms]}]];
+          If[crossedQ[[t]],
+            v = crossedRotValue[chainDefs[ss[[1]]], chainDefs[ss[[2]]], kin, spin];
+            If[v === $Failed, failed = True; $Failed,
+              If[checkAlgebraic,
+                Module[{alg = crossedRotAlgebraic[chainDefs[ss[[1]]],
+                    chainDefs[ss[[2]]], kin, spin]},
+                  rotAbsErr[[t]] = Max[rotAbsErr[[t]], Abs[v - alg]];
+                  rotScaleRef[[t]] = Max[rotScaleRef[[t]], Abs[v], Abs[alg]];
+                  v],
+                v]],
+            Times @@ (fvals /@ ss)]],
+        {t, Length[crules]}]],
+    {cfg, cfgs}];
+  <|"failed" -> failed,
+    (* per monomial, over configs *)
+    "mono_vals" -> If[failed, $Failed, Transpose[refData]],
+    "rot_err_max" -> Max[0., MapThread[If[#2 > 0., #1/#2, 0.] &,
+      {rotAbsErr, rotScaleRef}]]|>];
+
+(* ---- 3-op fit, byte-equivalent arithmetic of the section-5 production leg --
+   Reusable on ANY F-linear numeric amplitude (e.g. the driver's triangle-only
+   sector: the bit-for-bit fixture contract -1.2831509485455282e-7 goes through
+   exactly this construction; per AMENDMENT5R1 R1 that fixture is a REGRESSION
+   pin, NOT physics — on unrotated crossed content this fit reads the crossed
+   monomials' out-of-span O_S leakage).  fsyms may include chains absent
+   from M. *)
+threeOpFit[M_, chainDefs_Association, fsyms_List, mchi_, mq_, vscale_:1.0] := Module[
+  {cfgs, Mvals, opCols, mat, sol},
+  cfgs = sampleConfigs[N[mchi], N[mq], vscale];
+  {Mvals, opCols} = Transpose[Table[
+    Module[{kin = cfg["kin"], spin = cfg["spin"], frule, mval, orow},
+      frule = (# -> chainValueOn[chainDefs[#], kin, spin]) & /@ fsyms;
+      mval = M /. frule;
+      orow = Table[$opRefs[op][kin, spin, N[mchi], N[mq]], {op, Keys[$opRefs]}];
+      {mval, orow}],
+    {cfg, cfgs}]];
+  mat = N[opCols];
+  sol = Quiet[LeastSquares[mat, N[Mvals]]];
+  <|"coeffs" -> AssociationThread[Keys[$opRefs] -> sol],
+    "rel_residual" -> If[Norm[N[Mvals]] < 1*^-300, Norm[N[Mvals] - mat . sol],
+      Norm[N[Mvals] - mat . sol]/Norm[N[Mvals]]]|>];
+
+(* ---- forward-manifold retained-dictionary instrument (probeE2, ported) -----
+   Third C_scalar instrument: purely FORWARD sampling (k1 == k3, k2 == k4) on a
+   golden-spiral direction set, exact-null columns excluded (31 pseudoscalar
+   columns vanish identically at forward kinematics — ubar(p) g5 u(p) == 0),
+   remaining columns greedily retained (R_S_S-seeded, threshold 1e-4 on
+   normalized residual direction) so the fit never solves through the
+   machine-noise tail that broke the naive forward fit (probeE: cond 3.9e16).
+   The rotation-exactness identity is NOT re-checked here (checkAlgebraic
+   False): the SAME crossedRotValue path is guarded against the algebraic form
+   on the 1104-config transfer set every run; this leg adds only kinematics,
+   not new rotation algebra. *)
+$fwdNDirs = 50;
+$fwdRetainTol = 1.0*^-4;
+$fwdNullTol = 1.0*^-14;
+fwdUnitDir[i_, n_, ph_] := Module[{z = 1. - 2. (i - 0.5)/n, r, th},
+  r = Sqrt[1 - z^2]; th = 2. Pi i N[GoldenRatio] + ph; {r Cos[th], r Sin[th], z}];
+forwardConfigs[mchi_, mq_, vscale_:1.0] := Flatten[Table[
+  Module[{dc, dq, kchi, kq, kin},
+    dc = (0.15 + 0.25 FractionalPart[i Sqrt[2.]]) fwdUnitDir[i, $fwdNDirs, 0.];
+    dq = (0.15 + 0.25 FractionalPart[i Sqrt[3.] + 0.3]) fwdUnitDir[i, $fwdNDirs, 1.];
+    kchi = onShell[vscale dc mchi, mchi]; kq = onShell[vscale dq mq, mq];
+    kin = {k[1] -> kchi, k[3] -> kchi, k[2] -> kq, k[4] -> kq,
+           MassFChi[_] -> mchi, MassFd[_] -> mq, MassFu[_] -> mq};
+    Table[<|"kin" -> kin,
+      "spin" -> {k[1] -> s[[1]], k[3] -> s[[2]], k[2] -> s[[3]], k[4] -> s[[4]]}|>,
+      {s, Tuples[{1, -1}, 4]}]],
+  {i, $fwdNDirs}], 1];
+
+forwardScalarInstrument[chainDefs_Association, fsyms_List, crules_List,
+    crossedQ_List, mchi_, mq_, vscale_:1.0] := Module[
+  {cfgs, rot, fullMat, MrotVals, fro, norms, gpos, zn, nzIdx, nmat, seedPos,
+   ordering, retIdx, Q, rm, svr, condRet, identRet, sol, resid, cS},
+  cfgs = forwardConfigs[N[mchi], N[mq], vscale];
+  rot = rotatedMonoVals[chainDefs, fsyms, crules, crossedQ, cfgs, False];
+  If[rot["failed"],
+    Return[<|"ok" -> False, "reason" -> "SD-FIERZ-ROTATION-INEXACT",
+      "detail" -> "forward instrument: unsupported crossed-chain leg layout " <>
+        "(chi legs must be k1/k3, quark legs k2/k4) — refusing"|>]];
+  fullMat = N[Table[refRow[c["kin"], c["spin"]], {c, cfgs}]];
+  MrotVals = N[Transpose[rot["mono_vals"]] . Values[crules]];
+  fro = Norm[fullMat, "Frobenius"];
+  norms = Norm /@ Transpose[fullMat];
+  gpos = Position[$refNames, $refScalarName][[1, 1]];
+  zn = Flatten[Position[norms, x_ /; x < $fwdNullTol fro, {1}, Heads -> False]];
+  If[MemberQ[zn, gpos],
+    Return[<|"ok" -> False, "reason" -> "SD-PROJECTION-BASIS-ILLCONDITIONED",
+      "detail" -> "forward instrument: R_S_S column numerically null — " <>
+        "cannot seed the retention, no forward C_scalar cross-check"|>]];
+  nzIdx = Complement[Range[Length[$refNames]], zn];
+  nmat = Transpose[Transpose[fullMat[[All, nzIdx]]]/norms[[nzIdx]]];
+  seedPos = Position[nzIdx, gpos][[1, 1]];
+  ordering = Join[{seedPos}, DeleteCases[Ordering[-norms[[nzIdx]]], seedPos]];
+  retIdx = {}; Q = {};
+  Do[Module[{col = nmat[[All, j]], r},
+      r = If[Q === {}, col, col - Transpose[Q] . (Conjugate[Q] . col)];
+      If[Norm[r] > $fwdRetainTol, AppendTo[retIdx, j]; AppendTo[Q, r/Norm[r]]]],
+    {j, ordering}];
+  rm = nmat[[All, Sort[retIdx]]];
+  svr = SingularValueList[rm, Tolerance -> 0];
+  condRet = Max[svr]/Min[svr];
+  identRet = Max[Abs[PseudoInverse[rm] . rm - IdentityMatrix[Length[retIdx]]]];
+  sol = Quiet[LeastSquares[rm, MrotVals]];
+  resid = If[Norm[MrotVals] < 1*^-300, Norm[rm . sol - MrotVals],
+    Norm[rm . sol - MrotVals]/Norm[MrotVals]];
+  cS = sol[[Position[Sort[retIdx], seedPos][[1, 1]]]]/norms[[gpos]];
+  <|"ok" -> True, "C_scalar_fwd" -> cS,
+    "n_configs" -> Length[cfgs], "n_null_columns" -> Length[zn],
+    "n_retained" -> Length[retIdx], "n_nonnull" -> Length[nzIdx],
+    "retained_cond" -> condRet, "retained_ident_err" -> identRet,
+    "completeness_rel_residual" -> resid|>];
+
+(* ---- production velocity leg (AMENDMENT3 Ruling 2 replacement bar) ----------
+   The 256-column transfer dictionary is honestly UNMEASURABLE at v/10 (cond
+   ~ 1/v^2, ratified named refusal — Ruling 4c), so velocity stability of the
+   PRODUCTION coefficients is measured on the two legs whose own conditioning
+   guards stay green at reduced v: the 3-op fit on the rotated amplitude
+   (forward samples) and the contracted twist-2 fit (its 4-column basis carries
+   the same fatal rank/cond/identifiability guards).  Returns the measured
+   coefficients at `vscale`, or ok -> False with the guard reason if this leg's
+   OWN guards refuse (in which case drift is unmeasurable — a named outcome,
+   never a silent value). *)
+productionVLeg[M_, abbr_List, mchi_, mq_, vscale_] := Module[
+  {cc, fsyms, chainDefs, crules, crossedQ, cfgs, refCfgs, rot, monoVals,
+   MrotVals, mat, opCols, c3Sol, prodNames, prodMat, prodGuards, prodColNorms,
+   prodSol},
+  cc = chainClass[abbr];
+  fsyms = Keys[cc];
+  chainDefs = Association[Cases[abbr, (f_ -> wc_WeylChain) :> (f -> wc)]];
+  crules = Quiet[CoefficientRules[M, fsyms]];
+  crossedQ = Table[Module[{ex = Keys[crules][[t]], ss},
+      ss = Flatten[Table[ConstantArray[fsyms[[i]], ex[[i]]], {i, Length[fsyms]}]];
+      Length[ss] === 2 && ss[[1]] =!= ss[[2]] &&
+        barChiMixedQ[chainDefs[ss[[1]]]] && barChiMixedQ[chainDefs[ss[[2]]]]],
+    {t, Length[crules]}];
+  cfgs = sampleConfigs[N[mchi], N[mq], vscale];
+  refCfgs = referenceConfigs[N[mchi], N[mq], vscale];
+  rot = rotatedMonoVals[chainDefs, fsyms, crules, crossedQ, refCfgs, True];
+  If[TrueQ[rot["failed"]] || rot["rot_err_max"] >= $fierzRotationTol,
+    Return[<|"ok" -> False, "reason" -> "SD-FIERZ-ROTATION-INEXACT",
+      "detail" -> "production velocity leg at vscale " <> ToString[vscale] <>
+        ": rotation exactness " <> ToString[rot["rot_err_max"], InputForm]|>]];
+  monoVals = rot["mono_vals"];
+  MrotVals = N[Transpose[monoVals] . Values[crules]];
+  opCols = Table[Table[$opRefs[op][cfg["kin"], cfg["spin"], N[mchi], N[mq]],
+    {op, Keys[$opRefs]}], {cfg, cfgs}];
+  mat = N[opCols];
+  c3Sol = Quiet[LeastSquares[mat, MrotVals[[1 ;; Length[cfgs]]]]];
+  prodNames = Keys[$opRefs2];
+  prodMat = N[Table[Table[$opRefs2[op][cfg["kin"], cfg["spin"], N[mchi], N[mq]],
+    {op, prodNames}], {cfg, refCfgs}]];
+  prodGuards = referenceBasisGuards[prodMat, ("CONTRACTED_" <> # &) /@ prodNames];
+  If[! TrueQ[prodGuards["ok"]],
+    Return[Join[prodGuards, <|"detail" -> ToString[Lookup[prodGuards, "detail", ""]] <>
+      " (contracted production twist-2 basis, velocity leg vscale " <>
+      ToString[vscale] <> ")"|>]]];
+  prodColNorms = Norm /@ Transpose[prodMat];
+  prodSol = Quiet[LeastSquares[
+    Transpose[Transpose[prodMat]/prodColNorms], MrotVals]]/prodColNorms;
+  <|"ok" -> True, "vscale" -> vscale,
+    "threeop_rotated_coeffs" -> AssociationThread[Keys[$opRefs] -> c3Sol],
+    "contracted_coeffs" -> AssociationThread[prodNames -> prodSol],
+    "production_basis_cond" -> prodGuards["cond"]|>];
+
+
 
 (* ============================================================================
    4.  Sample configurations (forward DD momenta, all helicities, several
@@ -517,11 +793,13 @@ $monomialContribTol = 1.0*^-8;
 projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
   {cc, badChains, fsyms, chainDefs, cfgs, Mvals, opCols, opNames, mat, sol,
    fit, residVec, mnorm, relResid, worstIdx, coeffs, projClass,
-   crules, monoNames, crossedQ, refCfgs, rotErrMax, rotAbsErr, rotScaleRef,
+   crules, monoNames, crossedQ, refCfgs, rotErrMax,
    refData, monoVals,
    fullMat, MrotVals, basisGuards, colNorms, nmat, fullSol, fullCoeffs,
    fullFit, fullResidVec, refMnorm, fullRelResid, monoResids, monoContribs,
-   derivMonoQ, monoWorst, diagShares, siShift},
+   derivMonoQ, monoWorst, diagShares, siShift,
+   c3rotSol, c3rotCoeffs, prodNames, prodMat, prodGuards, prodColNorms,
+   prodSol, prodCoeffs, fwd, crossVals, crossAbs, crossDiff, crossTol},
   cc = chainClass[abbr];
   badChains = unrecognizedChains[abbr];
   (* FAIL-FAST structural guard (F1/F2): any chain whose WeylChain is outside the
@@ -541,8 +819,9 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
 
   (* ---- PRODUCTION LEG (unchanged; fixture-stable): M + the 3 SI ops on the
      UNCHANGED forward sample set, plain LeastSquares.  This code path is the
-     bit-for-bit contract behind the triangle fixture -1.2831509485455282e-7 —
-     the instrument below must never feed back into it. *)
+     bit-for-bit contract behind the triangle fixture -1.2831509485455282e-7
+     (a REGRESSION pin, not physics — AMENDMENT5R1 R1) — the instrument below
+     must never feed back into it. *)
   {Mvals, opCols} = Transpose[Table[
     Module[{kin = cfg["kin"], spin = cfg["spin"], frule, mval, orow},
       frule = (# -> chainValueOn[chainDefs[#], kin, spin]) & /@ fsyms;
@@ -606,30 +885,12 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
      to 4.4e-11 at vscale 0.1 while scale-relative stays at 8.5e-16 — probeE2,
      2026-07).  Scale-relative is the uniform-norm statement of the identity
      and is what the < 1e-12 bar guards. *)
-  rotAbsErr = ConstantArray[0., Length[crules]];
-  rotScaleRef = ConstantArray[0., Length[crules]];
-  refData = Table[Module[
-      {kin = cfg["kin"], spin = cfg["spin"], fvals, movals},
-      fvals = Association[(# -> chainValueOn[chainDefs[#], kin, spin]) & /@ fsyms];
-      movals = Table[Module[{ex = Keys[crules][[t]], ss, v},
-          ss = Flatten[Table[ConstantArray[fsyms[[i]], ex[[i]]], {i, Length[fsyms]}]];
-          If[crossedQ[[t]],
-            v = crossedRotValue[chainDefs[ss[[1]]], chainDefs[ss[[2]]], kin, spin];
-            If[v === $Failed, $Failed,
-              Module[{alg = crossedRotAlgebraic[chainDefs[ss[[1]]], chainDefs[ss[[2]]],
-                  kin, spin]},
-                rotAbsErr[[t]] = Max[rotAbsErr[[t]], Abs[v - alg]];
-                rotScaleRef[[t]] = Max[rotScaleRef[[t]], Abs[v], Abs[alg]];
-                v]],
-            Times @@ (fvals /@ ss)]],
-        {t, Length[crules]}];
-      {movals, refRow[kin, spin]}],
-    {cfg, refCfgs}];
-  rotErrMax = Max[0., MapThread[If[#2 > 0., #1/#2, 0.] &, {rotAbsErr, rotScaleRef}]];
-  If[! FreeQ[refData, $Failed],
+  refData = rotatedMonoVals[chainDefs, fsyms, crules, crossedQ, refCfgs, True];
+  If[TrueQ[refData["failed"]],
     Return[<|"ok" -> False, "reason" -> "SD-FIERZ-ROTATION-INEXACT",
       "detail" -> "unsupported crossed-chain leg layout (chi legs must be " <>
         "k1/k3, quark legs k2/k4) — refusing, never a silent guess"|>]];
+  rotErrMax = refData["rot_err_max"];
   If[rotErrMax >= $fierzRotationTol,
     Return[<|"ok" -> False, "reason" -> "SD-FIERZ-ROTATION-INEXACT",
       "detail" -> "scale-relative rotation exactness " <> ToString[rotErrMax, InputForm] <>
@@ -637,8 +898,8 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
         "C-conjugate+16-Gamma direct combination)",
       "rotation_exactness_max" -> rotErrMax|>]];
 
-  monoVals = Transpose[refData[[All, 1]]];              (* per monomial, over cfgs *)
-  fullMat = N[refData[[All, 2]]];
+  monoVals = refData["mono_vals"];                      (* per monomial, over cfgs *)
+  fullMat = N[Table[refRow[cfg["kin"], cfg["spin"]], {cfg, refCfgs}]];
   MrotVals = N[Transpose[monoVals] . Values[crules]];   (* rotated amplitude *)
 
   (* fatal pre-fit instrument guards (rank / null+collinear / cond / ident) *)
@@ -718,6 +979,64 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
   siShift = If[Abs[coeffs["C_scalar"]] < 1*^-300, Abs[fullCoeffs[$refScalarName]],
     Abs[(fullCoeffs[$refScalarName] - coeffs["C_scalar"])/coeffs["C_scalar"]]];
 
+  (* ---- PRODUCTION legs (section 3c; AMENDMENT3 Ruling 1) --------------------- *)
+
+  (* instrument 1: the retired 3-op basis fit on the ROTATED amplitude, forward
+     sample set.  referenceConfigs PREPENDS sampleConfigs, so the first
+     Length[cfgs] rotated values correspond exactly to the production-leg
+     configs and `mat` (the 3-op matrix) is reusable verbatim. *)
+  c3rotSol = Quiet[LeastSquares[mat, MrotVals[[1 ;; Length[cfgs]]]]];
+  c3rotCoeffs = AssociationThread[opNames -> c3rotSol];
+
+  (* production contracted-operator fit (C_twist2 g1/g2 split) on the ROTATED
+     amplitude over the full transfer-diversified sample set.  Its OWN basis
+     health goes through the same fatal guards as the dictionary (4 columns:
+     rank, collinearity, cond < 1e4, identifiability). *)
+  prodNames = Keys[$opRefs2];
+  prodMat = N[Table[Table[$opRefs2[op][cfg["kin"], cfg["spin"], N[mchi], N[mq]],
+    {op, prodNames}], {cfg, refCfgs}]];
+  prodGuards = referenceBasisGuards[prodMat, ("CONTRACTED_" <> # &) /@ prodNames];
+  If[! TrueQ[prodGuards["ok"]],
+    Return[Join[prodGuards, <|"detail" -> ToString[Lookup[prodGuards, "detail", ""]] <>
+      " (contracted production twist-2 basis)", "classification" -> cc|>]]];
+  prodColNorms = Norm /@ Transpose[prodMat];
+  prodSol = Quiet[LeastSquares[
+    Transpose[Transpose[prodMat]/prodColNorms], MrotVals]]/prodColNorms;
+  prodCoeffs = AssociationThread[prodNames -> prodSol];
+
+  (* instrument 3: forward-manifold retained dictionary *)
+  fwd = forwardScalarInstrument[chainDefs, fsyms, crules, crossedQ,
+    N[mchi], N[mq], vscale];
+  If[! TrueQ[fwd["ok"]], Return[Join[fwd, <|"classification" -> cc|>]]];
+
+  (* SHIPPING GUARD: three-instrument C_scalar agreement,
+     max pairwise |a-b| <= max(1% * max|value|, 6e-10 absolute) *)
+  crossVals = <|
+    "threeop_rotated" -> c3rotCoeffs["C_scalar"],
+    "transfer_R_S_S"  -> fullCoeffs[$refScalarName],
+    "forward_R_S_S"   -> fwd["C_scalar_fwd"]|>;
+  crossAbs = Abs /@ Values[crossVals];
+  crossDiff = Max[Flatten[Table[Abs[Values[crossVals][[i]] - Values[crossVals][[j]]],
+    {i, 3}, {j, i + 1, 3}]]];
+  crossTol = Max[$crossInstrTolRel Max[crossAbs], $crossInstrTolAbs];
+  If[crossDiff > crossTol,
+    Return[<|"ok" -> False, "reason" -> "SD-SI-CROSS-INSTRUMENT-DISAGREE",
+      "detail" -> "C_scalar instruments disagree: 3-op-on-rotated=" <>
+        ToString[crossVals["threeop_rotated"], InputForm] <> ", transfer R_S_S=" <>
+        ToString[crossVals["transfer_R_S_S"], InputForm] <> ", forward R_S_S=" <>
+        ToString[crossVals["forward_R_S_S"], InputForm] <>
+        "; max pairwise diff " <> ToString[crossDiff, InputForm] <> " > tol " <>
+        ToString[crossTol, InputForm] <> " = max(1% rel, 6e-10 abs) " <>
+        "(AMENDMENT3 Ruling 1 shipping guard)",
+      "cross_instrument" -> Join[crossVals,
+        <|"max_pairwise_diff" -> crossDiff, "tolerance" -> crossTol|>],
+      (* carried for diagnosis/tests: the legacy 3-op values and the per-leg
+         instrument states at the refusal point *)
+      "C_scalar" -> coeffs["C_scalar"], "C_twist2" -> coeffs["C_twist2"],
+      "threeop_rotated_coeffs" -> c3rotCoeffs,
+      "forward_instrument" -> fwd,
+      "classification" -> cc|>]];
+
   (* structural cross-check classification of which chains are present *)
   projClass = <|
     "scalar_chains" -> Keys[Select[cc, (#["line"] =!= "mixed" && #["rank"] == 0 &&
@@ -737,6 +1056,24 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
     "completeness_ok" -> (fullRelResid < $fullCompletenessTol),
     "si3_completeness_ok" -> (relResid < $completenessTol),
     "C_scalar_full" -> fullCoeffs[$refScalarName],
+    (* PRODUCTION coefficients (AMENDMENT3 Ruling 1): C_scalar ships from the
+       transfer dictionary R_S_S; the twist-2 split ships from the contracted
+       fit on the rotated amplitude (Hisano C^(i) = g^(i)/m_chi, section 3c) *)
+    "C_scalar_production" -> fullCoeffs[$refScalarName],
+    (* c_sum = C^(1)+C^(2) is the f_N input; the split is a conditioned
+       DIAGNOSTIC (see the section-3c conditioning note) *)
+    "C_twist2_sum" -> prodCoeffs["C_twist2_sum"],
+    "C_twist2_dif" -> prodCoeffs["C_twist2_dif"],
+    "C_twist2_g1" -> (prodCoeffs["C_twist2_sum"] + prodCoeffs["C_twist2_dif"])/2,
+    "C_twist2_g2" -> (prodCoeffs["C_twist2_sum"] - prodCoeffs["C_twist2_dif"])/2,
+    "C_scalar_contracted_rotated" -> prodCoeffs["C_scalar"],
+    "C_chi_vector_rotated" -> prodCoeffs["C_chi_vector"],
+    "production_basis_cond" -> prodGuards["cond"],
+    "production_basis_ident_err" -> prodGuards["ident_err"],
+    "threeop_rotated_coeffs" -> c3rotCoeffs,
+    "forward_instrument" -> fwd,
+    "cross_instrument" -> Join[crossVals,
+      <|"max_pairwise_diff" -> crossDiff, "tolerance" -> crossTol, "ok" -> True|>],
     "si_shift_rel" -> siShift,
     "rotation_exactness_max" -> rotErrMax,
     "basis_rank" -> basisGuards["rank"],
@@ -770,7 +1107,8 @@ projectOperators[M_, abbr_List, mchi_, mq_, vscale_:1.0] := Module[
    exit-3 tests, like ddAssertNoSurvivors): any instrument-level failure reason
    (SD-FIERZ-ROTATION-INEXACT, SD-PROJECTION-BASIS-RANK-DEFICIENT,
    SD-PROJECTION-BASIS-ILLCONDITIONED, SD-PROJECTION-BASIS-UNIDENTIFIABLE,
-   SD-PROJECTION-MONOMIAL-OUT-OF-SPAN) is emitted verbatim as a single-line
+   SD-PROJECTION-MONOMIAL-OUT-OF-SPAN, SD-SI-CROSS-INSTRUMENT-DISAGREE) is
+   emitted verbatim as a single-line
    marker + detail, then Exit[3] — nothing ships on a defective instrument. *)
 projInstrumentAssert[proj_Association] :=
   If[! TrueQ[proj["ok"]] && StringQ[Lookup[proj, "reason", Null]] &&
