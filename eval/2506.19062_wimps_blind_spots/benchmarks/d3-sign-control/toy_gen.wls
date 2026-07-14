@@ -11,9 +11,6 @@ tops = CreateTopologies[0, 2 -> 2];
 ins = InsertFields[tops,
   {F[1, {1}], F[2, {1}]} -> {F[1, {1}], F[2, {1}]},
   InsertionLevel -> {Classes}];
-n = Length[Position[ins, FeynArts`Graph[__][__]]];
-Print["toy_gen: insertions(graphs) = ", n];
-If[n === 0, Print["toy_gen: NO DIAGRAMS"]; Exit[1]];
 amps = CreateFeynAmp[ins];
 nAmp = Length[Cases[amps, x_ /; Head[x] === FeynArts`FeynAmp, {0, Infinity}]];
 Print["toy_gen: FeynAmp count = ", nAmp];
