@@ -1,0 +1,360 @@
+{
+  "_desc": "D4 per-sector Hisano scalar decomposition (VALIDATION-ONLY, no kernel). Pre-registered rule/map/STOP locked before compute.",
+  "predictions_pre_registered": {
+    "locked_before_compute": true,
+    "decision_rule": "UNIQUE (s_tri,s_dbox,s_cbox in +-1) with every sector's signed C_ours in |ratio| in [0.2,5] AND sign-matched to the corresponding Hisano per-sector value, at BOTH legs.",
+    "hypothesis_pattern_map": {
+      "(-,-,-)": "uniform -1 global flip",
+      "(+,-,-)": "S2-as-posed (box-only flip, D3 minus as named source)",
+      "other_unique": "per-topology fermion-ordering signs"
+    },
+    "stop_condition": "NO assignment satisfies both legs -> magnitude-structure defect -> STOP + ESCALATE before any fix. MULTIPLE -> report NON-UNIQUE.",
+    "hisano_to_sector_map": {
+      "g_H (higgs term)": "our triangle sector (Higgs-exchange penguin)",
+      "g_S (box term)": "SINGLE box class <-> (directBox + crossedBox)",
+      "collapse": "2^3 scan collapses to two Hisano refs {tri_H, box_H}; box read as (A) box-total and (B) per-box vs shared box_H."
+    },
+    "sanity_anchor": "sum per-sector Hisano f_q*m_q == campaign C_Hisano -2.228e-12(L2)/-2.229e-12(L3)."
+  },
+  "hisano_sectors": {
+    "L2": {
+      "tri_H_gH": -2.073415536103058e-12,
+      "box_H_gS": -1.5424361678105703e-13,
+      "total": -2.227659152884115e-12,
+      "M": 495.510455
+    },
+    "L3": {
+      "tri_H_gH": -2.0746810640262234e-12,
+      "box_H_gS": -1.5416845222126134e-13,
+      "total": -2.2288495162474847e-12,
+      "M": 479.403955
+    }
+  },
+  "our_sectors": {
+    "L2": {
+      "triangle": 3.42656757274649e-12,
+      "directBox": 3.653155217877838e-12,
+      "crossedBox": 3.4310782578629727e-12
+    },
+    "L3": {
+      "triangle": 4.554446030728121e-12,
+      "directBox": 3.5733047020356063e-12,
+      "crossedBox": 3.337639766609869e-12
+    }
+  },
+  "sanity_anchor": {
+    "L2": {
+      "sum_hisano_sectors": -2.227659152884115e-12,
+      "campaign_C_Hisano": -2.228e-12,
+      "reproduces": true
+    },
+    "L3": {
+      "sum_hisano_sectors": -2.2288495162474847e-12,
+      "campaign_C_Hisano": -2.229e-12,
+      "reproduces": true
+    }
+  },
+  "sign_only_requirement": {
+    "s_tri_required_for_sign_match": -1,
+    "s_dbox_required_for_sign_match": -1,
+    "s_cbox_required_for_sign_match": -1,
+    "note": "Our triangle & both boxes are POSITIVE; both Hisano classes (g_H triangle, g_S box) are NEGATIVE => sign alone forces (-,-,-) = UNIFORM -1. S2's s_tri=+1 MISMATCHES Hisano's negative triangle class on the clean scalar axis."
+  },
+  "box_magnitude_structure": {
+    "L2": {
+      "box_H": -1.5424361678105703e-13,
+      "our_box_total": 7.084233475740811e-12,
+      "our_box_total_over_box_H": -45.92885996570356,
+      "our_directBox_over_box_H": -23.684320259835154,
+      "hisano_box_fraction_of_total": 0.06924022312002276,
+      "our_box_fraction_of_total": 0.6739955825498537
+    },
+    "L3": {
+      "box_H": -1.5416845222126134e-13,
+      "our_box_total": 6.910944468645475e-12,
+      "our_box_total_over_box_H": -44.8272287168515,
+      "our_directBox_over_box_H": -23.177924215696397,
+      "hisano_box_fraction_of_total": 0.06916952046220734,
+      "our_box_fraction_of_total": 0.6027657295251349
+    }
+  },
+  "scan_2x2x2": {
+    "(+,+,+)": {
+      "s": [
+        1,
+        1,
+        1
+      ],
+      "satisfies_both_legs": false,
+      "legs": {
+        "L2": {
+          "tri_signed": 3.42656757274649e-12,
+          "ratio_tri": -1.6526198020039213,
+          "tri_ok": false,
+          "box_total_signed": 7.084233475740811e-12,
+          "ratio_box_total": -45.92885996570356,
+          "boxA_ok": false,
+          "ratio_directBox": -23.684320259835154,
+          "ratio_crossedBox": -22.2445397058684,
+          "boxB_ok": false,
+          "leg_ok": false
+        },
+        "L3": {
+          "tri_signed": 4.554446030728121e-12,
+          "ratio_tri": -2.1952511688179914,
+          "tri_ok": false,
+          "box_total_signed": 6.910944468645475e-12,
+          "ratio_box_total": -44.8272287168515,
+          "boxA_ok": false,
+          "ratio_directBox": -23.177924215696397,
+          "ratio_crossedBox": -21.649304501155104,
+          "boxB_ok": false,
+          "leg_ok": false
+        }
+      }
+    },
+    "(+,+,-)": {
+      "s": [
+        1,
+        1,
+        -1
+      ],
+      "satisfies_both_legs": false,
+      "legs": {
+        "L2": {
+          "tri_signed": 3.42656757274649e-12,
+          "ratio_tri": -1.6526198020039213,
+          "tri_ok": false,
+          "box_total_signed": 2.2207696001486556e-13,
+          "ratio_box_total": -1.4397805539667512,
+          "boxA_ok": false,
+          "ratio_directBox": -23.684320259835154,
+          "ratio_crossedBox": 22.2445397058684,
+          "boxB_ok": false,
+          "leg_ok": false
+        },
+        "L3": {
+          "tri_signed": 4.554446030728121e-12,
+          "ratio_tri": -2.1952511688179914,
+          "tri_ok": false,
+          "box_total_signed": 2.3566493542573743e-13,
+          "ratio_box_total": -1.5286197145412928,
+          "boxA_ok": false,
+          "ratio_directBox": -23.177924215696397,
+          "ratio_crossedBox": 21.649304501155104,
+          "boxB_ok": false,
+          "leg_ok": false
+        }
+      }
+    },
+    "(+,-,+)": {
+      "s": [
+        1,
+        -1,
+        1
+      ],
+      "satisfies_both_legs": false,
+      "legs": {
+        "L2": {
+          "tri_signed": 3.42656757274649e-12,
+          "ratio_tri": -1.6526198020039213,
+          "tri_ok": false,
+          "box_total_signed": -2.2207696001486556e-13,
+          "ratio_box_total": 1.4397805539667512,
+          "boxA_ok": true,
+          "ratio_directBox": 23.684320259835154,
+          "ratio_crossedBox": -22.2445397058684,
+          "boxB_ok": false,
+          "leg_ok": false
+        },
+        "L3": {
+          "tri_signed": 4.554446030728121e-12,
+          "ratio_tri": -2.1952511688179914,
+          "tri_ok": false,
+          "box_total_signed": -2.3566493542573743e-13,
+          "ratio_box_total": 1.5286197145412928,
+          "boxA_ok": true,
+          "ratio_directBox": 23.177924215696397,
+          "ratio_crossedBox": -21.649304501155104,
+          "boxB_ok": false,
+          "leg_ok": false
+        }
+      }
+    },
+    "(+,-,-)": {
+      "s": [
+        1,
+        -1,
+        -1
+      ],
+      "satisfies_both_legs": false,
+      "legs": {
+        "L2": {
+          "tri_signed": 3.42656757274649e-12,
+          "ratio_tri": -1.6526198020039213,
+          "tri_ok": false,
+          "box_total_signed": -7.084233475740811e-12,
+          "ratio_box_total": 45.92885996570356,
+          "boxA_ok": false,
+          "ratio_directBox": 23.684320259835154,
+          "ratio_crossedBox": 22.2445397058684,
+          "boxB_ok": false,
+          "leg_ok": false
+        },
+        "L3": {
+          "tri_signed": 4.554446030728121e-12,
+          "ratio_tri": -2.1952511688179914,
+          "tri_ok": false,
+          "box_total_signed": -6.910944468645475e-12,
+          "ratio_box_total": 44.8272287168515,
+          "boxA_ok": false,
+          "ratio_directBox": 23.177924215696397,
+          "ratio_crossedBox": 21.649304501155104,
+          "boxB_ok": false,
+          "leg_ok": false
+        }
+      }
+    },
+    "(-,+,+)": {
+      "s": [
+        -1,
+        1,
+        1
+      ],
+      "satisfies_both_legs": false,
+      "legs": {
+        "L2": {
+          "tri_signed": -3.42656757274649e-12,
+          "ratio_tri": 1.6526198020039213,
+          "tri_ok": true,
+          "box_total_signed": 7.084233475740811e-12,
+          "ratio_box_total": -45.92885996570356,
+          "boxA_ok": false,
+          "ratio_directBox": -23.684320259835154,
+          "ratio_crossedBox": -22.2445397058684,
+          "boxB_ok": false,
+          "leg_ok": false
+        },
+        "L3": {
+          "tri_signed": -4.554446030728121e-12,
+          "ratio_tri": 2.1952511688179914,
+          "tri_ok": true,
+          "box_total_signed": 6.910944468645475e-12,
+          "ratio_box_total": -44.8272287168515,
+          "boxA_ok": false,
+          "ratio_directBox": -23.177924215696397,
+          "ratio_crossedBox": -21.649304501155104,
+          "boxB_ok": false,
+          "leg_ok": false
+        }
+      }
+    },
+    "(-,+,-)": {
+      "s": [
+        -1,
+        1,
+        -1
+      ],
+      "satisfies_both_legs": false,
+      "legs": {
+        "L2": {
+          "tri_signed": -3.42656757274649e-12,
+          "ratio_tri": 1.6526198020039213,
+          "tri_ok": true,
+          "box_total_signed": 2.2207696001486556e-13,
+          "ratio_box_total": -1.4397805539667512,
+          "boxA_ok": false,
+          "ratio_directBox": -23.684320259835154,
+          "ratio_crossedBox": 22.2445397058684,
+          "boxB_ok": false,
+          "leg_ok": false
+        },
+        "L3": {
+          "tri_signed": -4.554446030728121e-12,
+          "ratio_tri": 2.1952511688179914,
+          "tri_ok": true,
+          "box_total_signed": 2.3566493542573743e-13,
+          "ratio_box_total": -1.5286197145412928,
+          "boxA_ok": false,
+          "ratio_directBox": -23.177924215696397,
+          "ratio_crossedBox": 21.649304501155104,
+          "boxB_ok": false,
+          "leg_ok": false
+        }
+      }
+    },
+    "(-,-,+)": {
+      "s": [
+        -1,
+        -1,
+        1
+      ],
+      "satisfies_both_legs": false,
+      "legs": {
+        "L2": {
+          "tri_signed": -3.42656757274649e-12,
+          "ratio_tri": 1.6526198020039213,
+          "tri_ok": true,
+          "box_total_signed": -2.2207696001486556e-13,
+          "ratio_box_total": 1.4397805539667512,
+          "boxA_ok": true,
+          "ratio_directBox": 23.684320259835154,
+          "ratio_crossedBox": -22.2445397058684,
+          "boxB_ok": false,
+          "leg_ok": false
+        },
+        "L3": {
+          "tri_signed": -4.554446030728121e-12,
+          "ratio_tri": 2.1952511688179914,
+          "tri_ok": true,
+          "box_total_signed": -2.3566493542573743e-13,
+          "ratio_box_total": 1.5286197145412928,
+          "boxA_ok": true,
+          "ratio_directBox": 23.177924215696397,
+          "ratio_crossedBox": -21.649304501155104,
+          "boxB_ok": false,
+          "leg_ok": false
+        }
+      }
+    },
+    "(-,-,-)": {
+      "s": [
+        -1,
+        -1,
+        -1
+      ],
+      "satisfies_both_legs": false,
+      "legs": {
+        "L2": {
+          "tri_signed": -3.42656757274649e-12,
+          "ratio_tri": 1.6526198020039213,
+          "tri_ok": true,
+          "box_total_signed": -7.084233475740811e-12,
+          "ratio_box_total": 45.92885996570356,
+          "boxA_ok": false,
+          "ratio_directBox": 23.684320259835154,
+          "ratio_crossedBox": 22.2445397058684,
+          "boxB_ok": false,
+          "leg_ok": false
+        },
+        "L3": {
+          "tri_signed": -4.554446030728121e-12,
+          "ratio_tri": 2.1952511688179914,
+          "tri_ok": true,
+          "box_total_signed": -6.910944468645475e-12,
+          "ratio_box_total": 44.8272287168515,
+          "boxA_ok": false,
+          "ratio_directBox": 23.177924215696397,
+          "ratio_crossedBox": 21.649304501155104,
+          "boxB_ok": false,
+          "leg_ok": false
+        }
+      }
+    }
+  },
+  "winners": [],
+  "verdict": {
+    "outcome": "NONE -> STOP + ESCALATE (magnitude-structure defect)",
+    "reason": "NO sign assignment satisfies the rule at both legs. SIGN gate alone forces (-,-,-) uniform -1 (our triangle+both boxes POSITIVE; both Hisano classes g_H,g_S NEGATIVE) -- which REFUTES S2's s_tri=+1 on the clean scalar axis. BUT the BOX MAGNITUDE fails |ratio| in [0.2,5] under EVERY assignment and BOTH readings: Hisano's gauge-box class g_S is only ~6.9% of Hisano's scalar coupling (box_H~-1.54e-13), while our box sectors are ~67% (box_total~+7.0e-12) -> |box_total/box_H| ~ 40-46x, |directBox/box_H| ~ 22-24x, all far outside [0.2,5], independent of sign. The triangle gate, by contrast, PASSES under s_tri=-1 (|ratio_tri| ~1.6(L2)/2.2(L3)). Therefore the defect is NOT a pure sign assignment: it includes a MAGNITUDE-STRUCTURE mismatch in the box sector (our boxes ~20-46x too large relative to Hisano's gauge-box class). Per the pre-registered STOP condition, ESCALATE to the designer before any fix. Collateral finding: on SIGN the scalar axis favours uniform -1 over S2 (S2 needs the triangle to stay +, contradicting Hisano's negative triangle)."
+  }
+}

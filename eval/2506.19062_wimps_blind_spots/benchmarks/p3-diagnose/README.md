@@ -61,6 +61,41 @@ item-4 deliverable). **The S2 conviction stands on the SCALAR axis (D1)**, which
 apples-to-apples and sign-restoring. S3 gains no positive support (in the physics
 bridge its own magnitude is off by ~1.6e3x).
 
+## D4 per-sector Hisano decomposition (SCALAR axis) — STOP + ESCALATE
+`d4_per_sector_hisano.py` / `d4_analysis.json`. Pure-Python, no kernel. Rule +
+hypothesis-map + STOP condition pre-registered before compute. This is the CLEAN
+scalar-axis (f_q) tie-breaker — it does NOT use the unreliable twist-2 O_Tq bridge.
+Uniform −1 was treated as a NEUTRAL candidate (its prior exclusion ran through that
+bridge and was downgraded by the designer).
+
+**Mapping (documented):** Hisano f_q has TWO analytic classes — `g_H` (Higgs-exchange
+penguin) ↔ our **triangle**, and `g_S` (gauge box, a SINGLE class) ↔ our **box-total**
+(directBox+crossedBox). The 2^3 scan collapses to two Hisano refs {tri_H, box_H};
+the box is scored in both readings (A) box-total vs box_H and (B) each box sector vs
+the shared box_H, the latter breaking the mixed-box degeneracy.
+
+**Sanity anchor:** per-sector Hisano f_q·m_q sums to −2.228e-12 (L2)/−2.229e-12 (L3),
+reproducing the campaign C_Hisano exactly (both legs). Hisano split: tri_H = −2.073e-12
+(93.1%), box_H = −1.542e-13 (6.9%) — **BOTH classes NEGATIVE**.
+
+**Result: NO sign assignment satisfies the rule at both legs → STOP + ESCALATE**
+(pre-registered magnitude-structure branch). Two sub-findings:
+- **SIGN → uniform −1, not S2.** Our triangle and both boxes are POSITIVE; both Hisano
+  classes are NEGATIVE. Sign-match alone forces (−,−,−) = uniform −1 global flip. S2's
+  s_tri=+1 MISMATCHES Hisano's negative triangle class — **S2 is refuted on the clean
+  scalar axis.** (The triangle gate passes under s_tri=−1: |ratio_tri| 1.65/2.19.)
+- **MAGNITUDE (the crux) → box structurally too large.** Hisano's gauge-box class is only
+  6.9% of its scalar coupling; our boxes are ~60–67%. |box_total/box_H| ≈ 46 (L2)/45 (L3)
+  and |directBox/box_H| ≈ 22–24 — far outside [0.2,5] under EVERY sign. So the defect is
+  NOT a pure sign flip; it includes a box-sector magnitude-structure mismatch.
+
+**Reframing of the earlier D1 S2 conviction:** D1 compared TOTALS and found tri−box
+(S2) gives the best total ratio — but it does so by cancelling our too-large box against
+our triangle to land near Hisano's total. Per-sector, that structure does not match
+Hisano (93% triangle / 7% box). The scalar-axis per-sector test therefore downgrades S2
+and reopens uniform −1 on sign, while flagging that neither is a clean fit because the
+box magnitude is off by ~45×. Escalated to the designer before any fix.
+
 ## Reviewer-hardening notes (for the D3 / fix round)
 1. **S2 (+,-,-) is the UNIQUE admissible flip over the FULL 8-sign-combo space.**
    Twist-2 positivity forces the triangle sign, which forces BOTH boxes to flip
