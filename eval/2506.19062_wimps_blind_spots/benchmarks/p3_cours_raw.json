@@ -1,0 +1,55 @@
+{
+  "_provenance": {
+    "task": "P3 Hisano anchor (DESIGN-ITEM4-AMENDMENT5R1.md Ruling 4)",
+    "pipeline": "SPheno(tree,flag55=0) -> prepare_point -> run_eval_sd.wls -> amp_dd.m -> sd_projection.projectOperators",
+    "MPsi_gev": 500.0,
+    "portal_y": 1.0,
+    "theta_bs": -0.152,
+    "external_quark": "d",
+    "note": "C_scalar_full_re = rotated-complete R_S_S read-off (gH axis); C_twist2_re = O_Tq (free axis). Independent of the Hisano transcription."
+  },
+  "legs": {
+    "MS_3TeV": {
+      "ok": true,
+      "reason": "OK",
+      "m_chi": 495.792673,
+      "m_q": 0.00467,
+      "C_scalar_full_re": 5.722920007642508e-11,
+      "C_scalar_full_im": 3.2256321209955798e-12,
+      "C_scalar_3op_re": -9.525076281427274e-08,
+      "C_scalar_3op_im": -3.540612364774504e-15,
+      "C_twist2_re": 1.9143685530153922e-10,
+      "C_twist2_im": 7.066704760919849e-18,
+      "C_chi_vector_re": 1.803193477726501e-15,
+      "si_shift_rel": 1.0006008272594358,
+      "full_basis_completeness_rel_residual": 3.128460264810234e-09,
+      "rotation_exactness_max": 4.807128223756893e-16,
+      "basis_rank": 256,
+      "basis_cond": 6114.154239036275,
+      "completeness_ok": true,
+      "m_dm_gev": 495.792673,
+      "MS_gev": 3000.0
+    },
+    "MS_10TeV": {
+      "ok": true,
+      "reason": "OK",
+      "m_chi": 498.884633,
+      "m_q": 0.00467,
+      "C_scalar_full_re": 2.431263421523098e-11,
+      "C_scalar_full_im": 2.567081486996818e-12,
+      "C_scalar_3op_re": -9.191947885078004e-08,
+      "C_scalar_3op_im": -2.9698780512445523e-15,
+      "C_twist2_re": 1.835304398762538e-10,
+      "C_twist2_im": 5.888356005143142e-18,
+      "C_chi_vector_re": 1.718006724456685e-15,
+      "si_shift_rel": 1.0002644996516377,
+      "full_basis_completeness_rel_residual": 3.1283627040575175e-09,
+      "rotation_exactness_max": 4.043501211072367e-16,
+      "basis_rank": 256,
+      "basis_cond": 6114.153035381183,
+      "completeness_ok": true,
+      "m_dm_gev": 498.884633,
+      "MS_gev": 10000.0
+    }
+  }
+}
