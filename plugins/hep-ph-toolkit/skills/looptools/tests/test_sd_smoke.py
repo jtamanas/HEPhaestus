@@ -67,6 +67,9 @@ NAMED_GUARDS = (
     "SD-PROJECTION-BASIS-ILLCONDITIONED",
     "SD-PROJECTION-BASIS-UNIDENTIFIABLE",
     "SD-PROJECTION-MONOMIAL-OUT-OF-SPAN",
+    "SD-SI-CROSS-INSTRUMENT-DISAGREE",
+    "SD-KINEMATICS-REOPEN-TRIGGERED",
+    "SD-TRIANGLE-SECTOR-EMPTY",
     "UNBOUND-MODEL-PARAMETERS",
     "LOOPTOOLS_AMPLITUDE_NONFINITE",
 )
@@ -106,38 +109,65 @@ def test_sd_eval_finite_coeffs_or_named_guard(tmp_path):
     log = (res.stdout or "") + (res.stderr or "")
 
     if out_path.exists() and out_path.stat().st_size > 0:
-        # Outcome A — finite per-operator coefficients.
+        # Outcome A — the AMENDMENT3 production path (round-2 rewiring):
+        # full-basis C_scalar production, contracted twist-2, driver-side A5
+        # nucleon contraction, sigma_SI TWO-VALUE BRACKET (both provisional).
         doc = json.loads(out_path.read_text())
-        assert doc["schema"] == "looptools_sd_coefficients/v1"
+        assert doc["schema"] == "looptools_sd_coefficients/v2"
         assert doc["model"] == "singlet_doublet"
         wc = doc["wilson_coefficients"]
-        for k in ("C_scalar", "C_twist2", "C_chi_vector"):
+        for k in ("C_scalar", "C_twist2_sum", "C_scalar_triangle",
+                  "C_Q_universal", "C_chi_vector"):
             v = wc[k]
             assert v == v and v not in (float("inf"), float("-inf")), f"{k} non-finite"
         assert doc["amplitude"]["finite"] is True
-        # completeness residual must be present and below tolerance (F2).
-        assert doc["amplitude"]["completeness_rel_residual"] < 1e-3
-        # No sigma_SI at this stage (nucleon matching is item 4).
-        assert doc.get("nucleon_matching") == "deferred_item4"
+        # completeness: the GUARDED statement is the full-basis residual
+        # (< 1e-8, hard Exit[3] in the driver); the 3-op residual is a
+        # continuity REPORT and is ~1.0 on the real box-carrying amplitude
+        # (most of ||M|| is dictionary content outside the 3-op span —
+        # measured, expected, not a defect).
+        assert doc["a6_amended"]["full_basis_completeness_rel_residual"] < 1e-8
+        assert "completeness_rel_residual" in doc["amplitude"]
+        # cross-instrument shipping guard state must be recorded (green here)
+        ci = doc["a6_amended"]["cross_instrument"]
+        assert ci["max_pairwise_diff"] <= ci["tolerance"]
+        # sigma_SI: the bracket, both members, both provisional — never a
+        # single unbracketed floor (AMENDMENT3 Ruling 1)
+        assert doc["sigma_provisional"] is True
+        nm = doc["nucleon_matching"]
+        assert nm["flavors_measured"] == ["d"]
+        for nuc in ("proton", "neutron"):
+            for k in ("sigma_SI_cm2_with_CG", "sigma_SI_cm2_without_CG"):
+                assert nm[nuc][k] >= 0.0
     else:
         # Outcome B — loud failure at a named guard (no silent/empty crash).
         assert res.returncode != 0, "empty output but exit 0 — silent failure"
         assert any(g in log for g in NAMED_GUARDS), (
             f"no named guard in driver log (rc={res.returncode}):\n{log[-2000:]}")
-        # F5 fix: pin the SPECIFIC guard for the current known state, per artifact.
-        # Self-contained artifact (PR #32, abbr+subexpr persisted), post round-3
-        # (rotated-complete instrument, AMENDMENT2): the once-mysterious
-        # out-of-span content IS identified — a rank-12 instrument + unrotated
-        # Majorana-crossed monomials (re-review probe8); completeness now passes
-        # (3.12e-9 < 1e-8) and the run fails LOUDLY at the SI-extraction shift
-        # bar (si_shift ~ 100%: the unrotated crossed monomials' spurious O_S
-        # projection was round-2's -2.0973e-7 "direct-sector" value), pending
-        # the AMENDMENT2 Ruling-3 retirement adjudication.  A different guard
-        # firing = regression, must fail.
+        # F5 fix: pin the SPECIFIC state for the current artifact.
+        # Self-contained artifact, post AMENDMENT3 round-2 rewiring, MEASURED
+        # canonical state (2026-07-13 run): the SI-extraction gate is RETIRED
+        # (report-only; ~100% shift line must appear), the cross-instrument
+        # guard is GREEN (three instruments agree to ~3e-13), and the run
+        # refuses at the PRE-REGISTERED kinematics reopen trigger — the
+        # partial (d-flavor) f_N is a twist2-vs-gluon near-cancellation
+        # (shares 11.10/10.10 of |f_N|) and both terms drift > 1% at the
+        # green-guarded v/10 legs (twist2_sum 11.46%, C_Q 2.09%), plus the
+        # contracted-leg scalar column drifts 1.53e-8 abs > 6e-10.  A
+        # DIFFERENT guard firing = regression, must fail.  (If a future
+        # adjudication clears the reopen trigger, this pin moves to outcome A
+        # — the sigma_SI bracket asserts above.)
         if "subexpr-fix" in str(STEP2_AMP):
-            assert "SD-SI-EXTRACTION-UNSTABLE" in log, (
-                f"expected the SI-extraction-shift guard on the self-contained "
-                f"artifact (rc={res.returncode}):\n{log[-2000:]}")
+            assert "SD-SI-EXTRACTION-UNSTABLE" not in log, (
+                "the RETIRED SI-extraction gate fired — it must be "
+                f"report-only after AMENDMENT3 (rc={res.returncode}):\n{log[-2000:]}")
+            assert "si_shift_rel=" in log and "REPORT ONLY" in log
+            assert "SD-KINEMATICS-REOPEN-TRIGGERED" in log, (
+                "expected the pre-registered Ruling-2 reopen refusal on the "
+                f"self-contained artifact (rc={res.returncode}):\n{log[-3000:]}")
+            # the refusal must not orphan the measured production values
+            assert "PRODUCTION C_scalar_production=" in log
+            assert "CROSS-INSTRUMENT threeop_rotated=" in log
         else:
             assert "SD-AMP-ABBREVIATIONS-UNRESOLVED" in log, (
                 f"expected the abbreviations guard on the pre-PR#32 artifact "

@@ -233,7 +233,10 @@ pass (mirrors the 2HDM+a anchor discipline, SKILL.md:244-254).
   table]`). Band: **within ×5** (different σ-term inputs + NLO QCD in their
   later works justify the looser band). This anchor is also the γ5/chirality
   sign check (Decision 1, G1b): the interference sign between triangle and box
-  pieces must match.
+  pieces must match. [AMENDMENT5R1 R5(e): G1b must be evaluated on ROTATED
+  sector readings — the unrotated triangle value is a crossing artifact
+  (regression pin only), so an unrotated-lineage interference sign would
+  compare an artifact against physics.]
 - **(c) Blind-spot continuity + tree-dominance crossover:** on a θ scan
   through the blind spot (repo benchmark θ=−0.152, hephaestus memory / merged
   PR #2): tree σ_SI must dip ≥4 orders below its off-blind-spot value while

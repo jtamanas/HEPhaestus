@@ -92,12 +92,27 @@ result = If[TrueQ[proj["ok"]],
     (* production 3-op completeness (the fixture-level statement for derivative
        fixtures, which sit outside the LOCAL instrument span by construction) *)
     "si3_completeness_ok" -> TrueQ[proj["si3_completeness_ok"]],
+    (* production-path quantities (AMENDMENT3 Ruling 1) *)
+    "C_scalar_production" -> numOrNull[proj["C_scalar_production"]],
+    "C_twist2_sum" -> numOrNull[proj["C_twist2_sum"]],
+    "C_twist2_dif" -> numOrNull[proj["C_twist2_dif"]],
+    "cross_instrument" -> Map[If[NumberQ[N[#]], N[Re[#]], N[#]] &,
+      proj["cross_instrument"]],
     "unrecognized_chains" -> proj["unrecognized_chains"],
     "residual_symbols" -> (ToString /@ resid)
   |>,
   <|
     "ok" -> False,
     "reason" -> proj["reason"],
+    "detail" -> ToString[Lookup[proj, "detail", ""]],
+    (* refusal payload for the cross-instrument fixture tests: which instrument
+       disagreed, and the legacy 3-op values at the refusal point *)
+    "cross_instrument" -> If[AssociationQ[Lookup[proj, "cross_instrument", Null]],
+      Map[If[NumberQ[N[#]], N[Re[#]], N[#]] &, proj["cross_instrument"]], Null],
+    "C_scalar" -> If[NumberQ[N[Lookup[proj, "C_scalar", Null]]],
+      N[Re[proj["C_scalar"]]], Null],
+    "C_twist2" -> If[NumberQ[N[Lookup[proj, "C_twist2", Null]]],
+      N[Re[proj["C_twist2"]]], Null],
     "unrecognized_chains" -> Lookup[proj, "unrecognized_chains", {}],
     "residual_symbols" -> (ToString /@ resid)
   |>];

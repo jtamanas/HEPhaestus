@@ -45,6 +45,16 @@ RUNNER = SCRIPTS_DIR / "run_dd_triangle_continuity.wls"
 #     -1.2831508511406324e-7, agreeing to 7.6e-8 RELATIVE (float noise through
 #     a different evaluation order + LeastSquares path) — kept as the
 #     independent-implementation cross-check at loose tolerance.
+#
+# REGRESSION FIXTURE (instrument pin, NOT physics): -1.2831509485455282e-7 is
+# the unrotated forward 3-op reading of M_tri. Measured (AMENDMENT5 Q2,
+# 2026-07-13): this value is quantitatively the O_S leakage of M_tri's
+# unrotated Majorana-crossed monomials (crossed share 0.7071 of ||M_tri||;
+# crossed-part leakage -1.28485e-7; direct part +1.696e-10). It pins
+# bit-stability of the frozen unrotated code path; it is not a physical
+# coefficient. Physical scalar readings come from the rotated lineage
+# (AMENDMENT5R1). Bit-identity REMAINS a merge criterion in this regression
+# role.
 TRIANGLE_C_SCALAR = -1.2831509485455282e-7
 REVIEWER_C_SCALAR = -1.2831508511406324e-7
 
