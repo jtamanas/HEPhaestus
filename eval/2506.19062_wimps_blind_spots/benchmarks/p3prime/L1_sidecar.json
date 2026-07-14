@@ -1,0 +1,70 @@
+{
+  "leg": "L1",
+  "role": "L1 scaling reference (admixed): theta=-0.152 canonical; fraction ~1e-2 REFUSED at loop (wall) -> shipped max-approach 1.76e-3",
+  "status": "OK",
+  "note_pinned_quantity": "MEASURED singlet fraction |N_singlet|^2 of chi1 from SPheno ZNMIX/IMZNMIX",
+  "MS_gev": 3000.0,
+  "MPsi_gev": 500.0,
+  "m_chi_gev": 500.0,
+  "portal_y": 1.0,
+  "theta_rad": -0.152,
+  "yh1": 0.9884702243288492,
+  "yh2": -0.1514153744349448,
+  "theta_derivation": "held at canonical theta=-0.152 (Eq.8 blind spot of the ORIGINAL m_chi1=150 benchmark); NOT the decoupled-regime blind spot theta=-pi/4=-0.7854 (where m_chi1->mD forces sin2theta=-1). See protocol-conflict flag.",
+  "measured_singlet_fraction_chi1": 0.001761656028374648,
+  "singlet_gauge_column": 1,
+  "fraction_bar": "L1 scaling reference (admixed): theta=-0.152 canonical; fraction ~1e-2 REFUSED at loop (wall) -> shipped max-approach 1.76e-3",
+  "FChi1_gev": 480.796357,
+  "FChi2_gev": 491.296927,
+  "FChi3_singlet_gev": 3076.29322,
+  "FChiM_charged_gev": 485.494056,
+  "splitting_chi2_chi1_gev": 10.500569999999982,
+  "m_h_gev": 106.973817,
+  "m_h_physical": true,
+  "loop_spectrum": {
+    "flag55": 1,
+    "flag56_twoloopHiggs": 1,
+    "non_tachyonic": true,
+    "tachyon_lines": []
+  },
+  "residual_tree_scalar_coupling": {
+    "g_h_chi1chi1_Eq7": -0.03385016240292188,
+    "g_h_chi1chi1_mixing": -0.01692508120146092,
+    "tree_DD_over_loop_floor_ratio": 18.257475360655977,
+    "g_clean_threshold": 0.0018540439866,
+    "label": "SIGMA-LEVEL CONTEXT ONLY (6R3)",
+    "interpretation": "The projected amplitude amp_reduced.m is LOOP-ONLY (1PI core: 32 one-loop diagrams, B0i/C0i/D0i heads, all Den[T,m^2] are penguin mediator propagators, NO bare tree term). So this tree coupling is NOT in C_ours and is NOT a contamination bar. It is context for the PHYSICAL sigma_SI only. The real verdict-leg bar rides the singlet FRACTION (cleanliness bar, 6R1 R2 / 6R3)."
+  },
+  "blind_spot": {
+    "theta_bs_decoupled_rad": -0.7853981633974483,
+    "delta_theta_from_bs": 0.6333981633974483,
+    "at_blind_spot": false,
+    "comment": "NOT at the decoupled blind spot; fraction and tree coupling are the SAME order parameter (both ~0 only at theta=-pi/4)."
+  },
+  "ZNMIX": {
+    "1,1": 0.0419720863,
+    "1,2": 0.710842327,
+    "1,3": -0.702097949,
+    "2,1": 0.0,
+    "2,2": -0.0,
+    "2,3": -0.0,
+    "3,1": 0.998240561,
+    "3,2": -0.000378231566,
+    "3,3": 0.0592928323
+  },
+  "IMZNMIX": {
+    "1,1": 0.0,
+    "1,2": 0.0,
+    "1,3": 0.0,
+    "2,1": 0.0418822993,
+    "2,2": -0.703351294,
+    "2,3": -0.709607518,
+    "3,1": 0.0,
+    "3,2": 0.0,
+    "3,3": 0.0
+  },
+  "spectrum_path": "/Users/yianni/.claude/jobs/c703354a/tmp/p3prime-scratch/L1/SPheno.spc.SingletDoublet",
+  "point_json_path": "/Users/yianni/.claude/jobs/c703354a/tmp/p3prime-scratch/L1/point.json",
+  "m_dm_gev": 480.796357,
+  "dm_pdg": 9958431
+}

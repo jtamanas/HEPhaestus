@@ -1,0 +1,19 @@
+{
+	"ok":true,
+	"reason":"OK",
+	"m_chi":4.93943589e2,
+	"m_q":4.67e-3,
+	"C_scalar_full_re":1.2740276808261372e-11,
+	"C_scalar_full_im":2.4329514627333135e-12,
+	"C_scalar_3op_re":-1.378214100231654e-8,
+	"C_scalar_3op_im":-2.8192691306175194e-15,
+	"C_twist2_re":2.7792237517495672e-11,
+	"C_twist2_im":5.646284096453847e-18,
+	"C_chi_vector_re":2.627622912759472e-16,
+	"si_shift_rel":1.0009244203675323,
+	"full_basis_completeness_rel_residual":2.8857063205873513e-9,
+	"rotation_exactness_max":6.047461474545133e-16,
+	"basis_rank":256,
+	"basis_cond":6.114154966030284e3,
+	"completeness_ok":true
+}

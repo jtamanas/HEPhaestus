@@ -1,0 +1,182 @@
+==============================================================================
+P3 comparison — MEASURED (verdict adjudicated by design authority, NOT here)
+==============================================================================
+
+[L1]  m_chi = 480.796 GeV   (m_h=106.97, sw2=0.22328, alpha2=0.03501)
+  SCALAR (gH): C_ours=+4.18081e-11  C_Hisano=-3.02487e-12  ratio=-13.82  sign_agree=False
+               (Hisano f_q=-6.47724e-10 GeV^-3, ours Im=+3.194e-12)
+  TWIST2:      C_ours=+1.96738e-10  C_Hisano(OTq-equiv)=+5.07952e-15  ratio=+3.873e+04  sign_agree=True
+               (g_sum=+6.97278e-10 GeV^-3; dimensional g/M juxtaposition=+135.7 GeV)
+
+[L1b]  m_chi = 493.944 GeV   (m_h=126.21, sw2=0.22344, alpha2=0.03498)
+  SCALAR (gH): C_ours=+1.27403e-11  C_Hisano=-2.22174e-12  ratio=-5.734  sign_agree=False
+               (Hisano f_q=-4.75748e-10 GeV^-3, ours Im=+2.433e-12)
+  TWIST2:      C_ours=+2.77922e-11  C_Hisano(OTq-equiv)=+4.94735e-15  ratio=+5618  sign_agree=True
+               (g_sum=+6.97706e-10 GeV^-3; dimensional g/M juxtaposition=+19.68 GeV)
+
+[L2]  m_chi = 495.510 GeV   (m_h=126.06, sw2=0.22343, alpha2=0.03498)
+  SCALAR (gH): C_ours=+1.05298e-11  C_Hisano=-2.22766e-12  ratio=-4.727  sign_agree=False
+               (Hisano f_q=-4.77015e-10 GeV^-3, ours Im=+2.411e-12)
+  TWIST2:      C_ours=+8.11809e-12  C_Hisano(OTq-equiv)=+4.93278e-15  ratio=+1646  sign_agree=True
+               (g_sum=+6.97857e-10 GeV^-3; dimensional g/M juxtaposition=+5.764 GeV)
+
+[L3]  m_chi = 479.404 GeV   (m_h=125.73, sw2=0.22343, alpha2=0.03498)
+  SCALAR (gH): C_ours=+1.15392e-11  C_Hisano=-2.22885e-12  ratio=-5.177  sign_agree=False
+               (Hisano f_q=-4.77270e-10 GeV^-3, ours Im=+2.373e-12)
+  TWIST2:      C_ours=+5.18262e-11  C_Hisano(OTq-equiv)=+5.08791e-15  ratio=+1.019e+04  sign_agree=True
+               (g_sum=+6.96407e-10 GeV^-3; dimensional g/M juxtaposition=+35.68 GeV)
+
+{
+  "L1": {
+    "m_chi": 480.796357,
+    "ew_inputs": {
+      "m_W": 80.3651435,
+      "m_Z": 91.1876,
+      "m_h": 106.973817,
+      "g2": 0.663263304,
+      "sw2": 0.22328109104402172,
+      "alpha2": 0.03500757887327599
+    },
+    "scalar": {
+      "axis": "gH (decisive)",
+      "operator": "(chibar chi)(qbar q), coefficient in GeV^-2",
+      "C_ours": 4.180813002709523e-11,
+      "C_ours_full_im": 3.19413814545287e-12,
+      "C_hisano": -3.0248704274756014e-12,
+      "hisano_f_q_GeV^-3": -6.477238602731481e-10,
+      "ratio_ours_over_hisano": -13.821461457437072,
+      "sign_agree": false
+    },
+    "twist2": {
+      "axis": "gT1+gT2 (free second axis)",
+      "note": "ours=O_Tq single contracted coeff (origin/main, GeV^-3); primary ratio uses the static-limit bridge C_hisano_OTq_equiv = (3/4)(g1+g2) m_q/M (dimensionless ratio, O(3) normalization caveat \u2014 see module docstring); the g/M juxtaposition is dimensional (GeV), kept only for continuity with the historical ~100x convention factor.",
+      "C_ours": 1.9673778519956034e-10,
+      "C_hisano_g_sum_GeV^-3": 6.972777784579017e-10,
+      "C_hisano_OTq_equiv_GeV^-3": 5.079521472016479e-15,
+      "ratio_ours_over_hisano_OTq": 38731.55892408482,
+      "sign_agree": true,
+      "C_hisano_g_over_M_GeV^-4_DIMENSIONAL": 1.4502559520389663e-12,
+      "ratio_ours_over_hisano_gM_DIMENSIONAL_GeV": 135.6572851316071
+    },
+    "instrument": {
+      "si_shift_rel": 1.0004403526034624,
+      "full_basis_completeness_rel_residual": 2.8791413163840653e-09,
+      "C_scalar_3op_re": -9.494251539259211e-08,
+      "C_chi_vector_re": 1.910924331071723e-15
+    }
+  },
+  "L1b": {
+    "m_chi": 493.943589,
+    "ew_inputs": {
+      "m_W": 80.357135,
+      "m_Z": 91.1876,
+      "m_h": 126.206811,
+      "g2": 0.663033511,
+      "sw2": 0.22343588560240812,
+      "alpha2": 0.034983325750925685
+    },
+    "scalar": {
+      "axis": "gH (decisive)",
+      "operator": "(chibar chi)(qbar q), coefficient in GeV^-2",
+      "C_ours": 1.2740276808261372e-11,
+      "C_ours_full_im": 2.4329514627333135e-12,
+      "C_hisano": -2.221743163151542e-12,
+      "hisano_f_q_GeV^-3": -4.757480006748484e-10,
+      "ratio_ours_over_hisano": -5.734360757608585,
+      "sign_agree": false
+    },
+    "twist2": {
+      "axis": "gT1+gT2 (free second axis)",
+      "note": "ours=O_Tq single contracted coeff (origin/main, GeV^-3); primary ratio uses the static-limit bridge C_hisano_OTq_equiv = (3/4)(g1+g2) m_q/M (dimensionless ratio, O(3) normalization caveat \u2014 see module docstring); the g/M juxtaposition is dimensional (GeV), kept only for continuity with the historical ~100x convention factor.",
+      "C_ours": 2.7792237517495672e-11,
+      "C_hisano_g_sum_GeV^-3": 6.977055488209894e-10,
+      "C_hisano_OTq_equiv_GeV^-3": 4.947353785262947e-15,
+      "ratio_ours_over_hisano_OTq": 5617.596542273263,
+      "sign_agree": true,
+      "C_hisano_g_over_M_GeV^-4_DIMENSIONAL": 1.4125207095682933e-12,
+      "ratio_ours_over_hisano_gM_DIMENSIONAL_GeV": 19.675631889312104
+    },
+    "instrument": {
+      "si_shift_rel": 1.0009244203675323,
+      "full_basis_completeness_rel_residual": 2.8857063205873513e-09,
+      "C_scalar_3op_re": -1.378214100231654e-08,
+      "C_chi_vector_re": 2.627622912759472e-16
+    }
+  },
+  "L2": {
+    "m_chi": 495.510455,
+    "ew_inputs": {
+      "m_W": 80.3572732,
+      "m_Z": 91.1876,
+      "m_h": 126.055097,
+      "g2": 0.663037475,
+      "sw2": 0.22343321449540832,
+      "alpha2": 0.03498374405351677
+    },
+    "scalar": {
+      "axis": "gH (decisive)",
+      "operator": "(chibar chi)(qbar q), coefficient in GeV^-2",
+      "C_ours": 1.0529814305861467e-11,
+      "C_ours_full_im": 2.4107653413793817e-12,
+      "C_hisano": -2.227659152884115e-12,
+      "hisano_f_q_GeV^-3": -4.770148078980975e-10,
+      "ratio_ours_over_hisano": -4.726851633576296,
+      "sign_agree": false
+    },
+    "twist2": {
+      "axis": "gT1+gT2 (free second axis)",
+      "note": "ours=O_Tq single contracted coeff (origin/main, GeV^-3); primary ratio uses the static-limit bridge C_hisano_OTq_equiv = (3/4)(g1+g2) m_q/M (dimensionless ratio, O(3) normalization caveat \u2014 see module docstring); the g/M juxtaposition is dimensional (GeV), kept only for continuity with the historical ~100x convention factor.",
+      "C_ours": 8.118085718356999e-12,
+      "C_hisano_g_sum_GeV^-3": 6.978572604316862e-10,
+      "C_hisano_OTq_equiv_GeV^-3": 4.932782002878185e-15,
+      "ratio_ours_over_hisano_OTq": 1645.741837693263,
+      "sign_agree": true,
+      "C_hisano_g_over_M_GeV^-4_DIMENSIONAL": 1.4083603148831365e-12,
+      "ratio_ours_over_hisano_gM_DIMENSIONAL_GeV": 5.764210786520653
+    },
+    "instrument": {
+      "si_shift_rel": 1.0026064064487994,
+      "full_basis_completeness_rel_residual": 2.881709311932277e-09,
+      "C_scalar_3op_re": -4.040249878859955e-09,
+      "C_chi_vector_re": 7.650990997703001e-17
+    }
+  },
+  "L3": {
+    "m_chi": 479.403955,
+    "ew_inputs": {
+      "m_W": 80.357391,
+      "m_Z": 91.1876,
+      "m_h": 125.733729,
+      "g2": 0.663040853,
+      "sw2": 0.22343093767264532,
+      "alpha2": 0.03498410052021106
+    },
+    "scalar": {
+      "axis": "gH (decisive)",
+      "operator": "(chibar chi)(qbar q), coefficient in GeV^-2",
+      "C_ours": 1.153915600657338e-11,
+      "C_ours_full_im": 2.3729229704760927e-12,
+      "C_hisano": -2.2288495162474847e-12,
+      "hisano_f_q_GeV^-3": -4.772697036932516e-10,
+      "ratio_ours_over_hisano": -5.177180389459774,
+      "sign_agree": false
+    },
+    "twist2": {
+      "axis": "gT1+gT2 (free second axis)",
+      "note": "ours=O_Tq single contracted coeff (origin/main, GeV^-3); primary ratio uses the static-limit bridge C_hisano_OTq_equiv = (3/4)(g1+g2) m_q/M (dimensionless ratio, O(3) normalization caveat \u2014 see module docstring); the g/M juxtaposition is dimensional (GeV), kept only for continuity with the historical ~100x convention factor.",
+      "C_ours": 5.182619291215692e-11,
+      "C_hisano_g_sum_GeV^-3": 6.964070806784558e-10,
+      "C_hisano_OTq_equiv_GeV^-3": 5.087913386272108e-15,
+      "ratio_ours_over_hisano_OTq": 10186.138988134337,
+      "sign_agree": true,
+      "C_hisano_g_over_M_GeV^-4_DIMENSIONAL": 1.4526519304131644e-12,
+      "ratio_ours_over_hisano_gM_DIMENSIONAL_GeV": 35.67695180594051
+    },
+    "instrument": {
+      "si_shift_rel": 1.0004625560025957,
+      "full_basis_completeness_rel_residual": 2.8874949361612426e-09,
+      "C_scalar_3op_re": -2.4946750266917497e-08,
+      "C_chi_vector_re": 5.048525744844403e-16
+    }
+  }
+}
