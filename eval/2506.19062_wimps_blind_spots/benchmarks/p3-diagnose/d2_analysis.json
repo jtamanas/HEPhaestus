@@ -1,5 +1,6 @@
 {
   "_desc": "D2 machine crossing-sign check on the direct/crossed box sectors (same discipline as the Fierz/rotation guard). eta = crossed/direct per operator; rotation_exactness = projector Majorana crossing-rotation residual.",
+  "_D2_AS_BUILT_DEVIATION": "D2 as-built is CORROBORATIVE ONLY. It measures the same-kinematics crossed/direct amplitude ratio (eta) plus the projector's Majorana crossing-rotation exactness -- NOT the pre-registered s<->u crossing-kinematics identity (which would re-run the crossed box under swapped Mandelstam kinematics and check the sign against the direct box). Team-lead ruled NOT to re-run the proper D2: D1's 8-sign-combo enumeration already excludes S1 outright, so S1 exclusion rests on D1, and D2 stands only as an independent same-kinematics corroboration (boxes same-sign additive => not the near-cancellation an S1 fermion-flow error would produce; rotation exact => crossed monomials well-formed).",
   "legs": {
     "L2": {
       "eta_scalar_crossed_over_direct": 0.9392095471530846,

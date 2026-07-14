@@ -1,0 +1,123 @@
+{
+  "_desc": "S2-vs-S3 twist-2 discriminator (VALIDATION-ONLY, no kernel). Pre-registered predictions locked before compute.",
+  "predictions_pre_registered": {
+    "locked_before_compute": true,
+    "our_scenarios_OTq_units_GeV^-3": {
+      "current_cancellation_S3": {
+        "L2": 8.118e-12,
+        "L3": 5.183e-11
+      },
+      "additive_flip_S2": {
+        "L2": 1.7245e-10,
+        "L3": 2.2154e-10
+      }
+    },
+    "S2_predicts": "Hisano twist-2 at the ADDITIVE ~1.7e-10/2.2e-10 scale (our current is ~20x LOW).",
+    "S3_predicts": "Hisano twist-2 at the CURRENT ~8e-12/5e-11 scale (today's assembly already correct).",
+    "S2_over_S3_gap": "~20x (>> 11% twist-2 sampling systematic)",
+    "normalization_gate": "Report a magnitude verdict ONLY if the two sides are apples-to-apples; if residual normalization factor >> 20x, verdict is WITHHELD (INCONCLUSIVE)."
+  },
+  "legs": {
+    "L2": {
+      "m_chi": 495.510455,
+      "ew_inputs": {
+        "m_W": 80.3572732,
+        "m_Z": 91.1876,
+        "m_h": 126.055097,
+        "g2": 0.663037475,
+        "sw2": 0.22343321449540832,
+        "alpha2": 0.03498374405351677
+      },
+      "scalar_anchor": {
+        "C_hisano_scalar_GeV^-2": -2.227659152884115e-12,
+        "C_ours_scalar_full_re": 1.0529814305861467e-11,
+        "reproduces_campaign_-2.23e-12": true
+      },
+      "twist2": {
+        "our_current_S3_OTq": 8.118e-12,
+        "our_additive_S2_OTq": 1.7245292719539565e-10,
+        "hisano_g1": 7.17759587026317e-10,
+        "hisano_g2": -1.9902326594630702e-11,
+        "hisano_g_sum_GeV^-3": 6.978572604316862e-10,
+        "APPLES_TO_APPLES_bridge_OTq_equiv_GeV^-3": 4.932782002878185e-15,
+        "RAW_g_sum_juxtaposition_GeV^-3_NOT_operator_matched": 6.978572604316862e-10,
+        "under_bridge": {
+          "hisano": 4.932782002878185e-15,
+          "ratio_current_over_hisano": 1645.7244604086095,
+          "ratio_additive_over_hisano": 34960.58149230447,
+          "log10_dist_current": 3.2163571241076223,
+          "log10_dist_additive": 4.543578647555011,
+          "closer_scenario": "current_S3"
+        },
+        "under_raw_NONphysics": {
+          "hisano": 6.978572604316862e-10,
+          "ratio_current_over_hisano": 0.01163275136663091,
+          "ratio_additive_over_hisano": 0.2471177660152426,
+          "log10_dist_current": 1.9343175542289301,
+          "log10_dist_additive": 0.6070960307815418,
+          "closer_scenario": "additive_S2"
+        }
+      }
+    },
+    "L3": {
+      "m_chi": 479.403955,
+      "ew_inputs": {
+        "m_W": 80.357391,
+        "m_Z": 91.1876,
+        "m_h": 125.733729,
+        "g2": 0.663040853,
+        "sw2": 0.22343093767264532,
+        "alpha2": 0.03498410052021106
+      },
+      "scalar_anchor": {
+        "C_hisano_scalar_GeV^-2": -2.2288495162474847e-12,
+        "C_ours_scalar_full_re": 1.153915600657338e-11,
+        "reproduces_campaign_-2.23e-12": true
+      },
+      "twist2": {
+        "our_current_S3_OTq": 5.183e-11,
+        "our_additive_S2_OTq": 2.2154408716125962e-10,
+        "hisano_g1": 7.16748304283095e-10,
+        "hisano_g2": -2.0341223604639236e-11,
+        "hisano_g_sum_GeV^-3": 6.964070806784558e-10,
+        "APPLES_TO_APPLES_bridge_OTq_equiv_GeV^-3": 5.087913386272108e-15,
+        "RAW_g_sum_juxtaposition_GeV^-3_NOT_operator_matched": 6.964070806784558e-10,
+        "under_bridge": {
+          "hisano": 5.087913386272108e-15,
+          "ratio_current_over_hisano": 10186.88724926892,
+          "ratio_additive_over_hisano": 43543.21120304762,
+          "log10_dist_current": 4.008041499317148,
+          "log10_dist_additive": 4.638920454019227,
+          "closer_scenario": "current_S3"
+        },
+        "under_raw_NONphysics": {
+          "hisano": 6.964070806784558e-10,
+          "ratio_current_over_hisano": 0.07442486074309586,
+          "ratio_additive_over_hisano": 0.3181244035391287,
+          "log10_dist_current": 1.1282819692920756,
+          "log10_dist_additive": 0.4974030145899964,
+          "closer_scenario": "additive_S2"
+        }
+      }
+    }
+  },
+  "verdict": {
+    "closer_scenario_under_bridge": {
+      "L2": "current_S3",
+      "L3": "current_S3"
+    },
+    "closer_scenario_under_raw": {
+      "L2": "additive_S2",
+      "L3": "additive_S2"
+    },
+    "bridge_vs_raw_residual_factor": {
+      "L2": 141473.36331192008,
+      "L3": 136874.7908636688
+    },
+    "answer_flips_with_normalization": true,
+    "S2_confirmed": null,
+    "S3_favored": null,
+    "outcome": "INCONCLUSIVE \u2014 verdict WITHHELD (normalization gate)",
+    "reason": "Under the sanctioned static-limit bridge, |C_Hisano_twist2| = 4.933e-15 (L2)/5.088e-15 (L3), ~1.6e3-1e4x BELOW even the current-scenario O_Tq value -- it matches NEITHER pre-registered prediction and the residual factor (~7e5, bridge vs raw) dwarfs the 20x S2/S3 gap. The 'closer scenario' FLIPS between the bridge (favours S3/current) and the raw g_sum juxtaposition (favours S2/additive), so the twist-2 magnitude comparison is not apples-to-apples at the precision the test needs. Per the pre-registered normalization gate, no magnitude verdict is issued. NOTE: sign does NOT discriminate either -- Hisano twist-2 is POSITIVE (g_sum>0), consistent with BOTH our positive current and additive scenarios. The S2 conviction therefore rests on D1's SCALAR axis (apples-to-apples, sign-restoring, |ratio| in-band), which the twist-2 axis does not overturn and does not independently confirm. S3 is NOT favoured: it survives only in the physics bridge, where its own magnitude is off by ~1.6e3x, so twist-2 gives it no positive support. Absolute wrong-sign localization remains D3."
+  }
+}
