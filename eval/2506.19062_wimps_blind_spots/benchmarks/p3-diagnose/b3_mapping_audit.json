@@ -1,0 +1,70 @@
+{
+  "_desc": "B3 box internal-line mapping audit (VALIDATION-ONLY, no kernel). Outcomes pre-registered in header before verdict.",
+  "channels": [
+    {
+      "boson": "W (VWp)",
+      "fermion": "chi+/- , u",
+      "current": "CC",
+      "in_gS_scope": false,
+      "token_count": 47,
+      "magnitude_class": "DOMINANT (gauge coupling, no Yukawa suppression; the census headline chi-chi+/--W box)"
+    },
+    {
+      "boson": "H+/- (Hp)",
+      "fermion": "chi+/- , u",
+      "current": "CC",
+      "in_gS_scope": false,
+      "token_count": 61,
+      "magnitude_class": "sub-dominant (charged-Higgs Yukawa; not m_d-zero via m_u cot-beta piece)"
+    },
+    {
+      "boson": "Z (VZ)",
+      "fermion": "chi0",
+      "current": "NC",
+      "in_gS_scope": true,
+      "token_count": 93,
+      "magnitude_class": "the ONLY in-scope channel; gauge NC, a_qV/a_qA quark Z-couplings -- exactly what g_S represents"
+    },
+    {
+      "boson": "h (hh)",
+      "fermion": "chi0",
+      "current": "NC",
+      "in_gS_scope": false,
+      "token_count": 100,
+      "magnitude_class": "NEGLIGIBLE (h-d-d ~ y_d, extra m_d suppression; many terms but tiny magnitude)"
+    },
+    {
+      "boson": "A (Ah)",
+      "fermion": "chi0",
+      "current": "NC",
+      "in_gS_scope": false,
+      "token_count": 98,
+      "magnitude_class": "NEGLIGIBLE (pseudoscalar, A-d-d ~ y_d; velocity/m_d-suppressed for coherent SI)"
+    }
+  ],
+  "magnitude_note": "Token count != magnitude. h(100)/A(98) have the MOST terms yet are magnitude-negligible (Yukawa y_d suppression), while W(47) has the FEWEST yet is magnitude-DOMINANT (gauge coupling). So the g_S-scope (Z-only) piece is NOT ~1/5 of the box by magnitude -- it is subdominant to the out-of-scope W box. Exact per-channel C_scalar needs a kernel re-projection of the channel-filtered amplitude, which is FORBIDDEN here (no kernel); therefore the in-scope residual ratio is bounded in DIRECTION but not pinned to a number.",
+  "hisano_gS_scope": "Z-box only (g_S(z)); W is in the g_H penguin term.",
+  "key_test": {
+    "out_of_scope_channels_present": [
+      "W (VWp)",
+      "H+/- (Hp)",
+      "h (hh)",
+      "A (Ah)"
+    ],
+    "in_scope_channels": [
+      "Z (VZ)"
+    ],
+    "dominant_box_channel_out_of_scope": true,
+    "dominant_channel": "W (VWp) charged-current box",
+    "gS_scope": "Z-mediated neutral-current box ONLY (g_S(z); no g_S(w)); Hisano assigns ALL W strength to the g_H penguin, not the box.",
+    "full_box_over_box_H": {
+      "L2": 45.92874585553287,
+      "L3": 44.827360208639114
+    },
+    "in_scope_over_box_H_estimate": "CANNOT be pinned statically (no kernel). DIRECTION: removing the out-of-scope W/H+-/h/A channels -- which include the magnitude-DOMINANT W box -- leaves only the subdominant Z box, so |in-scope-box/box_H| << 45 and moves toward [0.2,5]. Sign of the effect is unambiguous; the exact landing point is not certifiable without the forbidden re-projection."
+  },
+  "verdict": {
+    "outcome": "MAPPING-ARTIFACT (dominant; residual un-pinned)",
+    "reason": "The box-total <-> g_S comparison is NOT apples-to-apples at internal-line grain. Hisano's g_S box class is Z-ONLY (neutral current). Our box-total carries FOUR channels OUTSIDE that scope -- W/chi+/-, H+-/chi+/-, h/chi0, A/chi0 -- and the magnitude-DOMINANT one (the W chi-chi+/- charged-current box, the census headline) is exactly the channel Hisano places in the g_H PENGUIN, not the box. So the ~45x reflects a triangle/box PARTITION mismatch: Hisano routes W->penguin while our pipeline routes W->box (and also carries H+-/h/A boxes g_S has no counterpart for). Only the subdominant Z box is genuinely in g_S scope. => The 45x is a MAPPING ARTIFACT, not (on this evidence) a genuine pipeline box-magnitude bug. IMPORTANT residual: exact per-channel C_scalar cannot be isolated without a kernel re-projection (forbidden), so the fraction of the 45x explained is not numerically pinned -- but the DIRECTION is certain and the dominant channel is definitively out of scope. NOTE this also revises the B3 brief's REAL-DEFECT premise ('g_S represents W/chi+/-(+Z)'): g_S is Z-only, so even the leading gauge-box channel is out of scope -- the mismatch is broader than anticipated. RECOMMENDATION: do NOT hand the 45x to B1/B2 as a box-magnitude bug; the correct sector comparison is TOTAL-vs-TOTAL (D4 anchor reproduces exactly) or a re-partitioned comparison grouping our W box with the penguin to match Hisano's g_H."
+  }
+}

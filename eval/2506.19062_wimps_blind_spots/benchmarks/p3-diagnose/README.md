@@ -96,6 +96,39 @@ Hisano (93% triangle / 7% box). The scalar-axis per-sector test therefore downgr
 and reopens uniform −1 on sign, while flagging that neither is a clean fit because the
 box magnitude is off by ~45×. Escalated to the designer before any fix.
 
+## B3 box internal-line mapping audit (AMENDMENT8R1) — MAPPING-ARTIFACT
+`b3_mapping_audit.py` / `b3_mapping_audit.json`. Static, no kernel. Adversarial
+internal-line enumeration testing whether D4's ~45× box mismatch is a genuine
+defect or an artifact of comparing our FULL box-total against a PARTIAL Hisano
+class. Outcomes pre-registered in the header before the verdict.
+
+**Our box internal lines** (from `DIAGRAM-CENSUS.md` IRR-3/4 + mass-token census of
+`amp_directBox.m`/`amp_crossedBox.m`, both boxes identical): bosons {W, H±, Z, h, A},
+fermions {χ±, χ0, internal up-quark}. Channels: **W/χ± (CC, magnitude-DOMINANT — gauge,
+no Yukawa suppression), H±/χ± (CC, sub-dominant), Z/χ0 (NC), h/χ0 & A/χ0 (NC,
+NEGLIGIBLE — y_d-suppressed)**. Token counts (h 100, A 98, Z 93, H± 61, W 47) prove
+presence but are NOT a magnitude proxy — the fewest-term W channel is magnitude-dominant,
+the most-term h/A channels are negligible.
+
+**Hisano g_S scope:** the transcription's f_q box term is `(a_qV²−a_qA²)(Y²/cw⁴)(α₂²/m_Z³)·g_S(z)`
+— **Z-mediated neutral-current box ONLY** (no g_S(w)). Hisano assigns ALL W strength to
+the g_H **penguin** (nfac/(8m_W)·g_H(w), inside the 1/m_h² Higgs-exchange bracket), none
+to the box.
+
+**KEY TEST:** out-of-scope channels present = {W, H±, h, A}; in-scope = {Z} only. The
+magnitude-dominant W/χ± charged-current box is OUT of g_S scope (Hisano routes it to the
+penguin). **VERDICT: MAPPING-ARTIFACT.** The ~45× reflects a triangle/box PARTITION
+mismatch — Hisano W→penguin, our pipeline W→box (plus H±/h/A boxes g_S has no counterpart
+for); only the subdominant Z box is genuinely in g_S scope. This also revises the B3
+brief's REAL-DEFECT premise ("g_S represents W/χ±(+Z)"): g_S is Z-only, so even the
+leading gauge-box channel is out of scope — the mismatch is broader than anticipated.
+**Residual caveat:** exact per-channel C_scalar cannot be isolated without a kernel
+re-projection (forbidden here), so the fraction of the 45× explained is not numerically
+pinned — but the direction is certain and the dominant channel is definitively out of
+scope. **Recommendation:** do NOT hand the 45× to B1/B2 as a box-magnitude bug; the
+correct sector comparison is TOTAL-vs-TOTAL (D4 anchor reproduces exactly) or a
+re-partitioned comparison grouping our W box with the penguin to match Hisano's g_H.
+
 ## Reviewer-hardening notes (for the D3 / fix round)
 1. **S2 (+,-,-) is the UNIQUE admissible flip over the FULL 8-sign-combo space.**
    Twist-2 positivity forces the triangle sign, which forces BOTH boxes to flip
