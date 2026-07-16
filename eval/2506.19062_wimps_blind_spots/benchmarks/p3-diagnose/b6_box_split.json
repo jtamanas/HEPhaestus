@@ -1,0 +1,295 @@
+{
+  "_desc": "B6 per-channel box split, scored vs frozen AMENDMENT8R3 bars. MEASUREMENT ONLY. Channels routed by internal-boson mass in each D0i (b6_boson_filter.wls).",
+  "method": {
+    "partition": "box-total (directBox+crossedBox) D0i split by internal boson: Wpure={MassVWp} only, Zpure={MassVZ} only, Yukawa=any {h,A,H\u00b1} in the D0i args. D0i counts per sector: 11(W)+11(Z)+121(Yukawa)=143 = total (exhaustive, non-overlapping; NO W-Z mixed D0i exists).",
+    "remainder": "derived from linearity, rem=(Wf+Zf+Yf-box_D1)/2 per sector-leg; kernel cannot run a 0-loop-function amp (MLException, measured).",
+    "whp_convention": "W-H\u00b1 mixed boxes route to Yukawa under the primary Higgs-dominant rule (the H\u00b1 leg carries the quark Yukawa chirality flip); P-i is re-scored under the alternative any-W convention as a sensitivity.",
+    "value_convention": "C_scalar_full_re (rotated-complete R_S_S read-off), same instrument as P3'/D1."
+  },
+  "frozen_bars": {
+    "P_i_frac": 0.05,
+    "band": [
+      0.2,
+      5.0
+    ],
+    "hisano": {
+      "L2": {
+        "tri_H": -2.073415536103058e-12,
+        "box_H": -1.5424361678105703e-13
+      },
+      "L3": {
+        "tri_H": -2.0746810640262234e-12,
+        "box_H": -1.5416845222126134e-13
+      }
+    }
+  },
+  "legs": {
+    "L2": {
+      "status": "COMPLETE",
+      "raw_filtered_re": {
+        "Wpure": {
+          "db": 2.287330812351858e-12,
+          "cb": 2.095210359003088e-12
+        },
+        "Zpure": {
+          "db": 1.3547089254183958e-12,
+          "cb": 1.3267580581427675e-12
+        },
+        "Yukawa": {
+          "db": -7.85147358607451e-15,
+          "cb": -9.857115068532116e-15
+        },
+        "WwithHp": {
+          "db": -8.687867499815537e-15,
+          "cb": -1.0131054341612569e-14
+        }
+      },
+      "raw_filtered_im": {
+        "Wpure": {
+          "db": 4.392190540801532e-13,
+          "cb": 1.30098232018803e-12
+        },
+        "Zpure": {
+          "db": 1.3692805837890917e-13,
+          "cb": 5.106015647580763e-13
+        },
+        "Yukawa": {
+          "db": 8.075783282519871e-20,
+          "cb": 8.074231910991736e-20
+        },
+        "WwithHp": {
+          "db": 4.47437868514301e-20,
+          "cb": 4.472836770512629e-20
+        }
+      },
+      "completeness_rel_residual": {
+        "Wpure": {
+          "db": 3.1865240717405864e-06,
+          "cb": 6.580560698013671e-07
+        },
+        "Zpure": {
+          "db": 2.7471425552526354e-06,
+          "cb": 5.988431143773013e-07
+        },
+        "Yukawa": {
+          "db": 1.1163146394533758e-10,
+          "cb": 1.2122571012307007e-10
+        },
+        "WwithHp": {
+          "db": 6.172331757649677e-11,
+          "cb": 6.73388745568129e-11
+        }
+      },
+      "remainder_derived": {
+        "db": -9.483476846829415e-15,
+        "cb": -9.483477892824543e-15
+      },
+      "remainder_db_cb_agreement_rel": 1.1029658689702767e-07,
+      "pure_channels": {
+        "Wpure": 4.4015081260946e-12,
+        "Zpure": 2.7004339383008173e-12,
+        "Yukawa": 1.2583660850473308e-15,
+        "WwithHp": 1.4803289822585225e-16,
+        "remainder": -1.8966954739653958e-14
+      },
+      "signs": {
+        "Wpure": "+",
+        "Zpure": "+",
+        "Yukawa": "+",
+        "triangle": "+"
+      },
+      "box_total_D1": 7.084233475740811e-12,
+      "channel_sum_recon": 7.084233475740811e-12,
+      "closure_note": "recon==box_total_D1 by construction of rem; independent evidence = remainder_db_cb_agreement + D1 sector-sum closure 0.18-0.64%",
+      "triangle_class": 3.42656757274649e-12,
+      "our_total_scalar": 1.0510801048487301e-11,
+      "P_i": {
+        "W_channel": 4.4015081260946e-12,
+        "box_total": 7.084233475740811e-12,
+        "ratio_W_over_box": 0.6213104270443778,
+        "bar": 0.05,
+        "PASS": false,
+        "alt_anyW_ratio": 0.6213313231510255,
+        "WwithHp": 1.4803289822585225e-16
+      },
+      "P_ii": {
+        "Z_channel": 2.7004339383008173e-12,
+        "box_H_gS": -1.5424361678105703e-13,
+        "ratio": -17.507589582355173,
+        "abs_ratio": 17.507589582355173,
+        "in_band": false,
+        "our_sign": "+",
+        "hisano_sign": "-",
+        "wrong_sign": true
+      },
+      "P_iii": {
+        "triangle_plus_W": 7.82807569884109e-12,
+        "triangle_only": 3.42656757274649e-12,
+        "tri_H_gH": -2.073415536103058e-12,
+        "ratio": -3.775449524003181,
+        "ratio_trionly": -1.6526198020039213,
+        "abs_ratio": 3.775449524003181,
+        "in_band": true,
+        "our_sign": "+",
+        "hisano_sign": "-",
+        "wrong_sign": true
+      },
+      "P_iv": {
+        "Yukawa_channel": 1.2583660850473308e-15,
+        "no_hisano_counterpart": true,
+        "frac_of_box_total": 0.00017762910967805746,
+        "excess_over_hisano": 1.2738460201371416e-11,
+        "frac_of_excess": 9.878478757674775e-05,
+        "carries_majority_of_excess": false
+      }
+    },
+    "L3": {
+      "status": "COMPLETE",
+      "raw_filtered_re": {
+        "Wpure": {
+          "db": 2.2435016139806408e-12,
+          "cb": 2.049061924431638e-12
+        },
+        "Zpure": {
+          "db": 1.2858248599475267e-12,
+          "cb": 1.2517914179787765e-12
+        },
+        "Yukawa": {
+          "db": -3.0447491271710406e-14,
+          "cb": -3.7638443373796225e-14
+        },
+        "WwithHp": {
+          "db": -3.4122551496064066e-14,
+          "cb": -3.976117634478158e-14
+        }
+      },
+      "raw_filtered_im": {
+        "Wpure": {
+          "db": 3.9913979638637793e-13,
+          "cb": 1.2798030902361216e-12
+        },
+        "Zpure": {
+          "db": 1.0397392859916848e-13,
+          "cb": 4.93524397600117e-13
+        },
+        "Yukawa": {
+          "db": 3.4166084210343383e-19,
+          "cb": 3.4161771964756915e-19
+        },
+        "WwithHp": {
+          "db": 1.7848168683988644e-19,
+          "cb": 1.7843038235633857e-19
+        }
+      },
+      "completeness_rel_residual": {
+        "Wpure": {
+          "db": 3.1649782971060372e-06,
+          "cb": 6.537816065371998e-07
+        },
+        "Zpure": {
+          "db": 2.742397349649273e-06,
+          "cb": 5.770563421582388e-07
+        },
+        "Yukawa": {
+          "db": 1.1392045605611736e-10,
+          "cb": 2.836122323521365e-10
+        },
+        "WwithHp": {
+          "db": 6.038490365066104e-11,
+          "cb": 6.603725258169623e-11
+        }
+      },
+      "remainder_derived": {
+        "db": -3.721285968957474e-14,
+        "cb": -3.721243378662527e-14
+      },
+      "remainder_db_cb_agreement_rel": 1.1445047572906824e-05,
+      "pure_channels": {
+        "Wpure": 4.3669888318884785e-12,
+        "Zpure": 2.612041571402503e-12,
+        "Yukawa": 6.339358830693382e-15,
+        "WwithHp": 5.415656353543656e-16,
+        "remainder": -7.442529347620001e-14
+      },
+      "signs": {
+        "Wpure": "+",
+        "Zpure": "+",
+        "Yukawa": "+",
+        "triangle": "+"
+      },
+      "box_total_D1": 6.910944468645475e-12,
+      "channel_sum_recon": 6.910944468645475e-12,
+      "closure_note": "recon==box_total_D1 by construction of rem; independent evidence = remainder_db_cb_agreement + D1 sector-sum closure 0.18-0.64%",
+      "triangle_class": 4.554446030728121e-12,
+      "our_total_scalar": 1.1465390499373597e-11,
+      "P_i": {
+        "W_channel": 4.3669888318884785e-12,
+        "box_total": 6.910944468645475e-12,
+        "ratio_W_over_box": 0.6318946493784221,
+        "bar": 0.05,
+        "PASS": false,
+        "alt_anyW_ratio": 0.6319730128550514,
+        "WwithHp": 5.415656353543656e-16
+      },
+      "P_ii": {
+        "Z_channel": 2.612041571402503e-12,
+        "box_H_gS": -1.5416845222126134e-13,
+        "ratio": -16.94277612422107,
+        "abs_ratio": 16.94277612422107,
+        "in_band": false,
+        "our_sign": "+",
+        "hisano_sign": "-",
+        "wrong_sign": true
+      },
+      "P_iii": {
+        "triangle_plus_W": 8.9214348626166e-12,
+        "triangle_only": 4.554446030728121e-12,
+        "tri_H_gH": -2.0746810640262234e-12,
+        "ratio": -4.300147631030692,
+        "ratio_trionly": -2.1952511688179914,
+        "abs_ratio": 4.300147631030692,
+        "in_band": true,
+        "our_sign": "+",
+        "hisano_sign": "-",
+        "wrong_sign": true
+      },
+      "P_iv": {
+        "Yukawa_channel": 6.339358830693382e-15,
+        "no_hisano_counterpart": true,
+        "frac_of_box_total": 0.000917292688351738,
+        "excess_over_hisano": 1.3694240015621081e-11,
+        "frac_of_excess": 0.00046292155121146166,
+        "carries_majority_of_excess": false
+      }
+    }
+  },
+  "verdict": {
+    "P_i_PASS_both_legs": false,
+    "P_i_ratios": {
+      "L2": 0.6213104270443778,
+      "L3": 0.6318946493784221
+    },
+    "P_ii_wrongsign_inband_both": false,
+    "P_iii_wrongsign_inband_both": true,
+    "P_iv_yukawa_majority": {
+      "L2": false,
+      "L3": false
+    },
+    "sign_pattern": {
+      "L2": {
+        "W": "+",
+        "Z": "+",
+        "tri": "+",
+        "Yuk": "+"
+      },
+      "L3": {
+        "W": "+",
+        "Z": "+",
+        "tri": "+",
+        "Yuk": "+"
+      }
+    },
+    "worldB_coherent": false,
+    "note": "MEASUREMENT ONLY. World A/B ruling is the manager+designer's call. World-B-coherent required P-i PASS + P-ii/P-iii wrong-sign in-band."
+  }
+}

@@ -57,7 +57,10 @@ HISANO = {
 
 
 def rd(leg, sec, chan):
-    p = RUNS / f"{leg}_{sec}_{chan}" / "cours.json"
+    # prefer the committed copies next to this script; fall back to scratch runs
+    p = DIAG / f"b6_{leg}_{sec}_{chan}_cours.json"
+    if not p.exists():
+        p = RUNS / f"{leg}_{sec}_{chan}" / "cours.json"
     if not p.exists():
         return None
     d = json.loads(p.read_text())
