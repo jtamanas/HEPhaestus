@@ -47,5 +47,5 @@ Coming-soon categories (no skills yet; tracked in the README's "Coming soon" sec
 
 ## Ownership
 
-Tier: **owned** (standing autonomous-ownership grant) — agents may commit and
-merge to `main` freely, without asking, including on the shared public remote.
+Tier: **owned** — agents may commit and merge properly-reviewed PRs to `main`
+without asking. Disk cleanup is limited to within this project.
