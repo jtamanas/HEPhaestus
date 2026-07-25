@@ -44,3 +44,8 @@ The marketplace index is at `.claude-plugin/marketplace.json`.
 | Workflow | `analytic-exception-detector`, `model-router` |
 
 Coming-soon categories (no skills yet; tracked in the README's "Coming soon" section): collider analysis (`cross-section`, `signal-background`), RGE running (`rge-runner`), tree-level amplitude calculation (`amplitude-calc`), parton-shower configuration (`pythia-config`), ROOT analysis (`root-analysis`), statistical inference (`statistical-tools`), LaTeX paper drafting (`hep-paper-draft`), arXiv/literature search (`arxiv-search`, `literature-review`).
+
+## Ownership
+
+Tier: **owned** (standing autonomous-ownership grant) — agents may commit and
+merge to `main` freely, without asking, including on the shared public remote.
