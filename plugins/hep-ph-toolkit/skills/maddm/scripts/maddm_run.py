@@ -1,7 +1,12 @@
 """MadDM session scripting and output parsing.
 
 Generate MadDM session scripts and parse computed observables.
-Library functions Claude composes per-task — not CLI executables.
+Library functions Claude composes per-task. The one exception is
+``check_slha_provenance``, also reachable as a subprocess step via
+``python3 maddm_run.py check-provenance MODEL SLHA_PATH [options]`` for
+callers that would rather shell out than import this module (see
+``if __name__ == "__main__"`` below); everything else here stays
+import-only.
 
 For param_card manipulation, use the shared SLHA parser from the
 madgraph skill: madgraph/scripts/card_io.py
@@ -30,12 +35,35 @@ still serves one. See ``maddm/SKILL.md`` section 'Frozen-SI DD-rerun staleness'.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import io
 import os
 import shlex
 import sys
 from pathlib import Path
 import shutil
+
+
+def _ensure_config_helpers_on_path() -> None:
+    """Make ``import config_helpers`` resolvable no matter how this module was
+    loaded, by self-locating the shared install-helpers dir off ``__file__``.
+
+    Some in-process callers (e.g. ``scan_sarah_dd.py``) load their own
+    modules via ``importlib.util.spec_from_file_location`` without ever
+    inserting them into ``sys.modules`` or adding
+    ``plugins/shared/install-helpers`` to ``sys.path`` themselves — a bare
+    ``import config_helpers`` inside :func:`check_slha_provenance` then fails
+    even though ``maddm_run.py`` loaded fine, silently downgrading every
+    result to ``reason="unverifiable"`` (nothing is actually checked). Doing
+    the path-fixup HERE, once, fixes every present and future in-process
+    caller at once — the "make the leak unrepresentable" fix — rather than
+    requiring every caller to remember its own ``sys.path.insert``. Safe to
+    call repeatedly (checks membership before inserting).
+    """
+    shared_helpers = Path(__file__).resolve().parents[4] / "shared" / "install-helpers"
+    if str(shared_helpers) not in sys.path:
+        sys.path.insert(0, str(shared_helpers))
 
 
 _OBSERVABLE_TO_GENERATE = {
@@ -314,6 +342,7 @@ def check_slha_provenance(
     expected_params: dict | None = None,
     observables: list[str] | None = None,
     fatal: bool = False,
+    record_only: bool = False,
 ) -> dict:
     """Verify the SLHA/param card about to feed a MadDM DD run is the registered one.
 
@@ -335,6 +364,25 @@ def check_slha_provenance(
     callers and pre-guard configs keep working. Pass ``fatal=True`` to raise
     :class:`SlhaProvenanceMismatch` instead when the card does not match.
 
+    Default is **guarding**: loud, fail-visible, meant for a caller about to
+    feed a card into a real DD run where a wrong-card mistake matters (the CLI
+    below, or a future single-point pre-DD call site).
+
+    ``record_only``: when True, switches to **recording** mode — compute and
+    return the exact same result dict, but suppress every ``WARNING:`` this
+    function would otherwise print (unreadable card, config unavailable,
+    no registration, pre-guard unverifiable, sha256 mismatch), AND suppress
+    the separate warnings ``config_helpers.read_latest_slha`` prints on its
+    own account for this call. Intended for callers where the check is
+    provenance *recording*, not *guarding* — e.g. a per-point scan driver
+    that intentionally runs every spectrum unregistered (``--no-register``)
+    and where every point's SLHA differs from the model's single global
+    ``latest_slha`` pointer *by construction*, so a "mismatch" here is the
+    expected shape of a healthy scan, not a signal. The returned dict is
+    identical either way — only the stderr side effect changes. This does not
+    touch ``read_latest_slha``'s own default (loud) behavior for its other
+    callers.
+
     Returns a dict::
 
         {"ok": bool, "skipped": bool, "reason": str | None,
@@ -345,12 +393,14 @@ def check_slha_provenance(
     recorded sha256 (the confident, verified case). It is also True — with
     ``reason="unverifiable"`` — when provenance cannot be checked (config helper
     or fingerprint unavailable), because absence of evidence is not a mismatch;
-    a warning is still emitted. It is False only on a genuine sha256 mismatch or
-    a missing/unreadable card.
+    a warning is still emitted (unless ``record_only``). It is False only on a
+    genuine sha256 mismatch or a missing/unreadable card.
     """
     used_path = str(Path(slha_path))
 
     def _warn(msg: str) -> None:
+        if record_only:
+            return
         print(f"WARNING: MadDM DD provenance[{model!r}]: {msg}", file=sys.stderr)
 
     def _result(ok: bool, reason: str | None, *, skipped: bool = False,
@@ -382,6 +432,10 @@ def check_slha_provenance(
         )
 
     # Lazy import: keep maddm_run importable without config_helpers on path.
+    # Self-locate the shared install-helpers dir first — some in-process
+    # callers (scan_sarah_dd.py) load their own modules by file path without
+    # ever putting it on sys.path themselves; see _ensure_config_helpers_on_path.
+    _ensure_config_helpers_on_path()
     try:
         import config_helpers  # type: ignore
     except Exception:
@@ -392,10 +446,22 @@ def check_slha_provenance(
         )
         return _result(True, "unverifiable", used_sha=used_sha)
 
-    # read_latest_slha emits its own loud warnings for drift / point mismatch.
-    registered_path = config_helpers.read_latest_slha(
-        model, expected_point=expected_point, expected_params=expected_params,
-    )
+    # read_latest_slha emits its own loud warnings for drift / point mismatch
+    # (a separate function in config_helpers.py, not gated by our own _warn
+    # above) — capture/discard them too when record_only, without touching
+    # read_latest_slha's default behavior for its other callers.
+    # NOTE: redirect_stderr rebinds sys.stderr process-wide for the duration
+    # of this `with` block, so it assumes serial callers (fine today — every
+    # known caller, including the scan, calls this synchronously); a future
+    # parallel/threaded scan sharing one process would need a different
+    # mechanism (e.g. a quiet kwarg threaded through read_latest_slha itself)
+    # to avoid one call's redirect swallowing another concurrent call's output.
+    _read_stderr_sink = io.StringIO() if record_only else None
+    with (contextlib.redirect_stderr(_read_stderr_sink) if record_only
+          else contextlib.nullcontext()):
+        registered_path = config_helpers.read_latest_slha(
+            model, expected_point=expected_point, expected_params=expected_params,
+        )
     if registered_path is None:
         _warn(
             "no latest_slha is registered for this model, so the DD param card "
@@ -459,6 +525,88 @@ def _mismatch_return(result: dict, fatal: bool, exc_msg: str) -> dict:
     if fatal:
         raise SlhaProvenanceMismatch(exc_msg)
     return result
+
+
+# ---------------------------------------------------------------------------
+# Minimal CLI: expose check_slha_provenance as a subprocess-invokable step for
+# callers (or agents) that would rather shell out than import this module.
+# maddm_run.py otherwise stays a pure library (see module docstring) — this
+# is deliberately thin, a single subcommand wrapping a single function.
+# ---------------------------------------------------------------------------
+
+def _build_arg_parser():
+    import argparse
+
+    ap = argparse.ArgumentParser(
+        prog="maddm_run.py",
+        description="CLI wrapper around maddm_run library functions.",
+    )
+    sub = ap.add_subparsers(dest="command", required=True)
+
+    cp = sub.add_parser(
+        "check-provenance",
+        help="verify an SLHA/param card matches the model's registered latest_slha",
+    )
+    cp.add_argument("model", help="config slug, e.g. singlet_doublet")
+    cp.add_argument("slha_path", help="path to the SLHA/param card about to be used")
+    cp.add_argument("--expected-point", default=None,
+                    help="warn if the registered point tag differs from this")
+    cp.add_argument("--observables", default=None,
+                    help="comma-separated subset of relic,direct_detection,"
+                         "indirect_detection; check is skipped unless "
+                         "direct_detection is included (omit to always check)")
+    cp.add_argument("--fatal", action="store_true",
+                    help="raise SlhaProvenanceMismatch (exit nonzero via "
+                         "traceback) on a genuine mismatch instead of just "
+                         "returning ok=False")
+    cp.add_argument("--record-only", action="store_true",
+                    help="recording mode: suppress ALL of this guard's own "
+                         "WARNING output (mismatch, no-registration, "
+                         "unreadable, unverifiable) and just print the "
+                         "result dict. For scripted/scan-style callers where "
+                         "the check is provenance recording, not a live "
+                         "guard. Default (flag absent) is loud/guarding.")
+    return ap
+
+
+def main(argv: list[str] | None = None) -> int:
+    import json as _json
+
+    # check_slha_provenance self-locates config_helpers on its own (see
+    # _ensure_config_helpers_on_path); calling it again here is a no-op but
+    # keeps this entrypoint independently correct even if that changes.
+    _ensure_config_helpers_on_path()
+
+    ap = _build_arg_parser()
+    args = ap.parse_args(argv)
+
+    if args.command == "check-provenance":
+        observables = (
+            [o.strip() for o in args.observables.split(",") if o.strip()]
+            if args.observables else None
+        )
+        result = check_slha_provenance(
+            args.model,
+            args.slha_path,
+            expected_point=args.expected_point,
+            observables=observables,
+            fatal=args.fatal,
+            record_only=args.record_only,
+        )
+        print(_json.dumps(result))
+        # 0 = clean verified match; 1 = a real mismatch/failure (including
+        # no_registration, which is `ok=False`); 2 = provenance genuinely
+        # could not be checked (config_helpers unavailable, or a pre-guard
+        # config with no recorded fingerprint) — those are `ok=True` in the
+        # result dict (absence of evidence isn't a mismatch), but exiting 0
+        # for them would let a caller gating on exit code alone misread
+        # "couldn't check" as "checked and clean".
+        if result["reason"] == "unverifiable":
+            return 2
+        return 0 if result["ok"] else 1
+
+    ap.error(f"unknown command {args.command!r}")  # pragma: no cover
+    return 2
 
 
 # ---------------------------------------------------------------------------
@@ -553,3 +701,7 @@ def assert_launch_produced_output(
             "stdout_tail": stdout_tail[-500:] if stdout_tail else "",
         },
     )
+
+
+if __name__ == "__main__":
+    sys.exit(main())

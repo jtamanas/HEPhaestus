@@ -266,6 +266,31 @@ def run_point(args, maddm_run, slha_complete, mg5_bin, ufo_path, dm_pdg,
                 "status": "failed", "stage": "spheno_no_slha"}
     m_dm = parse_mass_by_pdg(slha_path, dm_pdg)
 
+    # Provenance RECORDING, not guarding, at this call site: `slha_path` IS
+    # the exact file `shutil.copy`'d onto the DD param card a few lines below
+    # — there is no code path in which the card MadDM actually reads differs
+    # from the file checked here, so this can never catch a wrong-card
+    # mistake the way the guard does at a real pre-DD call site (e.g. the
+    # CLI). And because every scan point is produced via --no-register (Step
+    # 1 above) while a model's single global `latest_slha` pointer holds
+    # whatever ONE spectrum was last registered (if any), a scan point's sha256
+    # differs from that pointer BY CONSTRUCTION on every single point of a
+    # healthy scan — a "mismatch" against the global pointer is the expected
+    # shape of a scan, not a signal, so warning on it would be guaranteed
+    # per-point noise, not a real "wrong card" finding. record_only=True
+    # captures the full result (attached to the point's result dict below)
+    # while suppressing every WARNING check_slha_provenance would otherwise
+    # print for this call — including the ones config_helpers.read_latest_slha
+    # prints on its own account. Never pass fatal=True here, and never let an
+    # exception from this diagnostic-only call abort the point.
+    try:
+        provenance = maddm_run.check_slha_provenance(
+            args.model, slha_path, observables=["direct_detection"],
+            record_only=True,
+        )
+    except Exception as e:
+        provenance = {"ok": None, "error": f"{type(e).__name__}: {e}"}
+
     # ── Step 2: MadDM DD, two-phase overlay (fresh dir per point at RUN time) ─
     dd_out = point_dir / "maddm_run_dd"
     setup_script, launch_script = maddm_run.generate_maddm_script(
@@ -328,6 +353,7 @@ def run_point(args, maddm_run, slha_complete, mg5_bin, ufo_path, dm_pdg,
         "slha_path": slha_path,
         "maddm_results": str(results_txt),
         "completed_blocks": completed,
+        "provenance": provenance,
     }
     (point_dir / "result.json").write_text(json.dumps(result, indent=2))
 
