@@ -450,6 +450,12 @@ def check_slha_provenance(
     # (a separate function in config_helpers.py, not gated by our own _warn
     # above) — capture/discard them too when record_only, without touching
     # read_latest_slha's default behavior for its other callers.
+    # NOTE: redirect_stderr rebinds sys.stderr process-wide for the duration
+    # of this `with` block, so it assumes serial callers (fine today — every
+    # known caller, including the scan, calls this synchronously); a future
+    # parallel/threaded scan sharing one process would need a different
+    # mechanism (e.g. a quiet kwarg threaded through read_latest_slha itself)
+    # to avoid one call's redirect swallowing another concurrent call's output.
     _read_stderr_sink = io.StringIO() if record_only else None
     with (contextlib.redirect_stderr(_read_stderr_sink) if record_only
           else contextlib.nullcontext()):

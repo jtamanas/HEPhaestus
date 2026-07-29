@@ -264,7 +264,10 @@ Two defenses, both live in the `maddm` skill:
    unavailable, or a pre-guard config with no recorded fingerprint) — kept
    distinct from `0` so a caller gating on exit code alone cannot misread
    "couldn't check" as "checked and clean". `--record-only` suppresses the
-   WARNING output but does not change the exit code logic.
+   WARNING output but does not change the exit code logic. Exit code `2` is
+   also `argparse`'s own usage-error code (bad/missing args); distinguish
+   the two by stdout — the unverifiable case still prints the JSON result
+   dict, a usage error prints none.
 
 ### SARAH/SPheno SLHA silently zeroes the DD Higgs channel
 
