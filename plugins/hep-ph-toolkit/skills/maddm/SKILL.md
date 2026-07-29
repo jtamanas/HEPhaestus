@@ -233,6 +233,24 @@ Two defenses, both live in the `maddm` skill:
    value-level staleness guard above: provenance catches the *wrong card going
    in*, staleness catches a *stale value coming out*.
 
+   Callers that would rather shell out than import `maddm_run` can run the
+   same check as a subprocess step:
+
+   ```
+   python3 scripts/maddm_run.py check-provenance MODEL SLHA_PATH \
+       --observables direct_detection [--expected-point P] [--fatal] \
+       [--quiet-when-unregistered]
+   ```
+
+   It prints the same result dict as JSON to stdout and exits `0` when
+   `ok` is true, `1` otherwise (or raises, printing a traceback, when
+   `--fatal` is passed and the card genuinely mismatches). `scan_sarah_dd.py`
+   calls the guard this way — with `quiet_when_unregistered=True` — on every
+   scan point's per-point SLHA before the DD overlay, since every point is
+   intentionally produced via `--no-register` (see that script's docstring);
+   a genuine sha256 mismatch against something actually registered still
+   warns, only the "nothing registered" case is silenced for scans.
+
 ### SARAH/SPheno SLHA silently zeroes the DD Higgs channel
 
 When the UFO comes from SARAH and the SLHA from SPheno, the SPheno spectrum
