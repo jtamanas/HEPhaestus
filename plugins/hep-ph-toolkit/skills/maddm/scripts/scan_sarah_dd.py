@@ -266,6 +266,20 @@ def run_point(args, maddm_run, slha_complete, mg5_bin, ufo_path, dm_pdg,
                 "status": "failed", "stage": "spheno_no_slha"}
     m_dm = parse_mass_by_pdg(slha_path, dm_pdg)
 
+    # Provenance guard, diagnostic-only here: every scan point is produced via
+    # --no-register (Step 1 above), so "nothing registered for this model" is
+    # the expected steady state for a scan, not a signal —
+    # quiet_when_unregistered=True silences that specific WARNING per point.
+    # A genuine sha256 mismatch against something a user DID register (e.g. a
+    # real spheno-build point run before also running this scan) still warns;
+    # that case is a real "wrong card" signal even inside a scan. Never pass
+    # fatal=True here — this must never turn an otherwise-ok point into
+    # failed; it only ever informs, never gates status.
+    provenance = maddm_run.check_slha_provenance(
+        args.model, slha_path, observables=["direct_detection"],
+        quiet_when_unregistered=True,
+    )
+
     # ── Step 2: MadDM DD, two-phase overlay (fresh dir per point at RUN time) ─
     dd_out = point_dir / "maddm_run_dd"
     setup_script, launch_script = maddm_run.generate_maddm_script(
@@ -328,6 +342,7 @@ def run_point(args, maddm_run, slha_complete, mg5_bin, ufo_path, dm_pdg,
         "slha_path": slha_path,
         "maddm_results": str(results_txt),
         "completed_blocks": completed,
+        "provenance": provenance,
     }
     (point_dir / "result.json").write_text(json.dumps(result, indent=2))
 

@@ -1,7 +1,12 @@
 """MadDM session scripting and output parsing.
 
 Generate MadDM session scripts and parse computed observables.
-Library functions Claude composes per-task — not CLI executables.
+Library functions Claude composes per-task. The one exception is
+``check_slha_provenance``, also reachable as a subprocess step via
+``python3 maddm_run.py check-provenance MODEL SLHA_PATH [options]`` for
+callers that would rather shell out than import this module (see
+``if __name__ == "__main__"`` below); everything else here stays
+import-only.
 
 For param_card manipulation, use the shared SLHA parser from the
 madgraph skill: madgraph/scripts/card_io.py
@@ -314,6 +319,7 @@ def check_slha_provenance(
     expected_params: dict | None = None,
     observables: list[str] | None = None,
     fatal: bool = False,
+    quiet_when_unregistered: bool = False,
 ) -> dict:
     """Verify the SLHA/param card about to feed a MadDM DD run is the registered one.
 
@@ -334,6 +340,19 @@ def check_slha_provenance(
     Non-fatal by default: returns a result dict and never raises, so existing
     callers and pre-guard configs keep working. Pass ``fatal=True`` to raise
     :class:`SlhaProvenanceMismatch` instead when the card does not match.
+
+    ``quiet_when_unregistered``: when True, suppress the ``WARNING:`` print for
+    the ``reason="no_registration"`` case only (nothing at all is registered
+    for *model*) — the result dict is unchanged (still ``ok=False,
+    reason="no_registration"``), only the stderr print is silenced. Intended
+    for high-frequency callers (e.g. a per-point scan driver that
+    intentionally runs every spectrum unregistered via ``--no-register``,
+    where "nothing is registered" is the expected steady state, not a
+    signal) that would otherwise print one WARNING per point for no reason.
+    Every OTHER branch (sha256 mismatch, unreadable card, unverifiable
+    pre-guard config, exact match) is unaffected and still warns exactly as
+    before — a genuine mismatch is still worth flagging even for those
+    callers. Default False preserves all prior behavior.
 
     Returns a dict::
 
@@ -397,12 +416,13 @@ def check_slha_provenance(
         model, expected_point=expected_point, expected_params=expected_params,
     )
     if registered_path is None:
-        _warn(
-            "no latest_slha is registered for this model, so the DD param card "
-            f"({used_path}) cannot be checked against the produced spectrum. "
-            "Re-run SPheno (spheno-build) or register the spectrum "
-            "(lagrangian-builder register_model --latest-slha) first."
-        )
+        if not quiet_when_unregistered:
+            _warn(
+                "no latest_slha is registered for this model, so the DD param card "
+                f"({used_path}) cannot be checked against the produced spectrum. "
+                "Re-run SPheno (spheno-build) or register the spectrum "
+                "(lagrangian-builder register_model --latest-slha) first."
+            )
         return _mismatch_return(
             _result(False, "no_registration", used_sha=used_sha), fatal,
             f"no latest_slha registered for model {model!r}",
@@ -459,6 +479,85 @@ def _mismatch_return(result: dict, fatal: bool, exc_msg: str) -> dict:
     if fatal:
         raise SlhaProvenanceMismatch(exc_msg)
     return result
+
+
+# ---------------------------------------------------------------------------
+# Minimal CLI: expose check_slha_provenance as a subprocess-invokable step for
+# callers (or agents) that would rather shell out than import this module.
+# maddm_run.py otherwise stays a pure library (see module docstring) — this
+# is deliberately thin, a single subcommand wrapping a single function.
+# ---------------------------------------------------------------------------
+
+def _build_arg_parser():
+    import argparse
+
+    ap = argparse.ArgumentParser(
+        prog="maddm_run.py",
+        description="CLI wrapper around maddm_run library functions.",
+    )
+    sub = ap.add_subparsers(dest="command", required=True)
+
+    cp = sub.add_parser(
+        "check-provenance",
+        help="verify an SLHA/param card matches the model's registered latest_slha",
+    )
+    cp.add_argument("model", help="config slug, e.g. singlet_doublet")
+    cp.add_argument("slha_path", help="path to the SLHA/param card about to be used")
+    cp.add_argument("--expected-point", default=None,
+                    help="warn if the registered point tag differs from this")
+    cp.add_argument("--observables", default=None,
+                    help="comma-separated subset of relic,direct_detection,"
+                         "indirect_detection; check is skipped unless "
+                         "direct_detection is included (omit to always check)")
+    cp.add_argument("--fatal", action="store_true",
+                    help="raise SlhaProvenanceMismatch (exit nonzero via "
+                         "traceback) on a genuine mismatch instead of just "
+                         "returning ok=False")
+    cp.add_argument("--quiet-when-unregistered", action="store_true",
+                    help="suppress the WARNING when nothing is registered "
+                         "for the model (reason=no_registration); all other "
+                         "mismatch/warning cases are unaffected")
+    return ap
+
+
+def main(argv: list[str] | None = None) -> int:
+    import json as _json
+
+    # check_slha_provenance does a lazy `import config_helpers`; when this
+    # module is invoked directly as a script (rather than through a test
+    # harness that already puts the shared install-helpers dir on sys.path,
+    # e.g. tests/conftest.py), that import fails unless we add it ourselves.
+    _shared_helpers = (
+        Path(__file__).resolve().parents[4] / "shared" / "install-helpers"
+    )
+    if str(_shared_helpers) not in sys.path:
+        sys.path.insert(0, str(_shared_helpers))
+
+    ap = _build_arg_parser()
+    args = ap.parse_args(argv)
+
+    if args.command == "check-provenance":
+        observables = (
+            [o.strip() for o in args.observables.split(",") if o.strip()]
+            if args.observables else None
+        )
+        result = check_slha_provenance(
+            args.model,
+            args.slha_path,
+            expected_point=args.expected_point,
+            observables=observables,
+            fatal=args.fatal,
+            quiet_when_unregistered=args.quiet_when_unregistered,
+        )
+        print(_json.dumps(result))
+        return 0 if result["ok"] else 1
+
+    ap.error(f"unknown command {args.command!r}")  # pragma: no cover
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())
 
 
 # ---------------------------------------------------------------------------
