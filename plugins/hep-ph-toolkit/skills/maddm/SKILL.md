@@ -245,11 +245,12 @@ Two defenses, both live in the `maddm` skill:
    It prints the same result dict as JSON to stdout and exits `0` when
    `ok` is true, `1` otherwise (or raises, printing a traceback, when
    `--fatal` is passed and the card genuinely mismatches). `scan_sarah_dd.py`
-   calls the guard this way — with `quiet_when_unregistered=True` — on every
-   scan point's per-point SLHA before the DD overlay, since every point is
-   intentionally produced via `--no-register` (see that script's docstring);
-   a genuine sha256 mismatch against something actually registered still
-   warns, only the "nothing registered" case is silenced for scans.
+   calls the same guard in-process, with `quiet_when_unregistered=True`,
+   since it already has the module injected — the CLI above is for callers
+   without that injection. Every scan point is intentionally produced via
+   `--no-register` (see that script's docstring), so `quiet_when_unregistered`
+   silences the "nothing registered" case for scans; a genuine sha256
+   mismatch against something actually registered still warns.
 
 ### SARAH/SPheno SLHA silently zeroes the DD Higgs channel
 

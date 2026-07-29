@@ -556,10 +556,6 @@ def main(argv: list[str] | None = None) -> int:
     return 2
 
 
-if __name__ == "__main__":
-    sys.exit(main())
-
-
 # ---------------------------------------------------------------------------
 # Launch-produced-no-output guard
 # ---------------------------------------------------------------------------
@@ -652,3 +648,7 @@ def assert_launch_produced_output(
             "stdout_tail": stdout_tail[-500:] if stdout_tail else "",
         },
     )
+
+
+if __name__ == "__main__":
+    sys.exit(main())

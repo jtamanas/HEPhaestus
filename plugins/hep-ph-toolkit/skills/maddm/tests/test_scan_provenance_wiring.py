@@ -125,7 +125,10 @@ def test_run_point_provenance_mismatch_warns(tmp_path, monkeypatch, isolated_con
         "mg5_stub", str(tmp_path / "ufo"), 999, "MS", 200.0, "pt0",
     )
     err = capsys.readouterr().err
-    assert "WARNING" in err and "does NOT match" in err
+    # "WARNING" alone is vacuous here — stderr always contains an unrelated
+    # UFO-path WARNING regardless of this change; the provenance-specific
+    # warning is the real signal.
+    assert "MadDM DD provenance" in err and "does NOT match" in err
     # Diagnostic only: the mismatch must never fail the point.
     assert r["status"] == "ok"
     assert r["provenance"]["ok"] is False
