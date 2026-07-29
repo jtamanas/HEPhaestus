@@ -215,42 +215,56 @@ Two defenses, both live in the `maddm` skill:
    fresh-output-dir workaround. Always confirm σ_SI *responds* to coupling
    changes before trusting it.
 
-3. **SLHA provenance check (right-card gate).**
+3. **SLHA provenance check (right-card gate) — two modes: guard vs. record.**
    Before a `direct_detection` run, call
    `scripts/maddm_run.py::check_slha_provenance(model, slha_path,
    observables=["direct_detection"])` on the SLHA/param card you are about to
    overlay onto `Cards/param_card.dat`. It fingerprints that card and compares
    it against the `latest_slha` provenance recorded for the model by
    `spheno-build` / `lagrangian-builder` (via
-   `config_helpers.register_latest_slha`), and prints a loud `WARNING:` (naming
-   both paths + sha256 and a "re-run SPheno / register the spectrum"
-   remediation) when the card is not the model's latest registered spectrum —
-   the most common cause of a DD number that describes the wrong point. It is
-   **non-fatal by default** (returns a result dict, never raises; skips
-   non-DD-only runs; stays quiet on an exact match and on pre-guard configs it
-   cannot verify), so it is backward compatible. Pass `fatal=True` to raise
+   `config_helpers.register_latest_slha`).
+
+   **Default: loud guarding**, for a single pre-DD call site (e.g. the CLI
+   below, or a one-off analysis-point run) where a wrong-card mistake is a
+   real hazard. Prints a loud `WARNING:` (naming both paths + sha256 and a
+   "re-run SPheno / register the spectrum" remediation) when the card is not
+   the model's latest registered spectrum. **Non-fatal by default** (returns
+   a result dict, never raises; skips non-DD-only runs; stays quiet on an
+   exact match), so it is backward compatible. Pass `fatal=True` to raise
    `SlhaProvenanceMismatch` instead. This complements — does not replace — the
    value-level staleness guard above: provenance catches the *wrong card going
    in*, staleness catches a *stale value coming out*.
 
+   **`record_only=True`: silent recording**, for a call site where a
+   "mismatch" against the global `latest_slha` pointer is the *expected*
+   shape of normal operation rather than a signal — e.g. `scan_sarah_dd.py`,
+   where every point is produced via `--no-register` and each point's SLHA
+   differs from the single global pointer *by construction*. Suppresses
+   every `WARNING:` this function would otherwise print — including the
+   separate ones `config_helpers.read_latest_slha` prints on its own account
+   for the same call — and just returns the result dict for the caller to
+   record (`scan_sarah_dd.py` attaches it to each point's `result.json` under
+   `"provenance"`). The dict shape and the `ok`/`reason` fields are identical
+   in both modes; only the stderr side effect changes. `fatal` is never
+   combined with `record_only` by any caller — recording is diagnostic-only,
+   it must never gate pass/fail.
+
    Callers that would rather shell out than import `maddm_run` can run the
-   same check as a subprocess step:
+   guard (loud mode) as a subprocess step:
 
    ```
    python3 scripts/maddm_run.py check-provenance MODEL SLHA_PATH \
        --observables direct_detection [--expected-point P] [--fatal] \
-       [--quiet-when-unregistered]
+       [--record-only]
    ```
 
-   It prints the same result dict as JSON to stdout and exits `0` when
-   `ok` is true, `1` otherwise (or raises, printing a traceback, when
-   `--fatal` is passed and the card genuinely mismatches). `scan_sarah_dd.py`
-   calls the same guard in-process, with `quiet_when_unregistered=True`,
-   since it already has the module injected — the CLI above is for callers
-   without that injection. Every scan point is intentionally produced via
-   `--no-register` (see that script's docstring), so `quiet_when_unregistered`
-   silences the "nothing registered" case for scans; a genuine sha256
-   mismatch against something actually registered still warns.
+   Prints the result dict as JSON to stdout and exits: `0` — clean, verified
+   match; `1` — a real mismatch/failure (including no registration at all);
+   `2` — provenance genuinely could not be checked (`config_helpers`
+   unavailable, or a pre-guard config with no recorded fingerprint) — kept
+   distinct from `0` so a caller gating on exit code alone cannot misread
+   "couldn't check" as "checked and clean". `--record-only` suppresses the
+   WARNING output but does not change the exit code logic.
 
 ### SARAH/SPheno SLHA silently zeroes the DD Higgs channel
 

@@ -155,6 +155,11 @@ it); kept artifacts are `Cards/param_card.dat`, `MadDM_results.txt`,
 `gamlike.json`, `result.json`, and both MG5 logs. Feed the CSV to
 `/exclusion-contour` or `/hep-plot` for a σ_SI-vs-θ curve.
 
+Each point's `result.json` (not the CSV) also carries a `"provenance"` key:
+the `check_slha_provenance` result dict recorded (not enforced —
+`record_only=True`, silent) for that point's SLHA. See `SKILL.md`'s "SLHA
+provenance check" section for why the scan path records rather than warns.
+
 For a **2-D** scan, run one `scan_sarah_dd.py` invocation per outer-axis value
 into distinct `--out-dir`s and concatenate the CSVs (the driver is deliberately
 1-D; a Cartesian product is a thin outer loop, not a new tool).

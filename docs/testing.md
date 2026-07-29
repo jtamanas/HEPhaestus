@@ -74,6 +74,12 @@ protects it under the `importlib` mode this repo actually runs.
 - `dark-matter-constraints` is the sole bare `tests` package that does intra-`tests`
   imports (`from tests.oracle...`). If a skill genuinely needs intra-`tests`
   package imports, use **relative** imports (`from .conftest import ...`).
+- `skills/singlet-doublet/tests/__init__.py` also survives (pre-existing, not
+  part of the removal above): a bare marker with no matching skill-dir
+  `__init__.py`, so it is not part of a two-level package chain the way the
+  four skill-dir markers above are. Not yet audited for whether it is
+  load-bearing under `importlib` mode or simply unremoved cruft — flagging
+  so a future pass doesn't delete it without checking first.
 
 ## Live playtests (opt-in, not run by default)
 
